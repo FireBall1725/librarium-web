@@ -5,12 +5,14 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth, ApiError } from '../../auth/AuthContext'
 import PageHeader from '../../components/PageHeader'
+import RunDetailPanel from '../../components/RunDetailPanel'
 import { usePageTitle } from '../../hooks/usePageTitle'
+import type { SuggestionRunView } from '../../types'
 import AISuggestionsJobCard from './AISuggestionsJobCard'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type JobType = 'import' | 'metadata' | 'cover'
+type JobType = 'import' | 'metadata' | 'cover' | 'ai_suggestions'
 type JobStatus = 'pending' | 'processing' | 'done' | 'failed' | 'cancelled'
 
 interface ImportItem {
@@ -45,6 +47,16 @@ interface Job {
   created_at: string
   updated_at: string
   items?: ImportItem[]
+  // AI-suggestion-run-only fields (undefined for imports/enrichment)
+  triggered_by?: string
+  provider_type?: string
+  model_id?: string
+  tokens_in?: number
+  tokens_out?: number
+  estimated_cost_usd?: number
+  user_id?: string
+  run_error?: string
+  finished_at?: string
 }
 
 // Raw shape returned by the enrichment-batches endpoint
@@ -78,13 +90,46 @@ function batchToJob(b: EnrichmentBatchRaw): Job {
   }
 }
 
+// runToJob folds a suggestion run into the Job shape so it sits alongside
+// imports and enrichment batches in the unified history list.
+function runToJob(r: SuggestionRunView): Job {
+  const status: JobStatus =
+    r.status === 'running' ? 'processing'
+      : r.status === 'completed' ? 'done'
+      : r.status === 'failed' ? 'failed'
+      : 'pending'
+  return {
+    id: r.id,
+    type: 'ai_suggestions',
+    library_id: '',
+    library_name: 'AI suggestions',
+    status,
+    total_rows: 0,
+    processed_rows: 0,
+    failed_rows: 0,
+    skipped_rows: 0,
+    created_at: r.started_at,
+    updated_at: r.finished_at ?? r.started_at,
+    triggered_by: r.triggered_by,
+    provider_type: r.provider_type,
+    model_id: r.model_id,
+    tokens_in: r.tokens_in,
+    tokens_out: r.tokens_out,
+    estimated_cost_usd: r.estimated_cost_usd,
+    user_id: r.user_id,
+    run_error: r.error,
+    finished_at: r.finished_at,
+  }
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function TypeBadge({ type }: { type: JobType }) {
   const cfg: Record<JobType, { label: string; cls: string }> = {
-    import:   { label: 'Import',    cls: 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300' },
-    metadata: { label: 'Metadata',  cls: 'bg-sky-100 dark:bg-sky-900/40 text-sky-700 dark:text-sky-300' },
-    cover:    { label: 'Covers',    cls: 'bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300' },
+    import:         { label: 'Import',      cls: 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300' },
+    metadata:       { label: 'Metadata',    cls: 'bg-sky-100 dark:bg-sky-900/40 text-sky-700 dark:text-sky-300' },
+    cover:          { label: 'Covers',      cls: 'bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300' },
+    ai_suggestions: { label: 'Suggestions', cls: 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300' },
   }
   const { label, cls } = cfg[type] ?? cfg.import
   return (
@@ -92,6 +137,21 @@ function TypeBadge({ type }: { type: JobType }) {
       {label}
     </span>
   )
+}
+
+function formatTokens(n: number): string {
+  if (n < 1000) return String(n)
+  return `${(n / 1000).toFixed(1)}k`
+}
+
+function formatDurationSec(startIso: string, endIso?: string): string | null {
+  if (!endIso) return null
+  const ms = new Date(endIso).getTime() - new Date(startIso).getTime()
+  if (!Number.isFinite(ms) || ms < 0) return null
+  if (ms < 60_000) return `${(ms / 1000).toFixed(1)}s`
+  const m = Math.floor(ms / 60_000)
+  const s = Math.round((ms % 60_000) / 1000)
+  return `${m}m${s.toString().padStart(2, '0')}s`
 }
 
 function StatusBadge({ status }: { status: JobStatus }) {
@@ -146,8 +206,11 @@ function JobRow({
   const [cancelling, setCancelling] = useState(false)
   const [deleting, setDeleting] = useState(false)
 
-  const canCancel   = job.status === 'pending' || job.status === 'processing'
-  const canDelete   = job.status === 'done' || job.status === 'failed' || job.status === 'cancelled'
+  const isAISuggestions = job.type === 'ai_suggestions'
+  // No cancel/delete endpoints exist for suggestion runs yet, so hide the
+  // actions entirely for that type.
+  const canCancel   = !isAISuggestions && (job.status === 'pending' || job.status === 'processing')
+  const canDelete   = !isAISuggestions && (job.status === 'done' || job.status === 'failed' || job.status === 'cancelled')
   const isActive    = job.status === 'pending' || job.status === 'processing'
   const isEnrichment = job.type === 'metadata' || job.type === 'cover'
 
@@ -166,7 +229,9 @@ function JobRow({
 
   const toggleExpand = async () => {
     const isEnr = job.type === 'metadata' || job.type === 'cover'
-    if (!expanded) {
+    // AI suggestion runs expand into a RunDetailPanel, which self-fetches —
+    // skip the items lookup for that type.
+    if (!expanded && !isAISuggestions) {
       setLoadingItems(true)
       try {
         if (isEnr) {
@@ -243,13 +308,47 @@ function JobRow({
             <div className="min-w-0">
               <div className="flex items-center gap-2 mb-0.5">
                 <span className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                  {job.library_name ?? job.library_id}
+                  {isAISuggestions
+                    ? `Triggered by ${job.triggered_by ?? 'scheduler'}${job.user_id ? ` · user ${job.user_id.slice(0, 8)}` : ''}`
+                    : (job.library_name ?? job.library_id)}
                 </span>
                 <span className="text-xs text-gray-400 dark:text-gray-500 font-mono">
                   {job.id.slice(0, 8)}
                 </span>
               </div>
-              {isActive ? (
+              {isAISuggestions ? (
+                isActive ? (
+                  <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                    <span className="inline-block w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                    <span>Running…</span>
+                    {job.provider_type && (
+                      <span className="text-gray-400">{job.provider_type}{job.model_id ? ` (${job.model_id})` : ''}</span>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-gray-500 dark:text-gray-400">
+                    {job.provider_type && (
+                      <span>{job.provider_type}{job.model_id ? ` (${job.model_id})` : ''}</span>
+                    )}
+                    {(job.tokens_in !== undefined || job.tokens_out !== undefined) && (
+                      <span className="tabular-nums">
+                        {formatTokens(job.tokens_in ?? 0)} in / {formatTokens(job.tokens_out ?? 0)} out
+                      </span>
+                    )}
+                    {job.estimated_cost_usd !== undefined && job.estimated_cost_usd > 0 && (
+                      <span className="tabular-nums">${job.estimated_cost_usd.toFixed(4)}</span>
+                    )}
+                    {formatDurationSec(job.created_at, job.finished_at) && (
+                      <span className="tabular-nums">{formatDurationSec(job.created_at, job.finished_at)}</span>
+                    )}
+                    {job.run_error && (
+                      <span className="text-red-600 dark:text-red-400 truncate max-w-xs" title={job.run_error}>
+                        {job.run_error}
+                      </span>
+                    )}
+                  </div>
+                )
+              ) : isActive ? (
                 <div className="flex items-center gap-2">
                   <div className="flex-1 h-1.5 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden max-w-xs">
                     <div
@@ -307,7 +406,14 @@ function JobRow({
 
       {expanded && (
         <div className="border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50">
-          {loadingItems ? (
+          {isAISuggestions ? (
+            <div className="px-5 py-4">
+              <RunDetailPanel
+                endpoint={`/api/v1/admin/jobs/ai-suggestions/runs/${job.id}`}
+                hideSummary
+              />
+            </div>
+          ) : loadingItems ? (
             <div className="flex items-center justify-center py-8 text-sm text-gray-400 dark:text-gray-500">
               <div className="w-4 h-4 rounded-full border-2 border-blue-500 border-t-transparent animate-spin mr-2" />
               Loading…
@@ -404,14 +510,18 @@ export default function JobsPage() {
 
   const loadJobs = async () => {
     try {
-      const [importData, batchData] = await Promise.all([
+      const [importData, batchData, runData] = await Promise.all([
         callApi<Job[]>('/api/v1/imports'),
         callApi<EnrichmentBatchRaw[]>('/api/v1/enrichment-batches'),
+        // Suggestion runs are admin-only — tolerate failure so non-admins
+        // (if they ever reach this page) still see imports/enrichment.
+        callApi<SuggestionRunView[]>('/api/v1/admin/jobs/ai-suggestions/runs').catch(() => []),
       ])
       const imports = (importData ?? []).map(j => ({ ...j, type: 'import' as JobType }))
       const batches = (batchData ?? []).map(batchToJob)
+      const runs = (runData ?? []).map(runToJob)
       // Merge and sort newest-first
-      const merged = [...imports, ...batches].sort(
+      const merged = [...imports, ...batches, ...runs].sort(
         (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       )
       setJobs(merged)
