@@ -19,6 +19,7 @@
     "import": "Importer",
     "admin": "Admin",
     "users": "Utilisateurs",
+    "connections": "Connexions",
     "settings": "Paramètres",
     "profile": "Profil",
     "sign_out": "Déconnexion",
@@ -39,6 +40,9 @@
     "source": "Code source",
     "license": "Licence",
     "report_issue": "Signaler un problème"
+  },
+  "connections_nav": {
+    "ai": "IA"
   },
   "settings_nav": {
     "media_management": "Gestion des médias",

@@ -12,6 +12,7 @@ import type {
 } from '../types'
 import PageHeader from '../components/PageHeader'
 import BookCover from '../components/BookCover'
+import SuggestionsWidget from '../components/SuggestionsWidget'
 import { usePageTitle } from '../hooks/usePageTitle'
 
 // ─── Utilities ───────────────────────────────────────────────────────────────
@@ -769,7 +770,11 @@ export default function DashboardPage() {
         {/* Row 3: Picks of the day */}
         <PicksOfTheDayModule />
 
-        {/* Row 4: Recently Added (horizontal scroll) */}
+        {/* Row 4: AI suggestions — hidden entirely when empty */}
+        <SuggestionsWidget type="read_next" />
+        <SuggestionsWidget type="buy" />
+
+        {/* Row 5: Recently Added (horizontal scroll) */}
         <RecentlyAddedModule />
       </div>
     </>

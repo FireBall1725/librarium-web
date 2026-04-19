@@ -509,3 +509,85 @@ export interface LibraryMember {
   invited_by?: string
   tags: Tag[]
 }
+
+// ─── AI ──────────────────────────────────────────────────────────────────────
+
+export interface AIConfigField {
+  key: string
+  label: string
+  type: string // "password" | "text" | "url" | "model"
+  required: boolean
+  placeholder?: string
+  help_text?: string
+  options?: string[]
+}
+
+export interface AIProviderStatus {
+  name: string
+  display_name: string
+  description: string
+  help_text?: string
+  help_url?: string
+  config_fields: AIConfigField[]
+  enabled: boolean
+  active: boolean
+  has_api_key: boolean
+  config?: Record<string, string>
+}
+
+export interface AIPermissions {
+  reading_history: boolean
+  ratings: boolean
+  favourites: boolean
+  full_library: boolean
+  taste_profile: boolean
+}
+
+export interface UserAIPrefs {
+  opt_in: boolean
+}
+
+export interface SuggestionView {
+  id: string
+  type: string // "buy" | "read_next"
+  book_id?: string
+  book_edition_id?: string
+  library_id?: string
+  title: string
+  author?: string
+  isbn?: string
+  cover_url?: string
+  reasoning?: string
+  status: string // "new" | "dismissed" | "interested" | "added_to_library"
+  created_at: string
+}
+
+export interface JobSummary {
+  id: string
+  display_name: string
+  description: string
+  kind: string
+  enabled: boolean
+}
+
+export interface AISuggestionsJobConfig {
+  enabled: boolean
+  interval_minutes: number
+  max_buy_per_user: number
+  max_read_next_per_user: number
+  include_taste_profile: boolean
+  user_run_rate_limit_per_day: number
+}
+
+// TasteProfile is the JSON shape stored per-user. All fields optional —
+// empty categories simply aren't sent to the AI. Chip-style categories
+// (genres, themes, formats) use `love` / `avoid` lists rather than per-item
+// maps so the model prompt is compact and human-readable.
+export interface TasteProfile {
+  genres?: { love?: string[]; avoid?: string[]; favourite?: string[] }
+  themes?: { love?: string[]; avoid?: string[] }
+  formats?: { love?: string[]; avoid?: string[] }
+  era?: string
+  favourite_authors?: string[]
+  hard_nos?: string
+}

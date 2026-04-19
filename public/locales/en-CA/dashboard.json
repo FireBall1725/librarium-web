@@ -35,6 +35,28 @@
     "title": "Picks of the day",
     "empty": "Nothing to pick from — add some novels to your libraries and check back tomorrow."
   },
+  "suggestions": {
+    "buy_title": "Suggestions to buy",
+    "read_next_title": "Read next from your library",
+    "see_all": "See all →"
+  },
+  "suggestions_page": {
+    "title": "Suggestions",
+    "description": "Books your AI assistant thinks you'd enjoy, based on your library and taste profile.",
+    "run_now": "Run now",
+    "running": "Running…",
+    "run_queued": "Suggestion run queued — new picks will appear shortly.",
+    "run_failed": "Couldn't start a suggestion run.",
+    "filters": {
+      "all": "All ({{count}})",
+      "read_next": "Read next ({{count}})",
+      "buy": "To buy ({{count}})"
+    },
+    "empty": {
+      "title": "No suggestions yet",
+      "hint": "Opt in from your profile and run a batch — or wait for the next scheduled run."
+    }
+  },
   "library_chips": {
     "create_first": "+ Create your first library",
     "view_all": "View all →"

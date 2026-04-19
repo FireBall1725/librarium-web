@@ -24,7 +24,10 @@ import GenresPage from './pages/admin/settings/GenresPage'
 import MediaTypesPage from './pages/admin/settings/MediaTypesPage'
 import ProfilesPage from './pages/admin/settings/ProfilesPage'
 import GeneralPage from './pages/admin/settings/GeneralPage'
+import ConnectionsLayout from './pages/admin/ConnectionsLayout'
+import AIPage from './pages/admin/connections/AIPage'
 import ProfilePage from './pages/ProfilePage'
+import SuggestionsPage from './pages/SuggestionsPage'
 
 function AppRoutes() {
   const { apiReachable } = useAuth()
@@ -41,9 +44,14 @@ function AppRoutes() {
               <Route path="/libraries" element={<LibrariesPage />} />
               <Route path="/import" element={<ImportPage />} />
               <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/suggestions" element={<SuggestionsPage />} />
 
               <Route element={<ProtectedRoute requireAdmin />}>
                 <Route path="/admin/users" element={<UsersPage />} />
+                <Route path="/admin/connections" element={<ConnectionsLayout />}>
+                  <Route index element={<Navigate to="ai" replace />} />
+                  <Route path="ai" element={<AIPage />} />
+                </Route>
                 <Route path="/admin/settings" element={<SettingsLayout />}>
                   <Route index element={<Navigate to="media-management" replace />} />
                   <Route path="metadata"          element={<MetadataPage />} />

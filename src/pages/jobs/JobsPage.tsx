@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom'
 import { useAuth, ApiError } from '../../auth/AuthContext'
 import PageHeader from '../../components/PageHeader'
 import { usePageTitle } from '../../hooks/usePageTitle'
+import AISuggestionsJobCard from './AISuggestionsJobCard'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -496,6 +497,17 @@ export default function JobsPage() {
           {error}
         </div>
       )}
+
+      <section className="mb-8">
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+          Scheduled jobs
+        </h2>
+        <AISuggestionsJobCard />
+      </section>
+
+      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+        History
+      </h2>
 
       {jobs.length === 0 ? (
         <div className="rounded-xl border border-dashed border-gray-300 dark:border-gray-600 p-12 text-center">
