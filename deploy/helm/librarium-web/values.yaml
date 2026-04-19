@@ -1,0 +1,95 @@
+# Default values for librarium-web.
+#
+# This chart uses firelabs-helm-common as a library chart, so most keys under
+# the top level (image, service, ingress, env, probes, resources, ...) are
+# interpreted by the common chart. See:
+#   https://github.com/FireBall1725/firelabs-helm-common
+#
+# The image bundles nginx serving the Vite static SPA and proxying /api and
+# /health to http://librarium-api:8080 by bare service name. That means the
+# web release MUST be deployed into the same namespace as librarium-api so
+# Kubernetes DNS can resolve the short name. If you need to split namespaces,
+# override nginx.conf in a custom image and point at the fully-qualified
+# service name instead.
+
+global:
+  # Keep release names predictable (otherwise common prepends the release name).
+  fullnameOverride: librarium-web
+
+image:
+  repository: ghcr.io/fireball1725/librarium-web
+  # Pin to a release in production. `latest` is fine for trying the chart.
+  tag: latest
+  pullPolicy: IfNotPresent
+
+# Stateless static nginx bundle — safe to scale horizontally and roll without
+# downtime (no PVC, no singleton state).
+controller:
+  replicas: 2
+  strategy: RollingUpdate
+
+# -----------------------------------------------------------------------------
+# HTTP service
+# -----------------------------------------------------------------------------
+service:
+  main:
+    enabled: true
+    type: ClusterIP
+    ports:
+      http:
+        enabled: true
+        primary: true
+        port: 3000
+
+# -----------------------------------------------------------------------------
+# Ingress (disabled by default — most homelabs wire this up separately)
+# -----------------------------------------------------------------------------
+ingress:
+  main:
+    enabled: false
+    # ingressClassName: nginx
+    # annotations: {}
+    # hosts:
+    #   - host: librarium.example.com
+    #     paths:
+    #       - path: /
+    #         pathType: Prefix
+    # tls:
+    #   - secretName: librarium-web-tls
+    #     hosts: [librarium.example.com]
+
+# -----------------------------------------------------------------------------
+# Health probes — a 200 from the SPA index means nginx is alive and serving
+# static assets. There is no dedicated /health endpoint on this tier.
+# -----------------------------------------------------------------------------
+probes:
+  liveness:
+    enabled: true
+    custom: true
+    spec:
+      httpGet:
+        path: /
+        port: http
+      initialDelaySeconds: 15
+      periodSeconds: 30
+  readiness:
+    enabled: true
+    custom: true
+    spec:
+      httpGet:
+        path: /
+        port: http
+      initialDelaySeconds: 3
+      periodSeconds: 10
+  startup:
+    enabled: false
+
+# -----------------------------------------------------------------------------
+# Resources
+# -----------------------------------------------------------------------------
+resources:
+  requests:
+    cpu: 25m
+    memory: 32Mi
+  limits:
+    memory: 128Mi
