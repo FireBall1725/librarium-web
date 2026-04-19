@@ -8,10 +8,6 @@ export default function SetupPage() {
   const { bootstrapAdmin, initialized, user } = useAuth()
   const navigate = useNavigate()
 
-  // Once a user is created in this flow, we stay on the wizard through the
-  // "done" step — only redirect when we arrive already initialized without a session.
-  if (initialized === true && !user) return <Navigate to="/login" replace />
-
   const [step, setStep] = useState<WizardStep>('admin')
   const [form, setForm] = useState({
     display_name: '',
@@ -22,6 +18,11 @@ export default function SetupPage() {
   })
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+
+  // Once a user is created in this flow, we stay on the wizard through the
+  // "done" step — only redirect when we arrive already initialized without a session.
+  if (initialized === true && !user) return <Navigate to="/login" replace />
+
 
   const update = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm(prev => ({ ...prev, [key]: e.target.value }))

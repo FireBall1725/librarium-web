@@ -8,13 +8,14 @@ export default function LoginPage() {
   const navigate = useNavigate()
   const { t } = useTranslation()
 
-  if (initialized === false) return <Navigate to="/setup" replace />
-
   const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
   const [rememberMe, setRememberMe] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+
+  if (initialized === false) return <Navigate to="/setup" replace />
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

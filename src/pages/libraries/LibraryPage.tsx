@@ -832,7 +832,6 @@ function AddBookModal({ libraryId, mediaTypes, onClose, onSaved, onDuplicate, in
               {scanning ? (
                 <div className="space-y-3">
                   <p className="text-sm text-gray-600 dark:text-gray-400">Point your camera at a barcode…</p>
-                  {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
                   <video ref={videoRef} className="w-full rounded-lg bg-black aspect-video object-cover" playsInline />
                   <button type="button" onClick={stopScan}
                     className="w-full rounded-lg border border-gray-300 dark:border-gray-600 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
@@ -2889,7 +2888,7 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
                         checked={selectedIds.has(book.id)}
                         onChange={e => setSelectedIds(prev => {
                           const next = new Set(prev)
-                          e.target.checked ? next.add(book.id) : next.delete(book.id)
+                          if (e.target.checked) next.add(book.id); else next.delete(book.id)
                           return next
                         })}
                         className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 cursor-pointer"
@@ -3265,18 +3264,6 @@ function countSeriesLookupFields(r: SeriesLookupResult): number {
     (r.genres?.length ?? 0) > 0,
     !!r.url,
     !!r.cover_url,
-  ].filter(Boolean).length
-}
-
-function countFillableSeriesFields(series: Series, r: SeriesLookupResult): number {
-  return [
-    !series.description && !!r.description,
-    series.total_count == null && r.total_count != null,
-    !series.original_language && !!r.original_language,
-    series.publication_year == null && r.publication_year != null,
-    !series.demographic && !!r.demographic,
-    series.genres.length === 0 && (r.genres?.length ?? 0) > 0,
-    !series.url && !!r.url,
   ].filter(Boolean).length
 }
 
@@ -4404,7 +4391,7 @@ function SeriesMergeView({ series, libraryId, primary, matching, onBack, onClose
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const entries = (fn: (r: SeriesLookupResult) => any) =>
+  const entries = <T,>(fn: (r: SeriesLookupResult) => T) =>
     matching.map(r => ({ source: r.provider_display, value: fn(r) }))
 
   const descOpts   = useMemo(() => sortOptions(mergeString(series.description, entries(r => r.description))), [series, matching])
