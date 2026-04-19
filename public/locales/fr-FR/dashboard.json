@@ -55,6 +55,9 @@
     "empty": {
       "title": "Aucune suggestion pour l'instant",
       "hint": "Activez l'option dans votre profil et lancez une exécution — ou attendez la prochaine exécution planifiée."
+    },
+    "runs": {
+      "title": "Exécutions récentes"
     }
   },
   "library_chips": {

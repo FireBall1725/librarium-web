@@ -562,6 +562,35 @@ export interface SuggestionView {
   created_at: string
 }
 
+export interface SuggestionRunView {
+  id: string
+  user_id?: string // only set on admin-scoped responses
+  triggered_by: string // scheduler | admin | user
+  provider_type: string
+  model_id?: string
+  status: string // running | completed | failed
+  error?: string
+  tokens_in: number
+  tokens_out: number
+  estimated_cost_usd: number
+  started_at: string
+  finished_at?: string
+}
+
+// SuggestionRunEvent is one observable step in a pipeline run. `content`
+// shape depends on `type`; the UI renders raw JSON for unknown types.
+export interface SuggestionRunEvent {
+  seq: number
+  type: string
+  content: Record<string, unknown>
+  created_at: string
+}
+
+export interface SuggestionRunDetail {
+  run: SuggestionRunView
+  events: SuggestionRunEvent[]
+}
+
 export interface JobSummary {
   id: string
   display_name: string

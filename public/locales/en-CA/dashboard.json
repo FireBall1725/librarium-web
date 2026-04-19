@@ -55,6 +55,9 @@
     "empty": {
       "title": "No suggestions yet",
       "hint": "Opt in from your profile and run a batch — or wait for the next scheduled run."
+    },
+    "runs": {
+      "title": "Recent runs"
     }
   },
   "library_chips": {

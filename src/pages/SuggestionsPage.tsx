@@ -8,8 +8,9 @@ import { useAuth, ApiError } from '../auth/AuthContext'
 import { useToast } from '../components/Toast'
 import PageHeader from '../components/PageHeader'
 import SuggestionCard from '../components/SuggestionCard'
+import RunDetailPanel, { RunSummary } from '../components/RunDetailPanel'
 import { usePageTitle } from '../hooks/usePageTitle'
-import type { SuggestionView } from '../types'
+import type { SuggestionRunView, SuggestionView } from '../types'
 
 type TypeFilter = 'all' | 'buy' | 'read_next'
 
@@ -28,6 +29,8 @@ export default function SuggestionsPage() {
   const [items, setItems] = useState<SuggestionView[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [running, setRunning] = useState(false)
+  const [runs, setRuns] = useState<SuggestionRunView[] | null>(null)
+  const [expandedRun, setExpandedRun] = useState<string | null>(null)
 
   const reload = useCallback(() => {
     setItems(null)
@@ -35,11 +38,27 @@ export default function SuggestionsPage() {
     callApi<SuggestionView[]>('/api/v1/me/suggestions?status=new')
       .then(data => setItems(data ?? []))
       .catch(err => setError(err instanceof ApiError ? err.message : t('errors.failed_to_load', { ns: 'common' })))
+    callApi<SuggestionRunView[]>('/api/v1/me/suggestions/runs')
+      .then(data => setRuns(data ?? []))
+      .catch(() => setRuns([]))
   }, [callApi, t])
 
   useEffect(() => {
     reload()
   }, [reload])
+
+  // Poll runs while one is running so the user sees the status flip to
+  // completed/failed without a manual refresh.
+  const hasRunning = useMemo(() => (runs ?? []).some(r => r.status === 'running'), [runs])
+  useEffect(() => {
+    if (!hasRunning) return
+    const id = setInterval(() => {
+      callApi<SuggestionRunView[]>('/api/v1/me/suggestions/runs')
+        .then(data => setRuns(data ?? []))
+        .catch(() => {})
+    }, 3000)
+    return () => clearInterval(id)
+  }, [hasRunning, callApi])
 
   const handleChanged = useCallback((id: string, status: string | null) => {
     setItems(prev => {
@@ -112,6 +131,32 @@ export default function SuggestionsPage() {
             {t('suggestions_page.filters.buy', { count: buyCount })}
           </FilterTab>
         </div>
+
+        {runs && runs.length > 0 && (
+          <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+            <div className="border-b border-gray-100 dark:border-gray-800 px-4 py-2.5 text-sm font-semibold text-gray-900 dark:text-white">
+              {t('suggestions_page.runs.title')}
+            </div>
+            <ul className="divide-y divide-gray-100 dark:divide-gray-800">
+              {runs.slice(0, 10).map(run => (
+                <li key={run.id} className="px-4 py-3">
+                  <button
+                    type="button"
+                    onClick={() => setExpandedRun(prev => (prev === run.id ? null : run.id))}
+                    className="w-full text-left"
+                  >
+                    <RunSummary run={run} />
+                  </button>
+                  {expandedRun === run.id && (
+                    <div className="mt-3">
+                      <RunDetailPanel endpoint={`/api/v1/me/suggestions/runs/${run.id}`} hideSummary />
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {error ? (
           <div className="rounded-lg border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/30 p-4 text-sm text-red-700 dark:text-red-300">
