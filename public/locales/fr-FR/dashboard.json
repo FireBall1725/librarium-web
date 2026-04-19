@@ -1,0 +1,52 @@
+{
+  "welcome_back": "Bon retour, {{name}}",
+  "page_title": "Tableau de bord",
+  "continue_reading_eyebrow": "Continuer la lecture",
+  "last_opened": "Dernière ouverture {{relative}}",
+  "also_in_progress": "Également en cours",
+  "no_books_in_progress": {
+    "title": "Aucun livre en cours",
+    "hint": "Marquez un livre comme « En lecture » et il apparaîtra ici."
+  },
+  "stats": {
+    "read_in_year": "Lus en {{year}}",
+    "all_time": "{{count}} au total",
+    "last_12_months": "12 derniers mois",
+    "reading": "En lecture",
+    "favourites": "Favoris",
+    "total_books": "Total de livres",
+    "unread": "Non lus",
+    "sparkline_aria": "Activité de lecture sur 12 mois"
+  },
+  "continue_series": {
+    "title": "La suite de vos séries",
+    "empty": "Terminez un livre d'une série et nous vous suggérerons le suivant."
+  },
+  "recently_finished": {
+    "title": "Récemment terminés",
+    "empty": "Aucun livre terminé pour l'instant.",
+    "rating": "★ {{rating}}/10"
+  },
+  "recently_added": {
+    "title": "Récemment ajoutés",
+    "empty": "Aucun livre pour l'instant. Ajoutez-en un pour commencer."
+  },
+  "picks_of_the_day": {
+    "title": "Sélection du jour",
+    "empty": "Rien à suggérer — ajoutez des romans à vos bibliothèques et revenez demain."
+  },
+  "library_chips": {
+    "create_first": "+ Créer votre première bibliothèque",
+    "view_all": "Tout voir →"
+  },
+  "relative_time": {
+    "just_now": "à l'instant",
+    "minutes": "il y a {{count}} min",
+    "hours": "il y a {{count}} h",
+    "yesterday": "hier",
+    "days": "il y a {{count}} j",
+    "weeks": "il y a {{count}} sem",
+    "months": "il y a {{count}} mois",
+    "years": "il y a {{count}} an(s)"
+  }
+}

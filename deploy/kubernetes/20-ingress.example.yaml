@@ -1,0 +1,30 @@
+# Example ingress. Copy to 20-ingress.yaml, edit the host and TLS secret, then apply.
+#
+# This ingress fronts the web service. The web image's nginx already proxies /api
+# to the api service in-cluster, so both the UI and API are reachable through the
+# same host — no separate ingress for the API is needed.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: librarium-web
+  namespace: librarium
+  annotations:
+    # nginx:   nginx.ingress.kubernetes.io/proxy-body-size: "20m"
+    # traefik: traefik.ingress.kubernetes.io/router.entrypoints: websecure
+spec:
+  ingressClassName: nginx  # change to your controller
+  tls:
+    - hosts:
+        - librarium.example.com
+      secretName: librarium-web-tls
+  rules:
+    - host: librarium.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: librarium-web
+                port:
+                  number: 3000

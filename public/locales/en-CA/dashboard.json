@@ -1,0 +1,52 @@
+{
+  "welcome_back": "Welcome back, {{name}}",
+  "page_title": "Dashboard",
+  "continue_reading_eyebrow": "Continue reading",
+  "last_opened": "Last opened {{relative}}",
+  "also_in_progress": "Also in progress",
+  "no_books_in_progress": {
+    "title": "No books in progress",
+    "hint": "Mark a book as \"Reading\" and it'll show up here."
+  },
+  "stats": {
+    "read_in_year": "Read in {{year}}",
+    "all_time": "{{count}} all-time",
+    "last_12_months": "Last 12 months",
+    "reading": "Reading",
+    "favourites": "Favourites",
+    "total_books": "Total books",
+    "unread": "Unread",
+    "sparkline_aria": "12-month reading activity"
+  },
+  "continue_series": {
+    "title": "Up next in your series",
+    "empty": "Finish a book in a series and we'll suggest the next one."
+  },
+  "recently_finished": {
+    "title": "Recently finished",
+    "empty": "No finished books yet.",
+    "rating": "★ {{rating}}/10"
+  },
+  "recently_added": {
+    "title": "Recently added",
+    "empty": "No books yet. Add one to get started."
+  },
+  "picks_of_the_day": {
+    "title": "Picks of the day",
+    "empty": "Nothing to pick from — add some novels to your libraries and check back tomorrow."
+  },
+  "library_chips": {
+    "create_first": "+ Create your first library",
+    "view_all": "View all →"
+  },
+  "relative_time": {
+    "just_now": "just now",
+    "minutes": "{{count}}m ago",
+    "hours": "{{count}}h ago",
+    "yesterday": "yesterday",
+    "days": "{{count}}d ago",
+    "weeks": "{{count}}w ago",
+    "months": "{{count}}mo ago",
+    "years": "{{count}}y ago"
+  }
+}

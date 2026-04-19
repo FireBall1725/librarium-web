@@ -1,0 +1,67 @@
+{
+  "app": {
+    "name": "Librarium"
+  },
+  "auth": {
+    "sign_in_subtitle": "Connectez-vous à votre bibliothèque",
+    "username_or_email": "Nom d'utilisateur ou e-mail",
+    "username_placeholder": "nom d'utilisateur",
+    "password": "Mot de passe",
+    "remember_me": "Se souvenir de moi",
+    "sign_in": "Connexion",
+    "signing_in": "Connexion en cours…",
+    "unexpected_error": "Une erreur inattendue s'est produite"
+  },
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "libraries": "Bibliothèques",
+    "tools": "Outils",
+    "import": "Importer",
+    "admin": "Admin",
+    "users": "Utilisateurs",
+    "settings": "Paramètres",
+    "profile": "Profil",
+    "sign_out": "Déconnexion",
+    "open_menu": "Ouvrir le menu de navigation",
+    "close_menu": "Fermer le menu de navigation"
+  },
+  "library_nav": {
+    "books": "Livres",
+    "contributors": "Contributeurs",
+    "shelves": "Rayons",
+    "series": "Séries",
+    "loans": "Prêts",
+    "members": "Membres"
+  },
+  "footer": {
+    "web": "Web",
+    "api": "API",
+    "source": "Code source",
+    "license": "Licence",
+    "report_issue": "Signaler un problème"
+  },
+  "settings_nav": {
+    "media_management": "Gestion des médias",
+    "metadata": "Métadonnées",
+    "tags": "Étiquettes",
+    "genres": "Genres",
+    "media_types": "Types de médias",
+    "profiles": "Profils",
+    "general": "Général",
+    "jobs": "Tâches"
+  },
+  "theme": {
+    "light": "☀ Clair",
+    "dark": "☾ Sombre",
+    "auto": "⊙ Auto",
+    "cycle_tooltip": "Changer le thème : clair → sombre → auto"
+  },
+  "badges": {
+    "public": "Public",
+    "favourite": "Favori"
+  },
+  "errors": {
+    "failed_to_load": "Échec du chargement",
+    "failed_to_load_libraries": "Échec du chargement des bibliothèques"
+  }
+}
