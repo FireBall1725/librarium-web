@@ -284,7 +284,7 @@ function ContributorMetadataModal({ contributor, onClose, onApplied }: {
   }
 
   const toggle = (key: string) =>
-    setEnabled(prev => { const s = new Set(prev); s.has(key) ? s.delete(key) : s.add(key); return s })
+    setEnabled(prev => { const s = new Set(prev); if (s.has(key)) s.delete(key); else s.add(key); return s })
 
   // Build field comparison rows
   const fields: Array<{ key: string; label: string; current: string; proposed: string; multiline?: boolean }> = fetchData

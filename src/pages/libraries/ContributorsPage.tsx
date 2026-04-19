@@ -3,7 +3,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useOutletContext, useParams } from 'react-router-dom'
-import { useAuth } from '../../auth/AuthContext'
+import { useAuth, ApiError } from '../../auth/AuthContext'
 import type { LibraryOutletContext } from '../../components/LibraryOutlet'
 import type { LibraryContributor, PagedContributors } from '../../types'
 
@@ -326,7 +326,7 @@ export default function ContributorsPage() {
   const toggleCol = (col: ColKey) => {
     setVisibleCols(prev => {
       const next = new Set(prev)
-      next.has(col) ? next.delete(col) : next.add(col)
+      if (next.has(col)) next.delete(col); else next.add(col)
       localStorage.setItem('librarium:contributors:cols', JSON.stringify([...next]))
       return next
     })
@@ -362,8 +362,8 @@ export default function ContributorsPage() {
     try {
       await callApi(`/api/v1/contributors/${c.id}`, { method: 'DELETE' })
       load()
-    } catch (err: any) {
-      if (err?.status === 409) {
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 409) {
         alert('Cannot delete: this contributor still has books.')
       }
     }
@@ -548,7 +548,7 @@ export default function ContributorsPage() {
                       checked={selectedIds.has(c.id)}
                       onChange={e => setSelectedIds(prev => {
                         const next = new Set(prev)
-                        e.target.checked ? next.add(c.id) : next.delete(c.id)
+                        if (e.target.checked) next.add(c.id); else next.delete(c.id)
                         return next
                       })}
                       className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 cursor-pointer"

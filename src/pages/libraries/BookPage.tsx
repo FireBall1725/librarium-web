@@ -172,7 +172,7 @@ function FileBrowserModal({ libraryId, bookId, editionId, editionFormat, onLink,
 
   // Built-in upload path locations — always present
   const isAudiobook = editionFormat === 'audiobook'
-  const uploadTargets: BrowseTarget[] = isAudiobook
+  const uploadTargets: Extract<BrowseTarget, { kind: 'upload' }>[] = isAudiobook
     ? [{ kind: 'upload', format: 'audiobook', label: 'Audiobooks', rootPath: '' }]
     : [{ kind: 'upload', format: 'ebook', label: 'Ebooks', rootPath: '' }]
 
@@ -478,7 +478,7 @@ const DIGITAL_FORMATS = new Set(['ebook', 'digital', 'audiobook'])
 
 function EditionCard({ edition: initialEdition, libraryId, bookId, onEdit, onDeleted }: EditionCardProps) {
   const { callApi, getToken } = useAuth()
-  const [edition, setEdition] = useState(initialEdition)
+  const edition = initialEdition
   const [deleting, setDeleting] = useState(false)
   const [showReading, setShowReading] = useState(false)
   const [readStatus, setReadStatus] = useState<string>('unread')
@@ -960,7 +960,7 @@ function MergedMetadataModal({ book, editions, libraryId, bookId, onClose, onApp
                     return (
                       <div key={fd.key} className={`flex items-start gap-3 px-4 py-3 ${isSame ? 'opacity-50' : ''}`}>
                         <input type="checkbox" checked={isOn && !isSame} disabled={isSame}
-                          onChange={() => !isSame && setEnabled(prev => { const s = new Set(prev); isOn ? s.delete(fd.key) : s.add(fd.key); return s })}
+                          onChange={() => { if (!isSame) setEnabled(prev => { const s = new Set(prev); if (isOn) s.delete(fd.key); else s.add(fd.key); return s }) }}
                           className="mt-0.5 rounded border-gray-300 dark:border-gray-600 text-blue-600 flex-shrink-0" />
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">{fd.label}</p>
