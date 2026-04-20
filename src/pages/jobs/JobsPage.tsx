@@ -97,6 +97,7 @@ function runToJob(r: SuggestionRunView): Job {
     r.status === 'running' ? 'processing'
       : r.status === 'completed' ? 'done'
       : r.status === 'failed' ? 'failed'
+      : r.status === 'cancelled' ? 'cancelled'
       : 'pending'
   return {
     id: r.id,
