@@ -569,6 +569,7 @@ export default function JobsPage() {
       await Promise.all([
         callApi('/api/v1/imports', { method: 'DELETE' }),
         callApi('/api/v1/enrichment-batches', { method: 'DELETE' }),
+        callApi('/api/v1/admin/jobs/ai-suggestions/runs', { method: 'DELETE' }).catch(() => {}),
       ])
       setJobs(prev => prev.filter(j => j.status === 'pending' || j.status === 'processing'))
     } catch {
