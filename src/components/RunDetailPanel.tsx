@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (C) 2026 fireball1725
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useAuth, ApiError } from '../auth/AuthContext'
 import type { SuggestionRunDetail, SuggestionRunEvent, SuggestionRunView } from '../types'
 
@@ -24,20 +24,38 @@ export default function RunDetailPanel({ endpoint, hideSummary }: RunDetailPanel
   const { callApi } = useAuth()
   const [detail, setDetail] = useState<SuggestionRunDetail | null>(null)
   const [error, setError] = useState<string | null>(null)
+  // Track status in a ref so the polling interval can self-terminate without
+  // forcing the effect to restart every time detail changes.
+  const statusRef = useRef<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
     setDetail(null)
     setError(null)
-    callApi<SuggestionRunDetail>(endpoint)
-      .then(d => {
-        if (!cancelled) setDetail(d ?? null)
-      })
-      .catch(err => {
-        if (!cancelled) setError(err instanceof ApiError ? err.message : 'Failed to load run')
-      })
+    statusRef.current = null
+
+    const load = () =>
+      callApi<SuggestionRunDetail>(endpoint)
+        .then(d => {
+          if (cancelled) return
+          setDetail(d ?? null)
+          statusRef.current = d?.run.status ?? null
+        })
+        .catch(err => {
+          if (!cancelled) setError(err instanceof ApiError ? err.message : 'Failed to load run')
+        })
+
+    load()
+    // Poll while the run is still live; stop once it reaches a terminal state.
+    const id = setInterval(() => {
+      if (cancelled) return
+      const status = statusRef.current
+      if (status && status !== 'running') return
+      load()
+    }, 3000)
     return () => {
       cancelled = true
+      clearInterval(id)
     }
   }, [callApi, endpoint])
 

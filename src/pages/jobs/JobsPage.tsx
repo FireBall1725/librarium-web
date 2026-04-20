@@ -207,9 +207,9 @@ function JobRow({
   const [deleting, setDeleting] = useState(false)
 
   const isAISuggestions = job.type === 'ai_suggestions'
-  // No cancel/delete endpoints exist for suggestion runs yet, so hide the
-  // actions entirely for that type.
-  const canCancel   = !isAISuggestions && (job.status === 'pending' || job.status === 'processing')
+  // AI suggestion runs support cancel (admin only) but not delete; enrichment
+  // and import jobs support both.
+  const canCancel   = job.status === 'pending' || job.status === 'processing'
   const canDelete   = !isAISuggestions && (job.status === 'done' || job.status === 'failed' || job.status === 'cancelled')
   const isActive    = job.status === 'pending' || job.status === 'processing'
   const isEnrichment = job.type === 'metadata' || job.type === 'cover'
@@ -256,10 +256,13 @@ function JobRow({
     if (!canCancel || cancelling) return
     setCancelling(true)
     try {
-      const path = isEnrichment
-        ? `/api/v1/enrichment-batches/${job.id}/cancel`
-        : `/api/v1/imports/${job.id}/cancel`
-      await callApi(path, { method: 'POST' })
+      if (isAISuggestions) {
+        await callApi(`/api/v1/admin/jobs/ai-suggestions/runs/${job.id}`, { method: 'DELETE' })
+      } else if (isEnrichment) {
+        await callApi(`/api/v1/enrichment-batches/${job.id}/cancel`, { method: 'POST' })
+      } else {
+        await callApi(`/api/v1/imports/${job.id}/cancel`, { method: 'POST' })
+      }
       onCancelled(job.id)
     } catch {
       // non-fatal — parent will refresh
