@@ -606,6 +606,8 @@ export interface AISuggestionsJobConfig {
   max_read_next_per_user: number
   include_taste_profile: boolean
   user_run_rate_limit_per_day: number
+  max_tokens_initial: number
+  max_tokens_backfill: number
 }
 
 // TasteProfile is the JSON shape stored per-user. All fields optional —

@@ -617,7 +617,7 @@ export default function JobsPage() {
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
           Scheduled jobs
         </h2>
-        <AISuggestionsJobCard />
+        <AISuggestionsJobCard onRunKicked={loadJobs} />
       </section>
 
       <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">

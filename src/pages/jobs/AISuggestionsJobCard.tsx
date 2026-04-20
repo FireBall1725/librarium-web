@@ -27,7 +27,13 @@ function formatInterval(minutes: number): string {
   return `Every ${minutes} minutes`
 }
 
-export default function AISuggestionsJobCard() {
+interface AISuggestionsJobCardProps {
+  // Fires after a successful Run now so the parent can reload the jobs list
+  // and surface the new run immediately.
+  onRunKicked?: () => void
+}
+
+export default function AISuggestionsJobCard({ onRunKicked }: AISuggestionsJobCardProps = {}) {
   const { callApi } = useAuth()
   const { show: showToast } = useToast()
   const [config, setConfig] = useState<AISuggestionsJobConfig | null>(null)
@@ -92,7 +98,9 @@ export default function AISuggestionsJobCard() {
           : 'Enqueued suggestions run',
         { variant: 'success' }
       )
-      // The run appears in the History section below; JobsPage polls it.
+      // Ask the parent to refresh its jobs list so the new run appears
+      // without the admin needing to reload the page.
+      onRunKicked?.()
     } catch (err) {
       showToast(err instanceof ApiError ? err.message : 'Failed to enqueue run', { variant: 'error' })
     } finally {
@@ -258,6 +266,36 @@ export default function AISuggestionsJobCard() {
               />
               <div className="w-10 h-6 bg-gray-200 dark:bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full" />
             </label>
+          </div>
+
+          {/* Max tokens */}
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label className="block text-sm font-medium text-gray-900 dark:text-white">Max tokens (initial pass)</label>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                Output-token cap for the first suggestion request. Thinking models (qwen3, deepseek-r1, extended-thinking Claude) need a higher cap — 6000 is a reasonable starting point.
+              </p>
+              <input
+                type="number"
+                min={0}
+                value={config.max_tokens_initial}
+                onChange={e => set('max_tokens_initial', Math.max(0, Number(e.target.value)))}
+                className="mt-1 w-28 rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-900 dark:text-white">Max tokens (backfill)</label>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                Cap for each backfill retry when the first pass didn't fill every slot. Smaller is fine because backfill only asks for what's missing.
+              </p>
+              <input
+                type="number"
+                min={0}
+                value={config.max_tokens_backfill}
+                onChange={e => set('max_tokens_backfill', Math.max(0, Number(e.target.value)))}
+                className="mt-1 w-28 rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+            </div>
           </div>
 
           {/* User run rate limit */}
