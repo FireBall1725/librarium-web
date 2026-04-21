@@ -10,13 +10,12 @@ import SuggestionCard from './SuggestionCard'
 
 interface SuggestionsWidgetProps {
   type: 'buy' | 'read_next'
-  limit?: number
 }
 
 // SuggestionsWidget renders a dashboard row of AI-generated suggestions for a
 // single type. It is hidden entirely when the list is empty so a fresh install
 // stays clean (per the feature plan: no placeholder noise).
-export default function SuggestionsWidget({ type, limit = 5 }: SuggestionsWidgetProps) {
+export default function SuggestionsWidget({ type }: SuggestionsWidgetProps) {
   const { callApi } = useAuth()
   const { t } = useTranslation(['dashboard', 'common'])
   const [items, setItems] = useState<SuggestionView[] | null>(null)
@@ -51,7 +50,6 @@ export default function SuggestionsWidget({ type, limit = 5 }: SuggestionsWidget
   if (error || items === null || items.length === 0) return null
 
   const title = type === 'buy' ? t('suggestions.buy_title') : t('suggestions.read_next_title')
-  const visible = items.slice(0, limit)
 
   return (
     <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
@@ -65,7 +63,7 @@ export default function SuggestionsWidget({ type, limit = 5 }: SuggestionsWidget
         </Link>
       </div>
       <div className="px-5 pb-5 flex gap-3 overflow-x-auto scrollbar-thin">
-        {visible.map(s => (
+        {items.map(s => (
           <SuggestionCard key={s.id} suggestion={s} onChanged={handleChanged} />
         ))}
       </div>

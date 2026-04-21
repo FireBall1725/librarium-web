@@ -50,7 +50,12 @@
     "filters": {
       "all": "All ({{count}})",
       "read_next": "Read next ({{count}})",
-      "buy": "To buy ({{count}})"
+      "buy": "To buy ({{count}})",
+      "saved": "Saved ({{count}})"
+    },
+    "saved_empty": {
+      "title": "Nothing saved yet",
+      "hint": "Tap \"Interested\" on a suggestion to pin it here."
     },
     "empty": {
       "title": "No suggestions yet",
@@ -58,6 +63,17 @@
     },
     "runs": {
       "title": "Recent runs"
+    },
+    "progress": {
+      "title": "Generating suggestions…",
+      "starting": "Starting run…",
+      "steps_one": "{{count}} step completed",
+      "steps_other": "{{count}} steps completed"
+    },
+    "quota": {
+      "label": "Runs left: {{remaining}}/{{limit}}",
+      "unlimited": "Runs today: {{used}}",
+      "resets_at": "Next run available {{at}}"
     }
   },
   "library_chips": {

@@ -555,7 +555,7 @@ function RecentlyAddedModule() {
       ) : books === null ? (
         <div className="px-5 pb-5 flex gap-3">
           {[...Array(8)].map((_, i) => (
-            <div key={i} className="w-20 flex-shrink-0">
+            <div key={i} className="w-36 sm:w-40 flex-shrink-0">
               <div className="aspect-[2/3] rounded-lg bg-gray-100 dark:bg-gray-800 animate-pulse" />
               <div className="mt-1.5 h-3 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" />
             </div>
@@ -571,16 +571,16 @@ function RecentlyAddedModule() {
             <Link
               key={b.book_id}
               to={`/libraries/${b.library_id}/books/${b.book_id}`}
-              className="flex-shrink-0 w-20 group"
+              className="flex-shrink-0 w-36 sm:w-40 group"
               title={b.title}
             >
               <BookCover
                 title={b.title}
                 coverUrl={b.cover_url}
-                className="w-20"
+                className="w-36 sm:w-40"
                 readStatus={badges && b.read_status ? b.read_status : undefined}
               />
-              <p className="mt-1.5 text-xs font-medium text-gray-800 dark:text-gray-200 leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors break-words">
+              <p className="mt-1.5 text-xs font-medium text-gray-800 dark:text-gray-200 leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2">
                 {b.title}
               </p>
               {b.authors && (
@@ -626,7 +626,7 @@ function PicksOfTheDayModule() {
       ) : books === null ? (
         <div className="px-5 pb-5 flex gap-3">
           {[...Array(8)].map((_, i) => (
-            <div key={i} className="w-20 flex-shrink-0">
+            <div key={i} className="w-36 sm:w-40 flex-shrink-0">
               <div className="aspect-[2/3] rounded-lg bg-gray-100 dark:bg-gray-800 animate-pulse" />
               <div className="mt-1.5 h-3 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" />
             </div>
@@ -642,11 +642,11 @@ function PicksOfTheDayModule() {
             <Link
               key={b.book_id}
               to={`/libraries/${b.library_id}/books/${b.book_id}`}
-              className="flex-shrink-0 w-20 group"
+              className="flex-shrink-0 w-36 sm:w-40 group"
               title={b.title}
             >
-              <BookCover title={b.title} coverUrl={b.cover_url} className="w-20" />
-              <p className="mt-1.5 text-xs font-medium text-gray-800 dark:text-gray-200 leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors break-words">
+              <BookCover title={b.title} coverUrl={b.cover_url} className="w-36 sm:w-40" />
+              <p className="mt-1.5 text-xs font-medium text-gray-800 dark:text-gray-200 leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2">
                 {b.title}
               </p>
               {b.authors && (

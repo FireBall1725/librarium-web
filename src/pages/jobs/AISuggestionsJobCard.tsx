@@ -302,15 +302,27 @@ export default function AISuggestionsJobCard({ onRunKicked }: AISuggestionsJobCa
           <div>
             <label className="block text-sm font-medium text-gray-900 dark:text-white">User run rate limit (per day)</label>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-              Maximum number of user-triggered "Run now" requests allowed per user in 24 hours. 0 disables user-triggered runs.
+              Maximum number of user-triggered "Run now" requests allowed per user in 24 hours. Check "Unlimited" for local providers like Ollama or Osaurus; <code>0</code> disables user-triggered runs entirely.
             </p>
-            <input
-              type="number"
-              min={0}
-              value={config.user_run_rate_limit_per_day}
-              onChange={e => set('user_run_rate_limit_per_day', Math.max(0, Number(e.target.value)))}
-              className="mt-1 w-28 rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-            />
+            <div className="mt-1 flex items-center gap-3">
+              <input
+                type="number"
+                min={0}
+                value={config.user_run_rate_limit_per_day < 0 ? '' : config.user_run_rate_limit_per_day}
+                disabled={config.user_run_rate_limit_per_day < 0}
+                onChange={e => set('user_run_rate_limit_per_day', Math.max(0, Number(e.target.value)))}
+                className="w-28 rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              />
+              <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={config.user_run_rate_limit_per_day < 0}
+                  onChange={e => set('user_run_rate_limit_per_day', e.target.checked ? -1 : 1)}
+                  className="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500"
+                />
+                Unlimited
+              </label>
+            </div>
           </div>
 
           <div className="flex items-center gap-3 pt-2">

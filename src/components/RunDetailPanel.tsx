@@ -27,6 +27,8 @@ export default function RunDetailPanel({ endpoint, hideSummary }: RunDetailPanel
   // Track status in a ref so the polling interval can self-terminate without
   // forcing the effect to restart every time detail changes.
   const statusRef = useRef<string | null>(null)
+  const timelineRef = useRef<HTMLOListElement | null>(null)
+  const eventCountRef = useRef(0)
 
   useEffect(() => {
     let cancelled = false
@@ -59,6 +61,20 @@ export default function RunDetailPanel({ endpoint, hideSummary }: RunDetailPanel
     }
   }, [callApi, endpoint])
 
+  // Auto-scroll the timeline to the bottom while the run is live and new
+  // events are coming in. Admins who expand a running job want to watch the
+  // tail — once the run finishes we stop yanking their scroll position.
+  useEffect(() => {
+    const count = detail?.events.length ?? 0
+    const prev = eventCountRef.current
+    eventCountRef.current = count
+    if (statusRef.current !== 'running') return
+    if (count <= prev) return
+    const el = timelineRef.current
+    if (!el) return
+    el.scrollTop = el.scrollHeight
+  }, [detail])
+
   if (error) {
     return (
       <div className="rounded-md border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/30 p-3 text-sm text-red-700 dark:text-red-300">
@@ -81,7 +97,10 @@ export default function RunDetailPanel({ endpoint, hideSummary }: RunDetailPanel
         <div className="border-b border-gray-100 dark:border-gray-800 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
           Timeline ({detail.events.length} events)
         </div>
-        <ol className="divide-y divide-gray-100 dark:divide-gray-800">
+        <ol
+          ref={timelineRef}
+          className="max-h-96 overflow-auto divide-y divide-gray-100 dark:divide-gray-800"
+        >
           {detail.events.map(e => (
             <EventRow key={e.seq} event={e} />
           ))}
@@ -155,11 +174,8 @@ function StatusBadge({ status }: { status: string }) {
   return <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium ${styles}`}>{status}</span>
 }
 
-// Events that are visually noisy (one per candidate) start collapsed.
-const DEFAULT_COLLAPSED = new Set(['enrichment_decision', 'read_next_match'])
-
 function EventRow({ event }: { event: SuggestionRunEvent }) {
-  const [open, setOpen] = useState(!DEFAULT_COLLAPSED.has(event.type))
+  const [open, setOpen] = useState(false)
   return (
     <li className="px-3 py-2">
       <button
@@ -237,18 +253,24 @@ function EventHeadline({ event }: { event: SuggestionRunEvent }) {
       )
     }
     case 'ai_response':
-    case 'backfill_response':
+    case 'backfill_response': {
+      const model = str(c.model)
       return (
         <span className="text-gray-500 dark:text-gray-400">
           {num(c.tokens_in)} in / {num(c.tokens_out)} out
+          {model && <span className="ml-2 text-gray-400 dark:text-gray-500">· {model}</span>}
         </span>
       )
-    case 'pipeline_start':
+    }
+    case 'pipeline_start': {
+      const model = str(c.model)
       return (
         <span className="text-gray-500 dark:text-gray-400">
           {num(c.library_titles)} titles, {num(c.blocks)} blocks
+          {model && <span className="ml-2 text-gray-400 dark:text-gray-500">· {model}</span>}
         </span>
       )
+    }
     case 'pipeline_end':
       return (
         <span className="text-gray-500 dark:text-gray-400">
@@ -280,9 +302,9 @@ function EventBody({ event }: { event: SuggestionRunEvent }) {
           {String(c[textKey])}
         </pre>
       )}
-      {event.type === 'enrichment_decision' && c.metadata_lookup ? (
-        <MetadataLookup lookup={c.metadata_lookup} />
-      ) : null}
+      {event.type === 'enrichment_decision' && (
+        <EnrichmentDecisionBody content={c} />
+      )}
       <details className="text-[11px] text-gray-500 dark:text-gray-400">
         <summary className="cursor-pointer select-none">Raw JSON</summary>
         <pre className="mt-1 max-h-64 overflow-auto rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-950/50 p-2 font-mono text-gray-700 dark:text-gray-300">
@@ -293,12 +315,64 @@ function EventBody({ event }: { event: SuggestionRunEvent }) {
   )
 }
 
-function MetadataLookup({ lookup }: { lookup: unknown }) {
+// EnrichmentDecisionBody lays out the decision sub-panels in a way that makes
+// the title+author fallback path legible: if we recovered from a bad ISBN,
+// render the recovered book first, then relabel the primary lookup as the
+// rejected candidate. A plain accept (primary ISBN resolved correctly) falls
+// back to the original single-block layout.
+function EnrichmentDecisionBody({ content }: { content: Record<string, unknown> }) {
+  const recoveredVia = str(content.recovered_via)
+  const primaryReject = str(content.primary_reject_reason)
+  const recoveredTitle = str(content.recovered_title)
+  const recoveredAuthor = str(content.recovered_author)
+  const recoveredISBN = str(content.recovered_isbn)
+  const metadataLookup = content.metadata_lookup
+
+  if (recoveredVia) {
+    const primaryLookup =
+      metadataLookup && typeof metadataLookup === 'object'
+        ? (metadataLookup as Record<string, unknown>)
+        : null
+    return (
+      <div className="rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-950/50 px-2 py-1.5 text-[11px] space-y-1">
+        <div>
+          <span className="text-gray-500 dark:text-gray-400">ISBN lookup failed{primaryReject ? ` (${primaryReject})` : ''}</span>
+          {primaryLookup && str(primaryLookup.title) !== '' && (
+            <>
+              <span className="text-gray-500 dark:text-gray-400"> — returned </span>
+              <span className="font-medium text-gray-800 dark:text-gray-200">{str(primaryLookup.title)}</span>
+              {typeof primaryLookup.authors === 'string' && primaryLookup.authors !== '' && (
+                <span className="text-gray-500 dark:text-gray-400"> — {primaryLookup.authors}</span>
+              )}
+            </>
+          )}
+        </div>
+        <div>
+          <span className="text-gray-500 dark:text-gray-400">Matched via title+author: </span>
+          <span className="font-medium text-gray-800 dark:text-gray-200">{recoveredTitle}</span>
+          {recoveredAuthor && (
+            <span className="text-gray-500 dark:text-gray-400"> — {recoveredAuthor}</span>
+          )}
+          {recoveredISBN && (
+            <span className="text-gray-400 dark:text-gray-500"> · ISBN {recoveredISBN}</span>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  if (metadataLookup && typeof metadataLookup === 'object') {
+    return <MetadataLookup lookup={metadataLookup} label="Metadata provider resolved" />
+  }
+  return null
+}
+
+function MetadataLookup({ lookup, label }: { lookup: unknown; label: string }) {
   if (!lookup || typeof lookup !== 'object') return null
   const l = lookup as Record<string, unknown>
   return (
     <div className="rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-950/50 px-2 py-1.5 text-[11px]">
-      <span className="text-gray-500 dark:text-gray-400">Metadata provider resolved: </span>
+      <span className="text-gray-500 dark:text-gray-400">{label}: </span>
       <span className="font-medium text-gray-800 dark:text-gray-200">{str(l.title)}</span>
       {typeof l.authors === 'string' && l.authors !== '' && (
         <span className="text-gray-500 dark:text-gray-400"> — {l.authors}</span>

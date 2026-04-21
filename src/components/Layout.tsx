@@ -179,6 +179,8 @@ export default function Layout() {
             </div>
           )}
 
+          <NavLink to="/suggestions" className={navClass}>{t('nav.suggestions')}</NavLink>
+
           <div className="pt-4">
             <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
               {t('nav.tools')}

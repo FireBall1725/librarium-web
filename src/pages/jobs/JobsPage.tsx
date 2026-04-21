@@ -510,6 +510,7 @@ export default function JobsPage() {
   const [error, setError] = useState<string | null>(null)
   const [clearingAll, setClearingAll] = useState(false)
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const burstTimers = useRef<Array<ReturnType<typeof setTimeout>>>([])
   usePageTitle('Jobs')
 
   const loadJobs = async () => {
@@ -538,8 +539,25 @@ export default function JobsPage() {
 
   useEffect(() => {
     loadJobs()
+    return () => {
+      burstTimers.current.forEach(t => clearTimeout(t))
+      burstTimers.current = []
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // AdminRunSuggestions enqueues River jobs asynchronously — the run rows
+  // don't exist until the worker picks them up. A single reload races the
+  // worker, so fire a short burst instead to catch the run once it lands.
+  const burstReload = () => {
+    burstTimers.current.forEach(t => clearTimeout(t))
+    burstTimers.current = []
+    loadJobs()
+    for (const delay of [600, 1500, 3000, 6000]) {
+      const t = setTimeout(loadJobs, delay)
+      burstTimers.current.push(t)
+    }
+  }
 
   // Auto-poll while any job is active
   useEffect(() => {
@@ -617,7 +635,7 @@ export default function JobsPage() {
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
           Scheduled jobs
         </h2>
-        <AISuggestionsJobCard onRunKicked={loadJobs} />
+        <AISuggestionsJobCard onRunKicked={burstReload} />
       </section>
 
       <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">

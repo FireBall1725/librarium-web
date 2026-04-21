@@ -69,16 +69,16 @@ export default function SuggestionCard({ suggestion, onChanged }: SuggestionCard
       : null
 
   return (
-    <div className="w-36 sm:w-40 flex-shrink-0 group relative">
+    <div className="w-36 sm:w-40 flex-shrink-0 group relative flex flex-col">
       <div className="relative">
         <BookCover title={suggestion.title} coverUrl={suggestion.cover_url ?? null} className="w-full" />
         {suggestion.reasoning && (
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent text-white text-xs p-2 opacity-0 group-hover:opacity-100 transition-opacity rounded-b-lg">
-            <p className="line-clamp-4">{suggestion.reasoning}</p>
+          <div className="pointer-events-none absolute inset-0 flex items-end bg-black/75 text-white text-xs p-2 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg">
+            <p className="line-clamp-6">{suggestion.reasoning}</p>
           </div>
         )}
       </div>
-      <div className="mt-1.5">
+      <div className="mt-1.5 flex-1">
         <p className="text-xs font-medium text-gray-800 dark:text-gray-200 leading-snug line-clamp-2">
           {suggestion.title}
         </p>

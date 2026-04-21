@@ -24,10 +24,302 @@ function isSensitive(field: AIConfigField): boolean {
   return field.type === 'password' || field.key === 'api_key'
 }
 
+// OllamaModel mirrors the subset of /api/tags we expose through the Go proxy
+// at /api/v1/admin/connections/ai/ollama/models. Size is bytes; parameter_size
+// and quantization are descriptive strings like "7B" / "Q4_K_M" when present.
+interface OllamaModel {
+  name: string
+  size: number
+  modified: string
+  digest: string
+  family?: string
+  parameter_size?: string
+  quantization?: string
+}
+
+function formatOllamaSize(bytes: number): string {
+  if (!bytes || bytes <= 0) return ''
+  const gb = bytes / 1_073_741_824
+  if (gb >= 1) return `${gb.toFixed(1)} GB`
+  const mb = bytes / 1_048_576
+  return `${mb.toFixed(0)} MB`
+}
+
+// OllamaModelPicker renders a dropdown populated from the Ollama host's
+// /api/tags (fetched via the Go proxy so the browser never talks to Ollama
+// directly). Falls back to a plain text input if the host is unreachable —
+// better to let the admin save a config they know is correct than to block
+// them on a transient network error.
+function OllamaModelPicker({
+  value,
+  onChange,
+  placeholder,
+  configuredBaseURL,
+}: {
+  value: string
+  onChange: (v: string) => void
+  placeholder: string
+  configuredBaseURL: string
+}) {
+  const { callApi } = useAuth()
+  const [models, setModels] = useState<OllamaModel[] | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [customMode, setCustomMode] = useState(false)
+
+  const fetchModels = useCallback(async () => {
+    // No point fetching if the admin hasn't saved a base URL yet — the backend
+    // reads the stored config, not a parameter. Show the text input and wait.
+    if (!configuredBaseURL) {
+      setModels(null)
+      setError(null)
+      return
+    }
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await callApi<{ models: OllamaModel[] }>(
+        '/api/v1/admin/connections/ai/ollama/models'
+      )
+      setModels(res?.models ?? [])
+    } catch (err) {
+      setModels(null)
+      setError(err instanceof ApiError ? err.message : "couldn't reach Ollama")
+    } finally {
+      setLoading(false)
+    }
+  }, [callApi, configuredBaseURL])
+
+  useEffect(() => {
+    fetchModels()
+  }, [fetchModels])
+
+  // Unreachable or not yet configured → plain text input. Keeps the admin
+  // unblocked: they can type a model name and save without the fetch working.
+  if (!models || customMode) {
+    return (
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          placeholder={placeholder}
+          className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        />
+        {models && (
+          <button
+            type="button"
+            onClick={() => setCustomMode(false)}
+            className="rounded-lg border border-gray-300 dark:border-gray-600 px-2 py-1 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            title="Pick from installed models"
+          >
+            List
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={fetchModels}
+          disabled={loading || !configuredBaseURL}
+          className="rounded-lg border border-gray-300 dark:border-gray-600 px-2 py-1 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors"
+          title={configuredBaseURL ? 'Refresh model list' : 'Save a base URL first'}
+        >
+          {loading ? '…' : '↻'}
+        </button>
+        {error && !loading && (
+          <span className="self-center text-xs text-amber-600 dark:text-amber-400">{error}</span>
+        )}
+      </div>
+    )
+  }
+
+  const selectValue = models.some(m => m.name === value) ? value : ''
+
+  return (
+    <div className="flex gap-2">
+      <select
+        value={selectValue}
+        onChange={e => {
+          if (e.target.value === '__custom__') {
+            setCustomMode(true)
+            onChange('')
+          } else {
+            onChange(e.target.value)
+          }
+        }}
+        className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+      >
+        {models.length === 0 ? (
+          <option value="">No models pulled — use `ollama pull` on the host</option>
+        ) : (
+          <>
+            {selectValue === '' && <option value="">Select a model…</option>}
+            {models.map(m => {
+              const meta = [m.parameter_size, m.quantization, formatOllamaSize(m.size)]
+                .filter(Boolean)
+                .join(' · ')
+              return (
+                <option key={m.digest} value={m.name}>
+                  {m.name}{meta ? ` — ${meta}` : ''}
+                </option>
+              )
+            })}
+          </>
+        )}
+        <option value="__custom__">Custom…</option>
+      </select>
+      <button
+        type="button"
+        onClick={fetchModels}
+        disabled={loading}
+        className="rounded-lg border border-gray-300 dark:border-gray-600 px-2 py-1 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors"
+        title="Refresh model list"
+      >
+        {loading ? '…' : '↻'}
+      </button>
+    </div>
+  )
+}
+
+// OsaurusModel mirrors the subset of /v1/models we expose through the Go proxy
+// at /api/v1/admin/connections/ai/osaurus/models. Osaurus returns OpenAI-shape
+// records, so we only get an id and (optionally) owned_by — no size / quant
+// metadata like Ollama provides.
+interface OsaurusModel {
+  id: string
+  owned_by?: string
+  created?: number
+}
+
+// OsaurusModelPicker mirrors OllamaModelPicker against the Osaurus server's
+// /v1/models endpoint. Separate component because the data shape and "no
+// models available" messaging differ — Osaurus models are pulled via the
+// desktop app, not a CLI.
+function OsaurusModelPicker({
+  value,
+  onChange,
+  placeholder,
+  configuredBaseURL,
+}: {
+  value: string
+  onChange: (v: string) => void
+  placeholder: string
+  configuredBaseURL: string
+}) {
+  const { callApi } = useAuth()
+  const [models, setModels] = useState<OsaurusModel[] | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [customMode, setCustomMode] = useState(false)
+
+  const fetchModels = useCallback(async () => {
+    if (!configuredBaseURL) {
+      setModels(null)
+      setError(null)
+      return
+    }
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await callApi<{ models: OsaurusModel[] }>(
+        '/api/v1/admin/connections/ai/osaurus/models'
+      )
+      setModels(res?.models ?? [])
+    } catch (err) {
+      setModels(null)
+      setError(err instanceof ApiError ? err.message : "couldn't reach Osaurus")
+    } finally {
+      setLoading(false)
+    }
+  }, [callApi, configuredBaseURL])
+
+  useEffect(() => {
+    fetchModels()
+  }, [fetchModels])
+
+  if (!models || customMode) {
+    return (
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          placeholder={placeholder}
+          className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        />
+        {models && (
+          <button
+            type="button"
+            onClick={() => setCustomMode(false)}
+            className="rounded-lg border border-gray-300 dark:border-gray-600 px-2 py-1 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            title="Pick from installed models"
+          >
+            List
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={fetchModels}
+          disabled={loading || !configuredBaseURL}
+          className="rounded-lg border border-gray-300 dark:border-gray-600 px-2 py-1 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors"
+          title={configuredBaseURL ? 'Refresh model list' : 'Save a base URL first'}
+        >
+          {loading ? '…' : '↻'}
+        </button>
+        {error && !loading && (
+          <span className="self-center text-xs text-amber-600 dark:text-amber-400">{error}</span>
+        )}
+      </div>
+    )
+  }
+
+  const selectValue = models.some(m => m.id === value) ? value : ''
+
+  return (
+    <div className="flex gap-2">
+      <select
+        value={selectValue}
+        onChange={e => {
+          if (e.target.value === '__custom__') {
+            setCustomMode(true)
+            onChange('')
+          } else {
+            onChange(e.target.value)
+          }
+        }}
+        className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+      >
+        {models.length === 0 ? (
+          <option value="">No models downloaded — download one in the Osaurus app</option>
+        ) : (
+          <>
+            {selectValue === '' && <option value="">Select a model…</option>}
+            {models.map(m => (
+              <option key={m.id} value={m.id}>
+                {m.id}{m.owned_by ? ` — ${m.owned_by}` : ''}
+              </option>
+            ))}
+          </>
+        )}
+        <option value="__custom__">Custom…</option>
+      </select>
+      <button
+        type="button"
+        onClick={fetchModels}
+        disabled={loading}
+        className="rounded-lg border border-gray-300 dark:border-gray-600 px-2 py-1 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors"
+        title="Refresh model list"
+      >
+        {loading ? '…' : '↻'}
+      </button>
+    </div>
+  )
+}
+
 // ProviderCard renders a single AI provider config card. Fields are driven by
 // the server-declared `config_fields` so Anthropic (api_key + model), OpenAI
-// (api_key + model), and Ollama (base_url + model) all render correctly
-// without client-side shape knowledge.
+// (api_key + model), Ollama (base_url + model), and Osaurus (base_url +
+// model + optional api_key) all render correctly without client-side shape
+// knowledge.
 function ProviderCard({ provider, onSaved, onActivate, activating }: ProviderCardProps) {
   const { callApi } = useAuth()
   const [values, setValues] = useState<Record<string, string>>({})
@@ -163,8 +455,10 @@ function ProviderCard({ provider, onSaved, onActivate, activating }: ProviderCar
           const placeholder = sensitive && provider.has_api_key
             ? '••••••••••••••••'
             : field.placeholder ?? ''
+          const isOllamaModel = provider.name === 'ollama' && field.key === 'model'
+          const isOsaurusModel = provider.name === 'osaurus' && field.key === 'model'
           return (
-            <div key={field.key} className={field.options?.length ? 'sm:col-span-2' : ''}>
+            <div key={field.key} className={(field.options?.length || isOllamaModel || isOsaurusModel) ? 'sm:col-span-2' : ''}>
               <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
                 {field.label}
                 {sensitive && provider.has_api_key && (
@@ -174,7 +468,21 @@ function ProviderCard({ provider, onSaved, onActivate, activating }: ProviderCar
                   <span className="ml-1 text-gray-400">*</span>
                 )}
               </label>
-              {field.options && field.options.length > 0 ? (
+              {isOllamaModel ? (
+                <OllamaModelPicker
+                  value={values[field.key] ?? ''}
+                  onChange={v => setValue(field.key, v)}
+                  placeholder={placeholder}
+                  configuredBaseURL={provider.config?.base_url ?? ''}
+                />
+              ) : isOsaurusModel ? (
+                <OsaurusModelPicker
+                  value={values[field.key] ?? ''}
+                  onChange={v => setValue(field.key, v)}
+                  placeholder={placeholder}
+                  configuredBaseURL={provider.config?.base_url ?? ''}
+                />
+              ) : field.options && field.options.length > 0 ? (
                 <div className="flex gap-2">
                   <select
                     value={

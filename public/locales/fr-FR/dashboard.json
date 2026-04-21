@@ -50,7 +50,12 @@
     "filters": {
       "all": "Tout ({{count}})",
       "read_next": "À lire ensuite ({{count}})",
-      "buy": "À acheter ({{count}})"
+      "buy": "À acheter ({{count}})",
+      "saved": "Enregistrées ({{count}})"
+    },
+    "saved_empty": {
+      "title": "Aucune suggestion enregistrée",
+      "hint": "Cliquez sur « Intéressé » pour épingler une suggestion ici."
     },
     "empty": {
       "title": "Aucune suggestion pour l'instant",
@@ -58,6 +63,17 @@
     },
     "runs": {
       "title": "Exécutions récentes"
+    },
+    "progress": {
+      "title": "Génération des suggestions…",
+      "starting": "Démarrage de l'exécution…",
+      "steps_one": "{{count}} étape terminée",
+      "steps_other": "{{count}} étapes terminées"
+    },
+    "quota": {
+      "label": "Exécutions restantes : {{remaining}}/{{limit}}",
+      "unlimited": "Exécutions aujourd'hui : {{used}}",
+      "resets_at": "Prochaine exécution disponible {{at}}"
     }
   },
   "library_chips": {
