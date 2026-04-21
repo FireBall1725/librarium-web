@@ -7,14 +7,30 @@ server {
     root /usr/share/nginx/html;
     index index.html;
 
+    # Runtime DNS resolution for the api upstream. Without this, nginx
+    # resolves ${API_UPSTREAM} once at config-parse time and caches the
+    # IP forever — when the api instance rotates (Railway redeploy, k8s
+    # restart, anything that changes the backend IP) the cached address
+    # goes stale and every /api request times out.
+    #
+    # NGINX_LOCAL_RESOLVERS is exported by the nginx:alpine entrypoint
+    # (/docker-entrypoint.d/15-local-resolvers.envsh) from the container's
+    # /etc/resolv.conf — Docker's embedded DNS in compose, the platform's
+    # recursor on Railway/Fly/k8s.
+    resolver ${NGINX_LOCAL_RESOLVERS} ipv6=on valid=10s;
+
     # API_UPSTREAM is substituted at container start via nginx's
     # /docker-entrypoint.d/20-envsubst-on-templates.sh. Default value is
     # set in the Dockerfile so existing docker-compose deployments (where
     # the api is reachable as `librarium-api`) keep working unchanged.
     # On Railway / Fly / other PaaS, override it with the internal DNS
     # name of the api service (e.g. ${{api.RAILWAY_PRIVATE_DOMAIN}}).
+    #
+    # The `set` + variable in proxy_pass forces per-request resolution
+    # via the resolver above rather than parse-time caching.
     location /api {
-        proxy_pass http://${API_UPSTREAM}:${API_UPSTREAM_PORT};
+        set $api_upstream ${API_UPSTREAM}:${API_UPSTREAM_PORT};
+        proxy_pass http://$api_upstream;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -23,7 +39,8 @@ server {
     }
 
     location /health {
-        proxy_pass http://${API_UPSTREAM}:${API_UPSTREAM_PORT};
+        set $health_upstream ${API_UPSTREAM}:${API_UPSTREAM_PORT};
+        proxy_pass http://$health_upstream;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
     }
