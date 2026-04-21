@@ -42,14 +42,18 @@ See [`deploy/kubernetes/README.md`](./deploy/kubernetes/README.md) for the walkt
 
 ### Docker (web only, advanced)
 
-If you already have the API running elsewhere and just want to build the web image locally:
+If you already have the API running elsewhere and just want to run the web image:
 
 ```bash
 docker build -t librarium-web .
-docker run -p 3000:3000 librarium-web
+docker run -p 3000:3000 -e API_UPSTREAM=my-api.internal -e API_UPSTREAM_PORT=8080 librarium-web
 ```
 
-You'll need to override `nginx.conf` (or rebuild the image with a patched one) so `/api` proxies to your API host instead of the default `http://librarium-api:8080`.
+The container's nginx config is generated from [`nginx.conf.template`](./nginx.conf.template) at boot (via nginx's built-in envsubst). Set `API_UPSTREAM` and `API_UPSTREAM_PORT` to point `/api` at your API host. Defaults are `librarium-api` and `8080`, matching the full-stack Docker Compose deployment.
+
+### Railway (managed PaaS)
+
+The repo ships a `railway.toml` so Railway builds with the right Dockerfile. Deploy it alongside [`librarium-api`](https://github.com/FireBall1725/librarium-api) in the same Railway project and set `API_UPSTREAM=${{api.RAILWAY_PRIVATE_DOMAIN}}` on the web service. Full walkthrough: [`librarium-api/deploy/railway/`](https://github.com/fireball1725/librarium-api/tree/main/deploy/railway).
 
 ## Versioning
 

@@ -3,9 +3,14 @@ server {
     root /usr/share/nginx/html;
     index index.html;
 
-    # Proxy API and health requests to the backend service
+    # API_UPSTREAM is substituted at container start via nginx's
+    # /docker-entrypoint.d/20-envsubst-on-templates.sh. Default value is
+    # set in the Dockerfile so existing docker-compose deployments (where
+    # the api is reachable as `librarium-api`) keep working unchanged.
+    # On Railway / Fly / other PaaS, override it with the internal DNS
+    # name of the api service (e.g. ${{api.RAILWAY_PRIVATE_DOMAIN}}).
     location /api {
-        proxy_pass http://librarium-api:8080;
+        proxy_pass http://${API_UPSTREAM}:${API_UPSTREAM_PORT};
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -14,7 +19,7 @@ server {
     }
 
     location /health {
-        proxy_pass http://librarium-api:8080;
+        proxy_pass http://${API_UPSTREAM}:${API_UPSTREAM_PORT};
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
     }
