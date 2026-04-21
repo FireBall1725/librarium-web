@@ -174,8 +174,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         clearSession()
         throw new ApiError(401, 'Session expired — please log in again')
       }
-      if (res.status === 204) return undefined as T
-      const body = await res.json()
+      if (res.status === 204 || res.status === 202) return undefined as T
+      const text = await res.text()
+      const body = text ? JSON.parse(text) : {}
       if (!res.ok) throw new ApiError(res.status, body.error ?? `HTTP ${res.status}`)
       return body.data as T
     }

@@ -27,6 +27,10 @@ const SETTINGS_ITEMS: Array<{ to: string; labelKey: string }> = [
   { to: '/admin/settings/jobs',             labelKey: 'settings_nav.jobs' },
 ]
 
+const CONNECTIONS_ITEMS: Array<{ to: string; labelKey: string }> = [
+  { to: '/admin/connections/ai', labelKey: 'connections_nav.ai' },
+]
+
 const LIBRARY_SECTIONS: Array<{ section: string; labelKey: string }> = [
   { section: 'books',        labelKey: 'library_nav.books' },
   { section: 'contributors', labelKey: 'library_nav.contributors' },
@@ -42,6 +46,7 @@ export default function Layout() {
   const location = useLocation()
   const { t } = useTranslation()
   const inSettings = location.pathname.startsWith('/admin/settings')
+  const inConnections = location.pathname.startsWith('/admin/connections')
   const libraryMatch = location.pathname.match(/^\/libraries\/([^/]+)(?:\/|$)/)
   const currentLibraryId = libraryMatch?.[1]
   const themeLabels: Record<Theme, string> = {
@@ -174,6 +179,8 @@ export default function Layout() {
             </div>
           )}
 
+          <NavLink to="/suggestions" className={navClass}>{t('nav.suggestions')}</NavLink>
+
           <div className="pt-4">
             <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
               {t('nav.tools')}
@@ -187,6 +194,37 @@ export default function Layout() {
                 {t('nav.admin')}
               </p>
               <NavLink to="/admin/users" className={navClass}>{t('nav.users')}</NavLink>
+              <NavLink
+                to="/admin/connections"
+                className={({ isActive }) =>
+                  `block px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    isActive || inConnections
+                      ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                  }`
+                }
+              >
+                {t('nav.connections')}
+              </NavLink>
+              {inConnections && (
+                <div className="mt-1 ml-3 border-l border-gray-200 dark:border-gray-700 pl-3 space-y-0.5">
+                  {CONNECTIONS_ITEMS.map(item => (
+                    <NavLink
+                      key={item.to}
+                      to={item.to}
+                      className={({ isActive }) =>
+                        `block px-2 py-1.5 rounded-md text-sm transition-colors ${
+                          isActive
+                            ? 'text-blue-600 dark:text-blue-400 font-medium'
+                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800'
+                        }`
+                      }
+                    >
+                      {t(item.labelKey)}
+                    </NavLink>
+                  ))}
+                </div>
+              )}
               <NavLink
                 to="/admin/settings"
                 className={({ isActive }) =>

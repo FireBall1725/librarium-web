@@ -15,10 +15,12 @@
   "nav": {
     "dashboard": "Dashboard",
     "libraries": "Libraries",
+    "suggestions": "Suggestions",
     "tools": "Tools",
     "import": "Import",
     "admin": "Admin",
     "users": "Users",
+    "connections": "Connections",
     "settings": "Settings",
     "profile": "Profile",
     "sign_out": "Sign out",
@@ -39,6 +41,9 @@
     "source": "Source",
     "license": "License",
     "report_issue": "Report an issue"
+  },
+  "connections_nav": {
+    "ai": "AI"
   },
   "settings_nav": {
     "media_management": "Media Management",

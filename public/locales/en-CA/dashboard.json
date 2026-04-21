@@ -35,6 +35,47 @@
     "title": "Picks of the day",
     "empty": "Nothing to pick from — add some novels to your libraries and check back tomorrow."
   },
+  "suggestions": {
+    "buy_title": "Suggestions to buy",
+    "read_next_title": "Read next from your library",
+    "see_all": "See all →"
+  },
+  "suggestions_page": {
+    "title": "Suggestions",
+    "description": "Books your AI assistant thinks you'd enjoy, based on your library and taste profile.",
+    "run_now": "Run now",
+    "running": "Running…",
+    "run_queued": "Suggestion run queued — new picks will appear shortly.",
+    "run_failed": "Couldn't start a suggestion run.",
+    "filters": {
+      "all": "All ({{count}})",
+      "read_next": "Read next ({{count}})",
+      "buy": "To buy ({{count}})",
+      "saved": "Saved ({{count}})"
+    },
+    "saved_empty": {
+      "title": "Nothing saved yet",
+      "hint": "Tap \"Interested\" on a suggestion to pin it here."
+    },
+    "empty": {
+      "title": "No suggestions yet",
+      "hint": "Opt in from your profile and run a batch — or wait for the next scheduled run."
+    },
+    "runs": {
+      "title": "Recent runs"
+    },
+    "progress": {
+      "title": "Generating suggestions…",
+      "starting": "Starting run…",
+      "steps_one": "{{count}} step completed",
+      "steps_other": "{{count}} steps completed"
+    },
+    "quota": {
+      "label": "Runs left: {{remaining}}/{{limit}}",
+      "unlimited": "Runs today: {{used}}",
+      "resets_at": "Next run available {{at}}"
+    }
+  },
   "library_chips": {
     "create_first": "+ Create your first library",
     "view_all": "View all →"
