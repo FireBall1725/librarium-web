@@ -13,6 +13,19 @@ This project uses **`YY.MM.revision`** (e.g. `26.4.0`, `26.4.1`):
 
 Versions `0.1.0` → `0.13.0` predate this scheme. `26.4.0` is the first release cut under the new format and the first release of `librarium-web` as an independent repository.
 
+## [26.4.2] — Railway deploy support
+
+Deployment-infrastructure release: makes the web image friendly to PaaS platforms that route services via arbitrary internal DNS names instead of the docker-compose service-name convention.
+
+### Changed
+
+- `nginx.conf` is now `nginx.conf.template`, consumed at container start via nginx's built-in envsubst step. The API upstream is controlled by two new env vars — `API_UPSTREAM` (default `librarium-api`) and `API_UPSTREAM_PORT` (default `8080`) — so the existing Docker Compose deployment keeps working unchanged, while PaaS users (Railway, Fly, Render) can point the proxy at their api service's private DNS.
+
+### Added
+
+- `railway.toml` at the repo root so Railway picks up the Dockerfile build and healthcheck without extra config.
+- README section describing the new `API_UPSTREAM` / `API_UPSTREAM_PORT` variables and linking to the Railway walkthrough in the api repo.
+
 ## [26.4.1] — AI-powered book suggestions
 
 Client-side surfaces for the AI suggestions feature landing in `librarium-api` 26.4.1. Also ships the previously-merged Helm chart and associated packaging work.
