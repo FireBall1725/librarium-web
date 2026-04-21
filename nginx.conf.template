@@ -13,11 +13,11 @@ server {
     # restart, anything that changes the backend IP) the cached address
     # goes stale and every /api request times out.
     #
-    # NGINX_LOCAL_RESOLVERS is exported by the nginx:alpine entrypoint
-    # (/docker-entrypoint.d/15-local-resolvers.envsh) from the container's
-    # /etc/resolv.conf — Docker's embedded DNS in compose, the platform's
-    # recursor on Railway/Fly/k8s.
-    resolver ${NGINX_LOCAL_RESOLVERS} ipv6=on valid=10s;
+    # RESOLVERS is parsed from /etc/resolv.conf by docker-entrypoint-resolvers.sh
+    # (our wrapper entrypoint) and exported before the stock nginx entrypoint
+    # runs envsubst. Covers Docker's embedded DNS in compose, and whatever
+    # recursor the PaaS gives us on Railway/Fly/k8s.
+    resolver ${RESOLVERS} ipv6=on valid=10s;
 
     # API_UPSTREAM is substituted at container start via nginx's
     # /docker-entrypoint.d/20-envsubst-on-templates.sh. Default value is

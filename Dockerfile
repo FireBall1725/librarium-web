@@ -13,7 +13,11 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 # (Railway, Fly, etc.) override it to point at their api service's
 # internal DNS name.
 COPY nginx.conf.template /etc/nginx/templates/default.conf.template
+COPY docker-entrypoint-resolvers.sh /usr/local/bin/docker-entrypoint-resolvers.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint-resolvers.sh
 ENV API_UPSTREAM=librarium-api
 ENV API_UPSTREAM_PORT=8080
 ENV PORT=3000
 EXPOSE 3000
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint-resolvers.sh"]
+CMD ["nginx", "-g", "daemon off;"]
