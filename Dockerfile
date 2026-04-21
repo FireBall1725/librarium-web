@@ -15,4 +15,5 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 COPY nginx.conf.template /etc/nginx/templates/default.conf.template
 ENV API_UPSTREAM=librarium-api
 ENV API_UPSTREAM_PORT=8080
+ENV PORT=3000
 EXPOSE 3000

@@ -1,5 +1,9 @@
 server {
-    listen 3000;
+    # PORT is envsubst'd at container start. Defaults to 3000 (set in the
+    # Dockerfile) so existing Docker Compose deployments keep working; on
+    # Railway / Fly / other PaaS, the platform-injected $PORT wins and
+    # nginx binds to whatever port the platform routes traffic to.
+    listen ${PORT};
     root /usr/share/nginx/html;
     index index.html;
 
