@@ -120,7 +120,7 @@ export default function SuggestionsPage() {
     }
   }, [callApi, reload, refreshQuota])
 
-  const handleChanged = useCallback((_id: string, _status: string | null) => {
+  const handleChanged = useCallback(() => {
     // Status changes (interested / dismissed / added / block) shuffle a row
     // between the two status buckets — simplest to just refetch both. The
     // endpoint is cheap and avoids bespoke reconciliation logic.
