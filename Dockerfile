@@ -3,6 +3,8 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
+ARG LIBRARIUM_VERSION=""
+ENV LIBRARIUM_VERSION=$LIBRARIUM_VERSION
 RUN npm run build
 
 FROM nginx:alpine
