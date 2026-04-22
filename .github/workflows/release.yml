@@ -26,17 +26,11 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
-      next_dev: ${{ steps.version.outputs.next_dev }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: "npm"
 
       - name: Configure git
         run: |
@@ -66,23 +60,12 @@ jobs:
           fi
 
           VERSION="${PREFIX}.${REV}"
-          NEXT_DEV="${PREFIX}.$((REV + 1))-dev"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "next_dev=$NEXT_DEV" >> "$GITHUB_OUTPUT"
           echo "Releasing version: $VERSION"
 
-      - name: Update package.json (release)
-        run: |
-          npm version --no-git-tag-version --allow-same-version "${{ steps.version.outputs.version }}"
-
-      - name: Commit + tag release
-        if: ${{ inputs.dry-run == false }}
-        run: |
-          VERSION="${{ steps.version.outputs.version }}"
-          git add package.json package-lock.json
-          git commit -m "release: ${VERSION}"
-          git tag "v${VERSION}"
-
+      # The version lives only in the git tag and in the image the build embeds.
+      # vite.config.ts reads LIBRARIUM_VERSION at build time; Dockerfile forwards it
+      # as a build-arg. Local dev builds auto-compute "{YY}.{M}.DEV".
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -101,22 +84,18 @@ jobs:
           context: .
           push: true
           platforms: linux/amd64,linux/arm64
+          build-args: |
+            LIBRARIUM_VERSION=${{ steps.version.outputs.version }}
           tags: |
             ghcr.io/fireball1725/librarium-web:${{ steps.version.outputs.version }}
             ghcr.io/fireball1725/librarium-web:latest
 
-      - name: Bump to next -dev
+      - name: Tag release
         if: ${{ inputs.dry-run == false }}
         run: |
-          npm version --no-git-tag-version --allow-same-version "${{ steps.version.outputs.next_dev }}"
-          git add package.json package-lock.json
-          git commit -m "chore: bump to ${{ steps.version.outputs.next_dev }}"
-
-      - name: Push commits and tag
-        if: ${{ inputs.dry-run == false }}
-        run: |
-          git push origin HEAD:main
-          git push origin "v${{ steps.version.outputs.version }}"
+          VERSION="${{ steps.version.outputs.version }}"
+          git tag "v${VERSION}"
+          git push origin "v${VERSION}"
 
       - name: Create GitHub Release
         if: ${{ inputs.dry-run == false }}
