@@ -609,7 +609,7 @@ export default function JobsHistoryPage() {
           </button>
         ) : undefined}
       />
-      <div className="p-8 max-w-4xl mx-auto">
+      <div className="max-w-4xl px-8 py-8">
 
       {error && (
         <div className="mb-6 rounded-lg bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-400">

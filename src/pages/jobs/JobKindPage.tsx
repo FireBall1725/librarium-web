@@ -64,21 +64,16 @@ export default function JobKindPage() {
 
   useEffect(() => { load() }, [load])
 
-  // Run now posts to the kind-specific endpoint; each kind wires a
-  // different admin trigger. AI suggestions uses the scheduled fanout
-  // path; cover backfill has no admin trigger yet (cron-only).
+  // Run now uses the generic /admin/jobs/schedules/:kind/run endpoint,
+  // which fires the kind's Enqueue hook directly with triggered_by=admin.
+  // Works for every kind that has an Enqueue registered.
   const runNow = async () => {
     setRunning(true)
     try {
-      switch (kind) {
-        case 'ai_suggestions':
-          await callApi('/api/v1/admin/jobs/ai-suggestions/run', { method: 'POST' })
-          showToast('AI suggestions run queued', { variant: 'success' })
-          break
-        default:
-          showToast('Run Now is not available for this job', { variant: 'error' })
-      }
-      // Short delay then reload so the new row shows up in recent runs.
+      await callApi(`/api/v1/admin/jobs/schedules/${encodeURIComponent(kind)}/run`, {
+        method: 'POST',
+      })
+      showToast(`${schedule?.display_name || kind} run queued`, { variant: 'success' })
       setTimeout(load, 1500)
     } catch (err) {
       showToast(err instanceof ApiError ? err.message : 'Failed to run', { variant: 'error' })
@@ -87,13 +82,13 @@ export default function JobKindPage() {
     }
   }
 
-  const runNowAvailable = useMemo(() => kind === 'ai_suggestions', [kind])
+  const runNowAvailable = useMemo(() => schedule !== null, [schedule])
 
   if (error) {
     return (
       <>
         <PageHeader title="Job" breadcrumbs={[{ label: 'Settings', to: '/admin/settings' }, { label: 'Jobs', to: '/admin/settings/jobs' }]} />
-        <div className="p-8 max-w-3xl mx-auto">
+        <div className="max-w-3xl px-8 py-8">
           <div className="rounded-lg bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-400">
             {error}
           </div>
@@ -125,7 +120,7 @@ export default function JobKindPage() {
           </button>
         ) : undefined}
       />
-      <div className="p-8 max-w-3xl mx-auto space-y-6">
+      <div className="max-w-3xl px-8 py-8 space-y-6">
         {/* Schedule editor. Uses the existing section but filtered to
             this one kind. */}
         {schedule ? (

@@ -8,6 +8,20 @@ import PageHeader from '../../components/PageHeader'
 import { useToast } from '../../components/Toast'
 import { usePageTitle } from '../../hooks/usePageTitle'
 
+// Icon set kept alongside the page — single-use SVGs that don't deserve
+// their own file. Edit mirrors what BookPage uses for edition edit; Run
+// is a solid play triangle so it reads as an action separate from edit.
+const EditIcon = () => (
+  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+  </svg>
+)
+const RunIcon = () => (
+  <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+    <path d="M8 5v14l11-7z" />
+  </svg>
+)
+
 // Schedule is the wire-shape returned by GET /admin/jobs/schedules —
 // one row per registered schedulable kind. next_fire_at is computed
 // server-side from the cron + last_fired_at; empty when the schedule
@@ -73,6 +87,19 @@ export default function JobsPage() {
     }
   }
 
+  const runNow = async (s: Schedule) => {
+    try {
+      await callApi(`/api/v1/admin/jobs/schedules/${encodeURIComponent(s.kind)}/run`, {
+        method: 'POST',
+      })
+      showToast(`${s.display_name} run queued`, { variant: 'success' })
+      // Short delay then refresh so last_fired_at updates on the row.
+      setTimeout(load, 1500)
+    } catch (err) {
+      showToast(err instanceof ApiError ? err.message : 'Failed to run', { variant: 'error' })
+    }
+  }
+
   return (
     <>
       <PageHeader
@@ -88,7 +115,7 @@ export default function JobsPage() {
           </Link>
         }
       />
-      <div className="p-8 max-w-5xl mx-auto">
+      <div className="max-w-3xl px-8 py-8 space-y-6">
         {error && (
           <div className="mb-6 rounded-lg bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-400">
             {error}
@@ -147,13 +174,24 @@ export default function JobsPage() {
                         <div className="w-9 h-5 bg-gray-200 dark:bg-gray-600 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full" />
                       </label>
                     </td>
-                    <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
-                      <Link
-                        to={`/admin/settings/jobs/${encodeURIComponent(s.kind)}`}
-                        className="text-xs text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                      >
-                        Edit
-                      </Link>
+                    <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                      <div className="flex items-center gap-1 justify-end">
+                        <button
+                          type="button"
+                          onClick={() => runNow(s)}
+                          title="Run now"
+                          className="p-1.5 rounded-md text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                        >
+                          <RunIcon />
+                        </button>
+                        <Link
+                          to={`/admin/settings/jobs/${encodeURIComponent(s.kind)}`}
+                          title="Edit"
+                          className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                        >
+                          <EditIcon />
+                        </Link>
+                      </div>
                     </td>
                   </tr>
                 ))}
