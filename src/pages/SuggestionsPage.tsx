@@ -56,19 +56,23 @@ export default function SuggestionsPage() {
   // Track the last-seen running run so we can detect the running→completed
   // transition, refresh items, and auto-scope to it.
   const lastRunningIdRef = useRef<string | null>(null)
+  // Default the mixed view to the last 30 days so old never-actioned
+  // suggestions don't stack up indefinitely. "Show older" flips this off.
+  const [showOlder, setShowOlder] = useState(false)
 
   const loadMixed = useCallback(() => {
     setError(null)
+    const window = showOlder ? '' : '&since=30d'
     Promise.all([
-      callApi<SuggestionView[]>('/api/v1/me/suggestions?status=new'),
-      callApi<SuggestionView[]>('/api/v1/me/suggestions?status=interested'),
+      callApi<SuggestionView[]>(`/api/v1/me/suggestions?status=new${window}`),
+      callApi<SuggestionView[]>(`/api/v1/me/suggestions?status=interested${window}`),
     ])
       .then(([fresh, saved]) => {
         setNewItems(fresh ?? [])
         setSavedItems(saved ?? [])
       })
       .catch(err => setError(err instanceof ApiError ? err.message : t('errors.failed_to_load', { ns: 'common' })))
-  }, [callApi, t])
+  }, [callApi, t, showOlder])
 
   const loadScoped = useCallback((runId: string) => {
     setError(null)
@@ -307,7 +311,7 @@ export default function SuggestionsPage() {
               />
             )}
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <FilterTab active={filter === 'all'} onClick={() => setFilter('all')}>
                 {t('suggestions_page.filters.all', { count: pillCounts.all })}
               </FilterTab>
@@ -322,6 +326,18 @@ export default function SuggestionsPage() {
                 <FilterTab active={filter === 'saved'} onClick={() => setFilter('saved')}>
                   {t('suggestions_page.filters.saved', { count: pillCounts.saved })}
                 </FilterTab>
+              )}
+              {/* The 30-day window applies to the mixed pool (new + saved),
+                  not to a scoped-run view — there, users want every item
+                  the run produced regardless of age. */}
+              {!scopedRunId && (
+                <button
+                  type="button"
+                  onClick={() => setShowOlder(o => !o)}
+                  className="ml-auto text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 underline underline-offset-2"
+                >
+                  {showOlder ? 'Last 30 days only' : 'Show older suggestions'}
+                </button>
               )}
             </div>
 
