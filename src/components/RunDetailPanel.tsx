@@ -76,6 +76,17 @@ export default function RunDetailPanel({ endpoint, hideSummary }: RunDetailPanel
   }, [detail])
 
   if (error) {
+    // Expanding an orchestrator/dispatcher umbrella row (e.g. the admin
+    // Run Now wrapper around per-user fanout) has no associated run
+    // record — GetRun 404s with "run not found". Render a neutral
+    // placeholder instead of a red error, since nothing actually failed.
+    if (/not found/i.test(error)) {
+      return (
+        <div className="rounded-md border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40 p-3 text-sm text-gray-500 dark:text-gray-400">
+          This entry is a dispatcher — the per-user suggestion runs it queued each have their own row below.
+        </div>
+      )
+    }
     return (
       <div className="rounded-md border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/30 p-3 text-sm text-red-700 dark:text-red-300">
         {error}

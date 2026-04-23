@@ -10,7 +10,7 @@ import { usePageTitle } from '../../hooks/usePageTitle'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type JobType = 'import' | 'metadata' | 'cover' | 'ai_suggestions'
+type JobType = 'import' | 'metadata' | 'cover' | 'cover_backfill' | 'ai_suggestions'
 type JobStatus = 'pending' | 'processing' | 'done' | 'failed' | 'cancelled'
 
 interface ImportItem {
@@ -99,6 +99,7 @@ function unifiedToJob(u: UnifiedJobRow): Job {
     case 'import':         jobType = 'import'; break
     case 'enrichment':     jobType = 'metadata'; break
     case 'ai_suggestions': jobType = 'ai_suggestions'; break
+    case 'cover_backfill': jobType = 'cover_backfill'; break
     default:               jobType = 'metadata'; break
   }
 
@@ -130,10 +131,11 @@ function unifiedToJob(u: UnifiedJobRow): Job {
 
 function TypeBadge({ type }: { type: JobType }) {
   const cfg: Record<JobType, { label: string; cls: string }> = {
-    import:         { label: 'Import',      cls: 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300' },
-    metadata:       { label: 'Metadata',    cls: 'bg-sky-100 dark:bg-sky-900/40 text-sky-700 dark:text-sky-300' },
-    cover:          { label: 'Covers',      cls: 'bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300' },
-    ai_suggestions: { label: 'Suggestions', cls: 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300' },
+    import:         { label: 'Import',         cls: 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300' },
+    metadata:       { label: 'Metadata',       cls: 'bg-sky-100 dark:bg-sky-900/40 text-sky-700 dark:text-sky-300' },
+    cover:          { label: 'Covers',         cls: 'bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300' },
+    cover_backfill: { label: 'Cover backfill', cls: 'bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300' },
+    ai_suggestions: { label: 'Suggestions',    cls: 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300' },
   }
   const { label, cls } = cfg[type] ?? cfg.import
   return (
@@ -211,10 +213,12 @@ function JobRow({
   const [deleting, setDeleting] = useState(false)
 
   const isAISuggestions = job.type === 'ai_suggestions'
-  // AI suggestion runs support cancel (admin only) but not delete; enrichment
-  // and import jobs support both.
-  const canCancel   = job.status === 'pending' || job.status === 'processing'
-  const canDelete   = !isAISuggestions && (job.status === 'done' || job.status === 'failed' || job.status === 'cancelled')
+  const isCoverBackfill = job.type === 'cover_backfill'
+  // Cover-backfill parents and AI suggestion rows delete via the unified
+  // /admin/jobs/:id route (cascades through the kind-specific legacy
+  // tables); enrichment and import jobs still hit their per-kind endpoints.
+  const canCancel   = !isCoverBackfill && (job.status === 'pending' || job.status === 'processing')
+  const canDelete   = job.status === 'done' || job.status === 'failed' || job.status === 'cancelled'
   const isActive    = job.status === 'pending' || job.status === 'processing'
   const isEnrichment = job.type === 'metadata' || job.type === 'cover'
 
@@ -233,9 +237,10 @@ function JobRow({
 
   const toggleExpand = async () => {
     const isEnr = job.type === 'metadata' || job.type === 'cover'
-    // AI suggestion runs expand into a RunDetailPanel, which self-fetches —
-    // skip the items lookup for that type.
-    if (!expanded && !isAISuggestions) {
+    // AI suggestion runs expand into a RunDetailPanel, which self-fetches.
+    // Cover-backfill parents are orchestrators with no items — the expand
+    // panel just shows the summary, no fetch required.
+    if (!expanded && !isAISuggestions && !isCoverBackfill) {
       setLoadingItems(true)
       try {
         if (isEnr) {
@@ -280,9 +285,11 @@ function JobRow({
     if (!canDelete || deleting) return
     setDeleting(true)
     try {
-      const path = isEnrichment
-        ? `/api/v1/enrichment-batches/${job.id}`
-        : `/api/v1/imports/${job.id}`
+      const path = isCoverBackfill || isAISuggestions
+        ? `/api/v1/admin/jobs/${job.id}`
+        : isEnrichment
+          ? `/api/v1/enrichment-batches/${job.id}`
+          : `/api/v1/imports/${job.id}`
       await callApi(path, { method: 'DELETE' })
       onDeleted(job.id)
     } catch {
@@ -420,6 +427,18 @@ function JobRow({
                 hideSummary
               />
             </div>
+          ) : isCoverBackfill ? (
+            <div className="px-5 py-4 text-sm text-gray-600 dark:text-gray-400 space-y-1">
+              <p>
+                Enumerated {job.total_rows} book{job.total_rows === 1 ? '' : 's'} missing covers and dispatched cover-only enrichment batches.
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-500">
+                Per-book progress lives on the child Metadata rows above/below.
+              </p>
+              {job.run_error && (
+                <p className="text-xs text-red-600 dark:text-red-400">{job.run_error}</p>
+              )}
+            </div>
           ) : loadingItems ? (
             <div className="flex items-center justify-center py-8 text-sm text-gray-400 dark:text-gray-500">
               <div className="w-4 h-4 rounded-full border-2 border-blue-500 border-t-transparent animate-spin mr-2" />
@@ -447,7 +466,9 @@ function JobRow({
                     </div>
                     {item.book_id && (
                       <Link
-                        to={`/libraries/${job.library_id}/books/${item.book_id}`}
+                        to={job.library_id
+                          ? `/libraries/${job.library_id}/books/${item.book_id}`
+                          : `/books/${item.book_id}`}
                         className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex-shrink-0"
                         onClick={e => e.stopPropagation()}
                       >
@@ -566,12 +587,8 @@ export default function JobsHistoryPage() {
     if (clearingAll) return
     setClearingAll(true)
     try {
-      await Promise.all([
-        callApi('/api/v1/imports', { method: 'DELETE' }),
-        callApi('/api/v1/enrichment-batches', { method: 'DELETE' }),
-        callApi('/api/v1/admin/jobs/ai-suggestions/runs', { method: 'DELETE' }).catch(() => {}),
-      ])
-      setJobs(prev => prev.filter(j => j.status === 'pending' || j.status === 'processing'))
+      await callApi('/api/v1/admin/jobs/history', { method: 'DELETE' })
+      setJobs(prev => prev.filter(j => j.status === 'pending' || j.status === 'processing' || j.status === 'running'))
     } catch {
       // non-fatal
     } finally {
@@ -579,7 +596,7 @@ export default function JobsHistoryPage() {
     }
   }
 
-  const hasFinished = jobs.some(j => j.status === 'done' || j.status === 'failed' || j.status === 'cancelled')
+  const hasFinished = jobs.some(j => j.status === 'done' || j.status === 'completed' || j.status === 'failed' || j.status === 'cancelled')
 
   if (loading) {
     return (
