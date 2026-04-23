@@ -295,10 +295,10 @@ function JobRow({
     : null
 
   return (
-    <div className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+    <div className="bg-white dark:bg-gray-900">
       <button
         onClick={toggleExpand}
-        className="w-full text-left px-5 py-4 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+        className="w-full text-left px-5 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
       >
         <div className="flex items-center gap-4">
           <svg
@@ -625,7 +625,7 @@ export default function JobsHistoryPage() {
           </p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-800 overflow-hidden">
           {jobs.map(job => (
             <JobRow
               key={job.id}
