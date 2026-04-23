@@ -39,6 +39,25 @@ export interface ContributorResult {
   name: string
 }
 
+// MeSeriesResult — GET /api/v1/me/series, aggregated across the caller's libraries.
+export interface MeSeriesResult {
+  id: string
+  name: string
+  library_id: string
+  library_name: string
+}
+
+// MeTagResult — GET /api/v1/me/tags. `ambiguous` is true when another
+// accessible library has a tag with the same name; the UI appends the
+// library name to disambiguate.
+export interface MeTagResult {
+  id: string
+  name: string
+  library_id: string
+  library_name: string
+  ambiguous: boolean
+}
+
 export interface BookContributor {
   contributor_id: string
   name: string
@@ -575,6 +594,28 @@ export interface SuggestionRunView {
   estimated_cost_usd: number
   started_at: string
   finished_at?: string
+  suggestion_count?: number
+  steering?: SuggestionSteeringView | null
+}
+
+// Steering payload sent with POST /me/suggestions/run. All fields optional;
+// at least one must be non-empty for the server to accept it.
+export interface SuggestionSteeringInput {
+  author_ids?: string[]
+  series_ids?: string[]
+  genre_ids?: string[]
+  tag_ids?: string[]
+  notes?: string
+}
+
+// SuggestionSteeringView is the hydrated form returned on run reads: IDs
+// resolved to display names so the banner can render without extra fetches.
+export interface SuggestionSteeringView {
+  authors?: Array<{ id: string; name: string }>
+  series?: Array<{ id: string; name: string }>
+  genres?: Array<{ id: string; name: string }>
+  tags?: Array<{ id: string; name: string; library_id: string }>
+  notes?: string
 }
 
 // SuggestionRunEvent is one observable step in a pipeline run. `content`
@@ -597,6 +638,18 @@ export interface JobSummary {
   description: string
   kind: string
   enabled: boolean
+}
+
+// QuotaView is returned by GET /me/suggestions/quota. `available === false`
+// gates Run Now + sidebar visibility; `unavailable_reason` is one of
+// `job_disabled` / `no_provider` / `not_opted_in` when unavailable.
+export interface SuggestionQuotaView {
+  used: number
+  limit: number
+  resets_at?: string
+  unlimited: boolean
+  available: boolean
+  unavailable_reason: string | null
 }
 
 export interface AISuggestionsJobConfig {
