@@ -28,6 +28,7 @@ import ConnectionsLayout from './pages/admin/ConnectionsLayout'
 import AIPage from './pages/admin/connections/AIPage'
 import ProfilePage from './pages/ProfilePage'
 import SuggestionsPage from './pages/SuggestionsPage'
+import BookDetailPage from './pages/BookDetailPage'
 
 function AppRoutes() {
   const { apiReachable } = useAuth()
@@ -45,6 +46,7 @@ function AppRoutes() {
               <Route path="/import" element={<ImportPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/suggestions" element={<SuggestionsPage />} />
+              <Route path="/books/:bookId" element={<BookDetailPage />} />
 
               <Route element={<ProtectedRoute requireAdmin />}>
                 <Route path="/admin/users" element={<UsersPage />} />
