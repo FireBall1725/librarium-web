@@ -578,13 +578,12 @@ function EditionCard({ edition: initialEdition, libraryId, bookId, onEdit, onDel
     edition.publisher        ? { label: 'Publisher',  value: edition.publisher } : null,
     edition.language         ? { label: 'Language',   value: edition.language.toUpperCase() } : null,
     edition.publish_date     ? { label: 'Published',  value: edition.publish_date } : null,
-    edition.acquired_at      ? { label: 'Acquired',   value: edition.acquired_at } : null,
     edition.isbn_13          ? { label: 'ISBN-13',    value: <span className="font-mono">{edition.isbn_13}</span> } : null,
     edition.isbn_10          ? { label: 'ISBN-10',    value: <span className="font-mono">{edition.isbn_10}</span> } : null,
     edition.page_count != null    ? { label: 'Pages',    value: `${edition.page_count}` } : null,
     edition.duration_seconds != null ? { label: 'Duration', value: `${Math.round(edition.duration_seconds / 3600 * 10) / 10} hrs` } : null,
     edition.narrator         ? { label: 'Narrator',   value: edition.narrator } : null,
-    edition.copy_count > 1   ? { label: 'Copies',     value: <span className="text-blue-600 dark:text-blue-400">{edition.copy_count}</span> } : null,
+    // Copies + Acquired moved to per-library display — follow-up work under M2M.
   ].filter(Boolean)
 
   return (
@@ -885,8 +884,8 @@ function MergedMetadataModal({ book, editions, libraryId, bookId, onClose, onApp
             body: JSON.stringify({
               format: primaryEdition.format, edition_name: primaryEdition.edition_name,
               narrator: primaryEdition.narrator, is_primary: primaryEdition.is_primary,
-              copy_count: primaryEdition.copy_count, duration_seconds: primaryEdition.duration_seconds,
-              description: primaryEdition.description, acquired_at: primaryEdition.acquired_at,
+              duration_seconds: primaryEdition.duration_seconds,
+              description: primaryEdition.description,
               language: pick('language', primaryEdition.language ?? ''),
               publisher: pick('publisher', primaryEdition.publisher ?? ''),
               publish_date: pick('publish_date', primaryEdition.publish_date ?? ''),

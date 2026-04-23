@@ -402,8 +402,7 @@ export default function EditBookModal({ libraryId, book, onClose, onSaved, initi
                   e.narrator         ? { label: 'Narrator',   value: e.narrator } : null,
                   e.isbn_13          ? { label: 'ISBN-13',    value: e.isbn_13 } : null,
                   e.isbn_10          ? { label: 'ISBN-10',    value: e.isbn_10 } : null,
-                  e.copy_count > 1   ? { label: 'Copies',     value: String(e.copy_count) } : null,
-                  e.acquired_at      ? { label: 'Acquired',   value: e.acquired_at } : null,
+                  // Copies and Acquired moved to per-library display — follow-up work.
                 ].filter(Boolean) as Array<{ label: string; value: string }>
 
                 return (

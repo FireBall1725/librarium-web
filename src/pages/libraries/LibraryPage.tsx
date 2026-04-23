@@ -455,7 +455,6 @@ function AddBookModal({ libraryId, mediaTypes, onClose, onSaved, onDuplicate, in
     duration_minutes: '',
     narrator: '',
     is_primary: true,
-    acquired_at: new Date().toISOString().slice(0, 10),
   })
 
   const [error, setError] = useState<string | null>(null)
@@ -753,7 +752,6 @@ function AddBookModal({ libraryId, mediaTypes, onClose, onSaved, onDuplicate, in
           duration_seconds: durationSecs || null,
           narrator:         isAudio ? edition.narrator : null,
           is_primary:       edition.is_primary,
-          acquired_at:      edition.acquired_at || null,
         }
       }
       const book = await callApi<Book>(`/api/v1/libraries/${libraryId}/books`, {
@@ -1314,11 +1312,7 @@ function AddBookModal({ libraryId, mediaTypes, onClose, onSaved, onDuplicate, in
                       </div>
                     )}
 
-                    {/* Date acquired (all formats) */}
-                    <div>
-                      <label className={labelCls}>Date acquired</label>
-                      <input type="date" value={edition.acquired_at} onChange={e => setEdition(d => ({ ...d, acquired_at: e.target.value }))} className={inputCls} />
-                    </div>
+                    {/* Date acquired moved to per-library tracking under M2M — follow-up. */}
                   </div>
                   )
                 })()}
