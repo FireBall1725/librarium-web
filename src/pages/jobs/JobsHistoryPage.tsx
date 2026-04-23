@@ -588,7 +588,7 @@ export default function JobsHistoryPage() {
     setClearingAll(true)
     try {
       await callApi('/api/v1/admin/jobs/history', { method: 'DELETE' })
-      setJobs(prev => prev.filter(j => j.status === 'pending' || j.status === 'processing' || j.status === 'running'))
+      setJobs(prev => prev.filter(j => j.status === 'pending' || j.status === 'processing'))
     } catch {
       // non-fatal
     } finally {
@@ -596,7 +596,7 @@ export default function JobsHistoryPage() {
     }
   }
 
-  const hasFinished = jobs.some(j => j.status === 'done' || j.status === 'completed' || j.status === 'failed' || j.status === 'cancelled')
+  const hasFinished = jobs.some(j => j.status === 'done' || j.status === 'failed' || j.status === 'cancelled')
 
   if (loading) {
     return (
