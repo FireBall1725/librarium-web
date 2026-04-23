@@ -7,8 +7,8 @@ import { useAuth, ApiError } from '../../auth/AuthContext'
 import PageHeader from '../../components/PageHeader'
 import RunDetailPanel from '../../components/RunDetailPanel'
 import { usePageTitle } from '../../hooks/usePageTitle'
-import type { SuggestionRunView } from '../../types'
 import AISuggestionsJobCard from './AISuggestionsJobCard'
+import JobSchedulesSection from './JobSchedulesSection'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -59,69 +59,74 @@ interface Job {
   finished_at?: string
 }
 
-// Raw shape returned by the enrichment-batches endpoint
-interface EnrichmentBatchRaw {
+// UnifiedJobRow mirrors the JobView the unified /admin/jobs/history
+// endpoint returns. Progress is a kind-specific JSON blob the umbrella
+// row holds for summary UI — counters extracted via unifiedToJob below.
+interface UnifiedJobRow {
   id: string
-  library_id: string
-  library_name?: string
-  type: 'metadata' | 'cover'
-  status: JobStatus
-  total_books: number
-  processed_books: number
-  failed_books: number
-  skipped_books: number
+  kind: string
+  status: string
+  triggered_by: string
+  created_by?: string | null
+  schedule_id?: string | null
+  error?: string
+  progress: Record<string, unknown>
+  started_at?: string | null
+  finished_at?: string | null
   created_at: string
   updated_at: string
 }
 
-function batchToJob(b: EnrichmentBatchRaw): Job {
+// unifiedToJob folds the umbrella row + kind-specific progress into the
+// page-local Job shape so the existing per-kind rendering still works.
+function unifiedToJob(u: UnifiedJobRow): Job {
+  const mappedStatus: JobStatus =
+    u.status === 'pending' ? 'pending'
+      : u.status === 'running' ? 'processing'
+      : u.status === 'completed' ? 'done'
+      : u.status === 'failed' ? 'failed'
+      : u.status === 'cancelled' ? 'cancelled'
+      : 'pending'
+
+  // Kind-specific counters live in progress as { processed, failed, skipped, total }
+  // for import and enrichment; AI suggestions writes { tokens_in, tokens_out, cost_usd }.
+  const p = u.progress ?? {}
+  const num = (k: string): number => {
+    const v = p[k]
+    return typeof v === 'number' ? v : 0
+  }
+
+  let jobType: JobType
+  switch (u.kind) {
+    case 'import':         jobType = 'import'; break
+    case 'enrichment':     jobType = 'metadata'; break
+    case 'ai_suggestions': jobType = 'ai_suggestions'; break
+    default:               jobType = 'metadata'; break
+  }
+
   return {
-    id: b.id,
-    type: b.type,
-    library_id: b.library_id,
-    library_name: b.library_name,
-    status: b.status,
-    total_rows: b.total_books,
-    processed_rows: b.processed_books,
-    failed_rows: b.failed_books,
-    skipped_rows: b.skipped_books,
-    created_at: b.created_at,
-    updated_at: b.updated_at,
+    id: u.id,
+    type: jobType,
+    library_id: '', // umbrella rows don't carry library_id; the per-kind
+                   // detail fetch still does when the UI needs it
+    status: mappedStatus,
+    total_rows: num('total'),
+    processed_rows: num('processed'),
+    failed_rows: num('failed'),
+    skipped_rows: num('skipped'),
+    created_at: u.created_at,
+    updated_at: u.updated_at,
+    triggered_by: u.triggered_by,
+    tokens_in: num('tokens_in'),
+    tokens_out: num('tokens_out'),
+    estimated_cost_usd: typeof p.cost_usd === 'number' ? (p.cost_usd as number) : 0,
+    run_error: u.error || undefined,
+    finished_at: u.finished_at || undefined,
   }
 }
 
-// runToJob folds a suggestion run into the Job shape so it sits alongside
-// imports and enrichment batches in the unified history list.
-function runToJob(r: SuggestionRunView): Job {
-  const status: JobStatus =
-    r.status === 'running' ? 'processing'
-      : r.status === 'completed' ? 'done'
-      : r.status === 'failed' ? 'failed'
-      : r.status === 'cancelled' ? 'cancelled'
-      : 'pending'
-  return {
-    id: r.id,
-    type: 'ai_suggestions',
-    library_id: '',
-    library_name: 'AI suggestions',
-    status,
-    total_rows: 0,
-    processed_rows: 0,
-    failed_rows: 0,
-    skipped_rows: 0,
-    created_at: r.started_at,
-    updated_at: r.finished_at ?? r.started_at,
-    triggered_by: r.triggered_by,
-    provider_type: r.provider_type,
-    model_id: r.model_id,
-    tokens_in: r.tokens_in,
-    tokens_out: r.tokens_out,
-    estimated_cost_usd: r.estimated_cost_usd,
-    user_id: r.user_id,
-    run_error: r.error,
-    finished_at: r.finished_at,
-  }
-}
+// Legacy batchToJob / runToJob helpers removed with the unified history
+// endpoint — unifiedToJob above handles every kind now.
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -515,20 +520,12 @@ export default function JobsPage() {
 
   const loadJobs = async () => {
     try {
-      const [importData, batchData, runData] = await Promise.all([
-        callApi<Job[]>('/api/v1/imports'),
-        callApi<EnrichmentBatchRaw[]>('/api/v1/enrichment-batches'),
-        // Suggestion runs are admin-only — tolerate failure so non-admins
-        // (if they ever reach this page) still see imports/enrichment.
-        callApi<SuggestionRunView[]>('/api/v1/admin/jobs/ai-suggestions/runs').catch(() => []),
-      ])
-      const imports = (importData ?? []).map(j => ({ ...j, type: 'import' as JobType }))
-      const batches = (batchData ?? []).map(batchToJob)
-      const runs = (runData ?? []).map(runToJob)
-      // Merge and sort newest-first
-      const merged = [...imports, ...batches, ...runs].sort(
-        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      // One fetch replaces the three-endpoint fanout — the unified
+      // /admin/jobs/history returns every kind in one paginated shape.
+      const resp = await callApi<{ items: UnifiedJobRow[]; total: number }>(
+        '/api/v1/admin/jobs/history?limit=200'
       )
+      const merged = (resp?.items ?? []).map(unifiedToJob)
       setJobs(merged)
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Failed to load jobs')
@@ -633,7 +630,14 @@ export default function JobsPage() {
 
       <section className="mb-8">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-          Scheduled jobs
+          Schedules
+        </h2>
+        <JobSchedulesSection />
+      </section>
+
+      <section className="mb-8">
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+          AI suggestions config
         </h2>
         <AISuggestionsJobCard onRunKicked={burstReload} />
       </section>
