@@ -24,6 +24,11 @@ export default function RunDetailPanel({ endpoint, hideSummary }: RunDetailPanel
   const { callApi } = useAuth()
   const [detail, setDetail] = useState<SuggestionRunDetail | null>(null)
   const [error, setError] = useState<string | null>(null)
+  // Separate flag for "no run backs this id" — a dispatcher umbrella row
+  // (admin Run Now wrapper / scheduler tick) has no ai_suggestion_runs
+  // record, so the endpoint 404s. Keying off the status code is more
+  // robust than regex-matching the body text.
+  const [notFound, setNotFound] = useState(false)
   // Track status in a ref so the polling interval can self-terminate without
   // forcing the effect to restart every time detail changes.
   const statusRef = useRef<string | null>(null)
@@ -34,6 +39,7 @@ export default function RunDetailPanel({ endpoint, hideSummary }: RunDetailPanel
     let cancelled = false
     setDetail(null)
     setError(null)
+    setNotFound(false)
     statusRef.current = null
 
     const load = () =>
@@ -44,7 +50,12 @@ export default function RunDetailPanel({ endpoint, hideSummary }: RunDetailPanel
           statusRef.current = d?.run.status ?? null
         })
         .catch(err => {
-          if (!cancelled) setError(err instanceof ApiError ? err.message : 'Failed to load run')
+          if (cancelled) return
+          if (err instanceof ApiError && err.status === 404) {
+            setNotFound(true)
+            return
+          }
+          setError(err instanceof ApiError ? err.message : 'Failed to load run')
         })
 
     load()
@@ -75,18 +86,14 @@ export default function RunDetailPanel({ endpoint, hideSummary }: RunDetailPanel
     el.scrollTop = el.scrollHeight
   }, [detail])
 
+  if (notFound) {
+    return (
+      <div className="rounded-md border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40 p-3 text-sm text-gray-500 dark:text-gray-400">
+        This entry is a dispatcher — the per-user suggestion runs it queued each have their own row below.
+      </div>
+    )
+  }
   if (error) {
-    // Expanding an orchestrator/dispatcher umbrella row (e.g. the admin
-    // Run Now wrapper around per-user fanout) has no associated run
-    // record — GetRun 404s with "run not found". Render a neutral
-    // placeholder instead of a red error, since nothing actually failed.
-    if (/not found/i.test(error)) {
-      return (
-        <div className="rounded-md border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40 p-3 text-sm text-gray-500 dark:text-gray-400">
-          This entry is a dispatcher — the per-user suggestion runs it queued each have their own row below.
-        </div>
-      )
-    }
     return (
       <div className="rounded-md border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/30 p-3 text-sm text-red-700 dark:text-red-300">
         {error}
