@@ -63,21 +63,40 @@ export default function SuggestionCard({ suggestion, onChanged }: SuggestionCard
   }
 
   const isReadNext = suggestion.type === 'read_next'
-  const bookHref =
-    suggestion.library_id && suggestion.book_id
+  // Detail page link:
+  //   - read_next → the library-scoped BookPage in a library the user has
+  //     the book in (the API picks one via LATERAL subquery on library_books)
+  //   - buy → the library-agnostic /books/:id route, which renders the
+  //     floating-book BookDetailPage with metadata, re-enrich, BookFinder,
+  //     and Add-to-library actions.
+  const detailHref =
+    isReadNext && suggestion.library_id && suggestion.book_id
       ? `/libraries/${suggestion.library_id}/books/${suggestion.book_id}`
-      : null
+      : suggestion.book_id
+        ? `/books/${suggestion.book_id}`
+        : null
 
   return (
     <div className="w-36 sm:w-40 flex-shrink-0 group relative flex flex-col">
-      <div className="relative">
-        <BookCover title={suggestion.title} coverUrl={suggestion.cover_url ?? null} className="w-full" />
-        {suggestion.reasoning && (
-          <div className="pointer-events-none absolute inset-0 flex items-end bg-black/75 text-white text-xs p-2 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg">
-            <p className="line-clamp-6">{suggestion.reasoning}</p>
-          </div>
-        )}
-      </div>
+      {detailHref ? (
+        <Link to={detailHref} className="relative block">
+          <BookCover title={suggestion.title} coverUrl={suggestion.cover_url ?? null} className="w-full" />
+          {suggestion.reasoning && (
+            <div className="pointer-events-none absolute inset-0 flex items-end bg-black/75 text-white text-xs p-2 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg">
+              <p className="line-clamp-6">{suggestion.reasoning}</p>
+            </div>
+          )}
+        </Link>
+      ) : (
+        <div className="relative">
+          <BookCover title={suggestion.title} coverUrl={suggestion.cover_url ?? null} className="w-full" />
+          {suggestion.reasoning && (
+            <div className="pointer-events-none absolute inset-0 flex items-end bg-black/75 text-white text-xs p-2 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg">
+              <p className="line-clamp-6">{suggestion.reasoning}</p>
+            </div>
+          )}
+        </div>
+      )}
       <div className="mt-1.5 flex-1">
         <p className="text-xs font-medium text-gray-800 dark:text-gray-200 leading-snug line-clamp-2">
           {suggestion.title}
@@ -89,9 +108,9 @@ export default function SuggestionCard({ suggestion, onChanged }: SuggestionCard
         )}
       </div>
       <div className="mt-1.5 flex items-center gap-1.5 text-[11px]">
-        {isReadNext && bookHref ? (
+        {isReadNext && detailHref ? (
           <Link
-            to={bookHref}
+            to={detailHref}
             className="flex-1 text-center rounded border border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 font-medium text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
           >
             Open
