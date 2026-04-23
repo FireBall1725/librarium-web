@@ -24,7 +24,13 @@ interface Schedule {
   last_fired_at?: string
 }
 
-export default function JobSchedulesSection() {
+interface JobSchedulesSectionProps {
+  // kind filters to a single kind's schedule row. Used by the per-kind
+  // settings page; omitted by the (future) multi-kind admin index.
+  kind?: string
+}
+
+export default function JobSchedulesSection({ kind }: JobSchedulesSectionProps = {}) {
   const { callApi } = useAuth()
   const { show: showToast } = useToast()
   const [schedules, setSchedules] = useState<Schedule[] | null>(null)
@@ -34,11 +40,12 @@ export default function JobSchedulesSection() {
     setError(null)
     try {
       const list = await callApi<Schedule[]>('/api/v1/admin/jobs/schedules')
-      setSchedules(list ?? [])
+      const filtered = kind ? (list ?? []).filter(s => s.kind === kind) : (list ?? [])
+      setSchedules(filtered)
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Failed to load schedules')
     }
-  }, [callApi])
+  }, [callApi, kind])
 
   useEffect(() => { load() }, [load])
 

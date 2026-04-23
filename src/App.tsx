@@ -16,6 +16,8 @@ import ContributorPage from './pages/libraries/ContributorPage'
 import ImportPage from './pages/import/ImportPage'
 import UsersPage from './pages/admin/UsersPage'
 import JobsPage from './pages/jobs/JobsPage'
+import JobKindPage from './pages/jobs/JobKindPage'
+import JobsHistoryPage from './pages/jobs/JobsHistoryPage'
 import SettingsLayout from './pages/admin/SettingsLayout'
 import MetadataPage from './pages/admin/settings/MetadataPage'
 import MediaManagementPage from './pages/admin/settings/MediaManagementPage'
@@ -63,7 +65,9 @@ function AppRoutes() {
                   <Route path="media-types"       element={<MediaTypesPage />} />
                   <Route path="profiles"          element={<ProfilesPage />} />
                   <Route path="general"           element={<GeneralPage />} />
-                  <Route path="jobs"             element={<JobsPage />} />
+                  <Route path="jobs"              element={<JobsPage />} />
+                  <Route path="jobs/history"       element={<JobsHistoryPage />} />
+                  <Route path="jobs/:kind"         element={<JobKindPage />} />
                 </Route>
               </Route>
 
