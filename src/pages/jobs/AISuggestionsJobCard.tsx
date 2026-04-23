@@ -6,27 +6,6 @@ import { useAuth, ApiError } from '../../auth/AuthContext'
 import { useToast } from '../../components/Toast'
 import type { AISuggestionsJobConfig } from '../../types'
 
-// INTERVAL_PRESETS are friendly labels over minute counts. Custom values stay
-// editable in the raw input so admins can pick anything.
-const INTERVAL_PRESETS: Array<{ minutes: number; label: string }> = [
-  { minutes: 60,       label: 'Every hour' },
-  { minutes: 6 * 60,   label: 'Every 6 hours' },
-  { minutes: 12 * 60,  label: 'Every 12 hours' },
-  { minutes: 24 * 60,  label: 'Daily' },
-  { minutes: 3 * 24 * 60, label: 'Every 3 days' },
-  { minutes: 7 * 24 * 60, label: 'Weekly' },
-]
-
-function formatInterval(minutes: number): string {
-  const p = INTERVAL_PRESETS.find(x => x.minutes === minutes)
-  if (p) return p.label
-  if (minutes <= 0) return 'Disabled'
-  const h = minutes / 60
-  if (h % 24 === 0 && h > 0) return `Every ${h / 24} day${h / 24 === 1 ? '' : 's'}`
-  if (minutes % 60 === 0) return `Every ${h} hour${h === 1 ? '' : 's'}`
-  return `Every ${minutes} minutes`
-}
-
 interface AISuggestionsJobCardProps {
   // Fires after a successful Run now so the parent can reload the jobs list
   // and surface the new run immediately.
@@ -150,7 +129,7 @@ export default function AISuggestionsJobCard({ onRunKicked }: AISuggestionsJobCa
               </span>
             </div>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-              Generates per-user book suggestions using the active AI provider. {formatInterval(config.interval_minutes)}.
+              Generates per-user book suggestions using the active AI provider. Schedule is managed above.
             </p>
           </div>
           <div onClick={e => e.stopPropagation()}>
@@ -187,41 +166,24 @@ export default function AISuggestionsJobCard({ onRunKicked }: AISuggestionsJobCa
             </label>
           </div>
 
-          {/* Cadence */}
+          {/* Per-user cooldown — separate concern from the schedule cron
+              above. The scheduler fires on the cron; this value gates each
+              individual user so they don't get a new run more often than
+              this even if the cron fires more frequently. */}
           <div>
-            <label className="block text-sm font-medium text-gray-900 dark:text-white">Cadence</label>
+            <label className="block text-sm font-medium text-gray-900 dark:text-white">Per-user cooldown</label>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-              How often the scheduler should enqueue a run for each opted-in user.
+              Minimum time between scheduled runs for the same user. Manual and admin runs bypass this.
             </p>
-            <div className="mt-2 flex flex-wrap items-center gap-2">
-              <select
-                value={
-                  INTERVAL_PRESETS.some(p => p.minutes === config.interval_minutes)
-                    ? String(config.interval_minutes)
-                    : '__custom__'
-                }
-                onChange={e => {
-                  if (e.target.value !== '__custom__') {
-                    set('interval_minutes', Number(e.target.value))
-                  }
-                }}
-                className="rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-              >
-                {INTERVAL_PRESETS.map(p => (
-                  <option key={p.minutes} value={p.minutes}>{p.label}</option>
-                ))}
-                <option value="__custom__">Custom…</option>
-              </select>
-              <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  min={0}
-                  value={config.interval_minutes}
-                  onChange={e => set('interval_minutes', Math.max(0, Number(e.target.value)))}
-                  className="w-28 rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-                />
-                <span className="text-xs text-gray-500 dark:text-gray-400">minutes</span>
-              </div>
+            <div className="mt-2 flex items-center gap-2">
+              <input
+                type="number"
+                min={0}
+                value={config.interval_minutes}
+                onChange={e => set('interval_minutes', Math.max(0, Number(e.target.value)))}
+                className="w-28 rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+              <span className="text-xs text-gray-500 dark:text-gray-400">minutes</span>
             </div>
           </div>
 
