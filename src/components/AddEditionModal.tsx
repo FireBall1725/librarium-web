@@ -94,9 +94,7 @@ export function AddEditionModal({ libraryId, bookId, edition, contributors = [],
     duration_hours:          existingSecs > 0 ? String(Math.floor(existingSecs / 3600)) : '',
     duration_minutes:        existingSecs > 0 ? String(Math.floor((existingSecs % 3600) / 60)) : '',
     page_count:              edition?.page_count != null ? String(edition.page_count) : '',
-    copy_count:              String(edition?.copy_count ?? 1),
     is_primary:              edition?.is_primary    ?? false,
-    acquired_at:             edition?.acquired_at   ?? new Date().toISOString().slice(0, 10),
   })
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -144,9 +142,7 @@ export function AddEditionModal({ libraryId, bookId, edition, contributors = [],
         isbn_13:                 !isAudio   ? form.isbn_13 : null,
         duration_seconds:        durationSecs || null,
         page_count:              !isAudio && form.page_count ? Number(form.page_count) : null,
-        copy_count:              form.copy_count ? Number(form.copy_count) : 1,
         is_primary:              form.is_primary,
-        acquired_at:             form.acquired_at || null,
       }
       const url = edition
         ? `/api/v1/libraries/${libraryId}/books/${bookId}/editions/${edition.id}`
@@ -296,19 +292,9 @@ export function AddEditionModal({ libraryId, bookId, edition, contributors = [],
             </div>
           )}
 
-          {/* Copies (physical only) + date acquired */}
-          <div className={`grid gap-3 ${isPhysical ? 'grid-cols-2' : 'grid-cols-1'}`}>
-            {isPhysical && (
-              <div>
-                <label className={labelCls}>Copies</label>
-                <input type="number" min="1" value={form.copy_count} onChange={e => setForm(f => ({ ...f, copy_count: e.target.value }))} className={inputCls} />
-              </div>
-            )}
-            <div>
-              <label className={labelCls}>Date acquired</label>
-              <input type="date" value={form.acquired_at} onChange={e => setForm(f => ({ ...f, acquired_at: e.target.value }))} className={inputCls} />
-            </div>
-          </div>
+          {/* Copy count + acquisition date were removed here with the M2M
+              refactor — both are now per-library properties (library_book_editions
+              junction). Per-library copy UI will return as a follow-up feature. */}
 
           <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
             <input type="checkbox" checked={form.is_primary} onChange={e => setForm(f => ({ ...f, is_primary: e.target.checked }))}

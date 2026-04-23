@@ -98,15 +98,24 @@ export interface BookShelfRef {
   name: string
 }
 
+export interface BookLibraryRef {
+  id: string
+  name: string
+}
+
 export interface Book {
   id: string
-  library_id: string
+  // library_id is the first library holding this book (picked by the API
+  // from the library_books junction). Null when the book is floating — i.e.
+  // not in any library (e.g. a suggestion-only book). Prefer `libraries`
+  // when you need the full set.
+  library_id: string | null
+  libraries?: BookLibraryRef[]
   title: string
   subtitle: string
   media_type_id: string
   media_type: string
   description: string
-  added_by: string | null
   created_at: string
   updated_at: string
   contributors: BookContributor[]
@@ -154,12 +163,12 @@ export interface BookEdition {
   publish_date: string | null
   isbn_10: string
   isbn_13: string
-  copy_count: number
   description: string
   duration_seconds: number | null
   page_count: number | null
   is_primary: boolean
-  acquired_at: string | null
+  // copy_count and acquired_at used to live here; they're now per-library
+  // (tracked in library_book_editions). Future work: per-library copy UI.
   created_at: string
   updated_at: string
   files: EditionFile[]
