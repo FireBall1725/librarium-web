@@ -163,6 +163,8 @@ export default function ProfilePage() {
         body: JSON.stringify({ opt_in: next }),
       })
       setAiOptIn(next)
+      // Notify the sidebar so the Suggestions link shows/hides without reload.
+      window.dispatchEvent(new Event('librarium:ai-prefs-changed'))
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Failed to update AI preferences', { variant: 'error' })
     } finally {

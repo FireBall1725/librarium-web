@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
+import type { SuggestionQuotaView } from '../types'
 
 type Theme = 'light' | 'dark' | 'system'
 
@@ -41,7 +42,7 @@ const LIBRARY_SECTIONS: Array<{ section: string; labelKey: string }> = [
 ]
 
 export default function Layout() {
-  const { user, logout } = useAuth()
+  const { user, logout, callApi } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const { t } = useTranslation()
@@ -59,6 +60,32 @@ export default function Layout() {
     () => (localStorage.getItem('theme') as Theme) ?? 'system'
   )
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  // Hide the Suggestions nav entry when AI is unavailable for this user
+  // (job disabled, no active provider, or not opted in). Start undefined so
+  // we don't flash the link before we know — the nav just omits it for the
+  // first render tick either way. Re-fetch when the user flips opt-in on
+  // the profile page by listening to a custom event.
+  const [suggestionsAvailable, setSuggestionsAvailable] = useState<boolean | undefined>(undefined)
+
+  useEffect(() => {
+    let cancelled = false
+    const load = () => {
+      callApi<SuggestionQuotaView>('/api/v1/me/suggestions/quota')
+        .then(q => {
+          if (!cancelled) setSuggestionsAvailable(q?.available ?? false)
+        })
+        .catch(() => {
+          if (!cancelled) setSuggestionsAvailable(false)
+        })
+    }
+    load()
+    const onRefresh = () => load()
+    window.addEventListener('librarium:ai-prefs-changed', onRefresh)
+    return () => {
+      cancelled = true
+      window.removeEventListener('librarium:ai-prefs-changed', onRefresh)
+    }
+  }, [callApi])
 
   useEffect(() => {
     applyTheme(theme)
@@ -179,7 +206,9 @@ export default function Layout() {
             </div>
           )}
 
-          <NavLink to="/suggestions" className={navClass}>{t('nav.suggestions')}</NavLink>
+          {suggestionsAvailable && (
+            <NavLink to="/suggestions" className={navClass}>{t('nav.suggestions')}</NavLink>
+          )}
 
           <div className="pt-4">
             <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
