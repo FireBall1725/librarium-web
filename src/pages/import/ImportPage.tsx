@@ -855,22 +855,31 @@ export default function ImportPage() {
       )}
 
       {/* ── Step 3: Progress ── */}
-      {step === 3 && importJob && (
+      {step === 3 && importJob && (() => {
+        // The API treats processed/failed/skipped as disjoint buckets —
+        // skipped rows are NOT a subset of processed. The progress bar
+        // tracks "rows the worker has finished with", which is the sum
+        // of all three. Without this, an import that skips most rows
+        // (e.g. re-uploading the same CSV with duplicate handling off)
+        // sits at 0% all the way through.
+        const handled = importJob.processed_rows + importJob.failed_rows + importJob.skipped_rows
+        const pct = importJob.total_rows > 0 ? (handled / importJob.total_rows) * 100 : 0
+        return (
         <div className="space-y-6">
           <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
             <div className="mb-4">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {importJob.status === 'pending' ? 'Queued…' : `Processing… ${importJob.processed_rows}/${importJob.total_rows} rows`}
+                  {importJob.status === 'pending' ? 'Queued…' : `Processing… ${handled}/${importJob.total_rows} rows`}
                 </span>
                 <span className="text-sm text-gray-500 dark:text-gray-400">
-                  {importJob.total_rows > 0 ? `${Math.round((importJob.processed_rows / importJob.total_rows) * 100)}%` : '—'}
+                  {importJob.total_rows > 0 ? `${Math.round(pct)}%` : '—'}
                 </span>
               </div>
               <div className="h-2.5 w-full rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
                 <div
                   className="h-full rounded-full bg-blue-600 transition-all duration-500"
-                  style={{ width: importJob.total_rows > 0 ? `${(importJob.processed_rows / importJob.total_rows) * 100}%` : '0%' }}
+                  style={{ width: `${pct}%` }}
                 />
               </div>
             </div>
@@ -894,7 +903,8 @@ export default function ImportPage() {
             Checking for updates every 2 seconds…
           </div>
         </div>
-      )}
+        )
+      })()}
 
       {/* ── Step 4: Results ── */}
       {step === 4 && importJob && (
