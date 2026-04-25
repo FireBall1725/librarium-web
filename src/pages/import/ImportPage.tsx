@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (C) 2026 fireball1725
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import PageHeader from '../../components/PageHeader'
 import { usePageTitle } from '../../hooks/usePageTitle'
 import { useAuth } from '../../auth/AuthContext'
-import type { Library } from '../../types'
+import type { Library, LibraryMember } from '../../types'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -21,7 +21,12 @@ interface ImportJob {
 
 // ─── Field definitions ────────────────────────────────────────────────────────
 
+// Field names match what the api worker reads out of `row[...]`. Adding
+// a value here extends the column-mapping UI and exposes it for source
+// presets to target. Section breaks below are visual only — the worker
+// doesn't care how the fields are grouped.
 const IMPORT_FIELDS: { value: string; label: string }[] = [
+  // Book metadata
   { value: 'title',         label: 'Title' },
   { value: 'subtitle',      label: 'Subtitle' },
   { value: 'isbn_13',       label: 'ISBN-13' },
@@ -35,6 +40,14 @@ const IMPORT_FIELDS: { value: string; label: string }[] = [
   { value: 'language',      label: 'Language' },
   { value: 'tags',          label: 'Tags' },
   { value: 'media_type',    label: 'Media Type' },
+  // User interaction (per-importer; written to user_book_interactions)
+  { value: 'read_status',   label: 'Read status' },
+  { value: 'rating',        label: 'Rating' },
+  { value: 'review',        label: 'Review' },
+  { value: 'notes',         label: 'Notes' },
+  { value: 'date_started',  label: 'Started reading' },
+  { value: 'date_finished', label: 'Finished reading' },
+  { value: 'is_favorite',   label: 'Favourite' },
 ]
 
 const FORMAT_OPTIONS = [
@@ -45,10 +58,108 @@ const FORMAT_OPTIONS = [
   { value: 'digital',    label: 'Digital' },
 ]
 
-// ─── Auto-detect ──────────────────────────────────────────────────────────────
+// ─── Source presets ──────────────────────────────────────────────────────────
+//
+// Each preset maps a known CSV header (verbatim, case-sensitive) to a
+// Librarium import field. Picking a source from the dropdown reseats
+// the column mapping using its preset; headers not in the preset fall
+// back to the fuzzy autoDetect heuristic so additional columns aren't
+// silently ignored.
+//
+// Verified against real exports from each source (April 2026 column
+// shapes). If a source changes its export format, update its entry —
+// the rest of the UI is preset-agnostic.
 
+type Source = 'generic' | 'goodreads' | 'storygraph' | 'libib'
+
+interface Preset {
+  label: string
+  // Header → Librarium field. Header keys are matched verbatim.
+  columnMap: Record<string, string>
+}
+
+const SOURCE_PRESETS: Record<Source, Preset> = {
+  generic: {
+    label: 'Generic CSV (auto-detect)',
+    columnMap: {},
+  },
+  goodreads: {
+    label: 'Goodreads',
+    columnMap: {
+      'Title':           'title',
+      'Author':          'author',
+      'ISBN':            'isbn_10',
+      'ISBN13':          'isbn_13',
+      'My Rating':       'rating',
+      'Publisher':       'publisher',
+      'Number of Pages': 'page_count',
+      'Year Published':  'publish_date',
+      'Date Read':       'date_finished',
+      'Bookshelves':     'tags',
+      'Exclusive Shelf': 'read_status',
+      'My Review':       'review',
+      'Private Notes':   'notes',
+    },
+  },
+  storygraph: {
+    label: 'StoryGraph',
+    columnMap: {
+      'Title':          'title',
+      'Authors':        'author',
+      'ISBN/UID':       'isbn_13',
+      'Read Status':    'read_status',
+      'Last Date Read': 'date_finished',
+      'Star Rating':    'rating',
+      'Review':         'review',
+      'Tags':           'tags',
+    },
+  },
+  libib: {
+    label: 'Libib',
+    columnMap: {
+      'title':        'title',
+      'creators':     'author',
+      'ean_isbn13':   'isbn_13',
+      'upc_isbn10':   'isbn_10',
+      'description':  'description',
+      'publisher':    'publisher',
+      'publish_date': 'publish_date',
+      'tags':         'tags',
+      'length':       'page_count',
+      'rating':       'rating',
+      'review':       'review',
+      'notes':        'notes',
+      'status':       'read_status',
+      'began':        'date_started',
+      'completed':    'date_finished',
+      'added':        'acquired_date',
+    },
+  },
+}
+
+// detectSource sniffs a small number of headers that are highly
+// distinctive to each tracker. Goodreads is easiest because
+// `Exclusive Shelf` is unique to it; Libib's `creators` + `ean_isbn13`
+// pair is unmistakable; StoryGraph uses `Read Status` paired with
+// `Star Rating`. Returns 'generic' when no source clearly matches.
+function detectSource(headers: string[]): Source {
+  const set = new Set(headers)
+  if (set.has('Exclusive Shelf') || set.has('My Rating')) return 'goodreads'
+  if (set.has('Read Status') && set.has('Star Rating')) return 'storygraph'
+  if (set.has('ean_isbn13') || set.has('creators')) return 'libib'
+  return 'generic'
+}
+
+// ─── Auto-detect ──────────────────────────────────────────────────────────────
+//
+// Fuzzy fallback used when a header isn't claimed by the active source
+// preset. Strips delimiters/case and matches against a small set of
+// common variants so that vanilla CSVs people produce by hand still
+// land in the right field without needing a preset.
 function autoDetect(header: string): string {
   const h = header.toLowerCase().replace(/[\s\-_.]/g, '')
+
+  // Book metadata
   if (['isbn13', 'isbn', 'ean', 'barcode', 'ean13', 'eanisbn13', 'eanisbn'].includes(h)) return 'isbn_13'
   if (['isbn10', 'upc', 'upcisbn10', 'upcisbn', 'upc10'].includes(h)) return 'isbn_10'
   if (['title', 'booktitle', 'name', 'worktitle'].includes(h)) return 'title'
@@ -56,17 +167,55 @@ function autoDetect(header: string): string {
   if (['author', 'authors', 'writer', 'authorlf', 'authorname', 'creators', 'creator', 'artist'].includes(h)) return 'author'
   if (['publisher', 'pub', 'publishedby'].includes(h)) return 'publisher'
   if (['yearpublished', 'originalpublicationyear', 'publisheddate', 'publishdate', 'publicationdate'].includes(h)) return 'publish_date'
-  if (['acquiredat', 'acquireddate', 'dateacquired', 'purchasedate', 'datepurchased'].includes(h)) return 'acquired_date'
+  if (['acquiredat', 'acquireddate', 'dateacquired', 'purchasedate', 'datepurchased', 'added', 'dateadded'].includes(h)) return 'acquired_date'
   if (['description', 'summary', 'synopsis'].includes(h)) return 'description'
   if (['pagecount', 'pages', 'numberofpages', 'length', 'numpages', 'pagenum'].includes(h)) return 'page_count'
   if (['language', 'lang', 'booklanguage'].includes(h)) return 'language'
-  if (['tags', 'tag', 'genre', 'genres', 'category', 'categories', 'subjects', 'subject'].includes(h)) return 'tags'
+  if (['tags', 'tag', 'genre', 'genres', 'category', 'categories', 'subjects', 'subject', 'bookshelves'].includes(h)) return 'tags'
   if (['mediatype', 'type', 'format', 'booktype', 'bookformat', 'bindingtype'].includes(h)) return 'media_type'
+
+  // User interaction
+  if (['rating', 'myrating', 'starrating', 'usrrating'].includes(h)) return 'rating'
+  if (['review', 'myreview'].includes(h)) return 'review'
+  if (['notes', 'note', 'privatenotes'].includes(h)) return 'notes'
+  if (['readstatus', 'status', 'exclusiveshelf'].includes(h)) return 'read_status'
+  if (['began', 'datestarted', 'startedreading', 'startdate'].includes(h)) return 'date_started'
+  if (['completed', 'datefinished', 'datefinishedreading', 'finishdate', 'dateread', 'lastdateread', 'finishedreading'].includes(h)) return 'date_finished'
+  if (['favorite', 'favourite', 'isfavorite', 'isfavourite'].includes(h)) return 'is_favorite'
+
   return ''
 }
 
+// applyMapping computes the colIndex → field map for a given source
+// preset and a list of CSV headers. Headers in the preset's columnMap
+// are matched verbatim; everything else falls through to autoDetect.
+// The colIndex-keyed shape matches what the existing UI consumes.
+function applyMapping(headers: string[], source: Source): Record<number, string> {
+  const out: Record<number, string> = {}
+  const claimed = new Set<string>()
+  const preset = SOURCE_PRESETS[source].columnMap
+  headers.forEach((h, i) => {
+    let target = preset[h] ?? ''
+    if (!target) target = autoDetect(h)
+    // Each Librarium field is claimed by at most one column — first
+    // mapping wins, mirroring the historical behaviour.
+    if (target && !claimed.has(target)) {
+      out[i] = target
+      claimed.add(target)
+    } else {
+      out[i] = ''
+    }
+  })
+  return out
+}
+
 // ─── CSV preview parser ───────────────────────────────────────────────────────
-// Returns headers (first row) and up to 3 sample rows of data.
+// Returns headers (first row) and a pool of data rows the UI samples
+// from. We cap at PREVIEW_POOL_SIZE so a 50k-row file doesn't block
+// the main thread; that's still far more than we'd ever show at once,
+// so the random-draw button has plenty of variety to cycle through.
+
+const PREVIEW_POOL_SIZE = 1000
 
 function parseCSVPreview(text: string): { headers: string[]; samples: string[][] } {
   const raw = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
@@ -76,34 +225,59 @@ function parseCSVPreview(text: string): { headers: string[]; samples: string[][]
   const tabs   = (firstLine.match(/\t/g) ?? []).length
   const delim  = tabs > commas && tabs > semis ? '\t' : semis > commas ? ';' : ','
 
-  const parseLine = (line: string): string[] => {
-    const fields: string[] = []
-    let field = '', inQ = false
-    for (let i = 0; i < line.length; i++) {
-      const ch = line[i]
-      if (ch === '"') {
-        if (inQ && line[i + 1] === '"') { field += '"'; i++ }
-        else inQ = !inQ
-      } else if (ch === delim && !inQ) {
-        fields.push(field.trim().replace(/^"|"$/g, ''))
-        field = ''
-      } else {
-        field += ch
-      }
+  // Single-pass character walker that respects quoted fields. Libib /
+  // Goodreads exports routinely embed newlines inside the description
+  // column; splitting on `\n` first would smear those rows across the
+  // table and assign description fragments to unrelated columns.
+  const rows: string[][] = []
+  let field = ''
+  let row: string[] = []
+  let inQ = false
+  const pushField = () => {
+    row.push(field.trim().replace(/^"|"$/g, ''))
+    field = ''
+  }
+  const pushRow = () => {
+    pushField()
+    // Skip blank rows produced by trailing newlines.
+    if (!(row.length === 1 && row[0] === '')) rows.push(row)
+    row = []
+  }
+  for (let i = 0; i < raw.length; i++) {
+    const ch = raw[i]
+    if (ch === '"') {
+      if (inQ && raw[i + 1] === '"') { field += '"'; i++ }
+      else inQ = !inQ
+    } else if (ch === delim && !inQ) {
+      pushField()
+    } else if (ch === '\n' && !inQ) {
+      pushRow()
+      if (rows.length > PREVIEW_POOL_SIZE) break
+    } else {
+      field += ch
     }
-    fields.push(field.trim().replace(/^"|"$/g, ''))
-    return fields
   }
+  if (field !== '' || row.length > 0) pushRow()
 
-  const lines = raw.split('\n').filter(l => l.trim() !== '')
-  if (lines.length === 0) return { headers: [], samples: [] }
+  if (rows.length === 0) return { headers: [], samples: [] }
+  return { headers: rows[0], samples: rows.slice(1) }
+}
 
-  const headers = parseLine(lines[0])
-  const samples: string[][] = []
-  for (let i = 1; i < Math.min(4, lines.length); i++) {
-    samples.push(parseLine(lines[i]))
+// pickPreviewIndices returns up to `count` row indices into the sample
+// pool. The pool is shuffled with a Fisher-Yates pass so duplicates
+// don't appear within a single draw, then we slice. seed exists only to
+// trip the dependency array in callers — JS doesn't expose seedable
+// Math.random, but a stable shuffle per render is enough.
+function pickPreviewIndices(poolSize: number, count: number): number[] {
+  if (poolSize <= count) {
+    return Array.from({ length: poolSize }, (_, i) => i)
   }
-  return { headers, samples }
+  const order = Array.from({ length: poolSize }, (_, i) => i)
+  for (let i = order.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[order[i], order[j]] = [order[j], order[i]]
+  }
+  return order.slice(0, count)
 }
 
 // ─── Step indicator ───────────────────────────────────────────────────────────
@@ -154,7 +328,7 @@ function StepIndicator({ current }: { current: Step }) {
 // ─── ImportPage ───────────────────────────────────────────────────────────────
 
 export default function ImportPage() {
-  const { callApi } = useAuth()
+  const { callApi, user } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   usePageTitle('Import Books')
@@ -171,14 +345,26 @@ export default function ImportPage() {
   const [csvFile, setCsvFile] = useState<File | null>(null)
   const [headers, setHeaders] = useState<string[]>([])
   const [csvSamples, setCsvSamples] = useState<string[][]>([])
+  // sampleSeed bumps when the user clicks "shuffle" — the example draw
+  // recomputes off it so the column-mapping table can show varied rows.
+  const [sampleSeed, setSampleSeed] = useState(0)
+  // source picks the per-tracker preset that pre-fills csvMapping;
+  // 'generic' falls back to autoDetect for every column.
+  const [source, setSource] = useState<Source>('generic')
   // csvMapping: colIndex → internal field name ('' = skip)
   const [csvMapping, setCsvMapping] = useState<Record<number, string>>({})
-  const [skipDuplicates, setSkipDuplicates] = useState(true)
   const [defaultFormat, setDefaultFormat] = useState('paperback')
+  // Library members for the attribution dropdown. Loaded lazily on
+  // step 2 entry. Non-admins never see the dropdown so they don't pay
+  // the fetch.
+  const [members, setMembers] = useState<LibraryMember[]>([])
+  const [attributeToUserId, setAttributeToUserId] = useState<string>(user?.id ?? '')
+  // Duplicate handling: when both flags are off (the default) a duplicate
+  // ISBN is left untouched. They compose, so a user can opt into both.
+  const [duplicateIncrementCount, setDuplicateIncrementCount] = useState(false)
+  const [duplicateUpdateFromCSV, setDuplicateUpdateFromCSV] = useState(false)
   const [enrichMetadata, setEnrichMetadata] = useState(false)
   const [enrichCovers, setEnrichCovers] = useState(false)
-  // preferCsv: internal field name → true means use CSV value; defaults to true for all mapped fields
-  const [preferCsv, setPreferCsv] = useState<Record<string, boolean>>({})
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -187,7 +373,11 @@ export default function ImportPage() {
   const [importJob, setImportJob] = useState<ImportJob | null>(null)
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  // Load libraries on mount; auto-select if ?library=<id> is present
+  // Load libraries on mount. Three auto-advance paths skip step 1 when
+  // the choice is unambiguous: an explicit ?library=<id> preselect, a
+  // single-library account (the Libib-replacement case for most
+  // self-hosters), or the user landed on /import via a per-library
+  // shortcut. Step 1 only lingers when the user actually has a choice.
   useEffect(() => {
     const preselect = searchParams.get('library')
     callApi<Library[]>('/api/v1/libraries')
@@ -196,7 +386,11 @@ export default function ImportPage() {
         setLibraries(list)
         if (preselect) {
           const match = list.find(l => l.id === preselect)
-          if (match) { setSelectedLibrary(match); setStep(2) }
+          if (match) { setSelectedLibrary(match); setStep(2); return }
+        }
+        if (list.length === 1) {
+          setSelectedLibrary(list[0])
+          setStep(2)
         }
       })
       .catch(() => setLibraries([]))
@@ -209,6 +403,19 @@ export default function ImportPage() {
     return () => { if (pollRef.current) clearInterval(pollRef.current) }
   }, [])
 
+  // Lazy-load library members once a library is picked. Only admins
+  // can attribute imports to other users, so non-admins skip the fetch
+  // entirely — the dropdown won't render for them anyway.
+  useEffect(() => {
+    if (!selectedLibrary || !user?.is_instance_admin) {
+      setMembers([])
+      return
+    }
+    callApi<LibraryMember[]>(`/api/v1/libraries/${selectedLibrary.id}/members`)
+      .then(list => setMembers(list ?? []))
+      .catch(() => setMembers([]))
+  }, [selectedLibrary, user?.is_instance_admin, callApi])
+
   // ── File handling ─────────────────────────────────────────────────────────
 
   const processFile = (file: File) => {
@@ -220,21 +427,28 @@ export default function ImportPage() {
         setSubmitError('The file appears empty or invalid.')
         return
       }
+      // Sniff the source from the headers — if it's clearly a known
+      // tracker we set the dropdown for the user and use that
+      // preset's verbatim column-map. Otherwise we land on 'generic'
+      // and rely on the fuzzy autoDetect fallback.
+      const detected = detectSource(hdrs)
+      const auto = applyMapping(hdrs, detected)
       setCsvFile(file)
       setHeaders(hdrs)
       setCsvSamples(samples)
-      const auto: Record<number, string> = {}
-      const initPreferCsv: Record<string, boolean> = {}
-      hdrs.forEach((h, i) => {
-        const field = autoDetect(h)
-        auto[i] = field
-        if (field) initPreferCsv[field] = true
-      })
+      setSource(detected)
       setCsvMapping(auto)
-      setPreferCsv(initPreferCsv)
       setSubmitError(null)
     }
     reader.readAsText(file, 'UTF-8')
+  }
+
+  // Reseats the column mapping when the user changes the source
+  // dropdown.
+  const handleSourceChange = (next: Source) => {
+    setSource(next)
+    if (headers.length === 0) return
+    setCsvMapping(applyMapping(headers, next))
   }
 
   // ── Submit ────────────────────────────────────────────────────────────────
@@ -251,19 +465,18 @@ export default function ImportPage() {
           mappingObj[field] = Number(colStr)
         }
       }
-      const preferCsvObj: Record<string, boolean> = {}
-      for (const [f, v] of Object.entries(preferCsv)) {
-        if (v) preferCsvObj[f] = true
-      }
       const formData = new FormData()
       formData.append('file', csvFile)
       formData.append('mapping', JSON.stringify(mappingObj))
-      formData.append('skip_duplicates', skipDuplicates ? 'true' : 'false')
+      formData.append('duplicate_increment_count', duplicateIncrementCount ? 'true' : 'false')
+      formData.append('duplicate_update_from_csv', duplicateUpdateFromCSV ? 'true' : 'false')
       formData.append('default_format', defaultFormat)
       formData.append('enrich_metadata', enrichMetadata ? 'true' : 'false')
       formData.append('enrich_covers', enrichCovers ? 'true' : 'false')
-      if (Object.keys(preferCsvObj).length > 0) {
-        formData.append('prefer_csv', JSON.stringify(preferCsvObj))
+      // Only send attribution when the admin has actually retargeted —
+      // omitting the field tells the API to use the caller (default).
+      if (attributeToUserId && attributeToUserId !== user?.id) {
+        formData.append('attribute_to_user_id', attributeToUserId)
       }
       const job = await callApi<ImportJob>(`/api/v1/libraries/${selectedLibrary.id}/imports`, {
         method: 'POST',
@@ -296,15 +509,23 @@ export default function ImportPage() {
 
   const handleReset = () => {
     if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null }
-    setSelectedLibrary(null)
     setCsvFile(null)
     setHeaders([])
     setCsvSamples([])
+    setSource('generic')
     setCsvMapping({})
-    setPreferCsv({})
+    setAttributeToUserId(user?.id ?? '')
     setImportJob(null)
     setSubmitError(null)
-    setStep(1)
+    // Same auto-advance logic as the initial load — single-library
+    // accounts skip step 1 on every reset, not just first load.
+    if (libraries.length === 1) {
+      setSelectedLibrary(libraries[0])
+      setStep(2)
+    } else {
+      setSelectedLibrary(null)
+      setStep(1)
+    }
   }
 
   const anyMapped = Object.values(csvMapping).some(f => f !== '')
@@ -318,6 +539,16 @@ export default function ImportPage() {
     }
   }
 
+  // Sample-row indices for the column-mapping table. Recomputed when
+  // the file changes (csvSamples) or the user clicks shuffle (sampleSeed).
+  // sampleSeed is intentionally read from the deps so eslint sees it
+  // even though Math.random doesn't take a seed.
+  const previewIndices = useMemo(
+    () => pickPreviewIndices(csvSamples.length, 3),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [csvSamples, sampleSeed],
+  )
+
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
@@ -329,7 +560,11 @@ export default function ImportPage() {
       <div className="p-8 max-w-3xl mx-auto">
       <StepIndicator current={step} />
 
-      {/* ── Step 1: Select Library ── */}
+      {/* ── Step 1: Select Library ──
+          Only shown for accounts with multiple libraries — the load
+          effect (and handleReset) auto-advance to step 2 when there
+          is exactly one library, so the common Libib-replacement path
+          never sees this step. */}
       {step === 1 && (
         <div className="space-y-4">
           {libsLoading ? (
@@ -344,21 +579,34 @@ export default function ImportPage() {
               </Link>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-3">
-              {libraries.map(lib => (
-                <button
-                  key={lib.id}
-                  onClick={() => { setSelectedLibrary(lib); setStep(2) }}
-                  className="w-full text-left rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/10 px-5 py-4 transition-colors group"
-                >
-                  <p className="font-semibold text-gray-900 dark:text-white group-hover:text-blue-700 dark:group-hover:text-blue-300">
-                    {lib.name}
-                  </p>
-                  {lib.description && (
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5 truncate">{lib.description}</p>
-                  )}
-                </button>
-              ))}
+            <div>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                Choose the library this CSV will land in.
+              </p>
+              <div className="grid grid-cols-1 gap-3">
+                {libraries.map(lib => (
+                  <button
+                    key={lib.id}
+                    onClick={() => { setSelectedLibrary(lib); setStep(2) }}
+                    className="w-full text-left rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/10 px-5 py-4 transition-colors group flex items-center gap-4"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-gray-900 dark:text-white group-hover:text-blue-700 dark:group-hover:text-blue-300 truncate">
+                        {lib.name}
+                      </p>
+                      {lib.description && (
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5 truncate">{lib.description}</p>
+                      )}
+                    </div>
+                    <svg
+                      className="w-5 h-5 text-gray-300 dark:text-gray-600 group-hover:text-blue-500 dark:group-hover:text-blue-400 group-hover:translate-x-0.5 transition-all flex-shrink-0"
+                      fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                ))}
+              </div>
             </div>
           )}
         </div>
@@ -404,7 +652,7 @@ export default function ImportPage() {
                 </svg>
                 <p className="font-medium text-gray-900 dark:text-white">{csvFile.name}</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {headers.length} column{headers.length !== 1 ? 's' : ''}, {csvSamples.length} preview row{csvSamples.length !== 1 ? 's' : ''} — click to change
+                  {headers.length} column{headers.length !== 1 ? 's' : ''} — click to change
                 </p>
               </div>
             ) : (
@@ -418,29 +666,67 @@ export default function ImportPage() {
             )}
           </div>
 
+          {/* Source picker — auto-detected from headers; user can override. */}
+          {headers.length > 0 && (
+            <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                  <p className="text-sm font-medium text-gray-800 dark:text-gray-200">Importing from…</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                    Picking a source pre-fills the column mapping below. Detected automatically from the file's headers; override here if it picked wrong.
+                  </p>
+                </div>
+                <select
+                  value={source}
+                  onChange={e => handleSourceChange(e.target.value as Source)}
+                  className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                >
+                  {(Object.keys(SOURCE_PRESETS) as Source[]).map(s => (
+                    <option key={s} value={s}>{SOURCE_PRESETS[s].label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
+
           {/* Column mapping — one row per CSV column */}
           {headers.length > 0 && (
             <div>
-              <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-1">Column Mapping</h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                Each row is a column from your CSV. Auto-detected mappings are pre-filled — adjust any that look wrong.
-              </p>
+              <div className="flex items-end justify-between mb-3 gap-3">
+                <div>
+                  <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-1">Column Mapping</h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Each row is a column from your CSV. Auto-detected mappings are pre-filled — adjust any that look wrong.
+                  </p>
+                </div>
+                {csvSamples.length > 3 && (
+                  <button
+                    type="button"
+                    onClick={() => setSampleSeed(s => s + 1)}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-2.5 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 hover:border-blue-400 hover:text-blue-600 dark:hover:border-blue-500 dark:hover:text-blue-400 transition-colors flex-shrink-0"
+                    title="Show a different random sample of rows"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Shuffle examples
+                  </button>
+                )}
+              </div>
               <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden bg-white dark:bg-gray-900">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
                       <th className="text-left px-4 py-2.5 font-semibold text-gray-600 dark:text-gray-400 w-1/4">CSV Column</th>
-                      <th className="text-left px-4 py-2.5 font-semibold text-gray-600 dark:text-gray-400 w-2/5">Examples</th>
+                      <th className="text-left px-4 py-2.5 font-semibold text-gray-600 dark:text-gray-400 w-1/2">Examples</th>
                       <th className="text-left px-4 py-2.5 font-semibold text-gray-600 dark:text-gray-400 w-1/4">Maps To</th>
-                      <th className="text-left px-4 py-2.5 font-semibold text-gray-600 dark:text-gray-400">Prefer CSV</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                     {headers.map((h, colIdx) => {
-                      const examples = csvSamples
-                        .map(row => row[colIdx] ?? '')
+                      const examples = previewIndices
+                        .map(rowIdx => csvSamples[rowIdx]?.[colIdx] ?? '')
                         .filter(v => v !== '')
-                        .slice(0, 3)
                       const mappedField = csvMapping[colIdx] ?? ''
                       const isDuplicate = mappedField !== '' && (fieldUsage[mappedField]?.length ?? 0) > 1
 
@@ -463,13 +749,7 @@ export default function ImportPage() {
                           <td className="px-4 py-2.5">
                             <select
                               value={mappedField}
-                              onChange={e => {
-                                const newField = e.target.value
-                                setCsvMapping(prev => ({ ...prev, [colIdx]: newField }))
-                                if (newField) {
-                                  setPreferCsv(prev => ({ ...prev, [newField]: prev[newField] ?? true }))
-                                }
-                              }}
+                              onChange={e => setCsvMapping(prev => ({ ...prev, [colIdx]: e.target.value }))}
                               className={`w-full rounded-lg border px-2.5 py-1.5 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500 ${
                                 isDuplicate
                                   ? 'border-amber-400 dark:border-amber-500'
@@ -485,78 +765,122 @@ export default function ImportPage() {
                               <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">mapped twice</p>
                             )}
                           </td>
-                          <td className="px-4 py-2.5">
-                            {mappedField ? (
-                              <label className="flex items-center gap-1.5 cursor-pointer" title="Prefer this CSV value over provider lookup data">
-                                <input
-                                  type="checkbox"
-                                  checked={preferCsv[mappedField] ?? true}
-                                  onChange={e => setPreferCsv(prev => ({ ...prev, [mappedField]: e.target.checked }))}
-                                  className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-blue-600"
-                                />
-                              </label>
-                            ) : (
-                              <span className="text-xs text-gray-300 dark:text-gray-600">—</span>
-                            )}
-                          </td>
                         </tr>
                       )
                     })}
                   </tbody>
                 </table>
               </div>
-              <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
-                "Prefer CSV" is checked by default — your CSV values take priority. Uncheck a field to let metadata lookup override it.
-              </p>
             </div>
           )}
 
-          {/* Options */}
+          {/* Options — three labelled groups: per-row mapping, duplicate
+              policy, and the post-import enrichment toggles. */}
           {headers.length > 0 && (
-            <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 divide-y divide-gray-100 dark:divide-gray-800">
-              <div className="flex items-center justify-between px-4 py-3.5">
-                <div>
-                  <p className="text-sm font-medium text-gray-800 dark:text-gray-200">Skip duplicates</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Books already in the library will be skipped</p>
+            <div className="space-y-4">
+              {/* Mapping */}
+              <section className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+                <header className="px-4 pt-3.5 pb-2">
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Mapping</h3>
+                </header>
+                <div className="border-t border-gray-100 dark:border-gray-800 divide-y divide-gray-100 dark:divide-gray-800">
+                  <div className="flex items-center justify-between px-4 py-3.5">
+                    <div>
+                      <p className="text-sm font-medium text-gray-800 dark:text-gray-200">Default format</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Applied when the CSV does not specify a format</p>
+                    </div>
+                    <select
+                      value={defaultFormat}
+                      onChange={e => setDefaultFormat(e.target.value)}
+                      className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    >
+                      {FORMAT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                    </select>
+                  </div>
+                  {/* Admin-only attribution override. Only renders when
+                      the library has more than one member; with a single
+                      member there's no other choice to make. */}
+                  {user?.is_instance_admin && members.length > 1 && (
+                    <div className="flex items-center justify-between px-4 py-3.5">
+                      <div>
+                        <p className="text-sm font-medium text-gray-800 dark:text-gray-200">Reading data attributed to</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Read status, rating, review, and dates land on this user.</p>
+                      </div>
+                      <select
+                        value={attributeToUserId}
+                        onChange={e => setAttributeToUserId(e.target.value)}
+                        className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 max-w-xs"
+                      >
+                        {members.map(m => (
+                          <option key={m.user_id} value={m.user_id}>
+                            {m.display_name || m.username}{m.user_id === user?.id ? ' (you)' : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                 </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" checked={skipDuplicates} onChange={e => setSkipDuplicates(e.target.checked)} className="sr-only peer" />
-                  <div className="w-9 h-5 bg-gray-200 dark:bg-gray-700 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
-                </label>
-              </div>
-              <div className="flex items-center justify-between px-4 py-3.5">
-                <div>
-                  <p className="text-sm font-medium text-gray-800 dark:text-gray-200">Default format</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Applied when the CSV does not specify a format</p>
+              </section>
+
+              {/* Duplicate policy */}
+              <section className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+                <header className="px-4 pt-3.5 pb-2">
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white">When a book already exists</h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Default: do nothing. Enable either action — they compose.</p>
+                </header>
+                <div className="border-t border-gray-100 dark:border-gray-800 divide-y divide-gray-100 dark:divide-gray-800">
+                  <div className="flex items-center justify-between px-4 py-3.5">
+                    <div>
+                      <p className="text-sm font-medium text-gray-800 dark:text-gray-200">Add to copy count</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Bump the per-edition copy count for each duplicate row</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" checked={duplicateIncrementCount} onChange={e => setDuplicateIncrementCount(e.target.checked)} className="sr-only peer" />
+                      <div className="w-9 h-5 bg-gray-200 dark:bg-gray-700 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
+                    </label>
+                  </div>
+                  <div className="flex items-center justify-between px-4 py-3.5">
+                    <div>
+                      <p className="text-sm font-medium text-gray-800 dark:text-gray-200">Update read state, rating, review, dates</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Refresh your interaction fields from the CSV row</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" checked={duplicateUpdateFromCSV} onChange={e => setDuplicateUpdateFromCSV(e.target.checked)} className="sr-only peer" />
+                      <div className="w-9 h-5 bg-gray-200 dark:bg-gray-700 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
+                    </label>
+                  </div>
                 </div>
-                <select
-                  value={defaultFormat}
-                  onChange={e => setDefaultFormat(e.target.value)}
-                  className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                >
-                  {FORMAT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                </select>
-              </div>
-              <div className="flex items-center justify-between px-4 py-3.5">
-                <div>
-                  <p className="text-sm font-medium text-gray-800 dark:text-gray-200">Use metadata lookup for missing data</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">After import, look up each book from metadata providers to fill in any blank fields (runs in background)</p>
+              </section>
+
+              {/* Post-import enrichment */}
+              <section className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+                <header className="px-4 pt-3.5 pb-2">
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white">After import</h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Run these in the background on books this import added to the library. Pure duplicates already in this library are skipped, and books that already have the data are no-ops.</p>
+                </header>
+                <div className="border-t border-gray-100 dark:border-gray-800 divide-y divide-gray-100 dark:divide-gray-800">
+                  <div className="flex items-center justify-between px-4 py-3.5">
+                    <div>
+                      <p className="text-sm font-medium text-gray-800 dark:text-gray-200">Fill missing metadata</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Look each book up against metadata providers to populate blank fields</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" checked={enrichMetadata} onChange={e => setEnrichMetadata(e.target.checked)} className="sr-only peer" />
+                      <div className="w-9 h-5 bg-gray-200 dark:bg-gray-700 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
+                    </label>
+                  </div>
+                  <div className="flex items-center justify-between px-4 py-3.5">
+                    <div>
+                      <p className="text-sm font-medium text-gray-800 dark:text-gray-200">Download cover art</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Pull cover images from metadata providers for books that don't have one</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" checked={enrichCovers} onChange={e => setEnrichCovers(e.target.checked)} className="sr-only peer" />
+                      <div className="w-9 h-5 bg-gray-200 dark:bg-gray-700 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
+                    </label>
+                  </div>
                 </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" checked={enrichMetadata} onChange={e => setEnrichMetadata(e.target.checked)} className="sr-only peer" />
-                  <div className="w-9 h-5 bg-gray-200 dark:bg-gray-700 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
-                </label>
-              </div>
-              <div className="flex items-center justify-between px-4 py-3.5">
-                <div>
-                  <p className="text-sm font-medium text-gray-800 dark:text-gray-200">Fetch cover images from metadata</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">After import, download cover art for each book from metadata providers (runs in background)</p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" checked={enrichCovers} onChange={e => setEnrichCovers(e.target.checked)} className="sr-only peer" />
-                  <div className="w-9 h-5 bg-gray-200 dark:bg-gray-700 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
-                </label>
-              </div>
+              </section>
             </div>
           )}
 
@@ -579,22 +903,31 @@ export default function ImportPage() {
       )}
 
       {/* ── Step 3: Progress ── */}
-      {step === 3 && importJob && (
+      {step === 3 && importJob && (() => {
+        // The API treats processed/failed/skipped as disjoint buckets —
+        // skipped rows are NOT a subset of processed. The progress bar
+        // tracks "rows the worker has finished with", which is the sum
+        // of all three. Without this, an import that skips most rows
+        // (e.g. re-uploading the same CSV with duplicate handling off)
+        // sits at 0% all the way through.
+        const handled = importJob.processed_rows + importJob.failed_rows + importJob.skipped_rows
+        const pct = importJob.total_rows > 0 ? (handled / importJob.total_rows) * 100 : 0
+        return (
         <div className="space-y-6">
           <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
             <div className="mb-4">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {importJob.status === 'pending' ? 'Queued…' : `Processing… ${importJob.processed_rows}/${importJob.total_rows} rows`}
+                  {importJob.status === 'pending' ? 'Queued…' : `Processing… ${handled}/${importJob.total_rows} rows`}
                 </span>
                 <span className="text-sm text-gray-500 dark:text-gray-400">
-                  {importJob.total_rows > 0 ? `${Math.round((importJob.processed_rows / importJob.total_rows) * 100)}%` : '—'}
+                  {importJob.total_rows > 0 ? `${Math.round(pct)}%` : '—'}
                 </span>
               </div>
               <div className="h-2.5 w-full rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
                 <div
                   className="h-full rounded-full bg-blue-600 transition-all duration-500"
-                  style={{ width: importJob.total_rows > 0 ? `${(importJob.processed_rows / importJob.total_rows) * 100}%` : '0%' }}
+                  style={{ width: `${pct}%` }}
                 />
               </div>
             </div>
@@ -618,7 +951,8 @@ export default function ImportPage() {
             Checking for updates every 2 seconds…
           </div>
         </div>
-      )}
+        )
+      })()}
 
       {/* ── Step 4: Results ── */}
       {step === 4 && importJob && (
