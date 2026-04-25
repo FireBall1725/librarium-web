@@ -84,6 +84,7 @@ interface UnifiedJobRow {
   updated_at: string
   kind_id?: string | null
   library_id?: string | null
+  library_name?: string | null
 }
 
 // unifiedToJob folds the umbrella row + kind-specific progress into the
@@ -119,6 +120,7 @@ function unifiedToJob(u: UnifiedJobRow): Job {
     kind_id: u.kind_id ?? undefined,
     type: jobType,
     library_id: u.library_id ?? '',
+    library_name: u.library_name ?? undefined,
     status: mappedStatus,
     total_rows: num('total'),
     processed_rows: num('processed'),
