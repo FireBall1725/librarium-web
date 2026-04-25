@@ -6,7 +6,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import PageHeader from '../../components/PageHeader'
 import { usePageTitle } from '../../hooks/usePageTitle'
 import { useAuth } from '../../auth/AuthContext'
-import type { Library } from '../../types'
+import type { Library, LibraryMember } from '../../types'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -328,7 +328,7 @@ function StepIndicator({ current }: { current: Step }) {
 // ─── ImportPage ───────────────────────────────────────────────────────────────
 
 export default function ImportPage() {
-  const { callApi } = useAuth()
+  const { callApi, user } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   usePageTitle('Import Books')
@@ -354,6 +354,11 @@ export default function ImportPage() {
   // csvMapping: colIndex → internal field name ('' = skip)
   const [csvMapping, setCsvMapping] = useState<Record<number, string>>({})
   const [defaultFormat, setDefaultFormat] = useState('paperback')
+  // Library members for the attribution dropdown. Loaded lazily on
+  // step 2 entry. Non-admins never see the dropdown so they don't pay
+  // the fetch.
+  const [members, setMembers] = useState<LibraryMember[]>([])
+  const [attributeToUserId, setAttributeToUserId] = useState<string>(user?.id ?? '')
   // Duplicate handling: when both flags are off (the default) a duplicate
   // ISBN is left untouched. They compose, so a user can opt into both.
   const [duplicateIncrementCount, setDuplicateIncrementCount] = useState(false)
@@ -397,6 +402,19 @@ export default function ImportPage() {
   useEffect(() => {
     return () => { if (pollRef.current) clearInterval(pollRef.current) }
   }, [])
+
+  // Lazy-load library members once a library is picked. Only admins
+  // can attribute imports to other users, so non-admins skip the fetch
+  // entirely — the dropdown won't render for them anyway.
+  useEffect(() => {
+    if (!selectedLibrary || !user?.is_instance_admin) {
+      setMembers([])
+      return
+    }
+    callApi<LibraryMember[]>(`/api/v1/libraries/${selectedLibrary.id}/members`)
+      .then(list => setMembers(list ?? []))
+      .catch(() => setMembers([]))
+  }, [selectedLibrary, user?.is_instance_admin, callApi])
 
   // ── File handling ─────────────────────────────────────────────────────────
 
@@ -455,6 +473,11 @@ export default function ImportPage() {
       formData.append('default_format', defaultFormat)
       formData.append('enrich_metadata', enrichMetadata ? 'true' : 'false')
       formData.append('enrich_covers', enrichCovers ? 'true' : 'false')
+      // Only send attribution when the admin has actually retargeted —
+      // omitting the field tells the API to use the caller (default).
+      if (attributeToUserId && attributeToUserId !== user?.id) {
+        formData.append('attribute_to_user_id', attributeToUserId)
+      }
       const job = await callApi<ImportJob>(`/api/v1/libraries/${selectedLibrary.id}/imports`, {
         method: 'POST',
         body: formData,
@@ -491,6 +514,7 @@ export default function ImportPage() {
     setCsvSamples([])
     setSource('generic')
     setCsvMapping({})
+    setAttributeToUserId(user?.id ?? '')
     setImportJob(null)
     setSubmitError(null)
     // Same auto-advance logic as the initial load — single-library
@@ -759,18 +783,42 @@ export default function ImportPage() {
                 <header className="px-4 pt-3.5 pb-2">
                   <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Mapping</h3>
                 </header>
-                <div className="border-t border-gray-100 dark:border-gray-800 flex items-center justify-between px-4 py-3.5">
-                  <div>
-                    <p className="text-sm font-medium text-gray-800 dark:text-gray-200">Default format</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Applied when the CSV does not specify a format</p>
+                <div className="border-t border-gray-100 dark:border-gray-800 divide-y divide-gray-100 dark:divide-gray-800">
+                  <div className="flex items-center justify-between px-4 py-3.5">
+                    <div>
+                      <p className="text-sm font-medium text-gray-800 dark:text-gray-200">Default format</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Applied when the CSV does not specify a format</p>
+                    </div>
+                    <select
+                      value={defaultFormat}
+                      onChange={e => setDefaultFormat(e.target.value)}
+                      className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    >
+                      {FORMAT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                    </select>
                   </div>
-                  <select
-                    value={defaultFormat}
-                    onChange={e => setDefaultFormat(e.target.value)}
-                    className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  >
-                    {FORMAT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                  </select>
+                  {/* Admin-only attribution override. Only renders when
+                      the library has more than one member; with a single
+                      member there's no other choice to make. */}
+                  {user?.is_instance_admin && members.length > 1 && (
+                    <div className="flex items-center justify-between px-4 py-3.5">
+                      <div>
+                        <p className="text-sm font-medium text-gray-800 dark:text-gray-200">Reading data attributed to</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Read status, rating, review, and dates land on this user.</p>
+                      </div>
+                      <select
+                        value={attributeToUserId}
+                        onChange={e => setAttributeToUserId(e.target.value)}
+                        className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 max-w-xs"
+                      >
+                        {members.map(m => (
+                          <option key={m.user_id} value={m.user_id}>
+                            {m.display_name || m.username}{m.user_id === user?.id ? ' (you)' : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                 </div>
               </section>
 
@@ -808,7 +856,7 @@ export default function ImportPage() {
               <section className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
                 <header className="px-4 pt-3.5 pb-2">
                   <h3 className="text-sm font-semibold text-gray-900 dark:text-white">After import</h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Run these in the background once the CSV is in. Both fill missing data only — your CSV values are never overwritten.</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Run these in the background on books this import created. Duplicates and books already in another library are left alone, and your CSV values are never overwritten.</p>
                 </header>
                 <div className="border-t border-gray-100 dark:border-gray-800 divide-y divide-gray-100 dark:divide-gray-800">
                   <div className="flex items-center justify-between px-4 py-3.5">
