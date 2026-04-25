@@ -33,6 +33,11 @@ interface EnrichmentItem {
 
 interface Job {
   id: string
+  // kind_id is the per-kind detail row id (import_jobs.id /
+  // enrichment_batches.id). The per-kind GET/cancel/delete endpoints
+  // are keyed by it; without it the unified history's umbrella id
+  // cannot reach the detail panel and items render as "No items."
+  kind_id?: string
   type: JobType
   library_id: string
   library_name?: string
@@ -60,6 +65,10 @@ interface Job {
 // UnifiedJobRow mirrors the JobView the unified /admin/jobs/history
 // endpoint returns. Progress is a kind-specific JSON blob the umbrella
 // row holds for summary UI — counters extracted via unifiedToJob below.
+// kind_id and library_id are the per-kind detail row's primary key and
+// scope; the per-kind GET/DELETE/cancel endpoints are still keyed by
+// the per-kind id rather than the umbrella job id, so the row needs
+// both to deep-link correctly.
 interface UnifiedJobRow {
   id: string
   kind: string
@@ -73,6 +82,8 @@ interface UnifiedJobRow {
   finished_at?: string | null
   created_at: string
   updated_at: string
+  kind_id?: string | null
+  library_id?: string | null
 }
 
 // unifiedToJob folds the umbrella row + kind-specific progress into the
@@ -105,9 +116,9 @@ function unifiedToJob(u: UnifiedJobRow): Job {
 
   return {
     id: u.id,
+    kind_id: u.kind_id ?? undefined,
     type: jobType,
-    library_id: '', // umbrella rows don't carry library_id; the per-kind
-                   // detail fetch still does when the UI needs it
+    library_id: u.library_id ?? '',
     status: mappedStatus,
     total_rows: num('total'),
     processed_rows: num('processed'),
@@ -235,6 +246,12 @@ function JobRow({
     return () => clearInterval(id)
   }, [expanded, isEnrichment, isActive, job.id, callApi])
 
+  // Per-kind endpoints are keyed by the per-kind detail id (import_jobs.id,
+  // enrichment_batches.id) — the unified history's umbrella id won't
+  // resolve. kind_id falls back to id only for ai_suggestions / cover_backfill,
+  // where the umbrella id is what the route already takes.
+  const detailID = job.kind_id ?? job.id
+
   const toggleExpand = async () => {
     const isEnr = job.type === 'metadata' || job.type === 'cover'
     // AI suggestion runs expand into a RunDetailPanel, which self-fetches.
@@ -244,10 +261,10 @@ function JobRow({
       setLoadingItems(true)
       try {
         if (isEnr) {
-          const full = await callApi<{ items: EnrichmentItem[] }>(`/api/v1/enrichment-batches/${job.id}`)
+          const full = await callApi<{ items: EnrichmentItem[] }>(`/api/v1/enrichment-batches/${detailID}`)
           setEnrichItems(full.items ?? [])
         } else if (items === null) {
-          const full = await callApi<Job>(`/api/v1/libraries/${job.library_id}/imports/${job.id}`)
+          const full = await callApi<Job>(`/api/v1/libraries/${job.library_id}/imports/${detailID}`)
           setItems(full.items ?? [])
         }
       } catch {
@@ -268,9 +285,9 @@ function JobRow({
       if (isAISuggestions) {
         await callApi(`/api/v1/admin/jobs/ai-suggestions/runs/${job.id}`, { method: 'DELETE' })
       } else if (isEnrichment) {
-        await callApi(`/api/v1/enrichment-batches/${job.id}/cancel`, { method: 'POST' })
+        await callApi(`/api/v1/enrichment-batches/${detailID}/cancel`, { method: 'POST' })
       } else {
-        await callApi(`/api/v1/imports/${job.id}/cancel`, { method: 'POST' })
+        await callApi(`/api/v1/imports/${detailID}/cancel`, { method: 'POST' })
       }
       onCancelled(job.id)
     } catch {
@@ -288,8 +305,8 @@ function JobRow({
       const path = isCoverBackfill || isAISuggestions
         ? `/api/v1/admin/jobs/${job.id}`
         : isEnrichment
-          ? `/api/v1/enrichment-batches/${job.id}`
-          : `/api/v1/imports/${job.id}`
+          ? `/api/v1/enrichment-batches/${detailID}`
+          : `/api/v1/imports/${detailID}`
       await callApi(path, { method: 'DELETE' })
       onDeleted(job.id)
     } catch {
