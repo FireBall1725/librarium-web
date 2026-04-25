@@ -320,12 +320,13 @@ export default function ImportPage() {
   const [source, setSource] = useState<Source>('generic')
   // csvMapping: colIndex → internal field name ('' = skip)
   const [csvMapping, setCsvMapping] = useState<Record<number, string>>({})
-  const [skipDuplicates, setSkipDuplicates] = useState(true)
   const [defaultFormat, setDefaultFormat] = useState('paperback')
+  // Duplicate handling: when both flags are off (the default) a duplicate
+  // ISBN is left untouched. They compose, so a user can opt into both.
+  const [duplicateIncrementCount, setDuplicateIncrementCount] = useState(false)
+  const [duplicateUpdateFromCSV, setDuplicateUpdateFromCSV] = useState(false)
   const [enrichMetadata, setEnrichMetadata] = useState(false)
   const [enrichCovers, setEnrichCovers] = useState(false)
-  // preferCsv: internal field name → true means use CSV value; defaults to true for all mapped fields
-  const [preferCsv, setPreferCsv] = useState<Record<string, boolean>>({})
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -373,35 +374,22 @@ export default function ImportPage() {
       // and rely on the fuzzy autoDetect fallback.
       const detected = detectSource(hdrs)
       const auto = applyMapping(hdrs, detected)
-      const initPreferCsv: Record<string, boolean> = {}
-      Object.values(auto).forEach(field => {
-        if (field) initPreferCsv[field] = true
-      })
       setCsvFile(file)
       setHeaders(hdrs)
       setCsvSamples(samples)
       setSource(detected)
       setCsvMapping(auto)
-      setPreferCsv(initPreferCsv)
       setSubmitError(null)
     }
     reader.readAsText(file, 'UTF-8')
   }
 
   // Reseats the column mapping when the user changes the source
-  // dropdown. Preserves preferCsv toggles where possible — keying by
-  // field name means the tick state on, say, "title" survives a
-  // source change as long as some column still maps to "title".
+  // dropdown.
   const handleSourceChange = (next: Source) => {
     setSource(next)
     if (headers.length === 0) return
-    const remapped = applyMapping(headers, next)
-    setCsvMapping(remapped)
-    const refreshed: Record<string, boolean> = {}
-    Object.values(remapped).forEach(field => {
-      if (field) refreshed[field] = preferCsv[field] ?? true
-    })
-    setPreferCsv(refreshed)
+    setCsvMapping(applyMapping(headers, next))
   }
 
   // ── Submit ────────────────────────────────────────────────────────────────
@@ -418,20 +406,14 @@ export default function ImportPage() {
           mappingObj[field] = Number(colStr)
         }
       }
-      const preferCsvObj: Record<string, boolean> = {}
-      for (const [f, v] of Object.entries(preferCsv)) {
-        if (v) preferCsvObj[f] = true
-      }
       const formData = new FormData()
       formData.append('file', csvFile)
       formData.append('mapping', JSON.stringify(mappingObj))
-      formData.append('skip_duplicates', skipDuplicates ? 'true' : 'false')
+      formData.append('duplicate_increment_count', duplicateIncrementCount ? 'true' : 'false')
+      formData.append('duplicate_update_from_csv', duplicateUpdateFromCSV ? 'true' : 'false')
       formData.append('default_format', defaultFormat)
       formData.append('enrich_metadata', enrichMetadata ? 'true' : 'false')
       formData.append('enrich_covers', enrichCovers ? 'true' : 'false')
-      if (Object.keys(preferCsvObj).length > 0) {
-        formData.append('prefer_csv', JSON.stringify(preferCsvObj))
-      }
       const job = await callApi<ImportJob>(`/api/v1/libraries/${selectedLibrary.id}/imports`, {
         method: 'POST',
         body: formData,
@@ -469,7 +451,6 @@ export default function ImportPage() {
     setCsvSamples([])
     setSource('generic')
     setCsvMapping({})
-    setPreferCsv({})
     setImportJob(null)
     setSubmitError(null)
     setStep(1)
@@ -621,9 +602,8 @@ export default function ImportPage() {
                   <thead>
                     <tr className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
                       <th className="text-left px-4 py-2.5 font-semibold text-gray-600 dark:text-gray-400 w-1/4">CSV Column</th>
-                      <th className="text-left px-4 py-2.5 font-semibold text-gray-600 dark:text-gray-400 w-2/5">Examples</th>
+                      <th className="text-left px-4 py-2.5 font-semibold text-gray-600 dark:text-gray-400 w-1/2">Examples</th>
                       <th className="text-left px-4 py-2.5 font-semibold text-gray-600 dark:text-gray-400 w-1/4">Maps To</th>
-                      <th className="text-left px-4 py-2.5 font-semibold text-gray-600 dark:text-gray-400">Prefer CSV</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
@@ -654,13 +634,7 @@ export default function ImportPage() {
                           <td className="px-4 py-2.5">
                             <select
                               value={mappedField}
-                              onChange={e => {
-                                const newField = e.target.value
-                                setCsvMapping(prev => ({ ...prev, [colIdx]: newField }))
-                                if (newField) {
-                                  setPreferCsv(prev => ({ ...prev, [newField]: prev[newField] ?? true }))
-                                }
-                              }}
+                              onChange={e => setCsvMapping(prev => ({ ...prev, [colIdx]: e.target.value }))}
                               className={`w-full rounded-lg border px-2.5 py-1.5 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500 ${
                                 isDuplicate
                                   ? 'border-amber-400 dark:border-amber-500'
@@ -676,78 +650,98 @@ export default function ImportPage() {
                               <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">mapped twice</p>
                             )}
                           </td>
-                          <td className="px-4 py-2.5">
-                            {mappedField ? (
-                              <label className="flex items-center gap-1.5 cursor-pointer" title="Prefer this CSV value over provider lookup data">
-                                <input
-                                  type="checkbox"
-                                  checked={preferCsv[mappedField] ?? true}
-                                  onChange={e => setPreferCsv(prev => ({ ...prev, [mappedField]: e.target.checked }))}
-                                  className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-blue-600"
-                                />
-                              </label>
-                            ) : (
-                              <span className="text-xs text-gray-300 dark:text-gray-600">—</span>
-                            )}
-                          </td>
                         </tr>
                       )
                     })}
                   </tbody>
                 </table>
               </div>
-              <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
-                "Prefer CSV" is checked by default — your CSV values take priority. Uncheck a field to let metadata lookup override it.
-              </p>
             </div>
           )}
 
-          {/* Options */}
+          {/* Options — three labelled groups: per-row mapping, duplicate
+              policy, and the post-import enrichment toggles. */}
           {headers.length > 0 && (
-            <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 divide-y divide-gray-100 dark:divide-gray-800">
-              <div className="flex items-center justify-between px-4 py-3.5">
-                <div>
-                  <p className="text-sm font-medium text-gray-800 dark:text-gray-200">Skip duplicates</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Books already in the library will be skipped</p>
+            <div className="space-y-4">
+              {/* Mapping */}
+              <section className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+                <header className="px-4 pt-3.5 pb-2">
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Mapping</h3>
+                </header>
+                <div className="border-t border-gray-100 dark:border-gray-800 flex items-center justify-between px-4 py-3.5">
+                  <div>
+                    <p className="text-sm font-medium text-gray-800 dark:text-gray-200">Default format</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Applied when the CSV does not specify a format</p>
+                  </div>
+                  <select
+                    value={defaultFormat}
+                    onChange={e => setDefaultFormat(e.target.value)}
+                    className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  >
+                    {FORMAT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
                 </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" checked={skipDuplicates} onChange={e => setSkipDuplicates(e.target.checked)} className="sr-only peer" />
-                  <div className="w-9 h-5 bg-gray-200 dark:bg-gray-700 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
-                </label>
-              </div>
-              <div className="flex items-center justify-between px-4 py-3.5">
-                <div>
-                  <p className="text-sm font-medium text-gray-800 dark:text-gray-200">Default format</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Applied when the CSV does not specify a format</p>
+              </section>
+
+              {/* Duplicate policy */}
+              <section className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+                <header className="px-4 pt-3.5 pb-2">
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white">When a book already exists</h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Default: do nothing. Enable either action — they compose.</p>
+                </header>
+                <div className="border-t border-gray-100 dark:border-gray-800 divide-y divide-gray-100 dark:divide-gray-800">
+                  <div className="flex items-center justify-between px-4 py-3.5">
+                    <div>
+                      <p className="text-sm font-medium text-gray-800 dark:text-gray-200">Add to copy count</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Bump the per-edition copy count for each duplicate row</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" checked={duplicateIncrementCount} onChange={e => setDuplicateIncrementCount(e.target.checked)} className="sr-only peer" />
+                      <div className="w-9 h-5 bg-gray-200 dark:bg-gray-700 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
+                    </label>
+                  </div>
+                  <div className="flex items-center justify-between px-4 py-3.5">
+                    <div>
+                      <p className="text-sm font-medium text-gray-800 dark:text-gray-200">Update read state, rating, review, dates</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Refresh your interaction fields from the CSV row</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" checked={duplicateUpdateFromCSV} onChange={e => setDuplicateUpdateFromCSV(e.target.checked)} className="sr-only peer" />
+                      <div className="w-9 h-5 bg-gray-200 dark:bg-gray-700 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
+                    </label>
+                  </div>
                 </div>
-                <select
-                  value={defaultFormat}
-                  onChange={e => setDefaultFormat(e.target.value)}
-                  className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                >
-                  {FORMAT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                </select>
-              </div>
-              <div className="flex items-center justify-between px-4 py-3.5">
-                <div>
-                  <p className="text-sm font-medium text-gray-800 dark:text-gray-200">Use metadata lookup for missing data</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">After import, look up each book from metadata providers to fill in any blank fields (runs in background)</p>
+              </section>
+
+              {/* Post-import enrichment */}
+              <section className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+                <header className="px-4 pt-3.5 pb-2">
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white">After import</h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Run these in the background once the CSV is in. Both fill missing data only — your CSV values are never overwritten.</p>
+                </header>
+                <div className="border-t border-gray-100 dark:border-gray-800 divide-y divide-gray-100 dark:divide-gray-800">
+                  <div className="flex items-center justify-between px-4 py-3.5">
+                    <div>
+                      <p className="text-sm font-medium text-gray-800 dark:text-gray-200">Fill missing metadata</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Look each book up against metadata providers to populate blank fields</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" checked={enrichMetadata} onChange={e => setEnrichMetadata(e.target.checked)} className="sr-only peer" />
+                      <div className="w-9 h-5 bg-gray-200 dark:bg-gray-700 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
+                    </label>
+                  </div>
+                  <div className="flex items-center justify-between px-4 py-3.5">
+                    <div>
+                      <p className="text-sm font-medium text-gray-800 dark:text-gray-200">Download cover art</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Pull cover images from metadata providers for books that don't have one</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" checked={enrichCovers} onChange={e => setEnrichCovers(e.target.checked)} className="sr-only peer" />
+                      <div className="w-9 h-5 bg-gray-200 dark:bg-gray-700 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
+                    </label>
+                  </div>
                 </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" checked={enrichMetadata} onChange={e => setEnrichMetadata(e.target.checked)} className="sr-only peer" />
-                  <div className="w-9 h-5 bg-gray-200 dark:bg-gray-700 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
-                </label>
-              </div>
-              <div className="flex items-center justify-between px-4 py-3.5">
-                <div>
-                  <p className="text-sm font-medium text-gray-800 dark:text-gray-200">Fetch cover images from metadata</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">After import, download cover art for each book from metadata providers (runs in background)</p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" checked={enrichCovers} onChange={e => setEnrichCovers(e.target.checked)} className="sr-only peer" />
-                  <div className="w-9 h-5 bg-gray-200 dark:bg-gray-700 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
-                </label>
-              </div>
+              </section>
             </div>
           )}
 
