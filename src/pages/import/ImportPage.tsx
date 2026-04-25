@@ -856,7 +856,7 @@ export default function ImportPage() {
               <section className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
                 <header className="px-4 pt-3.5 pb-2">
                   <h3 className="text-sm font-semibold text-gray-900 dark:text-white">After import</h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Run these in the background on books this import created. Duplicates and books already in another library are left alone, and your CSV values are never overwritten.</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Run these in the background on books this import added to the library. Pure duplicates already in this library are skipped, and books that already have the data are no-ops.</p>
                 </header>
                 <div className="border-t border-gray-100 dark:border-gray-800 divide-y divide-gray-100 dark:divide-gray-800">
                   <div className="flex items-center justify-between px-4 py-3.5">
