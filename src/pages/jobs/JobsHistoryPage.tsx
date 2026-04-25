@@ -85,6 +85,10 @@ interface UnifiedJobRow {
   kind_id?: string | null
   library_id?: string | null
   library_name?: string | null
+  // For enrichment jobs, "metadata" or "cover" so the badge can
+  // distinguish a fill-missing-metadata pass from a cover backfill.
+  // Empty for kinds that don't subdivide.
+  subtype?: string | null
 }
 
 // unifiedToJob folds the umbrella row + kind-specific progress into the
@@ -106,10 +110,14 @@ function unifiedToJob(u: UnifiedJobRow): Job {
     return typeof v === 'number' ? v : 0
   }
 
+  // Enrichment is split into metadata vs cover via the subtype field.
+  // Without it the badge would always read "Metadata" even for cover
+  // batches, which is what landed in the original unified-history
+  // collapse and confused the user when they enabled cover-only.
   let jobType: JobType
   switch (u.kind) {
     case 'import':         jobType = 'import'; break
-    case 'enrichment':     jobType = 'metadata'; break
+    case 'enrichment':     jobType = u.subtype === 'cover' ? 'cover' : 'metadata'; break
     case 'ai_suggestions': jobType = 'ai_suggestions'; break
     case 'cover_backfill': jobType = 'cover_backfill'; break
     default:               jobType = 'metadata'; break
