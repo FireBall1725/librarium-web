@@ -225,35 +225,42 @@ function parseCSVPreview(text: string): { headers: string[]; samples: string[][]
   const tabs   = (firstLine.match(/\t/g) ?? []).length
   const delim  = tabs > commas && tabs > semis ? '\t' : semis > commas ? ';' : ','
 
-  const parseLine = (line: string): string[] => {
-    const fields: string[] = []
-    let field = '', inQ = false
-    for (let i = 0; i < line.length; i++) {
-      const ch = line[i]
-      if (ch === '"') {
-        if (inQ && line[i + 1] === '"') { field += '"'; i++ }
-        else inQ = !inQ
-      } else if (ch === delim && !inQ) {
-        fields.push(field.trim().replace(/^"|"$/g, ''))
-        field = ''
-      } else {
-        field += ch
-      }
+  // Single-pass character walker that respects quoted fields. Libib /
+  // Goodreads exports routinely embed newlines inside the description
+  // column; splitting on `\n` first would smear those rows across the
+  // table and assign description fragments to unrelated columns.
+  const rows: string[][] = []
+  let field = ''
+  let row: string[] = []
+  let inQ = false
+  const pushField = () => {
+    row.push(field.trim().replace(/^"|"$/g, ''))
+    field = ''
+  }
+  const pushRow = () => {
+    pushField()
+    // Skip blank rows produced by trailing newlines.
+    if (!(row.length === 1 && row[0] === '')) rows.push(row)
+    row = []
+  }
+  for (let i = 0; i < raw.length; i++) {
+    const ch = raw[i]
+    if (ch === '"') {
+      if (inQ && raw[i + 1] === '"') { field += '"'; i++ }
+      else inQ = !inQ
+    } else if (ch === delim && !inQ) {
+      pushField()
+    } else if (ch === '\n' && !inQ) {
+      pushRow()
+      if (rows.length > PREVIEW_POOL_SIZE) break
+    } else {
+      field += ch
     }
-    fields.push(field.trim().replace(/^"|"$/g, ''))
-    return fields
   }
+  if (field !== '' || row.length > 0) pushRow()
 
-  const lines = raw.split('\n').filter(l => l.trim() !== '')
-  if (lines.length === 0) return { headers: [], samples: [] }
-
-  const headers = parseLine(lines[0])
-  const samples: string[][] = []
-  const cap = Math.min(1 + PREVIEW_POOL_SIZE, lines.length)
-  for (let i = 1; i < cap; i++) {
-    samples.push(parseLine(lines[i]))
-  }
-  return { headers, samples }
+  if (rows.length === 0) return { headers: [], samples: [] }
+  return { headers: rows[0], samples: rows.slice(1) }
 }
 
 // pickPreviewIndices returns up to `count` row indices into the sample
