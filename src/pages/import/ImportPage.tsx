@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (C) 2026 fireball1725
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import PageHeader from '../../components/PageHeader'
 import { usePageTitle } from '../../hooks/usePageTitle'
@@ -210,7 +210,12 @@ function applyMapping(headers: string[], source: Source): Record<number, string>
 }
 
 // ─── CSV preview parser ───────────────────────────────────────────────────────
-// Returns headers (first row) and up to 3 sample rows of data.
+// Returns headers (first row) and a pool of data rows the UI samples
+// from. We cap at PREVIEW_POOL_SIZE so a 50k-row file doesn't block
+// the main thread; that's still far more than we'd ever show at once,
+// so the random-draw button has plenty of variety to cycle through.
+
+const PREVIEW_POOL_SIZE = 1000
 
 function parseCSVPreview(text: string): { headers: string[]; samples: string[][] } {
   const raw = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
@@ -244,10 +249,28 @@ function parseCSVPreview(text: string): { headers: string[]; samples: string[][]
 
   const headers = parseLine(lines[0])
   const samples: string[][] = []
-  for (let i = 1; i < Math.min(4, lines.length); i++) {
+  const cap = Math.min(1 + PREVIEW_POOL_SIZE, lines.length)
+  for (let i = 1; i < cap; i++) {
     samples.push(parseLine(lines[i]))
   }
   return { headers, samples }
+}
+
+// pickPreviewIndices returns up to `count` row indices into the sample
+// pool. The pool is shuffled with a Fisher-Yates pass so duplicates
+// don't appear within a single draw, then we slice. seed exists only to
+// trip the dependency array in callers — JS doesn't expose seedable
+// Math.random, but a stable shuffle per render is enough.
+function pickPreviewIndices(poolSize: number, count: number): number[] {
+  if (poolSize <= count) {
+    return Array.from({ length: poolSize }, (_, i) => i)
+  }
+  const order = Array.from({ length: poolSize }, (_, i) => i)
+  for (let i = order.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[order[i], order[j]] = [order[j], order[i]]
+  }
+  return order.slice(0, count)
 }
 
 // ─── Step indicator ───────────────────────────────────────────────────────────
@@ -315,6 +338,9 @@ export default function ImportPage() {
   const [csvFile, setCsvFile] = useState<File | null>(null)
   const [headers, setHeaders] = useState<string[]>([])
   const [csvSamples, setCsvSamples] = useState<string[][]>([])
+  // sampleSeed bumps when the user clicks "shuffle" — the example draw
+  // recomputes off it so the column-mapping table can show varied rows.
+  const [sampleSeed, setSampleSeed] = useState(0)
   // source picks the per-tracker preset that pre-fills csvMapping;
   // 'generic' falls back to autoDetect for every column.
   const [source, setSource] = useState<Source>('generic')
@@ -335,7 +361,11 @@ export default function ImportPage() {
   const [importJob, setImportJob] = useState<ImportJob | null>(null)
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  // Load libraries on mount; auto-select if ?library=<id> is present
+  // Load libraries on mount. Three auto-advance paths skip step 1 when
+  // the choice is unambiguous: an explicit ?library=<id> preselect, a
+  // single-library account (the Libib-replacement case for most
+  // self-hosters), or the user landed on /import via a per-library
+  // shortcut. Step 1 only lingers when the user actually has a choice.
   useEffect(() => {
     const preselect = searchParams.get('library')
     callApi<Library[]>('/api/v1/libraries')
@@ -344,7 +374,11 @@ export default function ImportPage() {
         setLibraries(list)
         if (preselect) {
           const match = list.find(l => l.id === preselect)
-          if (match) { setSelectedLibrary(match); setStep(2) }
+          if (match) { setSelectedLibrary(match); setStep(2); return }
+        }
+        if (list.length === 1) {
+          setSelectedLibrary(list[0])
+          setStep(2)
         }
       })
       .catch(() => setLibraries([]))
@@ -445,7 +479,6 @@ export default function ImportPage() {
 
   const handleReset = () => {
     if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null }
-    setSelectedLibrary(null)
     setCsvFile(null)
     setHeaders([])
     setCsvSamples([])
@@ -453,7 +486,15 @@ export default function ImportPage() {
     setCsvMapping({})
     setImportJob(null)
     setSubmitError(null)
-    setStep(1)
+    // Same auto-advance logic as the initial load — single-library
+    // accounts skip step 1 on every reset, not just first load.
+    if (libraries.length === 1) {
+      setSelectedLibrary(libraries[0])
+      setStep(2)
+    } else {
+      setSelectedLibrary(null)
+      setStep(1)
+    }
   }
 
   const anyMapped = Object.values(csvMapping).some(f => f !== '')
@@ -467,6 +508,16 @@ export default function ImportPage() {
     }
   }
 
+  // Sample-row indices for the column-mapping table. Recomputed when
+  // the file changes (csvSamples) or the user clicks shuffle (sampleSeed).
+  // sampleSeed is intentionally read from the deps so eslint sees it
+  // even though Math.random doesn't take a seed.
+  const previewIndices = useMemo(
+    () => pickPreviewIndices(csvSamples.length, 3),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [csvSamples, sampleSeed],
+  )
+
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
@@ -478,7 +529,11 @@ export default function ImportPage() {
       <div className="p-8 max-w-3xl mx-auto">
       <StepIndicator current={step} />
 
-      {/* ── Step 1: Select Library ── */}
+      {/* ── Step 1: Select Library ──
+          Only shown for accounts with multiple libraries — the load
+          effect (and handleReset) auto-advance to step 2 when there
+          is exactly one library, so the common Libib-replacement path
+          never sees this step. */}
       {step === 1 && (
         <div className="space-y-4">
           {libsLoading ? (
@@ -493,21 +548,34 @@ export default function ImportPage() {
               </Link>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-3">
-              {libraries.map(lib => (
-                <button
-                  key={lib.id}
-                  onClick={() => { setSelectedLibrary(lib); setStep(2) }}
-                  className="w-full text-left rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/10 px-5 py-4 transition-colors group"
-                >
-                  <p className="font-semibold text-gray-900 dark:text-white group-hover:text-blue-700 dark:group-hover:text-blue-300">
-                    {lib.name}
-                  </p>
-                  {lib.description && (
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5 truncate">{lib.description}</p>
-                  )}
-                </button>
-              ))}
+            <div>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                Choose the library this CSV will land in.
+              </p>
+              <div className="grid grid-cols-1 gap-3">
+                {libraries.map(lib => (
+                  <button
+                    key={lib.id}
+                    onClick={() => { setSelectedLibrary(lib); setStep(2) }}
+                    className="w-full text-left rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/10 px-5 py-4 transition-colors group flex items-center gap-4"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-gray-900 dark:text-white group-hover:text-blue-700 dark:group-hover:text-blue-300 truncate">
+                        {lib.name}
+                      </p>
+                      {lib.description && (
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5 truncate">{lib.description}</p>
+                      )}
+                    </div>
+                    <svg
+                      className="w-5 h-5 text-gray-300 dark:text-gray-600 group-hover:text-blue-500 dark:group-hover:text-blue-400 group-hover:translate-x-0.5 transition-all flex-shrink-0"
+                      fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                ))}
+              </div>
             </div>
           )}
         </div>
@@ -553,7 +621,7 @@ export default function ImportPage() {
                 </svg>
                 <p className="font-medium text-gray-900 dark:text-white">{csvFile.name}</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {headers.length} column{headers.length !== 1 ? 's' : ''}, {csvSamples.length} preview row{csvSamples.length !== 1 ? 's' : ''} — click to change
+                  {headers.length} column{headers.length !== 1 ? 's' : ''} — click to change
                 </p>
               </div>
             ) : (
@@ -593,10 +661,27 @@ export default function ImportPage() {
           {/* Column mapping — one row per CSV column */}
           {headers.length > 0 && (
             <div>
-              <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-1">Column Mapping</h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                Each row is a column from your CSV. Auto-detected mappings are pre-filled — adjust any that look wrong.
-              </p>
+              <div className="flex items-end justify-between mb-3 gap-3">
+                <div>
+                  <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-1">Column Mapping</h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Each row is a column from your CSV. Auto-detected mappings are pre-filled — adjust any that look wrong.
+                  </p>
+                </div>
+                {csvSamples.length > 3 && (
+                  <button
+                    type="button"
+                    onClick={() => setSampleSeed(s => s + 1)}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-2.5 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 hover:border-blue-400 hover:text-blue-600 dark:hover:border-blue-500 dark:hover:text-blue-400 transition-colors flex-shrink-0"
+                    title="Show a different random sample of rows"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Shuffle examples
+                  </button>
+                )}
+              </div>
               <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden bg-white dark:bg-gray-900">
                 <table className="w-full text-sm">
                   <thead>
@@ -608,10 +693,9 @@ export default function ImportPage() {
                   </thead>
                   <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                     {headers.map((h, colIdx) => {
-                      const examples = csvSamples
-                        .map(row => row[colIdx] ?? '')
+                      const examples = previewIndices
+                        .map(rowIdx => csvSamples[rowIdx]?.[colIdx] ?? '')
                         .filter(v => v !== '')
-                        .slice(0, 3)
                       const mappedField = csvMapping[colIdx] ?? ''
                       const isDuplicate = mappedField !== '' && (fieldUsage[mappedField]?.length ?? 0) > 1
 
