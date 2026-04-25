@@ -21,7 +21,12 @@ interface ImportJob {
 
 // ─── Field definitions ────────────────────────────────────────────────────────
 
+// Field names match what the api worker reads out of `row[...]`. Adding
+// a value here extends the column-mapping UI and exposes it for source
+// presets to target. Section breaks below are visual only — the worker
+// doesn't care how the fields are grouped.
 const IMPORT_FIELDS: { value: string; label: string }[] = [
+  // Book metadata
   { value: 'title',         label: 'Title' },
   { value: 'subtitle',      label: 'Subtitle' },
   { value: 'isbn_13',       label: 'ISBN-13' },
@@ -35,6 +40,14 @@ const IMPORT_FIELDS: { value: string; label: string }[] = [
   { value: 'language',      label: 'Language' },
   { value: 'tags',          label: 'Tags' },
   { value: 'media_type',    label: 'Media Type' },
+  // User interaction (per-importer; written to user_book_interactions)
+  { value: 'read_status',   label: 'Read status' },
+  { value: 'rating',        label: 'Rating' },
+  { value: 'review',        label: 'Review' },
+  { value: 'notes',         label: 'Notes' },
+  { value: 'date_started',  label: 'Started reading' },
+  { value: 'date_finished', label: 'Finished reading' },
+  { value: 'is_favorite',   label: 'Favourite' },
 ]
 
 const FORMAT_OPTIONS = [
@@ -45,10 +58,108 @@ const FORMAT_OPTIONS = [
   { value: 'digital',    label: 'Digital' },
 ]
 
-// ─── Auto-detect ──────────────────────────────────────────────────────────────
+// ─── Source presets ──────────────────────────────────────────────────────────
+//
+// Each preset maps a known CSV header (verbatim, case-sensitive) to a
+// Librarium import field. Picking a source from the dropdown reseats
+// the column mapping using its preset; headers not in the preset fall
+// back to the fuzzy autoDetect heuristic so additional columns aren't
+// silently ignored.
+//
+// Verified against real exports from each source (April 2026 column
+// shapes). If a source changes its export format, update its entry —
+// the rest of the UI is preset-agnostic.
 
+type Source = 'generic' | 'goodreads' | 'storygraph' | 'libib'
+
+interface Preset {
+  label: string
+  // Header → Librarium field. Header keys are matched verbatim.
+  columnMap: Record<string, string>
+}
+
+const SOURCE_PRESETS: Record<Source, Preset> = {
+  generic: {
+    label: 'Generic CSV (auto-detect)',
+    columnMap: {},
+  },
+  goodreads: {
+    label: 'Goodreads',
+    columnMap: {
+      'Title':           'title',
+      'Author':          'author',
+      'ISBN':            'isbn_10',
+      'ISBN13':          'isbn_13',
+      'My Rating':       'rating',
+      'Publisher':       'publisher',
+      'Number of Pages': 'page_count',
+      'Year Published':  'publish_date',
+      'Date Read':       'date_finished',
+      'Bookshelves':     'tags',
+      'Exclusive Shelf': 'read_status',
+      'My Review':       'review',
+      'Private Notes':   'notes',
+    },
+  },
+  storygraph: {
+    label: 'StoryGraph',
+    columnMap: {
+      'Title':          'title',
+      'Authors':        'author',
+      'ISBN/UID':       'isbn_13',
+      'Read Status':    'read_status',
+      'Last Date Read': 'date_finished',
+      'Star Rating':    'rating',
+      'Review':         'review',
+      'Tags':           'tags',
+    },
+  },
+  libib: {
+    label: 'Libib',
+    columnMap: {
+      'title':        'title',
+      'creators':     'author',
+      'ean_isbn13':   'isbn_13',
+      'upc_isbn10':   'isbn_10',
+      'description':  'description',
+      'publisher':    'publisher',
+      'publish_date': 'publish_date',
+      'tags':         'tags',
+      'length':       'page_count',
+      'rating':       'rating',
+      'review':       'review',
+      'notes':        'notes',
+      'status':       'read_status',
+      'began':        'date_started',
+      'completed':    'date_finished',
+      'added':        'acquired_date',
+    },
+  },
+}
+
+// detectSource sniffs a small number of headers that are highly
+// distinctive to each tracker. Goodreads is easiest because
+// `Exclusive Shelf` is unique to it; Libib's `creators` + `ean_isbn13`
+// pair is unmistakable; StoryGraph uses `Read Status` paired with
+// `Star Rating`. Returns 'generic' when no source clearly matches.
+function detectSource(headers: string[]): Source {
+  const set = new Set(headers)
+  if (set.has('Exclusive Shelf') || set.has('My Rating')) return 'goodreads'
+  if (set.has('Read Status') && set.has('Star Rating')) return 'storygraph'
+  if (set.has('ean_isbn13') || set.has('creators')) return 'libib'
+  return 'generic'
+}
+
+// ─── Auto-detect ──────────────────────────────────────────────────────────────
+//
+// Fuzzy fallback used when a header isn't claimed by the active source
+// preset. Strips delimiters/case and matches against a small set of
+// common variants so that vanilla CSVs people produce by hand still
+// land in the right field without needing a preset.
 function autoDetect(header: string): string {
   const h = header.toLowerCase().replace(/[\s\-_.]/g, '')
+
+  // Book metadata
   if (['isbn13', 'isbn', 'ean', 'barcode', 'ean13', 'eanisbn13', 'eanisbn'].includes(h)) return 'isbn_13'
   if (['isbn10', 'upc', 'upcisbn10', 'upcisbn', 'upc10'].includes(h)) return 'isbn_10'
   if (['title', 'booktitle', 'name', 'worktitle'].includes(h)) return 'title'
@@ -56,13 +167,46 @@ function autoDetect(header: string): string {
   if (['author', 'authors', 'writer', 'authorlf', 'authorname', 'creators', 'creator', 'artist'].includes(h)) return 'author'
   if (['publisher', 'pub', 'publishedby'].includes(h)) return 'publisher'
   if (['yearpublished', 'originalpublicationyear', 'publisheddate', 'publishdate', 'publicationdate'].includes(h)) return 'publish_date'
-  if (['acquiredat', 'acquireddate', 'dateacquired', 'purchasedate', 'datepurchased'].includes(h)) return 'acquired_date'
+  if (['acquiredat', 'acquireddate', 'dateacquired', 'purchasedate', 'datepurchased', 'added', 'dateadded'].includes(h)) return 'acquired_date'
   if (['description', 'summary', 'synopsis'].includes(h)) return 'description'
   if (['pagecount', 'pages', 'numberofpages', 'length', 'numpages', 'pagenum'].includes(h)) return 'page_count'
   if (['language', 'lang', 'booklanguage'].includes(h)) return 'language'
-  if (['tags', 'tag', 'genre', 'genres', 'category', 'categories', 'subjects', 'subject'].includes(h)) return 'tags'
+  if (['tags', 'tag', 'genre', 'genres', 'category', 'categories', 'subjects', 'subject', 'bookshelves'].includes(h)) return 'tags'
   if (['mediatype', 'type', 'format', 'booktype', 'bookformat', 'bindingtype'].includes(h)) return 'media_type'
+
+  // User interaction
+  if (['rating', 'myrating', 'starrating', 'usrrating'].includes(h)) return 'rating'
+  if (['review', 'myreview'].includes(h)) return 'review'
+  if (['notes', 'note', 'privatenotes'].includes(h)) return 'notes'
+  if (['readstatus', 'status', 'exclusiveshelf'].includes(h)) return 'read_status'
+  if (['began', 'datestarted', 'startedreading', 'startdate'].includes(h)) return 'date_started'
+  if (['completed', 'datefinished', 'datefinishedreading', 'finishdate', 'dateread', 'lastdateread', 'finishedreading'].includes(h)) return 'date_finished'
+  if (['favorite', 'favourite', 'isfavorite', 'isfavourite'].includes(h)) return 'is_favorite'
+
   return ''
+}
+
+// applyMapping computes the colIndex → field map for a given source
+// preset and a list of CSV headers. Headers in the preset's columnMap
+// are matched verbatim; everything else falls through to autoDetect.
+// The colIndex-keyed shape matches what the existing UI consumes.
+function applyMapping(headers: string[], source: Source): Record<number, string> {
+  const out: Record<number, string> = {}
+  const claimed = new Set<string>()
+  const preset = SOURCE_PRESETS[source].columnMap
+  headers.forEach((h, i) => {
+    let target = preset[h] ?? ''
+    if (!target) target = autoDetect(h)
+    // Each Librarium field is claimed by at most one column — first
+    // mapping wins, mirroring the historical behaviour.
+    if (target && !claimed.has(target)) {
+      out[i] = target
+      claimed.add(target)
+    } else {
+      out[i] = ''
+    }
+  })
+  return out
 }
 
 // ─── CSV preview parser ───────────────────────────────────────────────────────
@@ -171,6 +315,9 @@ export default function ImportPage() {
   const [csvFile, setCsvFile] = useState<File | null>(null)
   const [headers, setHeaders] = useState<string[]>([])
   const [csvSamples, setCsvSamples] = useState<string[][]>([])
+  // source picks the per-tracker preset that pre-fills csvMapping;
+  // 'generic' falls back to autoDetect for every column.
+  const [source, setSource] = useState<Source>('generic')
   // csvMapping: colIndex → internal field name ('' = skip)
   const [csvMapping, setCsvMapping] = useState<Record<number, string>>({})
   const [skipDuplicates, setSkipDuplicates] = useState(true)
@@ -220,21 +367,41 @@ export default function ImportPage() {
         setSubmitError('The file appears empty or invalid.')
         return
       }
+      // Sniff the source from the headers — if it's clearly a known
+      // tracker we set the dropdown for the user and use that
+      // preset's verbatim column-map. Otherwise we land on 'generic'
+      // and rely on the fuzzy autoDetect fallback.
+      const detected = detectSource(hdrs)
+      const auto = applyMapping(hdrs, detected)
+      const initPreferCsv: Record<string, boolean> = {}
+      Object.values(auto).forEach(field => {
+        if (field) initPreferCsv[field] = true
+      })
       setCsvFile(file)
       setHeaders(hdrs)
       setCsvSamples(samples)
-      const auto: Record<number, string> = {}
-      const initPreferCsv: Record<string, boolean> = {}
-      hdrs.forEach((h, i) => {
-        const field = autoDetect(h)
-        auto[i] = field
-        if (field) initPreferCsv[field] = true
-      })
+      setSource(detected)
       setCsvMapping(auto)
       setPreferCsv(initPreferCsv)
       setSubmitError(null)
     }
     reader.readAsText(file, 'UTF-8')
+  }
+
+  // Reseats the column mapping when the user changes the source
+  // dropdown. Preserves preferCsv toggles where possible — keying by
+  // field name means the tick state on, say, "title" survives a
+  // source change as long as some column still maps to "title".
+  const handleSourceChange = (next: Source) => {
+    setSource(next)
+    if (headers.length === 0) return
+    const remapped = applyMapping(headers, next)
+    setCsvMapping(remapped)
+    const refreshed: Record<string, boolean> = {}
+    Object.values(remapped).forEach(field => {
+      if (field) refreshed[field] = preferCsv[field] ?? true
+    })
+    setPreferCsv(refreshed)
   }
 
   // ── Submit ────────────────────────────────────────────────────────────────
@@ -300,6 +467,7 @@ export default function ImportPage() {
     setCsvFile(null)
     setHeaders([])
     setCsvSamples([])
+    setSource('generic')
     setCsvMapping({})
     setPreferCsv({})
     setImportJob(null)
@@ -417,6 +585,29 @@ export default function ImportPage() {
               </div>
             )}
           </div>
+
+          {/* Source picker — auto-detected from headers; user can override. */}
+          {headers.length > 0 && (
+            <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                  <p className="text-sm font-medium text-gray-800 dark:text-gray-200">Importing from…</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                    Picking a source pre-fills the column mapping below. Detected automatically from the file's headers; override here if it picked wrong.
+                  </p>
+                </div>
+                <select
+                  value={source}
+                  onChange={e => handleSourceChange(e.target.value as Source)}
+                  className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                >
+                  {(Object.keys(SOURCE_PRESETS) as Source[]).map(s => (
+                    <option key={s} value={s}>{SOURCE_PRESETS[s].label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
 
           {/* Column mapping — one row per CSV column */}
           {headers.length > 0 && (

@@ -18,32 +18,17 @@ interface ImportJob {
 
 // ─── Field definitions ────────────────────────────────────────────────────────
 
-// Field names match what the api worker reads out of `row[...]`. Adding a
-// field here extends the column-mapping UI and exposes it for source
-// presets to target.
-//
-// Section breaks below are visual only — the worker doesn't care how the
-// fields are grouped.
 const IMPORT_FIELDS: { value: string; label: string }[] = [
-  // Book metadata
-  { value: 'title',         label: 'Title' },
-  { value: 'isbn_13',       label: 'ISBN-13' },
-  { value: 'isbn_10',       label: 'ISBN-10' },
-  { value: 'author',        label: 'Author' },
-  { value: 'publisher',     label: 'Publisher' },
-  { value: 'publish_date',  label: 'Publish Date' },
-  { value: 'description',   label: 'Description' },
-  { value: 'page_count',    label: 'Page Count' },
-  { value: 'language',      label: 'Language' },
-  { value: 'tags',          label: 'Tags' },
-  // User interaction (per-importer; written to user_book_interactions)
-  { value: 'read_status',   label: 'Read status' },
-  { value: 'rating',        label: 'Rating' },
-  { value: 'review',        label: 'Review' },
-  { value: 'notes',         label: 'Notes' },
-  { value: 'date_started',  label: 'Started reading' },
-  { value: 'date_finished', label: 'Finished reading' },
-  { value: 'is_favorite',   label: 'Favourite' },
+  { value: 'title',        label: 'Title' },
+  { value: 'isbn_13',      label: 'ISBN-13' },
+  { value: 'isbn_10',      label: 'ISBN-10' },
+  { value: 'author',       label: 'Author' },
+  { value: 'publisher',    label: 'Publisher' },
+  { value: 'publish_date', label: 'Publish Date' },
+  { value: 'description',  label: 'Description' },
+  { value: 'page_count',   label: 'Page Count' },
+  { value: 'language',     label: 'Language' },
+  { value: 'tags',         label: 'Tags' },
 ]
 
 const FORMAT_OPTIONS = [
@@ -54,107 +39,10 @@ const FORMAT_OPTIONS = [
   { value: 'digital',    label: 'Digital' },
 ]
 
-// ─── Source presets ──────────────────────────────────────────────────────────
-//
-// Each preset maps a known CSV header (verbatim, case-sensitive) to a
-// Librarium import field. Picking a source from the dropdown reseats
-// the column mapping using its preset; headers not in the preset fall
-// back to the fuzzy autoDetect heuristic so additional columns aren't
-// silently ignored.
-//
-// Verified against real exports from each source (April 2026 column
-// shapes). If a source changes its export format, update its entry —
-// the rest of the UI is preset-agnostic.
-
-type Source = 'generic' | 'goodreads' | 'storygraph' | 'libib'
-
-interface Preset {
-  label: string
-  // Header → Librarium field. Header keys are matched verbatim.
-  columnMap: Record<string, string>
-}
-
-const SOURCE_PRESETS: Record<Source, Preset> = {
-  generic: {
-    label: 'Generic CSV (auto-detect)',
-    columnMap: {},
-  },
-  goodreads: {
-    label: 'Goodreads',
-    columnMap: {
-      'Title':              'title',
-      'Author':             'author',
-      'ISBN':               'isbn_10',
-      'ISBN13':             'isbn_13',
-      'My Rating':          'rating',
-      'Publisher':          'publisher',
-      'Number of Pages':    'page_count',
-      'Year Published':     'publish_date',
-      'Date Read':          'date_finished',
-      'Bookshelves':        'tags',
-      'Exclusive Shelf':    'read_status',
-      'My Review':          'review',
-      'Private Notes':      'notes',
-    },
-  },
-  storygraph: {
-    label: 'StoryGraph',
-    columnMap: {
-      'Title':         'title',
-      'Authors':       'author',
-      'ISBN/UID':      'isbn_13',
-      'Read Status':   'read_status',
-      'Last Date Read':'date_finished',
-      'Star Rating':   'rating',
-      'Review':        'review',
-      'Tags':          'tags',
-    },
-  },
-  libib: {
-    label: 'Libib',
-    columnMap: {
-      'title':        'title',
-      'creators':     'author',
-      'ean_isbn13':   'isbn_13',
-      'upc_isbn10':   'isbn_10',
-      'description':  'description',
-      'publisher':    'publisher',
-      'publish_date': 'publish_date',
-      'tags':         'tags',
-      'length':       'page_count',
-      'rating':       'rating',
-      'review':       'review',
-      'notes':        'notes',
-      'status':       'read_status',
-      'began':        'date_started',
-      'completed':    'date_finished',
-    },
-  },
-}
-
-// detectSource sniffs a small number of headers that are highly
-// distinctive to each tracker. Goodreads is the easiest because
-// `Exclusive Shelf` is unique to it; Libib's `creators` + `ean_isbn13`
-// pair is unmistakable; StoryGraph uses `Read Status` paired with
-// `Star Rating`. Returns 'generic' when no source clearly matches.
-function detectSource(headers: string[]): Source {
-  const set = new Set(headers)
-  if (set.has('Exclusive Shelf') || set.has('My Rating')) return 'goodreads'
-  if (set.has('Read Status') && set.has('Star Rating')) return 'storygraph'
-  if (set.has('ean_isbn13') || set.has('creators')) return 'libib'
-  return 'generic'
-}
-
 // ─── Auto-detect mapping from CSV header ─────────────────────────────────────
-//
-// Fuzzy fallback used when a header isn't claimed by the active source
-// preset. Strips delimiters/case and matches against a small set of
-// common variants so that vanilla CSVs people produce by hand still
-// land in the right field without needing a preset.
+
 function autoDetect(header: string): string {
   const h = header.toLowerCase().replace(/[\s\-_.]/g, '')
-
-  // Book metadata
   if (['isbn13', 'isbn', 'ean', 'barcode', 'ean13', 'eanisbn13', 'eanisbn'].includes(h)) return 'isbn_13'
   if (['isbn10', 'upc', 'upcisbn10', 'upcisbn', 'upc10'].includes(h)) return 'isbn_10'
   if (['title', 'booktitle', 'name', 'worktitle'].includes(h)) return 'title'
@@ -164,37 +52,8 @@ function autoDetect(header: string): string {
   if (['description', 'summary', 'synopsis'].includes(h)) return 'description'
   if (['pagecount', 'pages', 'numberofpages', 'length', 'numpages', 'pagenum'].includes(h)) return 'page_count'
   if (['language', 'lang', 'booklanguage'].includes(h)) return 'language'
-  if (['tags', 'tag', 'genre', 'genres', 'category', 'categories', 'subjects', 'subject', 'bookshelves'].includes(h)) return 'tags'
-
-  // User interaction
-  if (['rating', 'myrating', 'starrating', 'usrrating'].includes(h)) return 'rating'
-  if (['review', 'myreview'].includes(h)) return 'review'
-  if (['notes', 'note', 'privatenotes'].includes(h)) return 'notes'
-  if (['readstatus', 'status', 'exclusiveshelf'].includes(h)) return 'read_status'
-  if (['began', 'datestarted', 'startedreading', 'startdate'].includes(h)) return 'date_started'
-  if (['completed', 'datefinished', 'datefinishedreading', 'finishdate', 'dateread', 'lastdateread', 'finishedreading'].includes(h)) return 'date_finished'
-  if (['favorite', 'favourite', 'isfavorite', 'isfavourite'].includes(h)) return 'is_favorite'
-
+  if (['tags', 'tag', 'genre', 'genres', 'category', 'categories', 'subjects', 'subject'].includes(h)) return 'tags'
   return ''
-}
-
-// applyMapping computes the mapping object for a given source preset
-// and a list of CSV headers. Headers in the preset's columnMap are
-// matched verbatim; everything else falls through to autoDetect. Each
-// Librarium field is claimed by at most one column — if multiple
-// headers would map to the same field the first one wins, matching
-// the existing behaviour.
-function applyMapping(headers: string[], source: Source): Record<string, number | null> {
-  const out: Record<string, number | null> = {}
-  for (const f of IMPORT_FIELDS) out[f.value] = null
-
-  const preset = SOURCE_PRESETS[source].columnMap
-  headers.forEach((h, i) => {
-    let target = preset[h] ?? ''
-    if (!target) target = autoDetect(h)
-    if (target && out[target] === null) out[target] = i
-  })
-  return out
 }
 
 // ─── CSV header parser (first row only) ──────────────────────────────────────
@@ -284,7 +143,6 @@ export default function ImportNewPage() {
   const [isDragging, setIsDragging] = useState(false)
   const [csvFile, setCsvFile] = useState<File | null>(null)
   const [headers, setHeaders] = useState<string[]>([])
-  const [source, setSource] = useState<Source>('generic')
   const [mapping, setMapping] = useState<Record<string, number | null>>({})
   const [skipDuplicates, setSkipDuplicates] = useState(true)
   const [defaultFormat, setDefaultFormat] = useState('paperback')
@@ -314,30 +172,22 @@ export default function ImportNewPage() {
         setSubmitError('The file appears empty or invalid.')
         return
       }
-      // Sniff the source from the headers — if it's clearly a known
-      // tracker we set the dropdown for the user and use that
-      // preset's verbatim column-map. Otherwise we land on 'generic'
-      // and rely on the fuzzy autoDetect fallback.
-      const detected = detectSource(hdrs)
       setCsvFile(file)
       setHeaders(hdrs)
-      setSource(detected)
-      setMapping(applyMapping(hdrs, detected))
+      const auto: Record<string, number | null> = {}
+      for (const field of IMPORT_FIELDS) {
+        auto[field.value] = null
+      }
+      hdrs.forEach((h, i) => {
+        const detected = autoDetect(h)
+        if (detected && auto[detected] === null) {
+          auto[detected] = i
+        }
+      })
+      setMapping(auto)
       setSubmitError(null)
     }
     reader.readAsText(file, 'UTF-8')
-  }
-
-  // Re-run the mapping whenever the user picks a different source
-  // from the dropdown. Replaces the current mapping wholesale —
-  // matches the "preset is authoritative" mental model. Manual
-  // tweaks below the dropdown are still preserved per row because
-  // the user can override after.
-  const handleSourceChange = (next: Source) => {
-    setSource(next)
-    if (headers.length > 0) {
-      setMapping(applyMapping(headers, next))
-    }
   }
 
   const handleDrop = (e: React.DragEvent) => {
@@ -416,7 +266,6 @@ export default function ImportNewPage() {
     if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null }
     setCsvFile(null)
     setHeaders([])
-    setSource('generic')
     setMapping({})
     setImportJob(null)
     setSubmitError(null)
@@ -488,29 +337,6 @@ export default function ImportNewPage() {
 
           {headers.length > 0 && (
             <div>
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-base font-semibold text-gray-900 dark:text-white">Source</h3>
-              </div>
-              <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 mb-6">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-medium text-gray-800 dark:text-gray-200">Importing from…</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                      Picking a source pre-fills the column mapping below. Detected automatically from the file's headers; override here if it picked wrong.
-                    </p>
-                  </div>
-                  <select
-                    value={source}
-                    onChange={e => handleSourceChange(e.target.value as Source)}
-                    className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  >
-                    {(Object.keys(SOURCE_PRESETS) as Source[]).map(s => (
-                      <option key={s} value={s}>{SOURCE_PRESETS[s].label}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
               <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-3">Column Mapping</h3>
               <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden bg-white dark:bg-gray-900">
                 <table className="w-full text-sm">
