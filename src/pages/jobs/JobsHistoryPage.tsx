@@ -382,17 +382,27 @@ function JobRow({
                   </div>
                 )
               ) : isActive ? (
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 h-1.5 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden max-w-xs">
-                    <div
-                      className="h-full rounded-full bg-blue-500 transition-all duration-500"
-                      style={{ width: job.total_rows > 0 ? `${Math.round((job.processed_rows / job.total_rows) * 100)}%` : '0%' }}
-                    />
-                  </div>
-                  <span className="text-xs text-gray-400 tabular-nums">
-                    {job.processed_rows}/{job.total_rows}
-                  </span>
-                </div>
+                // processed/failed/skipped are disjoint buckets in the
+                // API; an import that mostly skips would otherwise sit
+                // at 0% all the way through. The bar shows total rows
+                // the worker has finished with, which is the sum.
+                (() => {
+                  const handled = job.processed_rows + job.failed_rows + job.skipped_rows
+                  const pct = job.total_rows > 0 ? Math.round((handled / job.total_rows) * 100) : 0
+                  return (
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-1.5 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden max-w-xs">
+                        <div
+                          className="h-full rounded-full bg-blue-500 transition-all duration-500"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                      <span className="text-xs text-gray-400 tabular-nums">
+                        {handled}/{job.total_rows}
+                      </span>
+                    </div>
+                  )
+                })()
               ) : (
                 <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
                   <span>{job.total_rows} {isEnrichment ? 'books' : 'rows'}</span>
