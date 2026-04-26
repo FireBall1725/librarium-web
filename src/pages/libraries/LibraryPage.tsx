@@ -2,7 +2,7 @@ import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'rea
 import { useParams, Link, useOutletContext, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth, ApiError } from '../../auth/AuthContext'
 import type { Crumb, LibraryOutletContext } from '../../components/LibraryOutlet'
-import type { LibraryMember, Book, PagedBooks, MediaType, ContributorResult, Tag, Shelf, Loan, Series, SeriesEntry, SeriesPreviewBook, SeriesVolume, SeriesMatchCandidate, SeriesSuggestion, ISBNLookupResult, SeriesLookupResult, Genre } from '../../types'
+import type { LibraryMember, Book, PagedBooks, MediaType, ContributorResult, Tag, Shelf, Loan, Series, SeriesArc, SeriesEntry, SeriesPreviewBook, SeriesVolume, SeriesMatchCandidate, SeriesSuggestion, ISBNLookupResult, SeriesLookupResult, Genre } from '../../types'
 import { useAuthenticatedImage } from '../../hooks/useAuthenticatedImage'
 import { LANGUAGE_OPTIONS } from '../../components/AddEditionModal'
 import BookCover, { BookCoverThumb } from '../../components/BookCover'
@@ -4762,7 +4762,6 @@ function SeriesDetailView({ seriesId, libraryId, setExtraCrumbs, onBack }: Serie
   const maxVolumePos = volumes.length > 0 ? Math.max(...volumes.map(v => v.position)) : 0
   const upperBound = Math.max(Math.floor(maxEntryPos), Math.floor(maxVolumePos), series.total_count ?? 0)
 
-  type GhostRow = { position: number; volume?: SeriesVolume }
   type Row = { type: 'entry'; entry: SeriesEntry } | { type: 'ghost'; position: number; volume?: SeriesVolume }
 
   // When arcs exist we group books under arc-header rows instead of one flat
