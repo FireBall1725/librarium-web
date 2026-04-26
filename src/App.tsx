@@ -77,6 +77,7 @@ function AppRoutes() {
                 <Route path="/libraries/:libraryId/books" element={<LibraryPage section="books" />} />
                 <Route path="/libraries/:libraryId/shelves" element={<LibraryPage section="shelves" />} />
                 <Route path="/libraries/:libraryId/series" element={<LibraryPage section="series" />} />
+                <Route path="/libraries/:libraryId/series/:seriesId" element={<LibraryPage section="series" />} />
                 <Route path="/libraries/:libraryId/loans" element={<LibraryPage section="loans" />} />
                 <Route path="/libraries/:libraryId/members" element={<LibraryPage section="members" />} />
                 <Route path="/libraries/:libraryId/books/:bookId" element={<BookPage />} />
