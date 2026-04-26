@@ -245,7 +245,31 @@ export interface Series {
   last_release_date: string | null
   next_release_date: string | null
   book_count: number
+  arc_count: number
+  // Caller-relative reading state — number of books in the series whose
+  // effective user_read_status is 'read' / 'reading'. Both 0 when not authed
+  // or no progress recorded. UI gates display behind show_read_badges.
+  read_count: number
+  reading_count: number
+  preview_books: SeriesPreviewBook[]
   tags: Tag[]
+  created_at: string
+  updated_at: string
+}
+
+export interface SeriesPreviewBook {
+  book_id: string
+  title: string
+  cover_url: string | null
+}
+
+export interface SeriesArc {
+  id: string
+  series_id: string
+  name: string
+  description: string
+  position: number
+  book_count: number
   created_at: string
   updated_at: string
 }
@@ -265,9 +289,12 @@ export interface SeriesVolume {
 export interface SeriesEntry {
   position: number
   book_id: string
+  arc_id: string | null
   title: string
   subtitle: string
   media_type: string
+  cover_url: string | null
+  user_read_status: string
   contributors: BookContributor[]
 }
 

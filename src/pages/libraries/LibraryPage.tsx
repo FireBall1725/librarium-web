@@ -1,8 +1,9 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useParams, Link, useOutletContext, useLocation } from 'react-router-dom'
+import { useParams, Link, useOutletContext, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth, ApiError } from '../../auth/AuthContext'
 import type { Crumb, LibraryOutletContext } from '../../components/LibraryOutlet'
-import type { LibraryMember, Book, PagedBooks, MediaType, ContributorResult, Tag, Shelf, Loan, Series, SeriesEntry, SeriesVolume, SeriesMatchCandidate, SeriesSuggestion, ISBNLookupResult, SeriesLookupResult, Genre } from '../../types'
+import type { LibraryMember, Book, PagedBooks, MediaType, ContributorResult, Tag, Shelf, Loan, Series, SeriesEntry, SeriesPreviewBook, SeriesVolume, SeriesMatchCandidate, SeriesSuggestion, ISBNLookupResult, SeriesLookupResult, Genre } from '../../types'
+import { useAuthenticatedImage } from '../../hooks/useAuthenticatedImage'
 import { LANGUAGE_OPTIONS } from '../../components/AddEditionModal'
 import BookCover, { BookCoverThumb } from '../../components/BookCover'
 import { useToast } from '../../components/Toast'
@@ -10,202 +11,14 @@ import ContributorRow, { CONTRIBUTOR_ROLES } from '../../components/ContributorR
 import MediaTypeSelect from '../../components/MediaTypeSelect'
 import EmojiPicker from '../../components/EmojiPicker'
 import EditBookModal from '../../components/EditBookModal'
-
-// ─── Language codes ───────────────────────────────────────────────────────────
-// (imported from AddEditionModal shared component)
-
-// ─── Query language parser ────────────────────────────────────────────────────
-
-type CondField = 'title' | 'tag' | 'genre' | 'type' | 'contributor' | 'letter' | 'has' | 'series' | 'shelf' | 'publisher' | 'language'
-type CondOp = 'contains' | 'not_contains' | 'equals' | 'not_equals' | 'regex' | 'phrase'
-
-interface SearchCondition {
-  field: CondField
-  op: CondOp
-  value: string
-  raw: string // original token(s) — used to remove this condition from the query string
-}
-
-interface ConditionGroup {
-  mode: 'AND' | 'OR'
-  conditions: SearchCondition[]
-}
-
-// ParsedSearch is a list of groups ANDed together.
-// Each group has its own mode (AND/OR) for its conditions.
-interface ParsedSearch {
-  groups: ConditionGroup[]
-}
-
-function allConditions(parsed: ParsedSearch): SearchCondition[] {
-  return parsed.groups.flatMap(g => g.conditions)
-}
-
-function displayLanguage(code: string): string {
-  if (!code) return ''
-  try {
-    return new Intl.DisplayNames(['en'], { type: 'language' }).of(code) ?? code
-  } catch {
-    return code
-  }
-}
-
-function conditionLabel(c: SearchCondition): string {
-  if (c.op === 'regex') return `/${c.value}/`
-  if (c.op === 'phrase') return `"${c.value}"`
-  switch (c.field) {
-    case 'letter': return `Starts with "${c.value.toUpperCase()}"`
-    case 'type': return `Type: ${c.value}`
-    case 'tag': return `Tag: ${c.value}`
-    case 'genre': return `Genre: ${c.value}`
-    case 'contributor': return `By: ${c.value}`
-    case 'has': return `Has ${c.value}`
-    case 'series': return `Series: ${c.value}`
-    case 'shelf': return `Shelf: ${c.value}`
-    case 'publisher': return `Publisher: ${c.value}`
-    case 'language': return `Language: ${displayLanguage(c.value)}`
-    default: return c.value
-  }
-}
-
-function removeFromQuery(query: string, raw: string): string {
-  return query
-    .replace(raw, '')
-    .replace(/\(\s*OR\s+/g, '(')   // leading OR after (
-    .replace(/\s+OR\s*\)/g, ')')   // trailing OR before )
-    .replace(/\(\s*AND\s+/g, '(')  // leading AND after (
-    .replace(/\s+AND\s*\)/g, ')') // trailing AND before )
-    .replace(/\(\s*\)/g, '')       // empty parens
-    .replace(/\s+/g, ' ')
-    .trim()
-}
-
-function upsertQueryToken(query: string, token: string, removePattern: RegExp): string {
-  const base = query.replace(removePattern, '').replace(/\s+/g, ' ').trim()
-  return (base ? base + ' ' : '') + token
-}
-
-// tokenizeQuery splits a query string into tokens, treating quoted strings,
-// parentheses, and field:value as atomic units.
-function tokenizeQuery(q: string): string[] {
-  const tokens: string[] = []
-  let cur = ''
-  let inQ = false
-  for (const ch of q) {
-    if (ch === '"') {
-      if (inQ) { tokens.push(cur + '"'); cur = ''; inQ = false }
-      // Don't flush cur — it may be a field prefix like "contributor:"
-      else { cur += '"'; inQ = true }
-    } else if (!inQ && (ch === '(' || ch === ')')) {
-      if (cur) { tokens.push(cur); cur = '' }
-      tokens.push(ch)
-    } else if (ch === ' ' && !inQ) {
-      if (cur) { tokens.push(cur); cur = '' }
-    } else {
-      cur += ch
-    }
-  }
-  if (cur) tokens.push(cur)
-  return tokens.filter(t => t.length > 0)
-}
-
-function parseSearchQuery(raw: string): ParsedSearch {
-  const q = raw.trim()
-  if (!q) return { groups: [] }
-
-  const tokens = tokenizeQuery(q)
-  const groups: ConditionGroup[] = []
-
-  let negate = false
-  let notTok = ''
-
-  function parseSingleCondition(token: string): SearchCondition | null {
-    const rawTok = negate ? notTok + ' ' + token : token
-
-    // field:value — value may be quoted ("hello world")
-    const fm = token.match(/^(type|tag|genre|contributor|author|title|isbn|letter|has|series|shelf|publisher|language):(.+)$/i)
-    if (fm) {
-      const rawField = fm[1].toLowerCase()
-      const field: CondField = rawField === 'author' ? 'contributor' : rawField as CondField
-      const rawVal = fm[2]
-      const value = rawVal.startsWith('"') && rawVal.endsWith('"') && rawVal.length > 2
-        ? rawVal.slice(1, -1) : rawVal
-      const isExact = field === 'type' || field === 'tag' || field === 'genre' || field === 'letter' || field === 'has' || field === 'series' || field === 'shelf' || field === 'publisher' || field === 'language'
-      const op: CondOp = negate ? (isExact ? 'not_equals' : 'not_contains') : (isExact ? 'equals' : 'contains')
-      negate = false; notTok = ''
-      return { field, op, value, raw: rawTok }
-    }
-
-    // Regex /pattern/
-    if (token.startsWith('/') && token.endsWith('/') && token.length > 2) {
-      negate = false; notTok = ''
-      return { field: 'title', op: 'regex', value: token.slice(1, -1), raw: rawTok }
-    }
-
-    // Quoted phrase
-    if (token.startsWith('"') && token.endsWith('"') && token.length > 2) {
-      const op: CondOp = negate ? 'not_contains' : 'phrase'
-      negate = false; notTok = ''
-      return { field: 'title', op, value: token.slice(1, -1), raw: rawTok }
-    }
-
-    // Plain term
-    const op: CondOp = negate ? 'not_contains' : 'contains'
-    negate = false; notTok = ''
-    return { field: 'title', op, value: token, raw: rawTok }
-  }
-
-  // Outer conditions (outside parens) collected here; flushed when we see '('
-  let outerConds: SearchCondition[] = []
-  let outerMode: 'AND' | 'OR' = 'AND'
-
-  let i = 0
-  while (i < tokens.length) {
-    const token = tokens[i]
-    const up = token.toUpperCase()
-
-    if (up === 'NOT') { negate = true; notTok = token; i++; continue }
-    if (up === 'AND') { i++; continue }
-    if (up === 'OR') { outerMode = 'OR'; i++; continue }
-
-    if (token === '(') {
-      // Flush pending outer conditions as a group before the paren block
-      if (outerConds.length > 0) {
-        groups.push({ mode: outerMode, conditions: outerConds })
-        outerConds = []
-        outerMode = 'AND'
-      }
-      i++ // skip '('
-      const subConds: SearchCondition[] = []
-      let subMode: 'AND' | 'OR' = 'AND'
-      negate = false; notTok = ''
-      while (i < tokens.length && tokens[i] !== ')') {
-        const stok = tokens[i]
-        const sup = stok.toUpperCase()
-        if (sup === 'NOT') { negate = true; notTok = stok; i++; continue }
-        if (sup === 'AND') { i++; continue }
-        if (sup === 'OR') { subMode = 'OR'; i++; continue }
-        const cond = parseSingleCondition(stok)
-        if (cond) subConds.push(cond)
-        i++
-      }
-      if (i < tokens.length) i++ // skip ')'
-      if (subConds.length > 0) groups.push({ mode: subMode, conditions: subConds })
-      continue
-    }
-
-    if (token === ')') { i++; continue } // stray close paren — ignore
-
-    const cond = parseSingleCondition(token)
-    if (cond) outerConds.push(cond)
-    i++
-  }
-
-  // Flush remaining outer conditions
-  if (outerConds.length > 0) groups.push({ mode: outerMode, conditions: outerConds })
-
-  return { groups }
-}
+import {
+  allConditions,
+  conditionLabel,
+  displayLanguage,
+  parseSearchQuery,
+  removeFromQuery,
+  upsertQueryToken,
+} from '../../lib/search'
 
 // ─── Manga publisher detection ────────────────────────────────────────────────
 
@@ -2476,7 +2289,7 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
             className={`px-2.5 py-2 transition-colors ${viewMode === 'grid' ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200' : 'text-gray-400 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
             title="Grid view">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
             </svg>
           </button>
         </div>
@@ -4578,59 +4391,347 @@ function FieldPicker<T>({ label, options, selected, equals, onPick, render, extr
 }
 
 interface SeriesDetailViewProps {
-  series: Series
+  seriesId: string
   libraryId: string
+  setExtraCrumbs: (cs: Crumb[]) => void
   onBack: () => void
 }
 
-function SeriesDetailView({ series: initialSeries, libraryId, onBack }: SeriesDetailViewProps) {
+// ─── Series volume cover ─────────────────────────────────────────────────────
+// Larger than BookCoverThumb, with the volume number embedded as a corner
+// badge so the # column can go away. Read-state glow follows the same color
+// scheme used by BookCoverThumb so both surfaces are consistent.
+function SeriesVolumeCover({
+  title, coverUrl, position, readStatus, isGhost,
+}: {
+  title: string
+  coverUrl: string | null | undefined
+  position: number
+  readStatus?: string
+  isGhost?: boolean
+}) {
+  const [imgError, setImgError] = useState(false)
+  const src = useAuthenticatedImage(coverUrl)
+  const showImage = !!src && !imgError && !isGhost
+
+  const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark')
+  const border = isDark ? '0 0 0 1px rgba(255,255,255,0.15)' : '0 0 0 1px rgba(0,0,0,0.2)'
+  const glow: React.CSSProperties = (() => {
+    if (isGhost) return { boxShadow: border }
+    if (readStatus === 'read')           return { boxShadow: `${border}, 0 0 12px 3px rgba(34,197,94,0.7)` }
+    if (readStatus === 'reading')        return { boxShadow: `${border}, 0 0 12px 3px rgba(59,130,246,0.7)` }
+    if (readStatus === 'did_not_finish') return { boxShadow: `${border}, 0 0 12px 3px rgba(245,158,11,0.7)` }
+    return { boxShadow: border }
+  })()
+
+  // The first letter is used as a placeholder when no cover; harmless for
+  // ghost rows since they always render the gradient.
+  const grad = COVER_GRADIENTS[title.charCodeAt(0) % COVER_GRADIENTS.length]
+
+  return (
+    <div className={`w-12 flex-shrink-0 rounded ${isGhost ? 'opacity-50' : ''}`} style={glow}>
+      <div className="relative aspect-[2/3] rounded overflow-hidden">
+        {showImage ? (
+          <img src={src} alt="" className="w-full h-full object-cover" onError={() => setImgError(true)} />
+        ) : (
+          <div className={`w-full h-full bg-gradient-to-br ${grad} flex items-center justify-center`}>
+            <span className="text-white text-base font-bold opacity-50 select-none">{title.charAt(0).toUpperCase()}</span>
+          </div>
+        )}
+        <span className="absolute bottom-0 right-0 bg-black/75 text-white text-[10px] font-bold leading-none px-1.5 py-0.5 rounded-tl">
+          {formatPosition(position)}
+        </span>
+      </div>
+    </div>
+  )
+}
+
+// Subset of COVER_GRADIENTS from BookCover — kept inline so we don't need to
+// export the array from there.
+const COVER_GRADIENTS = [
+  'from-rose-500 to-orange-400',
+  'from-blue-500 to-cyan-400',
+  'from-emerald-500 to-lime-400',
+  'from-violet-500 to-fuchsia-400',
+  'from-amber-500 to-red-400',
+  'from-teal-500 to-blue-400',
+]
+
+// ─── Arc management ──────────────────────────────────────────────────────────
+
+interface ArcManagerPanelProps {
+  libraryId: string
+  seriesId: string
+  arcs: SeriesArc[]
+  open: boolean
+  onToggle: () => void
+  onChanged: () => void
+}
+
+function ArcManagerPanel({ libraryId, seriesId, arcs, open, onToggle, onChanged }: ArcManagerPanelProps) {
   const { callApi } = useAuth()
-  const [series, setSeries] = useState<Series>(initialSeries)
+  const [editingArc, setEditingArc] = useState<SeriesArc | null>(null)
+  const [showAddForm, setShowAddForm] = useState(false)
+
+  const sorted = [...arcs].sort((a, b) => a.position - b.position || a.name.localeCompare(b.name))
+
+  return (
+    <div className="mb-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+      <button onClick={onToggle}
+        className="w-full flex items-center justify-between px-4 py-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-t-xl">
+        <div className="flex items-center gap-2">
+          <svg className={`w-4 h-4 text-gray-400 transition-transform ${open ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+          <span className="font-medium text-sm text-gray-900 dark:text-white">Arcs</span>
+          <span className="text-xs text-gray-500 dark:text-gray-400">{arcs.length === 0 ? 'none yet' : `${arcs.length} arc${arcs.length !== 1 ? 's' : ''}`}</span>
+        </div>
+      </button>
+
+      {open && (
+        <div className="border-t border-gray-100 dark:border-gray-800 p-4 space-y-3">
+          {sorted.length > 0 && (
+            <ul className="space-y-1.5">
+              {sorted.map(arc => editingArc?.id === arc.id ? (
+                <ArcEditRow
+                  key={arc.id}
+                  libraryId={libraryId}
+                  seriesId={seriesId}
+                  arc={arc}
+                  onCancel={() => setEditingArc(null)}
+                  onSaved={() => { setEditingArc(null); onChanged() }}
+                />
+              ) : (
+                <li key={arc.id} className="flex items-center gap-3 text-sm">
+                  <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 dark:bg-gray-700 text-xs font-semibold text-gray-600 dark:text-gray-300 flex-shrink-0">
+                    {formatPosition(arc.position)}
+                  </span>
+                  <span className="flex-1 font-medium text-gray-900 dark:text-white">{arc.name}</span>
+                  <span className="text-xs text-gray-400 dark:text-gray-500">{arc.book_count} book{arc.book_count !== 1 ? 's' : ''}</span>
+                  <button onClick={() => setEditingArc(arc)}
+                    className="p-1 rounded text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    title="Edit arc">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                    </svg>
+                  </button>
+                  <button onClick={async () => {
+                      if (!confirm(`Delete arc "${arc.name}"? Books in it will stay in the series, just unassigned.`)) return
+                      await callApi(`/api/v1/libraries/${libraryId}/series/${seriesId}/arcs/${arc.id}`, { method: 'DELETE' }).catch(() => {})
+                      onChanged()
+                    }}
+                    className="p-1 rounded text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    title="Delete arc">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {showAddForm ? (
+            <ArcEditRow
+              libraryId={libraryId}
+              seriesId={seriesId}
+              arc={null}
+              defaultPosition={sorted.length + 1}
+              onCancel={() => setShowAddForm(false)}
+              onSaved={() => { setShowAddForm(false); onChanged() }}
+            />
+          ) : (
+            <button onClick={() => setShowAddForm(true)}
+              className="text-sm text-blue-600 dark:text-blue-400 hover:underline">+ Add arc</button>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+interface ArcEditRowProps {
+  libraryId: string
+  seriesId: string
+  arc: SeriesArc | null
+  defaultPosition?: number
+  onCancel: () => void
+  onSaved: () => void
+}
+
+function ArcEditRow({ libraryId, seriesId, arc, defaultPosition, onCancel, onSaved }: ArcEditRowProps) {
+  const { callApi } = useAuth()
+  const [name, setName] = useState(arc?.name ?? '')
+  const [position, setPosition] = useState(String(arc?.position ?? defaultPosition ?? 1))
+  const [description, setDescription] = useState(arc?.description ?? '')
+  const [saving, setSaving] = useState(false)
+
+  const save = async () => {
+    if (!name.trim()) return
+    setSaving(true)
+    const body = JSON.stringify({ name: name.trim(), position: Number(position) || 0, description })
+    const url = arc
+      ? `/api/v1/libraries/${libraryId}/series/${seriesId}/arcs/${arc.id}`
+      : `/api/v1/libraries/${libraryId}/series/${seriesId}/arcs`
+    const method = arc ? 'PUT' : 'POST'
+    try {
+      await callApi(url, { method, headers: { 'Content-Type': 'application/json' }, body })
+      onSaved()
+    } catch { /* ignore */ }
+    finally { setSaving(false) }
+  }
+
+  return (
+    <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3 space-y-2">
+      <div className="flex items-center gap-2">
+        <input type="number" step="any" value={position} onChange={e => setPosition(e.target.value)}
+          className="w-16 rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-white px-2 py-1 text-sm"
+          placeholder="Pos" />
+        <input type="text" value={name} onChange={e => setName(e.target.value)} autoFocus
+          className="flex-1 rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-white px-2 py-1 text-sm"
+          placeholder="Arc name" />
+      </div>
+      <input type="text" value={description} onChange={e => setDescription(e.target.value)}
+        className="w-full rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-white px-2 py-1 text-sm"
+        placeholder="Description (optional)" />
+      <div className="flex items-center gap-2 justify-end">
+        <button onClick={onCancel} className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">Cancel</button>
+        <button onClick={save} disabled={saving || !name.trim()}
+          className="rounded bg-blue-600 px-3 py-1 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
+          {saving ? 'Saving…' : (arc ? 'Save' : 'Add')}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+interface BookArcAssignerProps {
+  entry: SeriesEntry
+  arcs: SeriesArc[]
+  isOpen: boolean
+  onOpen: () => void
+  onClose: () => void
+  onAssign: (arcID: string | null) => void
+}
+
+function BookArcAssigner({ entry, arcs, isOpen, onOpen, onClose, onAssign }: BookArcAssignerProps) {
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!isOpen) return
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) onClose()
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [isOpen, onClose])
+
+  const currentArc = arcs.find(a => a.id === entry.arc_id)
+  const sorted = [...arcs].sort((a, b) => a.position - b.position || a.name.localeCompare(b.name))
+
+  return (
+    <div ref={ref} className="relative">
+      <button onClick={isOpen ? onClose : onOpen}
+        className="text-xs text-gray-500 dark:text-gray-400 hover:text-blue-600 transition-colors">
+        {currentArc ? `Arc: ${currentArc.name}` : 'Set arc'}
+      </button>
+      {isOpen && (
+        <div className="absolute right-0 top-full mt-1 z-30 w-56 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg py-1">
+          <button onClick={() => onAssign(null)}
+            className={`w-full text-left px-3 py-1.5 text-xs transition-colors ${!entry.arc_id ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'}`}>
+            Unsorted
+          </button>
+          <div className="my-1 border-t border-gray-100 dark:border-gray-800" />
+          {sorted.map(arc => (
+            <button key={arc.id} onClick={() => onAssign(arc.id)}
+              className={`w-full text-left px-3 py-1.5 text-xs transition-colors ${entry.arc_id === arc.id ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'}`}>
+              {arc.name}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function SeriesDetailView({ seriesId, libraryId, setExtraCrumbs, onBack }: SeriesDetailViewProps) {
+  const { callApi } = useAuth()
+  // Series is fetched on mount so the URL is the source of truth — users can
+  // share links straight to a series without going through the list first.
+  const [series, setSeries] = useState<Series | null>(null)
   const [entries, setEntries] = useState<SeriesEntry[]>([])
   const [volumes, setVolumes] = useState<SeriesVolume[]>([])
+  const [arcs, setArcs] = useState<SeriesArc[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isSyncing, setIsSyncing] = useState(false)
   const [showAdd, setShowAdd] = useState(false)
   const [addHint, setAddHint] = useState<{ position?: number; query?: string } | null>(null)
   const [editEntry, setEditEntry] = useState<SeriesEntry | null>(null)
+  const [showArcManager, setShowArcManager] = useState(false)
+  const [assigningBookId, setAssigningBookId] = useState<string | null>(null)
   const [showMetaSearch, setShowMetaSearch] = useState(false)
   const [showAutoMatch, setShowAutoMatch] = useState(false)
   const [showEdit, setShowEdit] = useState(false)
 
   const deleteSeries = async () => {
+    if (!series) return
     if (!confirm(`Delete series "${series.name}"?`)) return
     try {
-      await callApi(`/api/v1/libraries/${libraryId}/series/${series.id}`, { method: 'DELETE' })
+      await callApi(`/api/v1/libraries/${libraryId}/series/${seriesId}`, { method: 'DELETE' })
       onBack()
     } catch { /* ignore */ }
   }
 
-  const reloadSeries = async () => {
+  const reloadSeries = useCallback(async () => {
     try {
-      const updated = await callApi<Series>(`/api/v1/libraries/${libraryId}/series/${series.id}`)
+      const updated = await callApi<Series>(`/api/v1/libraries/${libraryId}/series/${seriesId}`)
       if (updated) setSeries(updated)
     } catch { /* ignore */ }
-  }
+  }, [callApi, libraryId, seriesId])
 
   const load = useCallback(async () => {
     setIsLoading(true)
     try {
-      const [list, vols] = await Promise.all([
-        callApi<SeriesEntry[]>(`/api/v1/libraries/${libraryId}/series/${series.id}/books`),
-        callApi<SeriesVolume[]>(`/api/v1/libraries/${libraryId}/series/${series.id}/volumes`),
+      const [list, vols, arcList] = await Promise.all([
+        callApi<SeriesEntry[]>(`/api/v1/libraries/${libraryId}/series/${seriesId}/books`),
+        callApi<SeriesVolume[]>(`/api/v1/libraries/${libraryId}/series/${seriesId}/volumes`),
+        callApi<SeriesArc[]>(`/api/v1/libraries/${libraryId}/series/${seriesId}/arcs`),
       ])
       setEntries(list ?? [])
       setVolumes(vols ?? [])
+      setArcs(arcList ?? [])
     } catch { /* ignore */ }
     finally { setIsLoading(false) }
-  }, [callApi, libraryId, series.id])
+  }, [callApi, libraryId, seriesId])
+
+  // URL is the source of truth — fetch the series on mount or when the id
+  // changes. Direct hits to /libraries/{lib}/series/{sid} land here too.
+  useEffect(() => { reloadSeries() }, [reloadSeries])
+
+  // Once we know the series name, push a "Series › <name>" breadcrumb so the
+  // header reflects where we are.
+  useEffect(() => {
+    if (series) {
+      setExtraCrumbs([{ label: 'Series', to: `/libraries/${libraryId}/series` }, { label: series.name }])
+    }
+  }, [series, libraryId, setExtraCrumbs])
+
+  const assignBookToArc = async (bookId: string, position: number, arcID: string | null) => {
+    // Empty string clears an existing arc; UUID assigns; null/undefined leaves it.
+    await callApi(`/api/v1/libraries/${libraryId}/series/${seriesId}/books`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ book_id: bookId, position, arc_id: arcID ?? '' }),
+    }).catch(() => {})
+    setAssigningBookId(null)
+    load()
+  }
 
   const syncVolumes = async () => {
-    if (!series.external_id) return
+    if (!series?.external_id) return
     setIsSyncing(true)
     try {
       const vols = await callApi<SeriesVolume[]>(
-        `/api/v1/libraries/${libraryId}/series/${series.id}/volumes/sync`,
+        `/api/v1/libraries/${libraryId}/series/${seriesId}/volumes/sync`,
         { method: 'POST' }
       )
       setVolumes(vols ?? [])
@@ -4643,8 +4744,14 @@ function SeriesDetailView({ series: initialSeries, libraryId, onBack }: SeriesDe
 
   const removeEntry = async (bookId: string) => {
     if (!confirm('Remove this book from the series?')) return
-    await callApi(`/api/v1/libraries/${libraryId}/series/${series.id}/books/${bookId}`, { method: 'DELETE' }).catch(() => {})
+    await callApi(`/api/v1/libraries/${libraryId}/series/${seriesId}/books/${bookId}`, { method: 'DELETE' }).catch(() => {})
     load()
+  }
+
+  // Show a loading state until the series is fetched. The rest of the body
+  // can safely assume series is non-null.
+  if (!series) {
+    return <div className="text-sm text-gray-400 dark:text-gray-500 text-center py-16">Loading…</div>
   }
 
   // Build merged list: real entries + ghost rows for missing integer positions.
@@ -4654,33 +4761,66 @@ function SeriesDetailView({ series: initialSeries, libraryId, onBack }: SeriesDe
   const maxEntryPos = entries.length > 0 ? Math.max(...entries.map(e => e.position)) : 0
   const maxVolumePos = volumes.length > 0 ? Math.max(...volumes.map(v => v.position)) : 0
   const upperBound = Math.max(Math.floor(maxEntryPos), Math.floor(maxVolumePos), series.total_count ?? 0)
+
+  type GhostRow = { position: number; volume?: SeriesVolume }
   type Row = { type: 'entry'; entry: SeriesEntry } | { type: 'ghost'; position: number; volume?: SeriesVolume }
-  const rows: Row[] = [...entries.map(e => ({ type: 'entry' as const, entry: e }))]
-  for (let i = 1; i <= upperBound; i++) {
-    if (!existingPositions.has(i)) rows.push({ type: 'ghost', position: i, volume: volumeByPosition.get(i) })
+
+  // When arcs exist we group books under arc-header rows instead of one flat
+  // list. Books without an arc cluster under "Unsorted"; missing volumes go to
+  // a "Missing volumes" footer group.
+  type Group = { key: string; label: string; arcId: string | null; rows: Row[] }
+  let groups: Group[] = []
+
+  if (arcs.length > 0) {
+    const sortedArcs = [...arcs].sort((a, b) => a.position - b.position || a.name.localeCompare(b.name))
+    const byArc = new Map<string | null, SeriesEntry[]>()
+    for (const e of entries) {
+      const k = e.arc_id ?? null
+      if (!byArc.has(k)) byArc.set(k, [])
+      byArc.get(k)!.push(e)
+    }
+    const sortByPos = (a: SeriesEntry, b: SeriesEntry) => a.position - b.position
+    const unsorted = (byArc.get(null) ?? []).slice().sort(sortByPos)
+    if (unsorted.length > 0) {
+      groups.push({ key: 'unsorted', label: 'Unsorted', arcId: null, rows: unsorted.map(e => ({ type: 'entry' as const, entry: e })) })
+    }
+    for (const arc of sortedArcs) {
+      const arcEntries = (byArc.get(arc.id) ?? []).slice().sort(sortByPos)
+      groups.push({ key: arc.id, label: arc.name, arcId: arc.id, rows: arcEntries.map(e => ({ type: 'entry' as const, entry: e })) })
+    }
+    const ghostRows: Row[] = []
+    for (let i = 1; i <= upperBound; i++) {
+      if (!existingPositions.has(i)) ghostRows.push({ type: 'ghost', position: i, volume: volumeByPosition.get(i) })
+    }
+    if (ghostRows.length > 0) {
+      groups.push({ key: 'missing', label: 'Missing volumes', arcId: null, rows: ghostRows })
+    }
+  } else {
+    // Flat — single group with entries + ghosts interleaved by position.
+    const allRows: Row[] = [...entries.map(e => ({ type: 'entry' as const, entry: e }))]
+    for (let i = 1; i <= upperBound; i++) {
+      if (!existingPositions.has(i)) allRows.push({ type: 'ghost', position: i, volume: volumeByPosition.get(i) })
+    }
+    allRows.sort((a, b) => {
+      const posA = a.type === 'entry' ? a.entry.position : a.position
+      const posB = b.type === 'entry' ? b.entry.position : b.position
+      return posA - posB
+    })
+    groups = [{ key: 'flat', label: '', arcId: null, rows: allRows }]
   }
-  rows.sort((a, b) => {
-    const posA = a.type === 'entry' ? a.entry.position : a.position
-    const posB = b.type === 'entry' ? b.entry.position : b.position
-    return posA - posB
-  })
+
+  const hasAnyRows = groups.some(g => g.rows.length > 0)
+  const COL_COUNT = 5 // cover (with embedded #), title, type, contributors, actions
+  const showReadBadges = localStorage.getItem('librarium:show_read_badges') !== 'false'
 
   return (
     <div>
       <div className="flex items-center gap-3 mb-4 flex-wrap">
         <button onClick={onBack} className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors">← Back</button>
-        {series.status === 'completed' && (
-          <span className="inline-flex items-center rounded-full bg-green-50 dark:bg-green-950/50 px-2 py-0.5 text-xs font-medium text-green-700 dark:text-green-400 ring-1 ring-green-200 dark:ring-green-800">Complete</span>
-        )}
-        {series.status === 'hiatus' && (
-          <span className="inline-flex items-center rounded-full bg-amber-50 dark:bg-amber-950/50 px-2 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-400 ring-1 ring-amber-200 dark:ring-amber-800">Hiatus</span>
-        )}
-        {series.status === 'cancelled' && (
-          <span className="inline-flex items-center rounded-full bg-red-50 dark:bg-red-950/50 px-2 py-0.5 text-xs font-medium text-red-700 dark:text-red-400 ring-1 ring-red-200 dark:ring-red-800">Cancelled</span>
-        )}
-        {series.total_count != null && (
-          <span className="text-xs text-gray-400 dark:text-gray-500">{series.book_count} / {series.total_count} volumes</span>
-        )}
+        <span className="text-xs text-gray-500 dark:text-gray-400">
+          {seriesStatusLabel(series.status)}
+          {series.total_count != null && ` · ${series.book_count} / ${series.total_count} volumes`}
+        </span>
         <div className="flex-1" />
         {series.external_id && (
           <button onClick={syncVolumes} disabled={isSyncing}
@@ -4724,86 +4864,137 @@ function SeriesDetailView({ series: initialSeries, libraryId, onBack }: SeriesDe
 
       {isLoading && <div className="text-sm text-gray-400 dark:text-gray-500 text-center py-16">Loading…</div>}
 
-      {!isLoading && rows.length === 0 && (
+      {!isLoading && !hasAnyRows && (
         <div className="rounded-xl border border-dashed border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 p-12 text-center">
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">No books in this series yet</p>
           <button onClick={() => setShowAdd(true)} className="text-sm text-blue-600 hover:underline">Add the first book</button>
         </div>
       )}
 
-      {!isLoading && rows.length > 0 && (
+      {/* Arc management panel — collapsed by default. Always available so users
+          can add the first arc to a series. */}
+      <ArcManagerPanel
+        libraryId={libraryId}
+        seriesId={seriesId}
+        arcs={arcs}
+        open={showArcManager}
+        onToggle={() => setShowArcManager(o => !o)}
+        onChanged={load}
+      />
+
+      {!isLoading && hasAnyRows && (
         <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
               <tr>
-                {['#', 'Title', 'Type', 'Contributors', ''].map((h, i) => (
+                {['', 'Title', 'Type', 'Contributors', ''].map((h, i) => (
                   <th key={i} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-              {rows.map((row, idx) => row.type === 'entry' ? (
-                <tr key={row.entry.book_id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                  <td className="px-4 py-3 w-12">
-                    <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 dark:bg-gray-700 text-xs font-semibold text-gray-600 dark:text-gray-300">
-                      {formatPosition(row.entry.position)}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <Link to={`/libraries/${libraryId}/books/${row.entry.book_id}`}
-                      className="font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                      {row.entry.title}
-                    </Link>
-                    {row.entry.subtitle && <p className="text-xs text-gray-400 dark:text-gray-500">{row.entry.subtitle}</p>}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="inline-flex items-center rounded-full bg-gray-100 dark:bg-gray-700 px-2 py-0.5 text-xs font-medium text-gray-600 dark:text-gray-300 whitespace-nowrap">
-                      {row.entry.media_type}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-gray-600 dark:text-gray-400 text-xs">
-                    {row.entry.contributors.length > 0
-                      ? row.entry.contributors.map(c => c.name).join(', ')
-                      : <span className="text-gray-300 dark:text-gray-600">—</span>}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3 justify-end">
-                      <button onClick={() => setEditEntry(row.entry)}
-                        className="text-xs text-gray-500 dark:text-gray-400 hover:text-blue-600 transition-colors">Edit #</button>
-                      <button onClick={() => removeEntry(row.entry.book_id)}
-                        className="text-xs text-gray-500 dark:text-gray-400 hover:text-red-600 transition-colors">Remove</button>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                <tr key={`ghost-${row.position}-${idx}`} className="opacity-50">
-                  <td className="px-4 py-3 w-12">
-                    <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 dark:bg-gray-700 text-xs font-semibold text-gray-400 dark:text-gray-500">
-                      {row.position}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <p className="italic text-gray-400 dark:text-gray-500">
-                      {row.volume?.title || `Vol. ${row.position}`}
-                    </p>
-                    {row.volume?.release_date && (
-                      <p className="text-xs text-gray-400 dark:text-gray-500">
-                        {new Date(row.volume.release_date + 'T00:00:00').toLocaleDateString(undefined, { year: 'numeric', month: 'short' })}
-                      </p>
-                    )}
-                  </td>
-                  <td className="px-4 py-3" />
-                  <td className="px-4 py-3" />
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3 justify-end">
-                      <button onClick={() => {
-                          setAddHint({ position: row.position, query: series.name })
-                          setShowAdd(true)
-                        }}
-                        className="text-xs text-gray-400 dark:text-gray-500 hover:text-blue-600 transition-colors">Add</button>
-                    </div>
-                  </td>
-                </tr>
+              {groups.map(group => (
+                <Fragment key={group.key}>
+                  {arcs.length > 0 && group.label && (
+                    <tr className="bg-gray-50/60 dark:bg-gray-800/40">
+                      <td colSpan={COL_COUNT} className="px-4 py-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{group.label}</span>
+                          <span className="text-xs text-gray-400 dark:text-gray-500">· {group.rows.filter(r => r.type === 'entry').length} book{group.rows.filter(r => r.type === 'entry').length !== 1 ? 's' : ''}</span>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                  {group.rows.map((row, idx) => row.type === 'entry' ? (
+                    <tr key={row.entry.book_id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                      <td className="pl-4 pr-2 py-3 w-16">
+                        <SeriesVolumeCover
+                          title={row.entry.title}
+                          coverUrl={row.entry.cover_url}
+                          position={row.entry.position}
+                          readStatus={showReadBadges ? row.entry.user_read_status : undefined}
+                        />
+                      </td>
+                      <td className="px-4 py-3">
+                        <Link to={`/libraries/${libraryId}/books/${row.entry.book_id}`}
+                          className="font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                          {row.entry.title}
+                        </Link>
+                        {row.entry.subtitle && <p className="text-xs text-gray-400 dark:text-gray-500">{row.entry.subtitle}</p>}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="inline-flex items-center rounded-full bg-gray-100 dark:bg-gray-700 px-2 py-0.5 text-xs font-medium text-gray-600 dark:text-gray-300 whitespace-nowrap">
+                          {row.entry.media_type}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-gray-600 dark:text-gray-400 text-xs">
+                        {row.entry.contributors.length > 0
+                          ? row.entry.contributors.map(c => c.name).join(', ')
+                          : <span className="text-gray-300 dark:text-gray-600">—</span>}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3 justify-end">
+                          {arcs.length > 0 && (
+                            <BookArcAssigner
+                              entry={row.entry}
+                              arcs={arcs}
+                              isOpen={assigningBookId === row.entry.book_id}
+                              onOpen={() => setAssigningBookId(row.entry.book_id)}
+                              onClose={() => setAssigningBookId(null)}
+                              onAssign={arcID => assignBookToArc(row.entry.book_id, row.entry.position, arcID)}
+                            />
+                          )}
+                          <button onClick={() => setEditEntry(row.entry)}
+                            className="p-1 rounded text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                            title="Edit volume position">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                              <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                            </svg>
+                          </button>
+                          <button onClick={() => removeEntry(row.entry.book_id)}
+                            className="p-1 rounded text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                            title="Remove from series">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    <tr key={`ghost-${row.position}-${idx}`}>
+                      <td className="pl-4 pr-2 py-3 w-16">
+                        <SeriesVolumeCover
+                          title={row.volume?.title || `Vol. ${row.position}`}
+                          coverUrl={row.volume?.cover_url || null}
+                          position={row.position}
+                          isGhost
+                        />
+                      </td>
+                      <td className="px-4 py-3">
+                        <p className="italic text-gray-400 dark:text-gray-500">
+                          {row.volume?.title || `Vol. ${row.position}`}
+                        </p>
+                        {row.volume?.release_date && (
+                          <p className="text-xs text-gray-400 dark:text-gray-500">
+                            {new Date(row.volume.release_date + 'T00:00:00').toLocaleDateString(undefined, { year: 'numeric', month: 'short' })}
+                          </p>
+                        )}
+                      </td>
+                      <td className="px-4 py-3" />
+                      <td className="px-4 py-3" />
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3 justify-end">
+                          <button onClick={() => {
+                              setAddHint({ position: row.position, query: series.name })
+                              setShowAdd(true)
+                            }}
+                            className="text-xs text-gray-400 dark:text-gray-500 hover:text-blue-600 transition-colors">Add</button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </Fragment>
               ))}
             </tbody>
           </table>
@@ -4864,24 +5055,104 @@ interface SeriesTabProps {
   setExtraCrumbs: (crumbs: Crumb[]) => void
 }
 
+// Publication status as a plain word in the same metadata register as the
+// count text — sits inline with "X owned" so the two pieces of secondary info
+// don't compete for attention. Reading state stays as the only colored pill.
+function seriesStatusLabel(status: string): string {
+  if (status === 'completed') return 'Complete'
+  if (status === 'hiatus') return 'On hiatus'
+  if (status === 'cancelled') return 'Cancelled'
+  return 'Ongoing'
+}
+
+// 2×2 collage of the first four volume covers — auto-derived; no manual
+// "series cover" upload yet. Falls back to a gradient placeholder per tile.
+function SeriesMosaic({ series, size = 'md' }: { series: Series; size?: 'sm' | 'md' | 'lg' }) {
+  const tiles = series.preview_books.slice(0, 4)
+  // Pad to 4 tiles with placeholders so the grid stays consistent
+  const padded = [...tiles, ...Array(Math.max(0, 4 - tiles.length)).fill(null)] as (typeof tiles[0] | null)[]
+  const containerCls = size === 'sm' ? 'w-16' : size === 'lg' ? 'w-40' : 'w-28'
+  return (
+    <div className={`${containerCls} aspect-square rounded-lg overflow-hidden grid grid-cols-2 grid-rows-2 gap-0.5 bg-gray-200 dark:bg-gray-800 shadow-md`}>
+      {padded.map((p, i) => (
+        <div key={i} className="relative overflow-hidden bg-gray-100 dark:bg-gray-900">
+          {p ? <SeriesMosaicTile p={p} fallbackTitle={series.name} /> : <SeriesMosaicGradient title={series.name} idx={i} />}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function SeriesMosaicTile({ p, fallbackTitle }: { p: SeriesPreviewBook; fallbackTitle: string }) {
+  const [imgError, setImgError] = useState(false)
+  const src = useAuthenticatedImage(p.cover_url)
+  if (!src || imgError) return <SeriesMosaicGradient title={p.title || fallbackTitle} idx={0} />
+  return <img src={src} alt="" className="w-full h-full object-cover" onError={() => setImgError(true)} />
+}
+
+const MOSAIC_GRADIENTS = [
+  'from-rose-500 to-orange-400',
+  'from-blue-500 to-cyan-400',
+  'from-emerald-500 to-lime-400',
+  'from-violet-500 to-fuchsia-400',
+]
+function SeriesMosaicGradient({ title, idx }: { title: string; idx: number }) {
+  const grad = MOSAIC_GRADIENTS[(title.charCodeAt(0) + idx) % MOSAIC_GRADIENTS.length]
+  return (
+    <div className={`w-full h-full bg-gradient-to-br ${grad} flex items-center justify-center`}>
+      <span className="text-white text-xl font-bold opacity-30 select-none">{title.charAt(0).toUpperCase()}</span>
+    </div>
+  )
+}
+
+type StatusFilter = 'all' | 'ongoing' | 'completed' | 'hiatus' | 'cancelled'
+type ArcsFilter = 'all' | 'with' | 'without'
+type ReadingFilter = 'all' | 'unread' | 'reading' | 'read_all'
+type SeriesViewMode = 'grid' | 'table'
+type ReadingState = 'unread' | 'reading' | 'read_all'
+
+function readingState(s: Series): ReadingState {
+  if (s.book_count > 0 && s.read_count >= s.book_count) return 'read_all'
+  if (s.read_count > 0 || s.reading_count > 0) return 'reading'
+  return 'unread'
+}
+
+function ReadingStatePill({ state }: { state: ReadingState }) {
+  if (state === 'read_all') return <span className="inline-flex items-center rounded-full bg-green-50 dark:bg-green-950/50 px-2 py-0.5 text-xs font-medium text-green-700 dark:text-green-400 ring-1 ring-green-200 dark:ring-green-800">Read</span>
+  if (state === 'reading') return <span className="inline-flex items-center rounded-full bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 text-xs font-medium text-blue-700 dark:text-blue-400 ring-1 ring-blue-200 dark:ring-blue-800">Reading</span>
+  return null
+}
+
 function SeriesTab({ libraryId, setExtraCrumbs }: SeriesTabProps) {
   const { callApi } = useAuth()
+  const navigate = useNavigate()
+  // Series detail is URL-driven — `seriesId` is in the path when viewing one.
+  // This makes detail pages shareable via URL.
+  const { seriesId } = useParams<{ seriesId?: string }>()
   const [seriesList, setSeriesList] = useState<Series[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [showCreate, setShowCreate] = useState(false)
   const [showSuggest, setShowSuggest] = useState(false)
   const [editSeries, setEditSeries] = useState<Series | null>(null)
-  const [viewSeries, setViewSeries] = useState<Series | null>(null)
   const [search, setSearch] = useState('')
   const [tagFilter, setTagFilter] = useState('')
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
+  const [arcsFilter, setArcsFilter] = useState<ArcsFilter>('all')
+  const [readingFilter, setReadingFilter] = useState<ReadingFilter>('all')
   const [allTags, setAllTags] = useState<Tag[]>([])
+  const [viewMode, setViewMode] = useState<SeriesViewMode>(() =>
+    (localStorage.getItem('librarium:series:viewMode') as SeriesViewMode) === 'table' ? 'table' : 'grid'
+  )
+  // Same preference key as BooksTab — single toggle controls cover badges and
+  // series-card reading-state pills. Defaults true; respects the localStorage
+  // value written by BooksTab when it loaded the server preference.
+  const showReadBadges = localStorage.getItem('librarium:show_read_badges') !== 'false'
 
+  // Detail-view crumbs are managed by SeriesDetailView itself once the series
+  // loads — it knows the name. List view crumb is just "Series".
   useEffect(() => {
-    setExtraCrumbs(viewSeries
-      ? [{ label: 'Series', to: `/libraries/${libraryId}/series` }, { label: viewSeries.name }]
-      : [{ label: 'Series' }]
-    )
-  }, [viewSeries, setExtraCrumbs])
+    if (!seriesId) setExtraCrumbs([{ label: 'Series' }])
+  }, [seriesId, setExtraCrumbs])
 
   useEffect(() => {
     callApi<Tag[]>(`/api/v1/libraries/${libraryId}/tags`).then(ts => setAllTags(ts ?? [])).catch(() => {})
@@ -4901,33 +5172,46 @@ function SeriesTab({ libraryId, setExtraCrumbs }: SeriesTabProps) {
 
   useEffect(() => { load() }, [load])
 
+  // Client-side post-filter for the toggles — server already handled text + tag.
+  const visibleSeries = useMemo(() => {
+    return seriesList.filter(s => {
+      if (statusFilter !== 'all' && s.status !== statusFilter) return false
+      if (arcsFilter === 'with' && s.arc_count === 0) return false
+      if (arcsFilter === 'without' && s.arc_count > 0) return false
+      if (readingFilter !== 'all' && readingState(s) !== readingFilter) return false
+      return true
+    })
+  }, [seriesList, statusFilter, arcsFilter, readingFilter])
+
+  function setViewModeAndSave(m: SeriesViewMode) {
+    setViewMode(m)
+    localStorage.setItem('librarium:series:viewMode', m)
+  }
+
   const deleteSeries = async (s: Series) => {
     if (!confirm(`Delete series "${s.name}"?`)) return
     await callApi(`/api/v1/libraries/${libraryId}/series/${s.id}`, { method: 'DELETE' }).catch(() => {})
     load()
   }
 
-  const statusBadge = (status: string) => {
-    if (status === 'completed') return <span className="inline-flex items-center rounded-full bg-green-50 dark:bg-green-950/50 px-2 py-0.5 text-xs font-medium text-green-700 dark:text-green-400 ring-1 ring-green-200 dark:ring-green-800">Complete</span>
-    if (status === 'hiatus') return <span className="inline-flex items-center rounded-full bg-amber-50 dark:bg-amber-950/50 px-2 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-400 ring-1 ring-amber-200 dark:ring-amber-800">Hiatus</span>
-    if (status === 'cancelled') return <span className="inline-flex items-center rounded-full bg-red-50 dark:bg-red-950/50 px-2 py-0.5 text-xs font-medium text-red-700 dark:text-red-400 ring-1 ring-red-200 dark:ring-red-800">Cancelled</span>
-    return <span className="inline-flex items-center rounded-full bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 text-xs font-medium text-blue-700 dark:text-blue-400 ring-1 ring-blue-200 dark:ring-blue-800">Ongoing</span>
-  }
-
-  if (viewSeries) {
+  if (seriesId) {
     return (
       <SeriesDetailView
-        series={viewSeries}
+        seriesId={seriesId}
         libraryId={libraryId}
-        onBack={() => { setViewSeries(null); load() }}
+        setExtraCrumbs={setExtraCrumbs}
+        onBack={() => { navigate(`/libraries/${libraryId}/series`); load() }}
       />
     )
   }
 
+  const filterPill = (active: boolean) =>
+    `rounded-full px-2.5 py-1 text-xs font-medium ring-1 transition-all ${active ? 'bg-gray-700 text-white ring-transparent' : 'bg-white dark:bg-gray-800 ring-gray-300 dark:ring-gray-600 text-gray-600 dark:text-gray-300 hover:ring-gray-400'}`
+
   return (
     <div>
-      {/* Search bar + tag filters */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-4">
+      {/* Search bar + view toggle + actions */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
         <div className="flex-1 relative">
           <input
             type="text"
@@ -4940,6 +5224,25 @@ function SeriesTab({ libraryId, setExtraCrumbs }: SeriesTabProps) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
         </div>
+        {/* View mode toggle — same as BooksTab; table-then-grid order */}
+        <div className="flex items-center rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden flex-shrink-0">
+          <button
+            onClick={() => setViewModeAndSave('table')}
+            className={`px-2.5 py-2 transition-colors ${viewMode === 'table' ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200' : 'text-gray-400 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
+            title="Table view">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18M3 6h18M3 18h18" />
+            </svg>
+          </button>
+          <button
+            onClick={() => setViewModeAndSave('grid')}
+            className={`px-2.5 py-2 transition-colors ${viewMode === 'grid' ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200' : 'text-gray-400 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
+            title="Card view">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+            </svg>
+          </button>
+        </div>
         <button onClick={() => setShowSuggest(true)}
           className="rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors whitespace-nowrap">
           Suggest series
@@ -4950,12 +5253,46 @@ function SeriesTab({ libraryId, setExtraCrumbs }: SeriesTabProps) {
         </button>
       </div>
 
+      {/* Filter row: status / arcs / completion */}
+      <div className="flex flex-wrap items-center gap-3 mb-3">
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs uppercase tracking-wide text-gray-400 dark:text-gray-500 mr-1">Status</span>
+          {(['all', 'ongoing', 'completed', 'hiatus', 'cancelled'] as StatusFilter[]).map(s => (
+            <button key={s} onClick={() => setStatusFilter(s)} className={filterPill(statusFilter === s)}>
+              {s === 'all' ? 'All' : s[0].toUpperCase() + s.slice(1)}
+            </button>
+          ))}
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs uppercase tracking-wide text-gray-400 dark:text-gray-500 mr-1">Arcs</span>
+          {(['all', 'with', 'without'] as ArcsFilter[]).map(a => (
+            <button key={a} onClick={() => setArcsFilter(a)} className={filterPill(arcsFilter === a)}>
+              {a === 'all' ? 'All' : a === 'with' ? 'With arcs' : 'No arcs'}
+            </button>
+          ))}
+        </div>
+        {showReadBadges && (
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs uppercase tracking-wide text-gray-400 dark:text-gray-500 mr-1">Reading</span>
+            {([
+              ['all', 'All'],
+              ['unread', 'Unread'],
+              ['reading', 'Reading'],
+              ['read_all', 'Read all'],
+            ] as [ReadingFilter, string][]).map(([v, label]) => (
+              <button key={v} onClick={() => setReadingFilter(v)} className={filterPill(readingFilter === v)}>{label}</button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Tag chips */}
       {allTags.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mb-4">
           <button
             onClick={() => setTagFilter('')}
-            className={`rounded-full px-2.5 py-1 text-xs font-medium ring-1 transition-all ${!tagFilter ? 'bg-gray-700 text-white ring-transparent' : 'bg-white dark:bg-gray-800 ring-gray-300 dark:ring-gray-600 text-gray-600 dark:text-gray-300 hover:ring-gray-400'}`}>
-            All
+            className={filterPill(!tagFilter)}>
+            All tags
           </button>
           {allTags.map(tag => (
             <button key={tag.id}
@@ -4970,12 +5307,14 @@ function SeriesTab({ libraryId, setExtraCrumbs }: SeriesTabProps) {
 
       {isLoading && <div className="text-sm text-gray-400 dark:text-gray-500 text-center py-16">Loading…</div>}
 
-      {!isLoading && seriesList.length === 0 && (
+      {!isLoading && visibleSeries.length === 0 && (
         <div className="rounded-xl border border-dashed border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 p-12 text-center">
           <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">
-            {search || tagFilter ? 'No series match your search.' : 'No series yet'}
+            {(search || tagFilter || statusFilter !== 'all' || arcsFilter !== 'all' || readingFilter !== 'all')
+              ? 'No series match your filters.'
+              : 'No series yet'}
           </p>
-          {!search && !tagFilter && (
+          {!search && !tagFilter && statusFilter === 'all' && arcsFilter === 'all' && readingFilter === 'all' && (
             <button onClick={() => setShowCreate(true)}
               className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors">
               Create your first series
@@ -4984,27 +5323,86 @@ function SeriesTab({ libraryId, setExtraCrumbs }: SeriesTabProps) {
         </div>
       )}
 
-      {!isLoading && seriesList.length > 0 && (
+      {!isLoading && visibleSeries.length > 0 && viewMode === 'grid' && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+          {visibleSeries.map(s => {
+            const total = s.total_count ?? 0
+            const rs = readingState(s)
+            return (
+              <div key={s.id}
+                className="group relative flex flex-col rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:border-blue-400 dark:hover:border-blue-500 transition-colors">
+                <Link to={`/libraries/${libraryId}/series/${s.id}`}
+                  className="flex flex-col flex-1 p-3 text-left">
+                  <div className="self-center mb-3">
+                    <SeriesMosaic series={s} />
+                  </div>
+                  <p className="font-medium text-sm text-gray-900 dark:text-white line-clamp-2 group-hover:text-blue-600 transition-colors">{s.name}</p>
+                  {/* Metadata block pinned to the bottom so it lines up across cards
+                      regardless of how many lines the title takes. */}
+                  <div className="mt-auto pt-2 flex flex-col gap-1.5">
+                    <div className="flex items-center flex-wrap gap-1 min-h-[1.5rem]">
+                      {showReadBadges && <ReadingStatePill state={rs} />}
+                      {s.arc_count > 0 && (
+                        <span className="text-xs text-gray-500 dark:text-gray-400 ml-auto">{s.arc_count} arc{s.arc_count !== 1 ? 's' : ''}</span>
+                      )}
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      {seriesStatusLabel(s.status)} · {s.book_count}{total > 0 ? ` / ${total}` : ''} owned
+                      {showReadBadges && s.read_count > 0 && rs !== 'read_all' && (
+                        <span> · {s.read_count} read</span>
+                      )}
+                    </div>
+                  </div>
+                </Link>
+                <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button onClick={() => setEditSeries(s)}
+                    className="p-1 rounded bg-white/90 dark:bg-gray-900/90 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 shadow-sm transition-colors"
+                    title="Edit series">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                    </svg>
+                  </button>
+                  <button onClick={() => deleteSeries(s)}
+                    className="p-1 rounded bg-white/90 dark:bg-gray-900/90 text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 shadow-sm transition-colors"
+                    title="Delete series">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {!isLoading && visibleSeries.length > 0 && viewMode === 'table' && (
         <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
               <tr>
-                {['Name', 'Status', 'Tags', 'Volumes', ''].map(h => (
-                  <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{h}</th>
+                {['', 'Name', 'Status', 'Tags', 'Volumes', 'Arcs', ''].map((h, i) => (
+                  <th key={i} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-              {seriesList.map(s => (
+              {visibleSeries.map(s => (
                 <tr key={s.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                  <td className="pl-4 pr-2 py-2"><SeriesMosaic series={s} size="sm" /></td>
                   <td className="px-4 py-3">
-                    <button onClick={() => setViewSeries(s)} className="text-left group">
+                    <button onClick={() => navigate(`/libraries/${libraryId}/series/${s.id}`)} className="text-left group">
                       <p className="font-medium text-gray-900 dark:text-white group-hover:text-blue-600 transition-colors">{s.name}</p>
                       {s.description && <p className="text-xs text-gray-400 dark:text-gray-500 truncate max-w-xs">{s.description}</p>}
                       {s.demographic && <p className="text-xs text-gray-400 dark:text-gray-500">{s.demographic}</p>}
                     </button>
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap">{statusBadge(s.status)}</td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-500 dark:text-gray-400">{seriesStatusLabel(s.status)}</span>
+                      {showReadBadges && <ReadingStatePill state={readingState(s)} />}
+                    </div>
+                  </td>
                   <td className="px-4 py-3">
                     {s.tags && s.tags.length > 0 ? (
                       <div className="flex flex-wrap gap-1">
@@ -5025,6 +5423,9 @@ function SeriesTab({ libraryId, setExtraCrumbs }: SeriesTabProps) {
                         Next: {new Date(s.next_release_date + 'T00:00:00').toLocaleDateString(undefined, { year: 'numeric', month: 'short' })}
                       </p>
                     )}
+                  </td>
+                  <td className="px-4 py-3 text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                    {s.arc_count > 0 ? `${s.arc_count} arc${s.arc_count !== 1 ? 's' : ''}` : <span className="text-gray-300 dark:text-gray-600">—</span>}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3 justify-end">
