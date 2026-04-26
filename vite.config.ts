@@ -28,6 +28,12 @@ export default defineConfig({
         target: apiTarget,
         changeOrigin: true,
         secure: false,
+        // AI calls (suggest-arcs / suggest-metadata / cleanup) can run 60+
+        // seconds on complex prompts; the default http-proxy timeout was
+        // killing those requests with 502 even though the upstream eventually
+        // returned 201. Allow up to 5 minutes per request.
+        timeout: 5 * 60 * 1000,
+        proxyTimeout: 5 * 60 * 1000,
       },
       '/health': {
         target: apiTarget,

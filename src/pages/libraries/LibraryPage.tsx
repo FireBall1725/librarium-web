@@ -2,7 +2,7 @@ import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'rea
 import { useParams, Link, useOutletContext, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth, ApiError } from '../../auth/AuthContext'
 import type { Crumb, LibraryOutletContext } from '../../components/LibraryOutlet'
-import type { LibraryMember, Book, PagedBooks, MediaType, ContributorResult, Tag, Shelf, Loan, Series, SeriesArc, SeriesEntry, SeriesPreviewBook, SeriesVolume, SeriesMatchCandidate, SeriesSuggestion, ISBNLookupResult, SeriesLookupResult, Genre } from '../../types'
+import type { LibraryMember, Book, PagedBooks, MediaType, ContributorResult, Tag, Shelf, Loan, Series, SeriesArc, SeriesEntry, SeriesPreviewBook, SeriesVolume, SeriesMatchCandidate, SeriesSuggestion, ISBNLookupResult, SeriesLookupResult, Genre, AIMetadataProposal, SeriesMetadataPayload, SeriesArcsPayload } from '../../types'
 import { useAuthenticatedImage } from '../../hooks/useAuthenticatedImage'
 import { LANGUAGE_OPTIONS } from '../../components/AddEditionModal'
 import BookCover, { BookCoverThumb } from '../../components/BookCover'
@@ -1853,6 +1853,7 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
   // Bulk metadata / cover refresh
   const [showBulkMetaModal, setShowBulkMetaModal] = useState(false)
   const [bulkMetaForce, setBulkMetaForce] = useState(false)
+  const [bulkMetaUseAI, setBulkMetaUseAI] = useState(false)
   const [isBulkJobEnqueueing, setIsBulkJobEnqueueing] = useState(false)
 
   const [perPage, setPerPage] = useState(() => {
@@ -2175,13 +2176,13 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
       genre_ids: (book.genres ?? []).filter(g => g.id !== genreId).map(g => g.id),
     }))
 
-  const bulkEnrichMetadata = async (force: boolean) => {
+  const bulkEnrichMetadata = async (force: boolean, useAICleanup: boolean) => {
     const bookIds = Array.from(selectedIds)
     setIsBulkJobEnqueueing(true)
     try {
       await callApi(`/api/v1/libraries/${libraryId}/books/bulk/enrich`, {
         method: 'POST',
-        body: JSON.stringify({ book_ids: bookIds, force }),
+        body: JSON.stringify({ book_ids: bookIds, force, use_ai_cleanup: useAICleanup }),
       })
       showToast(`Metadata refresh queued for ${bookIds.length} book${bookIds.length !== 1 ? 's' : ''}.`, {
         action: { label: 'View jobs', to: '/admin/settings/jobs' },
@@ -2190,6 +2191,7 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
     setIsBulkJobEnqueueing(false)
     setShowBulkMetaModal(false)
     setBulkMetaForce(false)
+    setBulkMetaUseAI(false)
     setSelectedIds(new Set())
   }
 
@@ -2569,7 +2571,7 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
                   Queue metadata enrichment for {selectedIds.size} book{selectedIds.size !== 1 ? 's' : ''}?
                   Books without an ISBN will be skipped.
                 </p>
-                <label className="flex items-start gap-2.5 mb-5 cursor-pointer select-none">
+                <label className="flex items-start gap-2.5 mb-3 cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={bulkMetaForce}
@@ -2583,10 +2585,24 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
                     </span>
                   </span>
                 </label>
+                <label className="flex items-start gap-2.5 mb-5 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={bulkMetaUseAI}
+                    onChange={e => setBulkMetaUseAI(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded border-gray-300 dark:border-gray-600"
+                  />
+                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                    Clean descriptions with AI
+                    <span className="block text-xs text-gray-500 dark:text-gray-500 mt-0.5">
+                      Strip marketing fluff and retailer boilerplate from each book's description after enrichment. Uses AI tokens.
+                    </span>
+                  </span>
+                </label>
                 <div className="flex gap-2 justify-end">
                   <button
                     type="button"
-                    onClick={() => { setShowBulkMetaModal(false); setBulkMetaForce(false) }}
+                    onClick={() => { setShowBulkMetaModal(false); setBulkMetaForce(false); setBulkMetaUseAI(false) }}
                     className="rounded-lg px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                   >
                     Cancel
@@ -2594,7 +2610,7 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
                   <button
                     type="button"
                     disabled={isBulkJobEnqueueing}
-                    onClick={() => bulkEnrichMetadata(bulkMetaForce)}
+                    onClick={() => bulkEnrichMetadata(bulkMetaForce, bulkMetaUseAI)}
                     className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 transition-colors"
                   >
                     {isBulkJobEnqueueing ? 'Queuing…' : 'Queue jobs'}
@@ -4457,6 +4473,179 @@ const COVER_GRADIENTS = [
   'from-teal-500 to-blue-400',
 ]
 
+// ─── AI proposal review panel ────────────────────────────────────────────────
+// Pending AI suggestions render at the top of the series detail view. The user
+// reviews each proposal, accepts a subset of fields/arcs (or all), or rejects.
+// On accept, the API writes the chosen subset to the series and creates arcs.
+
+interface ProposalsPanelProps {
+  proposals: AIMetadataProposal[]
+  existingArcCount: number
+  onAccept: (proposalID: string, body?: Record<string, unknown>) => void
+  onReject: (proposalID: string) => void
+}
+
+function ProposalsPanel({ proposals, existingArcCount, onAccept, onReject }: ProposalsPanelProps) {
+  if (proposals.length === 0) return null
+  return (
+    <div className="mb-4 space-y-3">
+      {proposals.map(p => p.kind === 'series_metadata' ? (
+        <SeriesMetadataProposalCard key={p.id} proposal={p} onAccept={onAccept} onReject={onReject} />
+      ) : (
+        <SeriesArcsProposalCard key={p.id} proposal={p} existingArcCount={existingArcCount} onAccept={onAccept} onReject={onReject} />
+      ))}
+    </div>
+  )
+}
+
+function SeriesMetadataProposalCard({ proposal, onAccept, onReject }: { proposal: AIMetadataProposal; onAccept: (id: string, body?: Record<string, unknown>) => void; onReject: (id: string) => void }) {
+  const payload = proposal.payload as SeriesMetadataPayload
+  const fields: { key: string; label: string; value: string | null }[] = [
+    { key: 'status', label: 'Status', value: payload.status ?? null },
+    { key: 'total_count', label: 'Total volumes', value: payload.total_count != null ? String(payload.total_count) : null },
+    { key: 'demographic', label: 'Demographic', value: payload.demographic ?? null },
+    { key: 'genres', label: 'Genres', value: payload.genres && payload.genres.length > 0 ? payload.genres.join(', ') : null },
+    { key: 'description', label: 'Description', value: payload.description ?? null },
+  ].filter(f => f.value !== null)
+
+  const [selected, setSelected] = useState<Set<string>>(new Set(fields.map(f => f.key)))
+  const toggle = (k: string) => setSelected(prev => { const n = new Set(prev); if (n.has(k)) n.delete(k); else n.add(k); return n })
+
+  const apply = () => {
+    if (selected.size === 0) return
+    const allSelected = selected.size === fields.length
+    onAccept(proposal.id, allSelected ? undefined : { fields: Array.from(selected) })
+  }
+
+  if (fields.length === 0) {
+    return (
+      <div className="rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 p-4 text-sm">
+        <div className="flex items-center justify-between">
+          <p className="text-amber-800 dark:text-amber-300">AI didn't have evidence for any series-level fields.</p>
+          <button onClick={() => onReject(proposal.id)} className="text-xs text-amber-700 dark:text-amber-400 hover:underline">Dismiss</button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="rounded-xl border border-purple-200 dark:border-purple-800 bg-purple-50/40 dark:bg-purple-950/30 p-4">
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <p className="text-sm font-semibold text-purple-900 dark:text-purple-200">AI suggestion: series fields</p>
+          <p className="text-xs text-purple-700/80 dark:text-purple-300/70">Review and pick which fields to apply.</p>
+        </div>
+        <button onClick={() => onReject(proposal.id)} className="text-xs text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400">Dismiss</button>
+      </div>
+      <ul className="space-y-1.5 mb-3">
+        {fields.map(f => (
+          <li key={f.key}>
+            <label className="flex items-start gap-2.5 cursor-pointer select-none">
+              <input type="checkbox" checked={selected.has(f.key)} onChange={() => toggle(f.key)}
+                className="mt-0.5 h-4 w-4 rounded border-gray-300 dark:border-gray-600" />
+              <span className="text-sm text-gray-800 dark:text-gray-200 flex-1">
+                <span className="font-medium">{f.label}:</span>{' '}
+                <span className="text-gray-600 dark:text-gray-400">{f.value}</span>
+              </span>
+            </label>
+          </li>
+        ))}
+      </ul>
+      <div className="flex gap-2 justify-end">
+        <button onClick={() => onReject(proposal.id)}
+          className="rounded-md px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
+          Reject all
+        </button>
+        <button onClick={apply} disabled={selected.size === 0}
+          className="rounded-md bg-purple-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-purple-700 disabled:opacity-50">
+          Apply selected
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function SeriesArcsProposalCard({ proposal, existingArcCount, onAccept, onReject }: { proposal: AIMetadataProposal; existingArcCount: number; onAccept: (id: string, body?: Record<string, unknown>) => void; onReject: (id: string) => void }) {
+  const payload = proposal.payload as SeriesArcsPayload
+  const [selected, setSelected] = useState<Set<number>>(new Set(payload.arcs?.map((_, i) => i) ?? []))
+  const [assignBooks, setAssignBooks] = useState(true)
+
+  if (!payload.arcs || payload.arcs.length === 0) {
+    return (
+      <div className="rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 p-4 text-sm">
+        <div className="flex items-center justify-between">
+          <p className="text-amber-800 dark:text-amber-300">AI didn't propose any canonical arcs for this series.</p>
+          <button onClick={() => onReject(proposal.id)} className="text-xs text-amber-700 dark:text-amber-400 hover:underline">Dismiss</button>
+        </div>
+      </div>
+    )
+  }
+
+  const toggle = (i: number) => setSelected(prev => { const n = new Set(prev); if (n.has(i)) n.delete(i); else n.add(i); return n })
+
+  const apply = () => {
+    if (selected.size === 0) return
+    if (existingArcCount > 0) {
+      const msg = `This will delete the ${existingArcCount} existing arc${existingArcCount === 1 ? '' : 's'} on this series and replace ${existingArcCount === 1 ? 'it' : 'them'} with ${selected.size} new arc${selected.size === 1 ? '' : 's'}. Books will be re-grouped by the new volume ranges. Continue?`
+      if (!confirm(msg)) return
+    }
+    const all = selected.size === payload.arcs.length
+    const body: Record<string, unknown> = { assign_books: assignBooks }
+    if (!all) body.arc_indices = Array.from(selected).sort((a, b) => a - b)
+    onAccept(proposal.id, body)
+  }
+
+  const isReplace = existingArcCount > 0
+
+  return (
+    <div className="rounded-xl border border-purple-200 dark:border-purple-800 bg-purple-50/40 dark:bg-purple-950/30 p-4">
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <p className="text-sm font-semibold text-purple-900 dark:text-purple-200">AI suggestion: arcs</p>
+          <p className="text-xs text-purple-700/80 dark:text-purple-300/70">
+            {isReplace
+              ? `Accepting will replace the ${existingArcCount} existing arc${existingArcCount === 1 ? '' : 's'} on this series.`
+              : 'Pick which arcs to create.'}
+          </p>
+        </div>
+        <button onClick={() => onReject(proposal.id)} className="text-xs text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400">Dismiss</button>
+      </div>
+      <ul className="space-y-1.5 mb-3">
+        {payload.arcs.map((arc, i) => {
+          const range = arc.vol_start != null && arc.vol_end != null ? `vols ${arc.vol_start}–${arc.vol_end}` : 'no range'
+          return (
+            <li key={i}>
+              <label className="flex items-start gap-2.5 cursor-pointer select-none">
+                <input type="checkbox" checked={selected.has(i)} onChange={() => toggle(i)}
+                  className="mt-0.5 h-4 w-4 rounded border-gray-300 dark:border-gray-600" />
+                <span className="text-sm text-gray-800 dark:text-gray-200 flex-1">
+                  <span className="font-medium">{arc.name}</span>
+                  <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">{range}</span>
+                </span>
+              </label>
+            </li>
+          )
+        })}
+      </ul>
+      <label className="flex items-center gap-2.5 mb-3 cursor-pointer select-none">
+        <input type="checkbox" checked={assignBooks} onChange={e => setAssignBooks(e.target.checked)}
+          className="h-4 w-4 rounded border-gray-300 dark:border-gray-600" />
+        <span className="text-xs text-gray-700 dark:text-gray-300">Auto-assign books in suggested ranges to their arcs</span>
+      </label>
+      <div className="flex gap-2 justify-end">
+        <button onClick={() => onReject(proposal.id)}
+          className="rounded-md px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
+          Reject all
+        </button>
+        <button onClick={apply} disabled={selected.size === 0}
+          className="rounded-md bg-purple-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-purple-700 disabled:opacity-50">
+          {isReplace ? 'Replace arcs' : 'Create selected arcs'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // ─── Arc management ──────────────────────────────────────────────────────────
 
 interface ArcManagerPanelProps {
@@ -4466,9 +4655,11 @@ interface ArcManagerPanelProps {
   open: boolean
   onToggle: () => void
   onChanged: () => void
+  onSuggestArcs?: () => void
+  isSuggesting?: boolean
 }
 
-function ArcManagerPanel({ libraryId, seriesId, arcs, open, onToggle, onChanged }: ArcManagerPanelProps) {
+function ArcManagerPanel({ libraryId, seriesId, arcs, open, onToggle, onChanged, onSuggestArcs, isSuggesting }: ArcManagerPanelProps) {
   const { callApi } = useAuth()
   const [editingArc, setEditingArc] = useState<SeriesArc | null>(null)
   const [showAddForm, setShowAddForm] = useState(false)
@@ -4507,6 +4698,11 @@ function ArcManagerPanel({ libraryId, seriesId, arcs, open, onToggle, onChanged 
                     {formatPosition(arc.position)}
                   </span>
                   <span className="flex-1 font-medium text-gray-900 dark:text-white">{arc.name}</span>
+                  {arc.vol_start != null && arc.vol_end != null && (
+                    <span className="text-xs text-gray-400 dark:text-gray-500">
+                      vols {formatPosition(arc.vol_start)}–{formatPosition(arc.vol_end)}
+                    </span>
+                  )}
                   <span className="text-xs text-gray-400 dark:text-gray-500">{arc.book_count} book{arc.book_count !== 1 ? 's' : ''}</span>
                   <button onClick={() => setEditingArc(arc)}
                     className="p-1 rounded text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
@@ -4541,8 +4737,16 @@ function ArcManagerPanel({ libraryId, seriesId, arcs, open, onToggle, onChanged 
               onSaved={() => { setShowAddForm(false); onChanged() }}
             />
           ) : (
-            <button onClick={() => setShowAddForm(true)}
-              className="text-sm text-blue-600 dark:text-blue-400 hover:underline">+ Add arc</button>
+            <div className="flex items-center gap-3">
+              <button onClick={() => setShowAddForm(true)}
+                className="text-sm text-blue-600 dark:text-blue-400 hover:underline">+ Add arc</button>
+              {onSuggestArcs && (
+                <button onClick={onSuggestArcs} disabled={isSuggesting}
+                  className="text-sm text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 disabled:opacity-50">
+                  {isSuggesting ? 'Asking AI…' : (sorted.length > 0 ? 'Re-suggest with AI' : 'Suggest with AI')}
+                </button>
+              )}
+            </div>
           )}
         </div>
       )}
@@ -4564,12 +4768,29 @@ function ArcEditRow({ libraryId, seriesId, arc, defaultPosition, onCancel, onSav
   const [name, setName] = useState(arc?.name ?? '')
   const [position, setPosition] = useState(String(arc?.position ?? defaultPosition ?? 1))
   const [description, setDescription] = useState(arc?.description ?? '')
+  // Vol bounds are optional. Empty input string ⇒ null in the request body
+  // so existing bounds can be cleared. Stored as strings while editing so a
+  // partially-typed number doesn't get coerced to NaN mid-keystroke.
+  const [volStart, setVolStart] = useState(arc?.vol_start != null ? String(arc.vol_start) : '')
+  const [volEnd, setVolEnd] = useState(arc?.vol_end != null ? String(arc.vol_end) : '')
   const [saving, setSaving] = useState(false)
 
   const save = async () => {
     if (!name.trim()) return
     setSaving(true)
-    const body = JSON.stringify({ name: name.trim(), position: Number(position) || 0, description })
+    const parseBound = (s: string): number | null => {
+      const t = s.trim()
+      if (t === '') return null
+      const n = Number(t)
+      return Number.isFinite(n) ? n : null
+    }
+    const body = JSON.stringify({
+      name: name.trim(),
+      position: Number(position) || 0,
+      description,
+      vol_start: parseBound(volStart),
+      vol_end: parseBound(volEnd),
+    })
     const url = arc
       ? `/api/v1/libraries/${libraryId}/series/${seriesId}/arcs/${arc.id}`
       : `/api/v1/libraries/${libraryId}/series/${seriesId}/arcs`
@@ -4594,6 +4815,19 @@ function ArcEditRow({ libraryId, seriesId, arc, defaultPosition, onCancel, onSav
       <input type="text" value={description} onChange={e => setDescription(e.target.value)}
         className="w-full rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-white px-2 py-1 text-sm"
         placeholder="Description (optional)" />
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-gray-500 dark:text-gray-400 w-20">Vol range</span>
+        <input type="number" step="any" value={volStart} onChange={e => setVolStart(e.target.value)}
+          className="w-20 rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-white px-2 py-1 text-sm"
+          placeholder="Start" />
+        <span className="text-xs text-gray-400">–</span>
+        <input type="number" step="any" value={volEnd} onChange={e => setVolEnd(e.target.value)}
+          className="w-20 rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-white px-2 py-1 text-sm"
+          placeholder="End" />
+        <span className="text-xs text-gray-400 dark:text-gray-500 ml-1">
+          Optional. Slots missing volumes into this arc when set.
+        </span>
+      </div>
       <div className="flex items-center gap-2 justify-end">
         <button onClick={onCancel} className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">Cancel</button>
         <button onClick={save} disabled={saving || !name.trim()}
@@ -4655,6 +4889,7 @@ function BookArcAssigner({ entry, arcs, isOpen, onOpen, onClose, onAssign }: Boo
 
 function SeriesDetailView({ seriesId, libraryId, setExtraCrumbs, onBack }: SeriesDetailViewProps) {
   const { callApi } = useAuth()
+  const { show: showToast } = useToast()
   // Series is fetched on mount so the URL is the source of truth — users can
   // share links straight to a series without going through the list first.
   const [series, setSeries] = useState<Series | null>(null)
@@ -4671,6 +4906,9 @@ function SeriesDetailView({ seriesId, libraryId, setExtraCrumbs, onBack }: Serie
   const [showMetaSearch, setShowMetaSearch] = useState(false)
   const [showAutoMatch, setShowAutoMatch] = useState(false)
   const [showEdit, setShowEdit] = useState(false)
+  const [proposals, setProposals] = useState<AIMetadataProposal[]>([])
+  const [isSuggestingMetadata, setIsSuggestingMetadata] = useState(false)
+  const [isSuggestingArcs, setIsSuggestingArcs] = useState(false)
 
   const deleteSeries = async () => {
     if (!series) return
@@ -4691,17 +4929,63 @@ function SeriesDetailView({ seriesId, libraryId, setExtraCrumbs, onBack }: Serie
   const load = useCallback(async () => {
     setIsLoading(true)
     try {
-      const [list, vols, arcList] = await Promise.all([
+      const [list, vols, arcList, props] = await Promise.all([
         callApi<SeriesEntry[]>(`/api/v1/libraries/${libraryId}/series/${seriesId}/books`),
         callApi<SeriesVolume[]>(`/api/v1/libraries/${libraryId}/series/${seriesId}/volumes`),
         callApi<SeriesArc[]>(`/api/v1/libraries/${libraryId}/series/${seriesId}/arcs`),
+        callApi<AIMetadataProposal[]>(`/api/v1/libraries/${libraryId}/series/${seriesId}/proposals?status=pending`),
       ])
       setEntries(list ?? [])
       setVolumes(vols ?? [])
       setArcs(arcList ?? [])
+      setProposals(props ?? [])
     } catch { /* ignore */ }
     finally { setIsLoading(false) }
   }, [callApi, libraryId, seriesId])
+
+  const suggestSeriesMetadata = async () => {
+    if (isSuggestingMetadata) return
+    setIsSuggestingMetadata(true)
+    try {
+      await callApi(`/api/v1/libraries/${libraryId}/series/${seriesId}/suggest-metadata`, { method: 'POST' })
+      await load()
+      showToast('AI suggestion ready — review below.', { variant: 'success' })
+    } catch (err) {
+      const msg = err instanceof ApiError ? err.message : 'Failed to call AI provider'
+      showToast(`AI suggestion failed: ${msg}`, { variant: 'error' })
+    } finally {
+      setIsSuggestingMetadata(false)
+    }
+  }
+
+  const suggestSeriesArcs = async () => {
+    if (isSuggestingArcs) return
+    setIsSuggestingArcs(true)
+    try {
+      await callApi(`/api/v1/libraries/${libraryId}/series/${seriesId}/suggest-arcs`, { method: 'POST' })
+      await load()
+      showToast('AI arc suggestion ready — review below.', { variant: 'success' })
+    } catch (err) {
+      const msg = err instanceof ApiError ? err.message : 'Failed to call AI provider'
+      showToast(`AI arc suggestion failed: ${msg}`, { variant: 'error' })
+    } finally {
+      setIsSuggestingArcs(false)
+    }
+  }
+
+  const acceptProposal = async (proposalID: string, body?: Record<string, unknown>) => {
+    await callApi(`/api/v1/libraries/${libraryId}/proposals/${proposalID}/accept`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: body ? JSON.stringify(body) : undefined,
+    }).catch(err => console.error('accept proposal failed', err))
+    await Promise.all([load(), reloadSeries()])
+  }
+
+  const rejectProposal = async (proposalID: string) => {
+    await callApi(`/api/v1/libraries/${libraryId}/proposals/${proposalID}/reject`, { method: 'POST' }).catch(() => {})
+    await load()
+  }
 
   // URL is the source of truth — fetch the series on mount or when the id
   // changes. Direct hits to /libraries/{lib}/series/{sid} land here too.
@@ -4771,29 +5055,101 @@ function SeriesDetailView({ seriesId, libraryId, setExtraCrumbs, onBack }: Serie
   let groups: Group[] = []
 
   if (arcs.length > 0) {
-    const sortedArcs = [...arcs].sort((a, b) => a.position - b.position || a.name.localeCompare(b.name))
-    const byArc = new Map<string | null, SeriesEntry[]>()
-    for (const e of entries) {
-      const k = e.arc_id ?? null
-      if (!byArc.has(k)) byArc.set(k, [])
-      byArc.get(k)!.push(e)
+    // Infer which arc a missing volume sits in. Two-tier strategy:
+    //
+    //   1. If any arc has explicit vol_start/vol_end bounds covering this
+    //      position, use that arc. AI proposals carry these bounds, so the
+    //      Final Saga (vols 110–148) properly claims a ghost vol 113 even
+    //      when zero books in that arc are owned.
+    //   2. Otherwise fall back to immediate neighbours: a ghost between two
+    //      owned books in the SAME arc inherits that arc. Anything else
+    //      (mixed arcs, one or both unsorted) leaves the ghost unsorted, to
+    //      be caught by the "Missing volumes" group.
+    const allOwned: Array<{ pos: number; arcID: string | null }> = entries
+      .map(e => ({ pos: e.position, arcID: e.arc_id ?? null }))
+      .sort((a, b) => a.pos - b.pos)
+
+    const inferArcForPos = (p: number): string | null => {
+      // Tier 1 — explicit bounds. Use the most-specific arc when ranges
+      // overlap (smaller span wins on ties).
+      let bestArcID: string | null = null
+      let bestSpan = Infinity
+      for (const arc of arcs) {
+        if (arc.vol_start == null || arc.vol_end == null) continue
+        if (p < arc.vol_start || p > arc.vol_end) continue
+        const span = arc.vol_end - arc.vol_start
+        if (span < bestSpan) {
+          bestSpan = span
+          bestArcID = arc.id
+        }
+      }
+      if (bestArcID) return bestArcID
+
+      // Tier 2 — immediate-neighbour inference for arcs without bounds.
+      let prev: { pos: number; arcID: string | null } | null = null
+      let next: { pos: number; arcID: string | null } | null = null
+      for (const o of allOwned) {
+        if (o.pos < p) prev = o
+        else if (o.pos > p && next === null) { next = o; break }
+      }
+      if (prev && next && prev.arcID && next.arcID && prev.arcID === next.arcID) {
+        return prev.arcID
+      }
+      return null
     }
-    const sortByPos = (a: SeriesEntry, b: SeriesEntry) => a.position - b.position
-    const unsorted = (byArc.get(null) ?? []).slice().sort(sortByPos)
-    if (unsorted.length > 0) {
-      groups.push({ key: 'unsorted', label: 'Unsorted', arcId: null, rows: unsorted.map(e => ({ type: 'entry' as const, entry: e })) })
+
+    // Bucket entries + ghosts together by (inferred) arc_id. Each bucket
+    // ends up containing both real entries and any greyed-out gaps that fall
+    // within its position range, sorted naturally by position.
+    type RowsByKey = Map<string | null, Row[]>
+    const rowsByKey: RowsByKey = new Map()
+    const push = (k: string | null, r: Row) => {
+      if (!rowsByKey.has(k)) rowsByKey.set(k, [])
+      rowsByKey.get(k)!.push(r)
     }
-    for (const arc of sortedArcs) {
-      const arcEntries = (byArc.get(arc.id) ?? []).slice().sort(sortByPos)
-      groups.push({ key: arc.id, label: arc.name, arcId: arc.id, rows: arcEntries.map(e => ({ type: 'entry' as const, entry: e })) })
-    }
-    const ghostRows: Row[] = []
+    for (const e of entries) push(e.arc_id ?? null, { type: 'entry', entry: e })
     for (let i = 1; i <= upperBound; i++) {
-      if (!existingPositions.has(i)) ghostRows.push({ type: 'ghost', position: i, volume: volumeByPosition.get(i) })
+      if (existingPositions.has(i)) continue
+      const arcID = inferArcForPos(i)
+      push(arcID, { type: 'ghost', position: i, volume: volumeByPosition.get(i) })
     }
-    if (ghostRows.length > 0) {
-      groups.push({ key: 'missing', label: 'Missing volumes', arcId: null, rows: ghostRows })
+    const rowPos = (r: Row) => r.type === 'entry' ? r.entry.position : r.position
+    for (const rs of rowsByKey.values()) rs.sort((a, b) => rowPos(a) - rowPos(b))
+
+    // Build all groups (arcs + unsorted + truly-orphan missing) and sort by
+    // their first row's position so reading order flows top-to-bottom.
+    const collected: Array<Group & { sortKey: number }> = []
+    for (const arc of arcs) {
+      const rs = rowsByKey.get(arc.id) ?? []
+      if (rs.length === 0) continue // arc with no books and no inferable gaps
+      collected.push({
+        key: arc.id, label: arc.name, arcId: arc.id,
+        rows: rs,
+        sortKey: rowPos(rs[0]),
+      })
     }
+    const unsortedRows = rowsByKey.get(null) ?? []
+    if (unsortedRows.length > 0) {
+      // Split: real entries in "Unsorted", orphan ghosts in "Missing volumes".
+      const unsortedEntries = unsortedRows.filter(r => r.type === 'entry')
+      const orphanGhosts = unsortedRows.filter(r => r.type === 'ghost')
+      if (unsortedEntries.length > 0) {
+        collected.push({
+          key: 'unsorted', label: 'Unsorted', arcId: null,
+          rows: unsortedEntries,
+          sortKey: rowPos(unsortedEntries[0]),
+        })
+      }
+      if (orphanGhosts.length > 0) {
+        collected.push({
+          key: 'missing', label: 'Missing volumes', arcId: null,
+          rows: orphanGhosts,
+          sortKey: rowPos(orphanGhosts[0]),
+        })
+      }
+    }
+    collected.sort((a, b) => a.sortKey - b.sortKey)
+    groups = collected.map(({ key, label, arcId, rows }) => ({ key, label, arcId, rows }))
   } else {
     // Flat — single group with entries + ghosts interleaved by position.
     const allRows: Row[] = [...entries.map(e => ({ type: 'entry' as const, entry: e }))]
@@ -4835,6 +5191,11 @@ function SeriesDetailView({ seriesId, libraryId, setExtraCrumbs, onBack }: Serie
           className="rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
           Search metadata
         </button>
+        <button onClick={suggestSeriesMetadata} disabled={isSuggestingMetadata}
+          className="rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 transition-colors"
+          title="Ask AI to suggest series fields (status, total volumes, demographic, genres, description)">
+          {isSuggestingMetadata ? 'Asking AI…' : 'Suggest with AI'}
+        </button>
         <button onClick={() => setShowEdit(true)}
           className="rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
           Edit series
@@ -4870,6 +5231,10 @@ function SeriesDetailView({ seriesId, libraryId, setExtraCrumbs, onBack }: Serie
         </div>
       )}
 
+      {/* AI suggestion review panel — surfaces pending proposals so the user
+          can accept/reject before the API writes anything. */}
+      <ProposalsPanel proposals={proposals} existingArcCount={arcs.length} onAccept={acceptProposal} onReject={rejectProposal} />
+
       {/* Arc management panel — collapsed by default. Always available so users
           can add the first arc to a series. */}
       <ArcManagerPanel
@@ -4879,6 +5244,8 @@ function SeriesDetailView({ seriesId, libraryId, setExtraCrumbs, onBack }: Serie
         open={showArcManager}
         onToggle={() => setShowArcManager(o => !o)}
         onChanged={load}
+        onSuggestArcs={suggestSeriesArcs}
+        isSuggesting={isSuggestingArcs}
       />
 
       {!isLoading && hasAnyRows && (
