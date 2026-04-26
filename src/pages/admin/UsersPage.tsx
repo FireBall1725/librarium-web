@@ -31,6 +31,12 @@ const CheckCircleIcon = () => (
   </svg>
 )
 
+const KeyIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+    <path fillRule="evenodd" d="M18 8a6 6 0 01-7.743 5.743L10 14l-1 1-1 1H6v2H2v-4l4.257-4.257A6 6 0 1118 8zm-6-4a1 1 0 100 2 2 2 0 012 2 1 1 0 102 0 4 4 0 00-4-4z" clipRule="evenodd" />
+  </svg>
+)
+
 // ─── Add User modal ───────────────────────────────────────────────────────────
 
 interface AddUserModalProps {
@@ -114,11 +120,12 @@ function AddUserModal({ onClose, onCreated }: AddUserModalProps) {
 
 interface EditUserModalProps {
   user: AdminUser
+  isSelf: boolean
   onClose: () => void
   onSaved: () => void
 }
 
-function EditUserModal({ user, onClose, onSaved }: EditUserModalProps) {
+function EditUserModal({ user, isSelf, onClose, onSaved }: EditUserModalProps) {
   const { callApi } = useAuth()
   const [form, setForm] = useState({
     display_name: user.display_name,
@@ -170,15 +177,23 @@ function EditUserModal({ user, onClose, onSaved }: EditUserModalProps) {
               className="w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </div>
-          <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-            <input
-              type="checkbox"
-              checked={form.is_instance_admin}
-              onChange={e => setForm(f => ({ ...f, is_instance_admin: e.target.checked }))}
-              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-            />
-            Instance admin
-          </label>
+          <div>
+            <label className={`flex items-center gap-2 text-sm ${isSelf ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed' : 'text-gray-700 dark:text-gray-300'}`}>
+              <input
+                type="checkbox"
+                checked={form.is_instance_admin}
+                disabled={isSelf}
+                onChange={e => setForm(f => ({ ...f, is_instance_admin: e.target.checked }))}
+                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50"
+              />
+              Instance admin
+            </label>
+            {isSelf && (
+              <p className="mt-1 ml-6 text-xs text-gray-500 dark:text-gray-400">
+                You can't remove your own admin privileges. Have another admin do it.
+              </p>
+            )}
+          </div>
           {error && (
             <div className="rounded-lg bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 px-3 py-2 text-sm text-red-700 dark:text-red-400">
               {error}
@@ -206,15 +221,118 @@ function EditUserModal({ user, onClose, onSaved }: EditUserModalProps) {
   )
 }
 
+// ─── Set Password modal ───────────────────────────────────────────────────────
+//
+// Admin-driven password reset. Skips the current-password challenge that
+// the self-serve flow enforces — the user has lost access, that's why
+// we're here. Two fields with a match check so a typo doesn't lock the
+// user out a second time.
+
+interface SetPasswordModalProps {
+  user: AdminUser
+  onClose: () => void
+  onSaved: () => void
+}
+
+function SetPasswordModal({ user, onClose, onSaved }: SetPasswordModalProps) {
+  const { callApi } = useAuth()
+  const [password, setPassword] = useState('')
+  const [confirm, setConfirm] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const mismatch = confirm !== '' && password !== confirm
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (mismatch || password === '') return
+    setError(null)
+    setIsLoading(true)
+    try {
+      await callApi(`/api/v1/admin/users/${user.id}/password`, {
+        method: 'PUT',
+        body: JSON.stringify({ password }),
+      })
+      onSaved()
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Failed to set password')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+      <div className="w-full max-w-md rounded-xl bg-white dark:bg-gray-900 shadow-xl p-6">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">Set password</h2>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+          {user.username} — share the new password with them out of band; they can change it from their profile.
+        </p>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">New password</label>
+            <input
+              type="password"
+              required
+              autoFocus
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Confirm</label>
+            <input
+              type="password"
+              required
+              value={confirm}
+              onChange={e => setConfirm(e.target.value)}
+              className={`w-full rounded-lg border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-1 ${
+                mismatch
+                  ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                  : 'border-gray-300 dark:border-gray-600 focus:border-blue-500 focus:ring-blue-500'
+              }`}
+            />
+            {mismatch && (
+              <p className="mt-1 text-xs text-red-600 dark:text-red-400">Passwords don't match.</p>
+            )}
+          </div>
+          {error && (
+            <div className="rounded-lg bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 px-3 py-2 text-sm text-red-700 dark:text-red-400">
+              {error}
+            </div>
+          )}
+          <div className="flex gap-3 pt-1">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isLoading || mismatch || password === ''}
+              className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {isLoading ? 'Setting…' : 'Set password'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function UsersPage() {
-  const { callApi } = useAuth()
+  const { callApi, user: currentUser } = useAuth()
   const [data, setData] = useState<PagedUsers | null>(null)
   const [page, setPage] = useState(1)
   const [error, setError] = useState<string | null>(null)
   const [showAddModal, setShowAddModal] = useState(false)
   const [editingUser, setEditingUser] = useState<AdminUser | null>(null)
+  const [resettingUser, setResettingUser] = useState<AdminUser | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
   usePageTitle('Users')
 
@@ -341,6 +459,9 @@ export default function UsersPage() {
                   }
                 </td>
                 <td className="px-4 py-3">
+                  {(() => {
+                    const isSelf = currentUser?.id === u.id
+                    return (
                   <div className="flex items-center gap-0.5 justify-end">
                     <button
                       onClick={() => setEditingUser(u)}
@@ -351,26 +472,49 @@ export default function UsersPage() {
                       <PencilIcon />
                     </button>
                     <button
-                      onClick={() => toggleActive(u)}
+                      onClick={() => setResettingUser(u)}
+                      disabled={isSelf}
                       className={`p-1.5 rounded text-gray-400 dark:text-gray-500 transition-colors ${
-                        u.is_active
-                          ? 'hover:!text-amber-500 dark:hover:!text-amber-400 hover:!bg-amber-50 dark:hover:!bg-amber-900/20'
-                          : 'hover:!text-green-600 dark:hover:!text-green-400 hover:!bg-green-50 dark:hover:!bg-green-900/20'
+                        isSelf
+                          ? 'opacity-30 cursor-not-allowed'
+                          : 'hover:!text-purple-500 dark:hover:!text-purple-400 hover:!bg-purple-50 dark:hover:!bg-purple-900/20'
                       }`}
-                      title={u.is_active ? 'Disable user' : 'Enable user'}
+                      title={isSelf ? 'Use Profile → Change password to set your own password' : 'Set password'}
+                      aria-label="Set password"
+                    >
+                      <KeyIcon />
+                    </button>
+                    <button
+                      onClick={() => toggleActive(u)}
+                      disabled={isSelf}
+                      className={`p-1.5 rounded text-gray-400 dark:text-gray-500 transition-colors ${
+                        isSelf
+                          ? 'opacity-30 cursor-not-allowed'
+                          : u.is_active
+                            ? 'hover:!text-amber-500 dark:hover:!text-amber-400 hover:!bg-amber-50 dark:hover:!bg-amber-900/20'
+                            : 'hover:!text-green-600 dark:hover:!text-green-400 hover:!bg-green-50 dark:hover:!bg-green-900/20'
+                      }`}
+                      title={isSelf ? "Can't disable your own account" : (u.is_active ? 'Disable user' : 'Enable user')}
                       aria-label={u.is_active ? 'Disable user' : 'Enable user'}
                     >
                       {u.is_active ? <NoSymbolIcon /> : <CheckCircleIcon />}
                     </button>
                     <button
                       onClick={() => deleteUser(u)}
-                      className="p-1.5 rounded text-gray-400 dark:text-gray-500 hover:!text-red-500 dark:hover:!text-red-400 hover:!bg-red-50 dark:hover:!bg-red-900/20 transition-colors"
-                      title="Delete user"
+                      disabled={isSelf}
+                      className={`p-1.5 rounded text-gray-400 dark:text-gray-500 transition-colors ${
+                        isSelf
+                          ? 'opacity-30 cursor-not-allowed'
+                          : 'hover:!text-red-500 dark:hover:!text-red-400 hover:!bg-red-50 dark:hover:!bg-red-900/20'
+                      }`}
+                      title={isSelf ? "Can't delete your own account" : 'Delete user'}
                       aria-label="Delete user"
                     >
                       <TrashIcon />
                     </button>
                   </div>
+                    )
+                  })()}
                 </td>
               </tr>
             ))}
@@ -413,8 +557,17 @@ export default function UsersPage() {
       {editingUser && (
         <EditUserModal
           user={editingUser}
+          isSelf={currentUser?.id === editingUser.id}
           onClose={() => setEditingUser(null)}
           onSaved={() => { setEditingUser(null); load() }}
+        />
+      )}
+
+      {resettingUser && (
+        <SetPasswordModal
+          user={resettingUser}
+          onClose={() => setResettingUser(null)}
+          onSaved={() => setResettingUser(null)}
         />
       )}
     </div>
