@@ -5149,7 +5149,7 @@ function SeriesDetailView({ seriesId, libraryId, setExtraCrumbs, onBack }: Serie
       }
     }
     collected.sort((a, b) => a.sortKey - b.sortKey)
-    groups = collected.map(({ sortKey: _sortKey, ...g }) => g)
+    groups = collected.map(({ key, label, arcId, rows }) => ({ key, label, arcId, rows }))
   } else {
     // Flat — single group with entries + ghosts interleaved by position.
     const allRows: Row[] = [...entries.map(e => ({ type: 'entry' as const, entry: e }))]
