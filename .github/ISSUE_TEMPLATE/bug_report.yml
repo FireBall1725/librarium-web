@@ -1,0 +1,88 @@
+name: Bug report
+description: Something isn't working as expected in the Librarium web app
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing a bug. The web app sits on top of the Librarium API, so both
+        the **web build version** and the **API version** matter — the bottom-left footer
+        of any logged-in page shows both.
+
+  - type: input
+    id: web_version
+    attributes:
+      label: Web version
+      description: Shown in the page footer (e.g. `Web: v26.4.2`)
+      placeholder: "e.g. 26.4.2"
+    validations:
+      required: true
+
+  - type: input
+    id: api_version
+    attributes:
+      label: API version
+      description: Shown in the page footer (e.g. `API: v26.4.2`)
+      placeholder: "e.g. 26.4.2"
+    validations:
+      required: true
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser + version
+      placeholder: "e.g. Safari 18 / Chrome 130 / Firefox 133"
+    validations:
+      required: true
+
+  - type: input
+    id: url
+    attributes:
+      label: URL where it happened
+      description: The route or page path. Redact your hostname if self-hosted.
+      placeholder: "e.g. /libraries/<id>/books or /profile"
+    validations:
+      required: false
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Sign in
+        2. Go to …
+        3. Click …
+        4. See …
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+
+  - type: textarea
+    id: console
+    attributes:
+      label: Browser console errors
+      description: Open DevTools → Console and paste any red errors. Network tab failures are also useful.
+      render: text
+    validations:
+      required: false
+
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshot or recording
+      description: Drag-and-drop here. A short screen recording often beats a written repro.
+    validations:
+      required: false

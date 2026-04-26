@@ -1,0 +1,41 @@
+name: Feedback
+description: Open-ended observations, suggestions, or "this could be better" notes that aren't a clear bug or feature
+title: "[FEEDBACK] "
+labels: ["feedback"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For thoughts that don't fit cleanly into "bug" or "feature request" — UX nits, copy
+        suggestions, "this confused me", or comparisons to other tools. Less structure, more room.
+
+  - type: input
+    id: web_version
+    attributes:
+      label: Web version
+      placeholder: "e.g. 26.4.2"
+    validations:
+      required: false
+
+  - type: input
+    id: api_version
+    attributes:
+      label: API version
+      placeholder: "e.g. 26.4.2"
+    validations:
+      required: false
+
+  - type: textarea
+    id: feedback
+    attributes:
+      label: What's on your mind?
+      description: Be as casual or as detailed as you like.
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Screenshots / examples (optional)
+    validations:
+      required: false

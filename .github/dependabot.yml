@@ -1,0 +1,35 @@
+# Dependabot — automated dep update PRs.
+# Weekly cadence keeps the noise low while still catching security
+# patches in a reasonable window. Grouped updates land as one PR per
+# ecosystem instead of one per dependency.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels: ["dependencies"]
+    groups:
+      npm-deps:
+        patterns: ["*"]
+        # Major bumps land alone so they're easier to review.
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: docker
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    labels: ["dependencies"]
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    labels: ["dependencies"]
+    groups:
+      ci-actions:
+        patterns: ["*"]
