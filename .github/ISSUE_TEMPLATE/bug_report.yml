@@ -13,7 +13,7 @@ body:
     id: web_version
     attributes:
       label: Web version
-      description: Shown in the page footer (e.g. `Web: v26.4.2`)
+      description: "Shown in the page footer (e.g. `Web: v26.4.2`)"
       placeholder: "e.g. 26.4.2"
     validations:
       required: true
@@ -22,7 +22,7 @@ body:
     id: api_version
     attributes:
       label: API version
-      description: Shown in the page footer (e.g. `API: v26.4.2`)
+      description: "Shown in the page footer (e.g. `API: v26.4.2`)"
       placeholder: "e.g. 26.4.2"
     validations:
       required: true
