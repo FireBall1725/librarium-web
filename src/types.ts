@@ -269,9 +269,50 @@ export interface SeriesArc {
   name: string
   description: string
   position: number
+  // Optional volume bounds — used by the UI to slot ghost rows (missing
+  // volumes the user doesn't own) into the right arc even when no owned
+  // book in the arc is available as a neighbour anchor.
+  vol_start: number | null
+  vol_end: number | null
   book_count: number
   created_at: string
   updated_at: string
+}
+
+// AI-generated proposals for series metadata or arcs. Pending proposals are
+// rendered in a review panel on the series detail page; the user accepts or
+// rejects per-field or per-arc before any structured data is written.
+export interface AIMetadataProposal {
+  id: string
+  library_id: string
+  run_id: string | null
+  target_type: string
+  target_id: string
+  kind: 'series_metadata' | 'series_arcs'
+  payload: SeriesMetadataPayload | SeriesArcsPayload
+  status: 'pending' | 'accepted' | 'rejected' | 'partially_accepted'
+  created_at: string
+  applied_at: string | null
+  applied_by: string | null
+}
+
+export interface SeriesMetadataPayload {
+  status?: string | null
+  total_count?: number | null
+  demographic?: string | null
+  genres: string[]
+  description?: string | null
+}
+
+export interface SeriesArcsPayload {
+  arcs: ProposedArc[]
+}
+
+export interface ProposedArc {
+  name: string
+  position: number
+  vol_start?: number | null
+  vol_end?: number | null
 }
 
 export interface SeriesVolume {

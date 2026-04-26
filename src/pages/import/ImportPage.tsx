@@ -365,6 +365,7 @@ export default function ImportPage() {
   const [duplicateUpdateFromCSV, setDuplicateUpdateFromCSV] = useState(false)
   const [enrichMetadata, setEnrichMetadata] = useState(false)
   const [enrichCovers, setEnrichCovers] = useState(false)
+  const [useAICleanup, setUseAICleanup] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -473,6 +474,7 @@ export default function ImportPage() {
       formData.append('default_format', defaultFormat)
       formData.append('enrich_metadata', enrichMetadata ? 'true' : 'false')
       formData.append('enrich_covers', enrichCovers ? 'true' : 'false')
+      formData.append('use_ai_cleanup', useAICleanup ? 'true' : 'false')
       // Only send attribution when the admin has actually retargeted —
       // omitting the field tells the API to use the caller (default).
       if (attributeToUserId && attributeToUserId !== user?.id) {
@@ -877,6 +879,16 @@ export default function ImportPage() {
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input type="checkbox" checked={enrichCovers} onChange={e => setEnrichCovers(e.target.checked)} className="sr-only peer" />
                       <div className="w-9 h-5 bg-gray-200 dark:bg-gray-700 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
+                    </label>
+                  </div>
+                  <div className="flex items-center justify-between px-4 py-3.5">
+                    <div>
+                      <p className="text-sm font-medium text-gray-800 dark:text-gray-200">Clean descriptions with AI</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">After enrichment, ask the configured AI to strip marketing fluff and retailer boilerplate from descriptions. Costs AI tokens per book; disabled if no AI provider is configured.</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" checked={useAICleanup} onChange={e => setUseAICleanup(e.target.checked)} disabled={!enrichMetadata} className="sr-only peer" />
+                      <div className="w-9 h-5 bg-gray-200 dark:bg-gray-700 rounded-full peer peer-checked:bg-blue-600 peer-disabled:opacity-50 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
                     </label>
                   </div>
                 </div>

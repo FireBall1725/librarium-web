@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (C) 2026 fireball1725
 
-import { useEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth, ApiError } from '../../auth/AuthContext'
 import PageHeader from '../../components/PageHeader'
@@ -10,7 +10,7 @@ import { usePageTitle } from '../../hooks/usePageTitle'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type JobType = 'import' | 'metadata' | 'cover' | 'cover_backfill' | 'ai_suggestions'
+type JobType = 'import' | 'metadata' | 'cover' | 'cover_backfill' | 'ai_suggestions' | 'ai_metadata_proposal'
 type JobStatus = 'pending' | 'processing' | 'done' | 'failed' | 'cancelled'
 
 interface ImportItem {
@@ -116,11 +116,12 @@ function unifiedToJob(u: UnifiedJobRow): Job {
   // collapse and confused the user when they enabled cover-only.
   let jobType: JobType
   switch (u.kind) {
-    case 'import':         jobType = 'import'; break
-    case 'enrichment':     jobType = u.subtype === 'cover' ? 'cover' : 'metadata'; break
-    case 'ai_suggestions': jobType = 'ai_suggestions'; break
-    case 'cover_backfill': jobType = 'cover_backfill'; break
-    default:               jobType = 'metadata'; break
+    case 'import':                jobType = 'import'; break
+    case 'enrichment':            jobType = u.subtype === 'cover' ? 'cover' : 'metadata'; break
+    case 'ai_suggestions':        jobType = 'ai_suggestions'; break
+    case 'cover_backfill':        jobType = 'cover_backfill'; break
+    case 'ai_metadata_proposal':  jobType = 'ai_metadata_proposal'; break
+    default:                      jobType = 'metadata'; break
   }
 
   return {
@@ -152,11 +153,12 @@ function unifiedToJob(u: UnifiedJobRow): Job {
 
 function TypeBadge({ type }: { type: JobType }) {
   const cfg: Record<JobType, { label: string; cls: string }> = {
-    import:         { label: 'Import',         cls: 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300' },
-    metadata:       { label: 'Metadata',       cls: 'bg-sky-100 dark:bg-sky-900/40 text-sky-700 dark:text-sky-300' },
-    cover:          { label: 'Covers',         cls: 'bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300' },
-    cover_backfill: { label: 'Cover backfill', cls: 'bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300' },
-    ai_suggestions: { label: 'Suggestions',    cls: 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300' },
+    import:               { label: 'Import',         cls: 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300' },
+    metadata:             { label: 'Metadata',       cls: 'bg-sky-100 dark:bg-sky-900/40 text-sky-700 dark:text-sky-300' },
+    cover:                { label: 'Covers',         cls: 'bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300' },
+    cover_backfill:       { label: 'Cover backfill', cls: 'bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300' },
+    ai_suggestions:       { label: 'Suggestions',    cls: 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300' },
+    ai_metadata_proposal: { label: 'AI proposal',    cls: 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300' },
   }
   const { label, cls } = cfg[type] ?? cfg.import
   return (
@@ -216,6 +218,92 @@ function formatDate(iso: string): string {
 
 // ─── Job row ──────────────────────────────────────────────────────────────────
 
+// AICallsPanel pulls and renders ai_metadata_runs attached to a job. Used for
+// enrichment-batch rows to surface the description-cleanup AI calls so the
+// admin can expand each one and see prompt + response.
+interface AIMetadataRun {
+  id: string
+  kind: string
+  target_type: string
+  target_id: string
+  provider_type: string
+  model_id: string
+  status: string
+  error: string
+  tokens_in: number
+  tokens_out: number
+  estimated_cost_usd: number
+  prompt: string
+  response_text: string
+  started_at: string
+  finished_at: string | null
+}
+
+function AICallsPanel({ jobID }: { jobID: string }) {
+  const { callApi } = useAuth()
+  const [runs, setRuns] = useState<AIMetadataRun[] | null>(null)
+  const [expanded, setExpanded] = useState<string | null>(null)
+
+  useEffect(() => {
+    callApi<AIMetadataRun[]>(`/api/v1/jobs/${jobID}/ai-runs`)
+      .then(r => setRuns(r ?? []))
+      .catch(() => setRuns([]))
+  }, [callApi, jobID])
+
+  if (!runs || runs.length === 0) return null
+
+  const totalCost = runs.reduce((s, r) => s + (r.estimated_cost_usd || 0), 0)
+  const totalTokens = runs.reduce((s, r) => s + (r.tokens_in || 0) + (r.tokens_out || 0), 0)
+
+  return (
+    <div className="border-t border-gray-100 dark:border-gray-800 px-5 py-3">
+      <div className="flex items-center gap-3 mb-2">
+        <span className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 font-semibold">AI calls</span>
+        <span className="text-xs text-gray-400 dark:text-gray-500">{runs.length} · {totalTokens.toLocaleString()} tokens · ${totalCost.toFixed(4)}</span>
+      </div>
+      <div className="divide-y divide-gray-100 dark:divide-gray-800">
+        {runs.map(r => (
+          <div key={r.id}>
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); setExpanded(prev => prev === r.id ? null : r.id) }}
+              className="w-full flex items-center gap-3 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-800 -mx-2 px-2 rounded">
+              <ItemStatusDot status={r.status === 'completed' ? 'done' : r.status === 'failed' ? 'failed' : 'pending'} />
+              <span className="text-gray-700 dark:text-gray-300 font-medium font-mono text-xs">{r.kind}</span>
+              <span className="text-xs text-gray-400 dark:text-gray-500 flex-1 truncate">{r.target_type} {r.target_id.slice(0, 8)}</span>
+              <span className="text-xs text-gray-400 dark:text-gray-500">{r.tokens_in + r.tokens_out} tok</span>
+              <span className="text-xs text-gray-400 dark:text-gray-500">${r.estimated_cost_usd.toFixed(4)}</span>
+              <svg className={`w-3.5 h-3.5 text-gray-400 transition-transform ${expanded === r.id ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+            {expanded === r.id && (
+              <div className="pb-3 space-y-2">
+                {r.error && (
+                  <div className="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 px-3 py-2 rounded">
+                    {r.error}
+                  </div>
+                )}
+                <details className="text-xs">
+                  <summary className="cursor-pointer text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">Prompt ({r.prompt.length} chars)</summary>
+                  <pre className="mt-1 whitespace-pre-wrap font-mono text-[11px] bg-gray-50 dark:bg-gray-900 px-3 py-2 rounded border border-gray-200 dark:border-gray-700 max-h-96 overflow-y-auto">{r.prompt}</pre>
+                </details>
+                <details className="text-xs" open>
+                  <summary className="cursor-pointer text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">Response ({r.response_text.length} chars)</summary>
+                  <pre className="mt-1 whitespace-pre-wrap font-mono text-[11px] bg-gray-50 dark:bg-gray-900 px-3 py-2 rounded border border-gray-200 dark:border-gray-700 max-h-96 overflow-y-auto">{r.response_text}</pre>
+                </details>
+                <div className="text-[11px] text-gray-400 dark:text-gray-500 font-mono">
+                  {r.provider_type}/{r.model_id} · started {formatDate(r.started_at)}{r.finished_at ? ` · finished ${formatDate(r.finished_at)}` : ''}
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function JobRow({
   job,
   onCancelled,
@@ -235,10 +323,13 @@ function JobRow({
 
   const isAISuggestions = job.type === 'ai_suggestions'
   const isCoverBackfill = job.type === 'cover_backfill'
+  const isAIMetadata    = job.type === 'ai_metadata_proposal'
   // Cover-backfill parents and AI suggestion rows delete via the unified
   // /admin/jobs/:id route (cascades through the kind-specific legacy
   // tables); enrichment and import jobs still hit their per-kind endpoints.
-  const canCancel   = !isCoverBackfill && (job.status === 'pending' || job.status === 'processing')
+  // AI-metadata-proposal jobs run synchronously and are already finished by
+  // the time their row appears in history; no cancel path needed.
+  const canCancel   = !isCoverBackfill && !isAIMetadata && (job.status === 'pending' || job.status === 'processing')
   const canDelete   = job.status === 'done' || job.status === 'failed' || job.status === 'cancelled'
   const isActive    = job.status === 'pending' || job.status === 'processing'
   const isEnrichment = job.type === 'metadata' || job.type === 'cover'
@@ -267,7 +358,7 @@ function JobRow({
     // AI suggestion runs expand into a RunDetailPanel, which self-fetches.
     // Cover-backfill parents are orchestrators with no items — the expand
     // panel just shows the summary, no fetch required.
-    if (!expanded && !isAISuggestions && !isCoverBackfill) {
+    if (!expanded && !isAISuggestions && !isCoverBackfill && !isAIMetadata) {
       setLoadingItems(true)
       try {
         if (isEnr) {
@@ -328,139 +419,132 @@ function JobRow({
     ? Math.max(0, job.processed_rows - job.failed_rows - job.skipped_rows)
     : null
 
+  // Source column content — library for kinds that have one, otherwise who
+  // triggered it (AI runs are user/admin-triggered without a library).
+  const sourceLabel = (isAISuggestions || isAIMetadata)
+    ? `Triggered by ${job.triggered_by ?? 'scheduler'}${job.user_id ? ` · user ${job.user_id.slice(0, 8)}` : ''}`
+    : (job.library_name ?? job.library_id ?? '—')
+
   return (
-    <div className="bg-white dark:bg-gray-900">
-      <button
+    <Fragment>
+      <tr
         onClick={toggleExpand}
-        className="w-full text-left px-5 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+        className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
       >
-        <div className="flex items-center gap-4">
-          <svg
-            className={`w-4 h-4 text-gray-400 flex-shrink-0 transition-transform ${expanded ? 'rotate-90' : ''}`}
-            fill="none" stroke="currentColor" viewBox="0 0 24 24"
-          >
+        <td className="pl-4 pr-1 py-3 w-8">
+          <svg className={`w-4 h-4 text-gray-400 transition-transform ${expanded ? 'rotate-90' : ''}`}
+            fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
-
-          <div className="flex-1 min-w-0 grid grid-cols-[auto_auto_1fr_auto_auto] items-center gap-3">
-            <TypeBadge type={job.type} />
-            <StatusBadge status={job.status} />
-
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 mb-0.5">
-                <span className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                  {isAISuggestions
-                    ? `Triggered by ${job.triggered_by ?? 'scheduler'}${job.user_id ? ` · user ${job.user_id.slice(0, 8)}` : ''}`
-                    : (job.library_name ?? job.library_id)}
-                </span>
-                <span className="text-xs text-gray-400 dark:text-gray-500 font-mono">
-                  {job.id.slice(0, 8)}
-                </span>
-              </div>
-              {isAISuggestions ? (
-                isActive ? (
-                  <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                    <span className="inline-block w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-                    <span>Running…</span>
-                    {job.provider_type && (
-                      <span className="text-gray-400">{job.provider_type}{job.model_id ? ` (${job.model_id})` : ''}</span>
-                    )}
-                  </div>
-                ) : (
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-gray-500 dark:text-gray-400">
-                    {job.provider_type && (
-                      <span>{job.provider_type}{job.model_id ? ` (${job.model_id})` : ''}</span>
-                    )}
-                    {(job.tokens_in !== undefined || job.tokens_out !== undefined) && (
-                      <span className="tabular-nums">
-                        {formatTokens(job.tokens_in ?? 0)} in / {formatTokens(job.tokens_out ?? 0)} out
-                      </span>
-                    )}
-                    {job.estimated_cost_usd !== undefined && job.estimated_cost_usd > 0 && (
-                      <span className="tabular-nums">${job.estimated_cost_usd.toFixed(4)}</span>
-                    )}
-                    {formatDurationSec(job.created_at, job.finished_at) && (
-                      <span className="tabular-nums">{formatDurationSec(job.created_at, job.finished_at)}</span>
-                    )}
-                    {job.run_error && (
-                      <span className="text-red-600 dark:text-red-400 truncate max-w-xs" title={job.run_error}>
-                        {job.run_error}
-                      </span>
-                    )}
-                  </div>
-                )
-              ) : isActive ? (
-                // processed/failed/skipped are disjoint buckets in the
-                // API; an import that mostly skips would otherwise sit
-                // at 0% all the way through. The bar shows total rows
-                // the worker has finished with, which is the sum.
-                (() => {
-                  const handled = job.processed_rows + job.failed_rows + job.skipped_rows
-                  const pct = job.total_rows > 0 ? Math.round((handled / job.total_rows) * 100) : 0
-                  return (
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 h-1.5 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden max-w-xs">
-                        <div
-                          className="h-full rounded-full bg-blue-500 transition-all duration-500"
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
-                      <span className="text-xs text-gray-400 tabular-nums">
-                        {handled}/{job.total_rows}
-                      </span>
-                    </div>
-                  )
-                })()
-              ) : (
-                <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
-                  <span>{job.total_rows} {isEnrichment ? 'books' : 'rows'}</span>
-                  {successRows !== null && successRows > 0 && (
-                    <span className="text-green-600 dark:text-green-400">
-                      {successRows} {isEnrichment ? 'updated' : 'added'}
-                    </span>
-                  )}
-                  {job.skipped_rows > 0 && <span className="text-amber-600 dark:text-amber-400">{job.skipped_rows} skipped</span>}
-                  {job.failed_rows > 0 && <span className="text-red-600 dark:text-red-400">{job.failed_rows} failed</span>}
-                </div>
-              )}
-            </div>
-
-            <span className="text-xs text-gray-400 dark:text-gray-500 tabular-nums whitespace-nowrap">
-              {formatDate(job.created_at)}
-            </span>
-
-            <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
-              {canCancel && (
-                <button
-                  onClick={handleCancel}
-                  disabled={cancelling}
-                  className="text-xs text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 disabled:opacity-50 transition-colors px-1 py-0.5 rounded"
-                  title="Cancel job"
-                >
-                  {cancelling ? '…' : 'Cancel'}
-                </button>
-              )}
-              {canDelete && (
-                <button
-                  onClick={handleDelete}
-                  disabled={deleting}
-                  className="text-xs text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 disabled:opacity-50 transition-colors px-1 py-0.5 rounded"
-                  title="Delete job"
-                >
-                  {deleting ? '…' : 'Delete'}
-                </button>
-              )}
-            </div>
+        </td>
+        <td className="px-3 py-3 whitespace-nowrap"><TypeBadge type={job.type} /></td>
+        <td className="px-3 py-3 whitespace-nowrap"><StatusBadge status={job.status} /></td>
+        <td className="px-3 py-3 min-w-0">
+          <div className="flex flex-col">
+            <span className="text-sm font-medium text-gray-900 dark:text-white truncate">{sourceLabel}</span>
+            <span className="text-xs text-gray-400 dark:text-gray-500 font-mono">{job.id.slice(0, 8)}</span>
           </div>
-        </div>
-      </button>
-
+        </td>
+        <td className="px-3 py-3 min-w-0">
+          {(isAISuggestions || isAIMetadata) ? (
+            isActive ? (
+              <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                <span className="inline-block w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                <span>Running…</span>
+                {job.provider_type && (
+                  <span className="text-gray-400">{job.provider_type}{job.model_id ? ` (${job.model_id})` : ''}</span>
+                )}
+              </div>
+            ) : (
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-gray-500 dark:text-gray-400">
+                {job.provider_type && (
+                  <span>{job.provider_type}{job.model_id ? ` (${job.model_id})` : ''}</span>
+                )}
+                {(job.tokens_in !== undefined || job.tokens_out !== undefined) && (
+                  <span className="tabular-nums">
+                    {formatTokens(job.tokens_in ?? 0)} in / {formatTokens(job.tokens_out ?? 0)} out
+                  </span>
+                )}
+                {job.estimated_cost_usd !== undefined && job.estimated_cost_usd > 0 && (
+                  <span className="tabular-nums">${job.estimated_cost_usd.toFixed(4)}</span>
+                )}
+                {formatDurationSec(job.created_at, job.finished_at) && (
+                  <span className="tabular-nums">{formatDurationSec(job.created_at, job.finished_at)}</span>
+                )}
+                {job.run_error && (
+                  <span className="text-red-600 dark:text-red-400 truncate max-w-xs" title={job.run_error}>
+                    {job.run_error}
+                  </span>
+                )}
+              </div>
+            )
+          ) : isActive ? (
+            // processed/failed/skipped are disjoint buckets in the API; the
+            // bar shows total rows the worker has finished with (sum).
+            (() => {
+              const handled = job.processed_rows + job.failed_rows + job.skipped_rows
+              const pct = job.total_rows > 0 ? Math.round((handled / job.total_rows) * 100) : 0
+              return (
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 h-1.5 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden max-w-xs">
+                    <div className="h-full rounded-full bg-blue-500 transition-all duration-500"
+                      style={{ width: `${pct}%` }} />
+                  </div>
+                  <span className="text-xs text-gray-400 tabular-nums whitespace-nowrap">
+                    {handled}/{job.total_rows}
+                  </span>
+                </div>
+              )
+            })()
+          ) : (
+            <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+              <span>{job.total_rows} {isEnrichment ? 'books' : 'rows'}</span>
+              {successRows !== null && successRows > 0 && (
+                <span className="text-green-600 dark:text-green-400">
+                  {successRows} {isEnrichment ? 'updated' : 'added'}
+                </span>
+              )}
+              {job.skipped_rows > 0 && <span className="text-amber-600 dark:text-amber-400">{job.skipped_rows} skipped</span>}
+              {job.failed_rows > 0 && <span className="text-red-600 dark:text-red-400">{job.failed_rows} failed</span>}
+            </div>
+          )}
+        </td>
+        <td className="px-3 py-3 text-xs text-gray-400 dark:text-gray-500 tabular-nums whitespace-nowrap">
+          {formatDate(job.created_at)}
+        </td>
+        <td className="pl-3 pr-4 py-3" onClick={e => e.stopPropagation()}>
+          <div className="flex items-center gap-3 justify-end">
+            {canCancel && (
+              <button onClick={handleCancel} disabled={cancelling}
+                className="text-xs text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 disabled:opacity-50 transition-colors"
+                title="Cancel job">
+                {cancelling ? '…' : 'Cancel'}
+              </button>
+            )}
+            {canDelete && (
+              <button onClick={handleDelete} disabled={deleting}
+                className="text-xs text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 disabled:opacity-50 transition-colors"
+                title="Delete job">
+                {deleting ? '…' : 'Delete'}
+              </button>
+            )}
+          </div>
+        </td>
+      </tr>
       {expanded && (
-        <div className="border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50">
+        <tr className="bg-gray-50 dark:bg-gray-900/50">
+          <td colSpan={7} className="border-b border-gray-100 dark:border-gray-800 p-0">
           {isAISuggestions ? (
             <div className="px-5 py-4">
               <RunDetailPanel
                 endpoint={`/api/v1/admin/jobs/ai-suggestions/runs/${job.id}`}
+                hideSummary
+              />
+            </div>
+          ) : isAIMetadata ? (
+            <div className="px-5 py-4">
+              <RunDetailPanel
+                endpoint={`/api/v1/admin/jobs/ai-metadata/runs/${job.id}`}
                 hideSummary
               />
             </div>
@@ -482,42 +566,45 @@ function JobRow({
               Loading…
             </div>
           ) : isEnrichment ? (
-            enrichItems && enrichItems.length > 0 ? (
-              <div className="divide-y divide-gray-100 dark:divide-gray-800">
-                {enrichItems.map(item => (
-                  <div key={item.id} className="flex items-start gap-3 px-5 py-2.5 text-sm">
-                    <ItemStatusDot status={item.status} />
-                    <div className="flex-1 min-w-0">
-                      <span className="text-gray-800 dark:text-gray-200 font-medium">
-                        {item.book_title || <span className="text-gray-400 italic font-mono text-xs">{item.book_id?.slice(0, 8) ?? 'Unknown'}</span>}
-                      </span>
-                      {item.message && (
-                        <p className={`text-xs mt-0.5 ${
-                          item.status === 'failed' ? 'text-red-600 dark:text-red-400'
-                            : item.status === 'skipped' ? 'text-amber-600 dark:text-amber-400'
-                            : 'text-gray-400 dark:text-gray-500'
-                        }`}>
-                          {item.message}
-                        </p>
+            <>
+              {enrichItems && enrichItems.length > 0 ? (
+                <div className="divide-y divide-gray-100 dark:divide-gray-800">
+                  {enrichItems.map(item => (
+                    <div key={item.id} className="flex items-start gap-3 px-5 py-2.5 text-sm">
+                      <ItemStatusDot status={item.status} />
+                      <div className="flex-1 min-w-0">
+                        <span className="text-gray-800 dark:text-gray-200 font-medium">
+                          {item.book_title || <span className="text-gray-400 italic font-mono text-xs">{item.book_id?.slice(0, 8) ?? 'Unknown'}</span>}
+                        </span>
+                        {item.message && (
+                          <p className={`text-xs mt-0.5 ${
+                            item.status === 'failed' ? 'text-red-600 dark:text-red-400'
+                              : item.status === 'skipped' ? 'text-amber-600 dark:text-amber-400'
+                              : 'text-gray-400 dark:text-gray-500'
+                          }`}>
+                            {item.message}
+                          </p>
+                        )}
+                      </div>
+                      {item.book_id && (
+                        <Link
+                          to={job.library_id
+                            ? `/libraries/${job.library_id}/books/${item.book_id}`
+                            : `/books/${item.book_id}`}
+                          className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex-shrink-0"
+                          onClick={e => e.stopPropagation()}
+                        >
+                          View
+                        </Link>
                       )}
                     </div>
-                    {item.book_id && (
-                      <Link
-                        to={job.library_id
-                          ? `/libraries/${job.library_id}/books/${item.book_id}`
-                          : `/books/${item.book_id}`}
-                        className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex-shrink-0"
-                        onClick={e => e.stopPropagation()}
-                      >
-                        View
-                      </Link>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="px-5 py-4 text-sm text-gray-400 dark:text-gray-500">No items.</p>
-            )
+                  ))}
+                </div>
+              ) : (
+                <p className="px-5 py-4 text-sm text-gray-400 dark:text-gray-500">No items.</p>
+              )}
+              <AICallsPanel jobID={job.id} />
+            </>
           ) : items && items.length > 0 ? (
             <div className="divide-y divide-gray-100 dark:divide-gray-800">
               {items.map(item => (
@@ -556,9 +643,10 @@ function JobRow({
           ) : (
             <p className="px-5 py-4 text-sm text-gray-400 dark:text-gray-500">No items.</p>
           )}
-        </div>
+          </td>
+        </tr>
       )}
-    </div>
+    </Fragment>
   )
 }
 
@@ -567,22 +655,44 @@ function JobRow({
 export default function JobsHistoryPage() {
   const { callApi } = useAuth()
   const [jobs, setJobs] = useState<Job[]>([])
+  const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [clearingAll, setClearingAll] = useState(false)
+  // Filter + pagination state. Each filter value maps to a backend query param;
+  // the special 'metadata' / 'cover' filter values translate to kind=enrichment
+  // + subtype=metadata|cover so the UI can split enrichment into its two
+  // user-meaningful flavours.
+  const [kindFilter, setKindFilter] = useState<string>('')
+  const [statusFilter, setStatusFilter] = useState<string>('')
+  const [page, setPage] = useState(1)
+  const PAGE_SIZE = 50
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const burstTimers = useRef<Array<ReturnType<typeof setTimeout>>>([])
   usePageTitle('Job history')
 
   const loadJobs = async () => {
     try {
-      // One fetch replaces the three-endpoint fanout — the unified
-      // /admin/jobs/history returns every kind in one paginated shape.
+      const params = new URLSearchParams()
+      params.set('limit', String(PAGE_SIZE))
+      params.set('offset', String((page - 1) * PAGE_SIZE))
+      // Map UI kind values to backend kind + subtype.
+      if (kindFilter === 'metadata') {
+        params.set('kind', 'enrichment')
+        params.set('subtype', 'metadata')
+      } else if (kindFilter === 'cover') {
+        params.set('kind', 'enrichment')
+        params.set('subtype', 'cover')
+      } else if (kindFilter !== '') {
+        params.set('kind', kindFilter)
+      }
+      if (statusFilter !== '') params.set('status', statusFilter)
       const resp = await callApi<{ items: UnifiedJobRow[]; total: number }>(
-        '/api/v1/admin/jobs/history?limit=200'
+        `/api/v1/admin/jobs/history?${params.toString()}`
       )
       const merged = (resp?.items ?? []).map(unifiedToJob)
       setJobs(merged)
+      setTotal(resp?.total ?? 0)
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Failed to load jobs')
     } finally {
@@ -590,6 +700,7 @@ export default function JobsHistoryPage() {
     }
   }
 
+  // Reload when filters or page change.
   useEffect(() => {
     loadJobs()
     return () => {
@@ -597,7 +708,13 @@ export default function JobsHistoryPage() {
       burstTimers.current = []
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [kindFilter, statusFilter, page])
+
+  // Reset to page 1 when filters change so the user doesn't end up on an
+  // empty page from a previous filter's deeper offsets.
+  useEffect(() => {
+    setPage(1)
+  }, [kindFilter, statusFilter])
 
   // Auto-poll while any job is active
   useEffect(() => {
@@ -663,7 +780,12 @@ export default function JobsHistoryPage() {
           </button>
         ) : undefined}
       />
-      <div className="max-w-4xl px-8 py-8">
+      {/* Wider than the default admin max-w-4xl: the jobs table has 7 columns
+          with badges + summaries + actions; max-w-4xl was clipping the
+          Created column and the action buttons. max-w-7xl gives breathing
+          room while still keeping the line lengths reasonable on huge
+          monitors. */}
+      <div className="max-w-7xl px-8 py-8">
 
       {error && (
         <div className="mb-6 rounded-lg bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-400">
@@ -671,24 +793,99 @@ export default function JobsHistoryPage() {
         </div>
       )}
 
+      {/* Filter row */}
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+        <label className="flex items-center gap-2 text-sm">
+          <span className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Type</span>
+          <select value={kindFilter} onChange={e => setKindFilter(e.target.value)}
+            className="rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-2 py-1 text-sm">
+            <option value="">All</option>
+            <option value="import">Import</option>
+            <option value="metadata">Metadata</option>
+            <option value="cover">Covers</option>
+            <option value="cover_backfill">Cover backfill</option>
+            <option value="ai_suggestions">AI suggestions</option>
+            <option value="ai_metadata_proposal">AI proposal</option>
+          </select>
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <span className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Status</span>
+          <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
+            className="rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-2 py-1 text-sm">
+            <option value="">All</option>
+            <option value="pending">Pending</option>
+            <option value="running">Running</option>
+            <option value="completed">Done</option>
+            <option value="failed">Failed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </label>
+        {(kindFilter !== '' || statusFilter !== '') && (
+          <button onClick={() => { setKindFilter(''); setStatusFilter('') }}
+            className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">
+            Clear filters
+          </button>
+        )}
+        <span className="ml-auto text-xs text-gray-400 dark:text-gray-500">
+          {total === 0 ? 'No matches' : total === 1 ? '1 job' : `${total.toLocaleString()} jobs`}
+        </span>
+      </div>
+
       {jobs.length === 0 ? (
         <div className="rounded-xl border border-dashed border-gray-300 dark:border-gray-600 p-12 text-center">
-          <p className="text-sm font-medium text-gray-500 dark:text-gray-400">No jobs yet</p>
+          <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+            {kindFilter !== '' || statusFilter !== '' ? 'No jobs match these filters' : 'No jobs yet'}
+          </p>
           <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-            Start an import from the Import tool to see background jobs here.
+            {kindFilter !== '' || statusFilter !== ''
+              ? 'Adjust the type or status filter above.'
+              : 'Start an import from the Import tool to see background jobs here.'}
           </p>
         </div>
       ) : (
-        <div className="rounded-xl border border-gray-200 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-800 overflow-hidden">
-          {jobs.map(job => (
-            <JobRow
-              key={job.id}
-              job={job}
-              onCancelled={handleCancelled}
-              onDeleted={handleDeleted}
-            />
-          ))}
-        </div>
+        <>
+          <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                <tr>
+                  {['', 'Type', 'Status', 'Source', 'Summary', 'Created', ''].map((h, i) => (
+                    <th key={i} className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 whitespace-nowrap">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                {jobs.map(job => (
+                  <JobRow
+                    key={job.id}
+                    job={job}
+                    onCancelled={handleCancelled}
+                    onDeleted={handleDeleted}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination — only renders when there are more jobs than fit in
+              one page. Server enforces newest-first ordering. */}
+          {total > PAGE_SIZE && (
+            <div className="flex items-center justify-between mt-4 text-sm">
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                Page {page} of {Math.max(1, Math.ceil(total / PAGE_SIZE))} · showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, total)} of {total.toLocaleString()}
+              </span>
+              <div className="flex items-center gap-2">
+                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+                  className="rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                  ← Newer
+                </button>
+                <button onClick={() => setPage(p => p + 1)} disabled={page * PAGE_SIZE >= total}
+                  className="rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                  Older →
+                </button>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
     </>
