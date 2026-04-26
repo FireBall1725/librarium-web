@@ -25,7 +25,7 @@ You'll need Node.js 22+. Point `VITE_API_BASE_URL` at a running [`librarium-api`
 - Keep changes focused. One PR = one feature/fix.
 - Run `npm run lint` and `npm run build` before submitting.
 - Prefer the existing design primitives (Tailwind v4 utility classes + shared components in `src/components/`) over introducing a new UI kit.
-- For anything that needs server state, use TanStack Query — don't reach for bespoke fetching or client-side caching.
+- For server data, use `callApi` from the auth context — it handles auth, refresh, and the `{data: ...}` envelope. Don't reach for separate fetching libraries.
 
 ## Commit messages
 
@@ -36,7 +36,7 @@ Short, imperative, reference the scope: `feat(shelf): inline edit for book title
 - Rebase on `main` before opening the PR.
 - The PR description should explain the *why*, not just the *what* — link to the issue if there is one.
 - CI must pass before review.
-- For user-facing changes, add a line to `CHANGELOG.md` under `## [Unreleased]` (the release workflow moves it into a versioned section when cutting a release).
+- Don't hand-edit a `CHANGELOG.md` — release notes are auto-generated from PR titles by the release workflow. Write a clear, descriptive title.
 
 ## License
 
