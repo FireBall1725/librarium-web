@@ -1115,8 +1115,10 @@ export default function BookPage() {
     return () => setExtraCrumbs([])
   }, [book, setExtraCrumbs])
 
-  // Lazy-load loan history when the disclosure opens — most books have
-  // no history so we avoid the extra request on the initial book read.
+  // Eager-load loan history alongside the book so we can hide the
+  // section entirely on books that have never been lent. Cheap one-shot
+  // GET; the trade-off vs lazy-loading on disclosure-open is that we
+  // don't render an empty "Loan history" header on books with none.
   // Lives above the early `error` return so hook order stays stable.
   const loadHistory = useCallback(async () => {
     if (!libraryId || !bookId) return
@@ -1126,9 +1128,7 @@ export default function BookPage() {
     setHistory(list ?? [])
   }, [callApi, libraryId, bookId])
 
-  useEffect(() => {
-    if (historyOpen && history === null) loadHistory()
-  }, [historyOpen, history, loadHistory])
+  useEffect(() => { loadHistory() }, [loadHistory])
 
   if (error) {
     return (
@@ -1170,9 +1170,8 @@ export default function BookPage() {
       }),
     }).catch(() => {})
     load()
-    // Drop any cached history so the disclosure refetches and shows the
-    // newly-returned loan in the history list.
-    setHistory(null)
+    // Refresh history so the just-returned loan shows up there too.
+    loadHistory()
   }
 
   const handleCoverDelete = async () => {
@@ -1365,53 +1364,46 @@ export default function BookPage() {
             </Section>
           )}
 
-          {/* Loan history — disclosure pattern, hidden by default since
-              most books have no history. Lazy-fetches on open. */}
-          <div className="pt-6">
-            <button onClick={() => setHistoryOpen(o => !o)}
-              className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors">
-              <svg className={`w-3.5 h-3.5 transition-transform ${historyOpen ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-              Loan history
-              {history && history.length > 0 && (
+          {/* Loan history — disclosure pattern, collapsed by default.
+              The whole section hides on books with no recorded loans;
+              we eager-fetch above so we know whether to render at all. */}
+          {history && history.length > 0 && (
+            <div className="pt-6">
+              <button onClick={() => setHistoryOpen(o => !o)}
+                className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors">
+                <svg className={`w-3.5 h-3.5 transition-transform ${historyOpen ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+                Loan history
                 <span className="text-xs font-normal normal-case tracking-normal text-gray-400 dark:text-gray-500">
                   ({history.length})
                 </span>
-              )}
-            </button>
-            {historyOpen && (
-              <div className="mt-3">
-                {history === null ? (
-                  <p className="text-sm text-gray-400 dark:text-gray-500">Loading…</p>
-                ) : history.length === 0 ? (
-                  <p className="text-sm text-gray-400 dark:text-gray-500">No loan history yet.</p>
-                ) : (
-                  <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
-                    <table className="w-full text-sm">
-                      <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-                        <tr>
-                          {['Loaned to', 'Loaned', 'Due', 'Returned'].map(h => (
-                            <th key={h} className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{h}</th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                        {history.map(loan => (
-                          <tr key={loan.id}>
-                            <td className="px-4 py-2.5 text-gray-700 dark:text-gray-300">{loan.loaned_to}</td>
-                            <td className="px-4 py-2.5 text-xs text-gray-500 dark:text-gray-400">{loan.loaned_at}</td>
-                            <td className="px-4 py-2.5 text-xs text-gray-500 dark:text-gray-400">{loan.due_date ?? <span className="text-gray-300 dark:text-gray-600">—</span>}</td>
-                            <td className="px-4 py-2.5 text-xs text-gray-500 dark:text-gray-400">{loan.returned_at ?? <span className="text-amber-600 dark:text-amber-400">Active</span>}</td>
-                          </tr>
+              </button>
+              {historyOpen && (
+                <div className="mt-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                      <tr>
+                        {['Loaned to', 'Loaned', 'Due', 'Returned'].map(h => (
+                          <th key={h} className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{h}</th>
                         ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                      {history.map(loan => (
+                        <tr key={loan.id}>
+                          <td className="px-4 py-2.5 text-gray-700 dark:text-gray-300">{loan.loaned_to}</td>
+                          <td className="px-4 py-2.5 text-xs text-gray-500 dark:text-gray-400">{loan.loaned_at}</td>
+                          <td className="px-4 py-2.5 text-xs text-gray-500 dark:text-gray-400">{loan.due_date ?? <span className="text-gray-300 dark:text-gray-600">—</span>}</td>
+                          <td className="px-4 py-2.5 text-xs text-gray-500 dark:text-gray-400">{loan.returned_at ?? <span className="text-amber-600 dark:text-amber-400">Active</span>}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Description */}
           {book.description && (
