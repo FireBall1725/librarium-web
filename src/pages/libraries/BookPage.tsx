@@ -5,6 +5,7 @@ import type { Crumb, LibraryOutletContext } from '../../components/LibraryOutlet
 import type { Book, BookEdition, EditionFile, UserBookInteraction, Shelf, BookSeriesRef, ContributorResult, MergedBookResult, MergedFieldResult, StorageLocation, BrowseEntry } from '../../types'
 import { AddEditionModal } from '../../components/AddEditionModal'
 import EditBookModal from '../../components/EditBookModal'
+import LoanFormModal from '../../components/LoanFormModal'
 import BookCover from '../../components/BookCover'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -1072,6 +1073,7 @@ export default function BookPage() {
   const [error, setError] = useState<string | null>(null)
   const [showMetaSearch, setShowMetaSearch] = useState(false)
   const [showEditBook, setShowEditBook] = useState(false)
+  const [showLend, setShowLend] = useState(false)
   const [editionModal, setEditionModal] = useState<'add' | BookEdition | null>(null)
   const [coverUploading, setCoverUploading] = useState(false)
   const coverInputRef = useRef<HTMLInputElement>(null)
@@ -1264,6 +1266,12 @@ export default function BookPage() {
               )}
             </div>
             <div className="flex items-center gap-1 flex-shrink-0">
+              <button onClick={() => setShowLend(true)} title="Lend this book"
+                className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                </svg>
+              </button>
               <button onClick={() => setShowEditBook(true)} title="Edit book"
                 className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1365,6 +1373,15 @@ export default function BookPage() {
           book={book}
           onClose={() => setShowEditBook(false)}
           onSaved={updated => { setBook(updated); setShowEditBook(false) }}
+        />
+      )}
+
+      {showLend && book && (
+        <LoanFormModal
+          libraryId={libraryId!}
+          prefillBook={{ id: book.id, title: book.title }}
+          onClose={() => setShowLend(false)}
+          onSaved={() => setShowLend(false)}
         />
       )}
 
