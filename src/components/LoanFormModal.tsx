@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useAuth, ApiError } from '../auth/AuthContext'
-import type { Book, Loan, PagedBooks, Tag } from '../types'
+import type { Book, Loan, PagedBooks } from '../types'
 
 interface LoanFormModalProps {
   libraryId: string
@@ -12,18 +12,6 @@ interface LoanFormModalProps {
   onClose: () => void
   onSaved: () => void
 }
-
-const TAG_COLORS = [
-  { value: '', label: 'Default' },
-  { value: '#ef4444', label: 'Red' },
-  { value: '#f97316', label: 'Orange' },
-  { value: '#eab308', label: 'Yellow' },
-  { value: '#22c55e', label: 'Green' },
-  { value: '#3b82f6', label: 'Blue' },
-  { value: '#8b5cf6', label: 'Purple' },
-  { value: '#ec4899', label: 'Pink' },
-  { value: '#6b7280', label: 'Grey' },
-]
 
 export default function LoanFormModal({ libraryId, loan, prefillBook, onClose, onSaved }: LoanFormModalProps) {
   const { callApi } = useAuth()
@@ -45,32 +33,8 @@ export default function LoanFormModal({ libraryId, loan, prefillBook, onClose, o
     loan ? { id: loan.book_id, title: loan.book_title } : (prefillBook ?? null)
   )
   const [isSearching, setIsSearching] = useState(false)
-  const [libraryTags, setLibraryTags] = useState<Tag[]>([])
-  const [selectedTags, setSelectedTags] = useState<Tag[]>(loan?.tags ?? [])
-  const [newTagName, setNewTagName] = useState('')
-  const [newTagColor, setNewTagColor] = useState('#6b7280')
-  const [showNewTag, setShowNewTag] = useState(false)
-  const [isCreatingTag, setIsCreatingTag] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-
-  useEffect(() => {
-    callApi<Tag[]>(`/api/v1/libraries/${libraryId}/tags`).then(ts => setLibraryTags(ts ?? [])).catch(() => {})
-  }, [callApi, libraryId])
-
-  const createTag = async () => {
-    if (!newTagName.trim()) return
-    setIsCreatingTag(true)
-    try {
-      const tag = await callApi<Tag>(`/api/v1/libraries/${libraryId}/tags`, {
-        method: 'POST',
-        body: JSON.stringify({ name: newTagName.trim(), color: newTagColor }),
-      })
-      if (tag) { setLibraryTags(ts => [...ts, tag]); setSelectedTags(ts => [...ts, tag]) }
-      setNewTagName(''); setShowNewTag(false)
-    } catch { /* ignore */ }
-    finally { setIsCreatingTag(false) }
-  }
 
   // Debounced typeahead — re-fetches as the user types, like the search
   // inputs on BooksTab / SeriesTab. Skips fetching when a book is already
@@ -102,7 +66,6 @@ export default function LoanFormModal({ libraryId, loan, prefillBook, onClose, o
             due_date: form.due_date || null,
             returned_at: loan.returned_at || null,
             notes: form.notes,
-            tag_ids: selectedTags.map(t => t.id),
           }),
         })
       } else {
@@ -114,7 +77,6 @@ export default function LoanFormModal({ libraryId, loan, prefillBook, onClose, o
             loaned_at: form.loaned_at,
             due_date: form.due_date || null,
             notes: form.notes,
-            tag_ids: selectedTags.map(t => t.id),
           }),
         })
       }
@@ -212,49 +174,6 @@ export default function LoanFormModal({ libraryId, loan, prefillBook, onClose, o
               onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
               className="w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
           </div>
-
-          {libraryTags.length > 0 && (
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Tags</label>
-                <button type="button" onClick={() => setShowNewTag(v => !v)}
-                  className="text-xs text-blue-600 hover:underline">+ New tag</button>
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {libraryTags.map(tag => {
-                  const selected = selectedTags.some(t => t.id === tag.id)
-                  return (
-                    <button key={tag.id} type="button"
-                      onClick={() => setSelectedTags(ts => selected ? ts.filter(t => t.id !== tag.id) : [...ts, tag])}
-                      className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ring-1 transition-all ${
-                        selected ? 'ring-transparent text-white' : 'bg-white dark:bg-gray-800 ring-gray-300 dark:ring-gray-600 text-gray-600 dark:text-gray-300 hover:ring-gray-400'
-                      }`}
-                      style={selected ? { backgroundColor: tag.color || '#6b7280' } : tag.color ? { color: tag.color } : undefined}>
-                      {tag.name}
-                    </button>
-                  )
-                })}
-              </div>
-              {showNewTag && (
-                <div className="mt-2 flex items-center gap-2">
-                  <input type="text" value={newTagName} onChange={e => setNewTagName(e.target.value)}
-                    placeholder="Tag name"
-                    className="flex-1 h-8 rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-2 text-xs focus:border-blue-500 focus:outline-none" />
-                  <select value={newTagColor} onChange={e => setNewTagColor(e.target.value)}
-                    className="h-8 rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-2 text-xs focus:border-blue-500 focus:outline-none">
-                    {TAG_COLORS.filter(c => c.value).map(c => (
-                      <option key={c.value} value={c.value}>{c.label}</option>
-                    ))}
-                  </select>
-                  <button type="button" disabled={isCreatingTag || !newTagName.trim()}
-                    onClick={createTag}
-                    className="h-8 px-3 rounded bg-blue-600 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50">Add</button>
-                  <button type="button" onClick={() => setShowNewTag(false)}
-                    className="h-8 px-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 text-lg leading-none">×</button>
-                </div>
-              )}
-            </div>
-          )}
 
           {error && <div className="rounded-lg bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 px-3 py-2 text-sm text-red-700 dark:text-red-400">{error}</div>}
           <div className="flex gap-3 pt-1">

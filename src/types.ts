@@ -375,7 +375,6 @@ export interface Loan {
   due_date: string | null
   returned_at: string | null
   notes: string
-  tags: Tag[]
   created_at: string
   updated_at: string
 }
