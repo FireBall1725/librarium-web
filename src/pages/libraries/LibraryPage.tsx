@@ -5859,12 +5859,6 @@ function LoansTab({ libraryId }: LoansTabProps) {
   const [showNew, setShowNew] = useState(false)
   const [editLoan, setEditLoan] = useState<Loan | null>(null)
   const [search, setSearch] = useState('')
-  const [tagFilter, setTagFilter] = useState('')
-  const [allTags, setAllTags] = useState<Tag[]>([])
-
-  useEffect(() => {
-    callApi<Tag[]>(`/api/v1/libraries/${libraryId}/tags`).then(ts => setAllTags(ts ?? [])).catch(() => {})
-  }, [callApi, libraryId])
 
   // Server returns active-only by default; ask for everything when the
   // status filter could include returned loans, then client-side filter.
@@ -5876,12 +5870,11 @@ function LoansTab({ libraryId }: LoansTabProps) {
       const params = new URLSearchParams()
       params.set('include_returned', String(includeReturned))
       if (search) params.set('search', search)
-      if (tagFilter) params.set('tag', tagFilter)
       const list = await callApi<Loan[]>(`/api/v1/libraries/${libraryId}/loans?${params}`)
       setLoans(list ?? [])
     } catch { /* ignore */ }
     finally { setIsLoading(false) }
-  }, [callApi, libraryId, includeReturned, search, tagFilter])
+  }, [callApi, libraryId, includeReturned, search])
 
   useEffect(() => { load() }, [load])
 
@@ -5966,33 +5959,18 @@ function LoansTab({ libraryId }: LoansTabProps) {
         </div>
       </div>
 
-      {/* Tag chips */}
-      {allTags.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 mb-4">
-          <button onClick={() => setTagFilter('')} className={filterPill(!tagFilter)}>All tags</button>
-          {allTags.map(tag => (
-            <button key={tag.id}
-              onClick={() => setTagFilter(tagFilter === tag.name ? '' : tag.name)}
-              className={`rounded-full px-2.5 py-1 text-xs font-medium ring-1 transition-all ${tagFilter === tag.name ? 'ring-transparent text-white' : 'bg-white dark:bg-gray-800 ring-gray-300 dark:ring-gray-600 text-gray-600 dark:text-gray-300 hover:ring-gray-400'}`}
-              style={tagFilter === tag.name ? { backgroundColor: tag.color || '#6b7280' } : tag.color ? { color: tag.color } : undefined}>
-              {tag.name}
-            </button>
-          ))}
-        </div>
-      )}
-
       {isLoading && <div className="text-sm text-gray-400 dark:text-gray-500 text-center py-16">Loading…</div>}
 
       {!isLoading && visibleLoans.length === 0 && (
         <div className="rounded-xl border border-dashed border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 p-12 text-center">
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-            {search || tagFilter || overdueFilter !== 'all'
+            {search || overdueFilter !== 'all'
               ? 'No loans match your filters.'
               : statusFilter === 'returned' ? 'No returned loans yet.'
               : statusFilter === 'all' ? 'No loans recorded yet.'
               : 'No active loans.'}
           </p>
-          {!search && !tagFilter && overdueFilter === 'all' && (
+          {!search && overdueFilter === 'all' && (
             <button onClick={() => setShowNew(true)}
               className="text-sm text-blue-600 hover:underline">Record a loan</button>
           )}
@@ -6004,7 +5982,7 @@ function LoansTab({ libraryId }: LoansTabProps) {
           <table className="w-full text-sm">
             <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
               <tr>
-                {['Book', 'Loaned to', 'Tags', 'Loaned', 'Due', showReturnedColumn ? 'Returned' : '', ''].map((h, i) => (
+                {['Book', 'Loaned to', 'Loaned', 'Due', showReturnedColumn ? 'Returned' : '', ''].map((h, i) => (
                   h ? <th key={i} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{h}</th>
                     : <th key={i} />
                 ))}
@@ -6020,19 +5998,6 @@ function LoansTab({ libraryId }: LoansTabProps) {
                     </Link>
                   </td>
                   <td className="px-4 py-3 text-gray-700 dark:text-gray-300">{loan.loaned_to}</td>
-                  <td className="px-4 py-3">
-                    {loan.tags && loan.tags.length > 0 ? (
-                      <div className="flex flex-wrap gap-1">
-                        {loan.tags.map(tag => (
-                          <span key={tag.id}
-                            className="inline-flex items-center rounded-full px-1.5 py-0.5 text-xs font-medium text-white"
-                            style={{ backgroundColor: tag.color || '#6b7280' }}>
-                            {tag.name}
-                          </span>
-                        ))}
-                      </div>
-                    ) : <span className="text-gray-300 dark:text-gray-600">—</span>}
-                  </td>
                   <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs">{loan.loaned_at}</td>
                   <td className="px-4 py-3 text-xs">
                     {loan.due_date ? (
