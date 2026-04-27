@@ -2,9 +2,10 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate, Link, useOutletContext } from 'react-router-dom'
 import { useAuth, ApiError } from '../../auth/AuthContext'
 import type { Crumb, LibraryOutletContext } from '../../components/LibraryOutlet'
-import type { Book, BookEdition, EditionFile, UserBookInteraction, Shelf, BookSeriesRef, ContributorResult, MergedBookResult, MergedFieldResult, StorageLocation, BrowseEntry } from '../../types'
+import type { Book, BookEdition, EditionFile, Loan, UserBookInteraction, Shelf, BookSeriesRef, ContributorResult, MergedBookResult, MergedFieldResult, StorageLocation, BrowseEntry } from '../../types'
 import { AddEditionModal } from '../../components/AddEditionModal'
 import EditBookModal from '../../components/EditBookModal'
+import LoanFormModal from '../../components/LoanFormModal'
 import BookCover from '../../components/BookCover'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -1072,6 +1073,9 @@ export default function BookPage() {
   const [error, setError] = useState<string | null>(null)
   const [showMetaSearch, setShowMetaSearch] = useState(false)
   const [showEditBook, setShowEditBook] = useState(false)
+  const [showLend, setShowLend] = useState(false)
+  const [historyOpen, setHistoryOpen] = useState(false)
+  const [history, setHistory] = useState<Loan[] | null>(null)
   const [editionModal, setEditionModal] = useState<'add' | BookEdition | null>(null)
   const [coverUploading, setCoverUploading] = useState(false)
   const coverInputRef = useRef<HTMLInputElement>(null)
@@ -1111,6 +1115,21 @@ export default function BookPage() {
     return () => setExtraCrumbs([])
   }, [book, setExtraCrumbs])
 
+  // Lazy-load loan history when the disclosure opens — most books have
+  // no history so we avoid the extra request on the initial book read.
+  // Lives above the early `error` return so hook order stays stable.
+  const loadHistory = useCallback(async () => {
+    if (!libraryId || !bookId) return
+    const list = await callApi<Loan[]>(
+      `/api/v1/libraries/${libraryId}/loans?include_returned=true&book_id=${bookId}`,
+    ).catch(() => null)
+    setHistory(list ?? [])
+  }, [callApi, libraryId, bookId])
+
+  useEffect(() => {
+    if (historyOpen && history === null) loadHistory()
+  }, [historyOpen, history, loadHistory])
+
   if (error) {
     return (
       <div className="p-8">
@@ -1137,6 +1156,23 @@ export default function BookPage() {
       load()
     } catch { /* ignore — cover upload errors are visible from missing image */ }
     finally { setCoverUploading(false) }
+  }
+
+  const handleMarkReturned = async (loan: Loan) => {
+    const today = new Date().toISOString().slice(0, 10)
+    await callApi(`/api/v1/libraries/${libraryId}/loans/${loan.id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({
+        loaned_to: loan.loaned_to,
+        due_date: loan.due_date,
+        returned_at: today,
+        notes: loan.notes,
+      }),
+    }).catch(() => {})
+    load()
+    // Drop any cached history so the disclosure refetches and shows the
+    // newly-returned loan in the history list.
+    setHistory(null)
   }
 
   const handleCoverDelete = async () => {
@@ -1264,6 +1300,12 @@ export default function BookPage() {
               )}
             </div>
             <div className="flex items-center gap-1 flex-shrink-0">
+              <button onClick={() => setShowLend(true)} title="Lend this book"
+                className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                </svg>
+              </button>
               <button onClick={() => setShowEditBook(true)} title="Edit book"
                 className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1277,6 +1319,98 @@ export default function BookPage() {
                 </svg>
               </button>
             </div>
+          </div>
+
+          {/* Active loans — surfaces loans where this book is currently
+              lent out so the user doesn't have to navigate to /loans. The
+              schema allows multi-active loans (when the user owns more than
+              one copy), so we render every active row. */}
+          {book.active_loans && book.active_loans.length > 0 && (
+            <Section title={book.active_loans.length === 1 ? 'Currently lent' : `Currently lent (${book.active_loans.length})`}>
+              <div className="space-y-2">
+                {book.active_loans.map(loan => {
+                  const today = new Date().toISOString().slice(0, 10)
+                  const overdue = !!loan.due_date && loan.due_date < today
+                  return (
+                    <div key={loan.id}
+                      className="flex items-center justify-between rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-amber-50 dark:bg-amber-950/50 flex items-center justify-center">
+                          <svg className="w-4 h-4 text-amber-500 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                          </svg>
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                            Lent to {loan.loaned_to}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            <span>Loaned {loan.loaned_at}</span>
+                            {loan.due_date && (
+                              <span className={overdue ? 'ml-2 text-red-600 dark:text-red-400 font-medium' : 'ml-2'}>
+                                · Due {loan.due_date}{overdue && ' (overdue)'}
+                              </span>
+                            )}
+                          </p>
+                        </div>
+                      </div>
+                      <button onClick={() => handleMarkReturned(loan)}
+                        className="rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0">
+                        Mark returned
+                      </button>
+                    </div>
+                  )
+                })}
+              </div>
+            </Section>
+          )}
+
+          {/* Loan history — disclosure pattern, hidden by default since
+              most books have no history. Lazy-fetches on open. */}
+          <div className="pt-6">
+            <button onClick={() => setHistoryOpen(o => !o)}
+              className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors">
+              <svg className={`w-3.5 h-3.5 transition-transform ${historyOpen ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+              Loan history
+              {history && history.length > 0 && (
+                <span className="text-xs font-normal normal-case tracking-normal text-gray-400 dark:text-gray-500">
+                  ({history.length})
+                </span>
+              )}
+            </button>
+            {historyOpen && (
+              <div className="mt-3">
+                {history === null ? (
+                  <p className="text-sm text-gray-400 dark:text-gray-500">Loading…</p>
+                ) : history.length === 0 ? (
+                  <p className="text-sm text-gray-400 dark:text-gray-500">No loan history yet.</p>
+                ) : (
+                  <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                        <tr>
+                          {['Loaned to', 'Loaned', 'Due', 'Returned'].map(h => (
+                            <th key={h} className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                        {history.map(loan => (
+                          <tr key={loan.id}>
+                            <td className="px-4 py-2.5 text-gray-700 dark:text-gray-300">{loan.loaned_to}</td>
+                            <td className="px-4 py-2.5 text-xs text-gray-500 dark:text-gray-400">{loan.loaned_at}</td>
+                            <td className="px-4 py-2.5 text-xs text-gray-500 dark:text-gray-400">{loan.due_date ?? <span className="text-gray-300 dark:text-gray-600">—</span>}</td>
+                            <td className="px-4 py-2.5 text-xs text-gray-500 dark:text-gray-400">{loan.returned_at ?? <span className="text-amber-600 dark:text-amber-400">Active</span>}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Description */}
@@ -1365,6 +1499,15 @@ export default function BookPage() {
           book={book}
           onClose={() => setShowEditBook(false)}
           onSaved={updated => { setBook(updated); setShowEditBook(false) }}
+        />
+      )}
+
+      {showLend && book && (
+        <LoanFormModal
+          libraryId={libraryId!}
+          prefillBook={{ id: book.id, title: book.title }}
+          onClose={() => setShowLend(false)}
+          onSaved={() => setShowLend(false)}
         />
       )}
 

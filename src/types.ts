@@ -128,6 +128,11 @@ export interface Book {
   publish_year: number | null
   language: string
   user_read_status?: string
+  // active_loan_count is on every book row (drives the "loaned" badge in
+  // list views). active_loans is only populated by single-book reads (the
+  // GetBook endpoint) for the loan panel.
+  active_loan_count?: number
+  active_loans?: Loan[]
 }
 
 export interface PagedBooks {

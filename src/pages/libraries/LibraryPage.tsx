@@ -11,6 +11,7 @@ import ContributorRow, { CONTRIBUTOR_ROLES } from '../../components/ContributorR
 import MediaTypeSelect from '../../components/MediaTypeSelect'
 import EmojiPicker from '../../components/EmojiPicker'
 import EditBookModal from '../../components/EditBookModal'
+import LoanFormModal from '../../components/LoanFormModal'
 import {
   allConditions,
   conditionLabel,
@@ -2660,6 +2661,11 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
                     {book.contributors.length > 0 && (
                       <p className="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">{book.contributors[0].name}</p>
                     )}
+                    {(book.active_loan_count ?? 0) > 0 && (
+                      <span className="mt-1 inline-flex items-center rounded-full bg-amber-50 dark:bg-amber-950/50 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-400 ring-1 ring-amber-200 dark:ring-amber-800">
+                        Lent
+                      </span>
+                    )}
                   </div>
                 </div>
               ))}
@@ -2722,10 +2728,17 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
                         <BookCoverThumb title={book.title} coverUrl={book.cover_url}
                           readStatus={showReadBadges ? book.user_read_status : undefined} />
                         <div className="min-w-0">
-                      <Link to={`/libraries/${libraryId}/books/${book.id}`}
-                        className="font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                        {book.title}
-                      </Link>
+                      <div className="flex items-center gap-2">
+                        <Link to={`/libraries/${libraryId}/books/${book.id}`}
+                          className="font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                          {book.title}
+                        </Link>
+                        {(book.active_loan_count ?? 0) > 0 && (
+                          <span className="inline-flex items-center rounded-full bg-amber-50 dark:bg-amber-950/50 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-400 ring-1 ring-amber-200 dark:ring-amber-800">
+                            Lent
+                          </span>
+                        )}
+                      </div>
                       {book.subtitle && <p className="text-xs text-gray-400 dark:text-gray-500 truncate max-w-xs">{book.subtitle}</p>}
                       {book.genres?.length > 0 && (
                         <div className="flex flex-wrap gap-1 mt-1">
@@ -5830,258 +5843,19 @@ function SeriesTab({ libraryId, setExtraCrumbs }: SeriesTabProps) {
 
 // ─── Loans tab ────────────────────────────────────────────────────────────────
 
-interface LoanFormModalProps {
-  libraryId: string
-  loan?: Loan | null
-  onClose: () => void
-  onSaved: () => void
-}
-
-function LoanFormModal({ libraryId, loan, onClose, onSaved }: LoanFormModalProps) {
-  const { callApi } = useAuth()
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
-    document.addEventListener('keydown', handler)
-    return () => document.removeEventListener('keydown', handler)
-  }, [onClose])
-  const today = new Date().toISOString().slice(0, 10)
-  const [form, setForm] = useState({
-    loaned_to: loan?.loaned_to ?? '',
-    loaned_at: loan?.loaned_at ?? today,
-    due_date: loan?.due_date ?? '',
-    notes: loan?.notes ?? '',
-  })
-  const [bookQuery, setBookQuery] = useState(loan?.book_title ?? '')
-  const [bookSearch, setBookSearch] = useState('')
-  const [bookResults, setBookResults] = useState<Book[]>([])
-  const [selectedBook, setSelectedBook] = useState<{ id: string; title: string } | null>(
-    loan ? { id: loan.book_id, title: loan.book_title } : null
-  )
-  const [isSearching, setIsSearching] = useState(false)
-  const [libraryTags, setLibraryTags] = useState<Tag[]>([])
-  const [selectedTags, setSelectedTags] = useState<Tag[]>(loan?.tags ?? [])
-  const [newTagName, setNewTagName] = useState('')
-  const [newTagColor, setNewTagColor] = useState('#6b7280')
-  const [showNewTag, setShowNewTag] = useState(false)
-  const [isCreatingTag, setIsCreatingTag] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-
-  useEffect(() => {
-    callApi<Tag[]>(`/api/v1/libraries/${libraryId}/tags`).then(ts => setLibraryTags(ts ?? [])).catch(() => {})
-  }, [callApi, libraryId])
-
-  const createTag = async () => {
-    if (!newTagName.trim()) return
-    setIsCreatingTag(true)
-    try {
-      const tag = await callApi<Tag>(`/api/v1/libraries/${libraryId}/tags`, {
-        method: 'POST',
-        body: JSON.stringify({ name: newTagName.trim(), color: newTagColor }),
-      })
-      if (tag) { setLibraryTags(ts => [...ts, tag]); setSelectedTags(ts => [...ts, tag]) }
-      setNewTagName(''); setShowNewTag(false)
-    } catch { /* ignore */ }
-    finally { setIsCreatingTag(false) }
-  }
-
-  useEffect(() => {
-    if (!bookSearch) { setBookResults([]); return }
-    setIsSearching(true)
-    callApi<PagedBooks>(`/api/v1/libraries/${libraryId}/books?q=${encodeURIComponent(bookSearch)}&per_page=20`)
-      .then(data => setBookResults(data?.items ?? []))
-      .catch(() => {})
-      .finally(() => setIsSearching(false))
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bookSearch])
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!selectedBook && !loan) { setError('Select a book'); return }
-    setError(null); setIsLoading(true)
-    try {
-      if (loan) {
-        await callApi(`/api/v1/libraries/${libraryId}/loans/${loan.id}`, {
-          method: 'PATCH',
-          body: JSON.stringify({
-            loaned_to: form.loaned_to,
-            due_date: form.due_date || null,
-            returned_at: loan.returned_at || null,
-            notes: form.notes,
-            tag_ids: selectedTags.map(t => t.id),
-          }),
-        })
-      } else {
-        await callApi(`/api/v1/libraries/${libraryId}/loans`, {
-          method: 'POST',
-          body: JSON.stringify({
-            book_id: selectedBook!.id,
-            loaned_to: form.loaned_to,
-            loaned_at: form.loaned_at,
-            due_date: form.due_date || null,
-            notes: form.notes,
-            tag_ids: selectedTags.map(t => t.id),
-          }),
-        })
-      }
-      onSaved()
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Failed to save loan')
-    } finally { setIsLoading(false) }
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-sm rounded-xl bg-white dark:bg-gray-900 shadow-xl p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-semibold text-gray-900 dark:text-white">{loan ? 'Edit loan' : 'New loan'}</h3>
-          <button type="button" onClick={onClose}
-            className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-            aria-label="Close">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        <form onSubmit={handleSubmit} className="space-y-3">
-
-          {!loan && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Book *</label>
-              {selectedBook ? (
-                <div className="flex items-center gap-2 rounded-lg border border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-950/30 px-3 py-2">
-                  <span className="flex-1 text-sm text-gray-900 dark:text-white truncate">{selectedBook.title}</span>
-                  <button type="button" onClick={() => { setSelectedBook(null); setBookQuery('') }}
-                    className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 text-lg leading-none">×</button>
-                </div>
-              ) : (
-                <form onSubmit={e => { e.preventDefault(); setBookSearch(bookQuery) }} className="flex gap-2">
-                  <input type="text" value={bookQuery} onChange={e => setBookQuery(e.target.value)}
-                    placeholder="Search books…"
-                    className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
-                  <button type="submit"
-                    className="rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Go</button>
-                </form>
-              )}
-              {isSearching && <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Searching…</p>}
-              {!isSearching && bookResults.length > 0 && !selectedBook && (
-                <ul className="mt-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow max-h-40 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-800">
-                  {bookResults.map(b => (
-                    <li key={b.id}>
-                      <button type="button"
-                        onClick={() => { setSelectedBook({ id: b.id, title: b.title }); setBookResults([]) }}
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors">
-                        {b.title}
-                        {b.contributors.length > 0 && (
-                          <span className="text-xs text-gray-400 dark:text-gray-500 ml-1">— {b.contributors.map(c => c.name).join(', ')}</span>
-                        )}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          )}
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Loaned to *</label>
-            <input type="text" autoFocus={!!loan} value={form.loaned_to}
-              onChange={e => setForm(f => ({ ...f, loaned_to: e.target.value }))}
-              placeholder="Name or contact"
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            {!loan && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Loaned date</label>
-                <input type="date" value={form.loaned_at}
-                  onChange={e => setForm(f => ({ ...f, loaned_at: e.target.value }))}
-                  className="w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
-              </div>
-            )}
-            <div className={loan ? 'col-span-2' : ''}>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Due date</label>
-              <input type="date" value={form.due_date}
-                onChange={e => setForm(f => ({ ...f, due_date: e.target.value }))}
-                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
-            <input type="text" value={form.notes}
-              onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
-          </div>
-
-          {libraryTags.length > 0 && (
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Tags</label>
-                <button type="button" onClick={() => setShowNewTag(v => !v)}
-                  className="text-xs text-blue-600 hover:underline">+ New tag</button>
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {libraryTags.map(tag => {
-                  const selected = selectedTags.some(t => t.id === tag.id)
-                  return (
-                    <button key={tag.id} type="button"
-                      onClick={() => setSelectedTags(ts => selected ? ts.filter(t => t.id !== tag.id) : [...ts, tag])}
-                      className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ring-1 transition-all ${
-                        selected ? 'ring-transparent text-white' : 'bg-white dark:bg-gray-800 ring-gray-300 dark:ring-gray-600 text-gray-600 dark:text-gray-300 hover:ring-gray-400'
-                      }`}
-                      style={selected ? { backgroundColor: tag.color || '#6b7280' } : tag.color ? { color: tag.color } : undefined}>
-                      {tag.name}
-                    </button>
-                  )
-                })}
-              </div>
-              {showNewTag && (
-                <div className="mt-2 flex items-center gap-2">
-                  <input type="text" value={newTagName} onChange={e => setNewTagName(e.target.value)}
-                    placeholder="Tag name"
-                    className="flex-1 h-8 rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-2 text-xs focus:border-blue-500 focus:outline-none" />
-                  <select value={newTagColor} onChange={e => setNewTagColor(e.target.value)}
-                    className="h-8 rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-2 text-xs focus:border-blue-500 focus:outline-none">
-                    {TAG_COLORS.filter(c => c.value).map(c => (
-                      <option key={c.value} value={c.value}>{c.label}</option>
-                    ))}
-                  </select>
-                  <button type="button" disabled={isCreatingTag || !newTagName.trim()}
-                    onClick={createTag}
-                    className="h-8 px-3 rounded bg-blue-600 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50">Add</button>
-                  <button type="button" onClick={() => setShowNewTag(false)}
-                    className="h-8 px-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 text-lg leading-none">×</button>
-                </div>
-              )}
-            </div>
-          )}
-
-          {error && <div className="rounded-lg bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 px-3 py-2 text-sm text-red-700 dark:text-red-400">{error}</div>}
-          <div className="flex gap-3 pt-1">
-            <button type="button" onClick={onClose}
-              className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Cancel</button>
-            <button type="submit" disabled={isLoading || !form.loaned_to}
-              className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
-              {isLoading ? 'Saving…' : loan ? 'Save changes' : 'Create loan'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  )
-}
-
 interface LoansTabProps {
   libraryId: string
 }
+
+type LoanStatusFilter = 'all' | 'active' | 'returned'
+type LoanOverdueFilter = 'all' | 'overdue'
 
 function LoansTab({ libraryId }: LoansTabProps) {
   const { callApi } = useAuth()
   const [loans, setLoans] = useState<Loan[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [showHistory, setShowHistory] = useState(false)
+  const [statusFilter, setStatusFilter] = useState<LoanStatusFilter>('active')
+  const [overdueFilter, setOverdueFilter] = useState<LoanOverdueFilter>('all')
   const [showNew, setShowNew] = useState(false)
   const [editLoan, setEditLoan] = useState<Loan | null>(null)
   const [search, setSearch] = useState('')
@@ -6092,23 +5866,38 @@ function LoansTab({ libraryId }: LoansTabProps) {
     callApi<Tag[]>(`/api/v1/libraries/${libraryId}/tags`).then(ts => setAllTags(ts ?? [])).catch(() => {})
   }, [callApi, libraryId])
 
+  // Server returns active-only by default; ask for everything when the
+  // status filter could include returned loans, then client-side filter.
+  const includeReturned = statusFilter !== 'active'
+
   const load = useCallback(async () => {
     setIsLoading(true)
     try {
       const params = new URLSearchParams()
-      params.set('include_returned', String(showHistory))
+      params.set('include_returned', String(includeReturned))
       if (search) params.set('search', search)
       if (tagFilter) params.set('tag', tagFilter)
       const list = await callApi<Loan[]>(`/api/v1/libraries/${libraryId}/loans?${params}`)
       setLoans(list ?? [])
     } catch { /* ignore */ }
     finally { setIsLoading(false) }
-  }, [callApi, libraryId, showHistory, search, tagFilter])
+  }, [callApi, libraryId, includeReturned, search, tagFilter])
 
   useEffect(() => { load() }, [load])
 
+  const today = new Date().toISOString().slice(0, 10)
+  const isOverdue = (loan: Loan) => !loan.returned_at && loan.due_date && loan.due_date < today
+
+  // Client-side post-filters for status (when 'returned') and overdue.
+  // Server already handled text + tag, and gated returned-vs-active.
+  const visibleLoans = useMemo(() => loans.filter(l => {
+    if (statusFilter === 'returned' && !l.returned_at) return false
+    if (overdueFilter === 'overdue' && !isOverdue(l)) return false
+    return true
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [loans, statusFilter, overdueFilter])
+
   const markReturned = async (loan: Loan) => {
-    const today = new Date().toISOString().slice(0, 10)
     await callApi(`/api/v1/libraries/${libraryId}/loans/${loan.id}`, {
       method: 'PATCH',
       body: JSON.stringify({
@@ -6127,12 +5916,15 @@ function LoansTab({ libraryId }: LoansTabProps) {
     load()
   }
 
-  const today = new Date().toISOString().slice(0, 10)
-  const isOverdue = (loan: Loan) => !loan.returned_at && loan.due_date && loan.due_date < today
+  const filterPill = (active: boolean) =>
+    `rounded-full px-2.5 py-1 text-xs font-medium ring-1 transition-all ${active ? 'bg-gray-700 text-white ring-transparent' : 'bg-white dark:bg-gray-800 ring-gray-300 dark:ring-gray-600 text-gray-600 dark:text-gray-300 hover:ring-gray-400'}`
+
+  const showReturnedColumn = statusFilter !== 'active'
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row gap-3 mb-4">
+      {/* Search bar + actions */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
         <div className="flex-1 relative">
           <input
             type="text"
@@ -6145,24 +5937,39 @@ function LoansTab({ libraryId }: LoansTabProps) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
         </div>
-        <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 cursor-pointer whitespace-nowrap">
-          <input type="checkbox" checked={showHistory} onChange={e => setShowHistory(e.target.checked)}
-            className="rounded border-gray-300 dark:border-gray-600" />
-          Show returned
-        </label>
         <button onClick={() => setShowNew(true)}
           className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors whitespace-nowrap">
           New loan
         </button>
       </div>
 
+      {/* Filter row: status / overdue */}
+      <div className="flex flex-wrap items-center gap-3 mb-3">
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs uppercase tracking-wide text-gray-400 dark:text-gray-500 mr-1">Status</span>
+          {([
+            ['active', 'Active'],
+            ['returned', 'Returned'],
+            ['all', 'All'],
+          ] as [LoanStatusFilter, string][]).map(([v, label]) => (
+            <button key={v} onClick={() => setStatusFilter(v)} className={filterPill(statusFilter === v)}>{label}</button>
+          ))}
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs uppercase tracking-wide text-gray-400 dark:text-gray-500 mr-1">Overdue</span>
+          {([
+            ['all', 'All'],
+            ['overdue', 'Overdue only'],
+          ] as [LoanOverdueFilter, string][]).map(([v, label]) => (
+            <button key={v} onClick={() => setOverdueFilter(v)} className={filterPill(overdueFilter === v)}>{label}</button>
+          ))}
+        </div>
+      </div>
+
+      {/* Tag chips */}
       {allTags.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mb-4">
-          <button
-            onClick={() => setTagFilter('')}
-            className={`rounded-full px-2.5 py-1 text-xs font-medium ring-1 transition-all ${!tagFilter ? 'bg-gray-700 text-white ring-transparent' : 'bg-white dark:bg-gray-800 ring-gray-300 dark:ring-gray-600 text-gray-600 dark:text-gray-300 hover:ring-gray-400'}`}>
-            All
-          </button>
+          <button onClick={() => setTagFilter('')} className={filterPill(!tagFilter)}>All tags</button>
           {allTags.map(tag => (
             <button key={tag.id}
               onClick={() => setTagFilter(tagFilter === tag.name ? '' : tag.name)}
@@ -6176,33 +5983,42 @@ function LoansTab({ libraryId }: LoansTabProps) {
 
       {isLoading && <div className="text-sm text-gray-400 dark:text-gray-500 text-center py-16">Loading…</div>}
 
-      {!isLoading && loans.length === 0 && (
+      {!isLoading && visibleLoans.length === 0 && (
         <div className="rounded-xl border border-dashed border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 p-12 text-center">
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-            {search || tagFilter ? 'No loans match your search.' : showHistory ? 'No loans recorded yet.' : 'No active loans.'}
+            {search || tagFilter || overdueFilter !== 'all'
+              ? 'No loans match your filters.'
+              : statusFilter === 'returned' ? 'No returned loans yet.'
+              : statusFilter === 'all' ? 'No loans recorded yet.'
+              : 'No active loans.'}
           </p>
-          {!search && !tagFilter && (
+          {!search && !tagFilter && overdueFilter === 'all' && (
             <button onClick={() => setShowNew(true)}
               className="text-sm text-blue-600 hover:underline">Record a loan</button>
           )}
         </div>
       )}
 
-      {!isLoading && loans.length > 0 && (
+      {!isLoading && visibleLoans.length > 0 && (
         <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
               <tr>
-                {['Book', 'Loaned to', 'Tags', 'Loaned', 'Due', showHistory ? 'Returned' : '', ''].map((h, i) => (
+                {['Book', 'Loaned to', 'Tags', 'Loaned', 'Due', showReturnedColumn ? 'Returned' : '', ''].map((h, i) => (
                   h ? <th key={i} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{h}</th>
                     : <th key={i} />
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-              {loans.map(loan => (
+              {visibleLoans.map(loan => (
                 <tr key={loan.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                  <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">{loan.book_title}</td>
+                  <td className="px-4 py-3 font-medium">
+                    <Link to={`/libraries/${loan.library_id}/books/${loan.book_id}`}
+                      className="text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                      {loan.book_title}
+                    </Link>
+                  </td>
                   <td className="px-4 py-3 text-gray-700 dark:text-gray-300">{loan.loaned_to}</td>
                   <td className="px-4 py-3">
                     {loan.tags && loan.tags.length > 0 ? (
@@ -6225,21 +6041,36 @@ function LoansTab({ libraryId }: LoansTabProps) {
                       </span>
                     ) : <span className="text-gray-300 dark:text-gray-600">—</span>}
                   </td>
-                  {showHistory && (
+                  {showReturnedColumn && (
                     <td className="px-4 py-3 text-xs text-gray-500 dark:text-gray-400">
                       {loan.returned_at ?? <span className="text-gray-300 dark:text-gray-600">—</span>}
                     </td>
                   )}
                   <td className="px-4 py-3">
-                    <div className="flex items-center gap-3 justify-end">
+                    <div className="flex items-center gap-1 justify-end">
                       {!loan.returned_at && (
                         <button onClick={() => markReturned(loan)}
-                          className="text-xs text-gray-500 dark:text-gray-400 hover:text-green-600 transition-colors">Returned</button>
+                          className="p-1 rounded text-gray-500 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                          title="Mark returned">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          </svg>
+                        </button>
                       )}
                       <button onClick={() => setEditLoan(loan)}
-                        className="text-xs text-gray-500 dark:text-gray-400 hover:text-blue-600 transition-colors">Edit</button>
+                        className="p-1 rounded text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                        title="Edit loan">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                          <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                        </svg>
+                      </button>
                       <button onClick={() => deleteLoan(loan)}
-                        className="text-xs text-gray-500 dark:text-gray-400 hover:text-red-600 transition-colors">Delete</button>
+                        className="p-1 rounded text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                        title="Delete loan">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                      </button>
                     </div>
                   </td>
                 </tr>
