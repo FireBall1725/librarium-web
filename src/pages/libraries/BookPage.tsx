@@ -1499,7 +1499,14 @@ export default function BookPage() {
           libraryId={libraryId!}
           prefillBook={{ id: book.id, title: book.title }}
           onClose={() => setShowLend(false)}
-          onSaved={() => setShowLend(false)}
+          onSaved={() => {
+            setShowLend(false)
+            // Refresh the book (active_loans) and the history list so the
+            // new loan shows in both the "Currently lent" panel and the
+            // history disclosure without a manual page reload.
+            load()
+            loadHistory()
+          }}
         />
       )}
 
