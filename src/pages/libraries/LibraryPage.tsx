@@ -5852,7 +5852,6 @@ function LoanFormModal({ libraryId, loan, onClose, onSaved }: LoanFormModalProps
     notes: loan?.notes ?? '',
   })
   const [bookQuery, setBookQuery] = useState(loan?.book_title ?? '')
-  const [bookSearch, setBookSearch] = useState('')
   const [bookResults, setBookResults] = useState<Book[]>([])
   const [selectedBook, setSelectedBook] = useState<{ id: string; title: string } | null>(
     loan ? { id: loan.book_id, title: loan.book_title } : null
@@ -5885,15 +5884,22 @@ function LoanFormModal({ libraryId, loan, onClose, onSaved }: LoanFormModalProps
     finally { setIsCreatingTag(false) }
   }
 
+  // Debounced typeahead — re-fetches as the user types, like the search
+  // inputs on BooksTab / SeriesTab. Skips fetching when a book is already
+  // selected so the dropdown doesn't reappear after pick.
   useEffect(() => {
-    if (!bookSearch) { setBookResults([]); return }
+    if (selectedBook) return
+    if (!bookQuery.trim()) { setBookResults([]); return }
     setIsSearching(true)
-    callApi<PagedBooks>(`/api/v1/libraries/${libraryId}/books?q=${encodeURIComponent(bookSearch)}&per_page=20`)
-      .then(data => setBookResults(data?.items ?? []))
-      .catch(() => {})
-      .finally(() => setIsSearching(false))
+    const t = setTimeout(() => {
+      callApi<PagedBooks>(`/api/v1/libraries/${libraryId}/books?q=${encodeURIComponent(bookQuery)}&per_page=20`)
+        .then(data => setBookResults(data?.items ?? []))
+        .catch(() => {})
+        .finally(() => setIsSearching(false))
+    }, 200)
+    return () => clearTimeout(t)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bookSearch])
+  }, [bookQuery, selectedBook])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -5955,15 +5961,19 @@ function LoanFormModal({ libraryId, loan, onClose, onSaved }: LoanFormModalProps
                     className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 text-lg leading-none">×</button>
                 </div>
               ) : (
-                <form onSubmit={e => { e.preventDefault(); setBookSearch(bookQuery) }} className="flex gap-2">
+                <div className="relative">
                   <input type="text" value={bookQuery} onChange={e => setBookQuery(e.target.value)}
                     placeholder="Search books…"
-                    className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
-                  <button type="submit"
-                    className="rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Go</button>
-                </form>
+                    className="w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white pl-9 pr-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                  <svg className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
               )}
               {isSearching && <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Searching…</p>}
+              {!isSearching && bookQuery.trim() && bookResults.length === 0 && !selectedBook && (
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">No matches.</p>
+              )}
               {!isSearching && bookResults.length > 0 && !selectedBook && (
                 <ul className="mt-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow max-h-40 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-800">
                   {bookResults.map(b => (
