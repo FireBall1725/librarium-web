@@ -2661,6 +2661,11 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
                     {book.contributors.length > 0 && (
                       <p className="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">{book.contributors[0].name}</p>
                     )}
+                    {(book.active_loan_count ?? 0) > 0 && (
+                      <span className="mt-1 inline-flex items-center rounded-full bg-amber-50 dark:bg-amber-950/50 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-400 ring-1 ring-amber-200 dark:ring-amber-800">
+                        Lent
+                      </span>
+                    )}
                   </div>
                 </div>
               ))}
@@ -2723,10 +2728,17 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
                         <BookCoverThumb title={book.title} coverUrl={book.cover_url}
                           readStatus={showReadBadges ? book.user_read_status : undefined} />
                         <div className="min-w-0">
-                      <Link to={`/libraries/${libraryId}/books/${book.id}`}
-                        className="font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                        {book.title}
-                      </Link>
+                      <div className="flex items-center gap-2">
+                        <Link to={`/libraries/${libraryId}/books/${book.id}`}
+                          className="font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                          {book.title}
+                        </Link>
+                        {(book.active_loan_count ?? 0) > 0 && (
+                          <span className="inline-flex items-center rounded-full bg-amber-50 dark:bg-amber-950/50 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-400 ring-1 ring-amber-200 dark:ring-amber-800">
+                            Lent
+                          </span>
+                        )}
+                      </div>
                       {book.subtitle && <p className="text-xs text-gray-400 dark:text-gray-500 truncate max-w-xs">{book.subtitle}</p>}
                       {book.genres?.length > 0 && (
                         <div className="flex flex-wrap gap-1 mt-1">
@@ -5835,11 +5847,15 @@ interface LoansTabProps {
   libraryId: string
 }
 
+type LoanStatusFilter = 'all' | 'active' | 'returned'
+type LoanOverdueFilter = 'all' | 'overdue'
+
 function LoansTab({ libraryId }: LoansTabProps) {
   const { callApi } = useAuth()
   const [loans, setLoans] = useState<Loan[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [showHistory, setShowHistory] = useState(false)
+  const [statusFilter, setStatusFilter] = useState<LoanStatusFilter>('active')
+  const [overdueFilter, setOverdueFilter] = useState<LoanOverdueFilter>('all')
   const [showNew, setShowNew] = useState(false)
   const [editLoan, setEditLoan] = useState<Loan | null>(null)
   const [search, setSearch] = useState('')
@@ -5850,23 +5866,38 @@ function LoansTab({ libraryId }: LoansTabProps) {
     callApi<Tag[]>(`/api/v1/libraries/${libraryId}/tags`).then(ts => setAllTags(ts ?? [])).catch(() => {})
   }, [callApi, libraryId])
 
+  // Server returns active-only by default; ask for everything when the
+  // status filter could include returned loans, then client-side filter.
+  const includeReturned = statusFilter !== 'active'
+
   const load = useCallback(async () => {
     setIsLoading(true)
     try {
       const params = new URLSearchParams()
-      params.set('include_returned', String(showHistory))
+      params.set('include_returned', String(includeReturned))
       if (search) params.set('search', search)
       if (tagFilter) params.set('tag', tagFilter)
       const list = await callApi<Loan[]>(`/api/v1/libraries/${libraryId}/loans?${params}`)
       setLoans(list ?? [])
     } catch { /* ignore */ }
     finally { setIsLoading(false) }
-  }, [callApi, libraryId, showHistory, search, tagFilter])
+  }, [callApi, libraryId, includeReturned, search, tagFilter])
 
   useEffect(() => { load() }, [load])
 
+  const today = new Date().toISOString().slice(0, 10)
+  const isOverdue = (loan: Loan) => !loan.returned_at && loan.due_date && loan.due_date < today
+
+  // Client-side post-filters for status (when 'returned') and overdue.
+  // Server already handled text + tag, and gated returned-vs-active.
+  const visibleLoans = useMemo(() => loans.filter(l => {
+    if (statusFilter === 'returned' && !l.returned_at) return false
+    if (overdueFilter === 'overdue' && !isOverdue(l)) return false
+    return true
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [loans, statusFilter, overdueFilter])
+
   const markReturned = async (loan: Loan) => {
-    const today = new Date().toISOString().slice(0, 10)
     await callApi(`/api/v1/libraries/${libraryId}/loans/${loan.id}`, {
       method: 'PATCH',
       body: JSON.stringify({
@@ -5885,12 +5916,15 @@ function LoansTab({ libraryId }: LoansTabProps) {
     load()
   }
 
-  const today = new Date().toISOString().slice(0, 10)
-  const isOverdue = (loan: Loan) => !loan.returned_at && loan.due_date && loan.due_date < today
+  const filterPill = (active: boolean) =>
+    `rounded-full px-2.5 py-1 text-xs font-medium ring-1 transition-all ${active ? 'bg-gray-700 text-white ring-transparent' : 'bg-white dark:bg-gray-800 ring-gray-300 dark:ring-gray-600 text-gray-600 dark:text-gray-300 hover:ring-gray-400'}`
+
+  const showReturnedColumn = statusFilter !== 'active'
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row gap-3 mb-4">
+      {/* Search bar + actions */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
         <div className="flex-1 relative">
           <input
             type="text"
@@ -5903,24 +5937,39 @@ function LoansTab({ libraryId }: LoansTabProps) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
         </div>
-        <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 cursor-pointer whitespace-nowrap">
-          <input type="checkbox" checked={showHistory} onChange={e => setShowHistory(e.target.checked)}
-            className="rounded border-gray-300 dark:border-gray-600" />
-          Show returned
-        </label>
         <button onClick={() => setShowNew(true)}
           className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors whitespace-nowrap">
           New loan
         </button>
       </div>
 
+      {/* Filter row: status / overdue */}
+      <div className="flex flex-wrap items-center gap-3 mb-3">
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs uppercase tracking-wide text-gray-400 dark:text-gray-500 mr-1">Status</span>
+          {([
+            ['active', 'Active'],
+            ['returned', 'Returned'],
+            ['all', 'All'],
+          ] as [LoanStatusFilter, string][]).map(([v, label]) => (
+            <button key={v} onClick={() => setStatusFilter(v)} className={filterPill(statusFilter === v)}>{label}</button>
+          ))}
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs uppercase tracking-wide text-gray-400 dark:text-gray-500 mr-1">Overdue</span>
+          {([
+            ['all', 'All'],
+            ['overdue', 'Overdue only'],
+          ] as [LoanOverdueFilter, string][]).map(([v, label]) => (
+            <button key={v} onClick={() => setOverdueFilter(v)} className={filterPill(overdueFilter === v)}>{label}</button>
+          ))}
+        </div>
+      </div>
+
+      {/* Tag chips */}
       {allTags.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mb-4">
-          <button
-            onClick={() => setTagFilter('')}
-            className={`rounded-full px-2.5 py-1 text-xs font-medium ring-1 transition-all ${!tagFilter ? 'bg-gray-700 text-white ring-transparent' : 'bg-white dark:bg-gray-800 ring-gray-300 dark:ring-gray-600 text-gray-600 dark:text-gray-300 hover:ring-gray-400'}`}>
-            All
-          </button>
+          <button onClick={() => setTagFilter('')} className={filterPill(!tagFilter)}>All tags</button>
           {allTags.map(tag => (
             <button key={tag.id}
               onClick={() => setTagFilter(tagFilter === tag.name ? '' : tag.name)}
@@ -5934,31 +5983,35 @@ function LoansTab({ libraryId }: LoansTabProps) {
 
       {isLoading && <div className="text-sm text-gray-400 dark:text-gray-500 text-center py-16">Loading…</div>}
 
-      {!isLoading && loans.length === 0 && (
+      {!isLoading && visibleLoans.length === 0 && (
         <div className="rounded-xl border border-dashed border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 p-12 text-center">
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-            {search || tagFilter ? 'No loans match your search.' : showHistory ? 'No loans recorded yet.' : 'No active loans.'}
+            {search || tagFilter || overdueFilter !== 'all'
+              ? 'No loans match your filters.'
+              : statusFilter === 'returned' ? 'No returned loans yet.'
+              : statusFilter === 'all' ? 'No loans recorded yet.'
+              : 'No active loans.'}
           </p>
-          {!search && !tagFilter && (
+          {!search && !tagFilter && overdueFilter === 'all' && (
             <button onClick={() => setShowNew(true)}
               className="text-sm text-blue-600 hover:underline">Record a loan</button>
           )}
         </div>
       )}
 
-      {!isLoading && loans.length > 0 && (
+      {!isLoading && visibleLoans.length > 0 && (
         <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
               <tr>
-                {['Book', 'Loaned to', 'Tags', 'Loaned', 'Due', showHistory ? 'Returned' : '', ''].map((h, i) => (
+                {['Book', 'Loaned to', 'Tags', 'Loaned', 'Due', showReturnedColumn ? 'Returned' : '', ''].map((h, i) => (
                   h ? <th key={i} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{h}</th>
                     : <th key={i} />
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-              {loans.map(loan => (
+              {visibleLoans.map(loan => (
                 <tr key={loan.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                   <td className="px-4 py-3 font-medium">
                     <Link to={`/libraries/${loan.library_id}/books/${loan.book_id}`}
@@ -5988,7 +6041,7 @@ function LoansTab({ libraryId }: LoansTabProps) {
                       </span>
                     ) : <span className="text-gray-300 dark:text-gray-600">—</span>}
                   </td>
-                  {showHistory && (
+                  {showReturnedColumn && (
                     <td className="px-4 py-3 text-xs text-gray-500 dark:text-gray-400">
                       {loan.returned_at ?? <span className="text-gray-300 dark:text-gray-600">—</span>}
                     </td>
