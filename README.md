@@ -1,6 +1,6 @@
 # librarium-web
 
-The web client for **[Librarium](https://librarium.press)** — a self-hosted, privacy-focused tracker for your physical book, manga, and comic collection. A self-hosted alternative to Libib and similar cloud catalog services.
+The web client for **[Librarium](https://librarium.press)**, a self-hosted, privacy-focused tracker for your physical book, manga, and comic collection. A self-hosted alternative to Libib and similar cloud catalog services. iOS Lite and Librarium Plus (hosted) are on the roadmap.
 
 React 19 · TypeScript · Vite · Tailwind CSS v4 · TanStack Query. Talks to [`librarium-api`](https://github.com/fireball1725/librarium-api) over HTTP.
 
