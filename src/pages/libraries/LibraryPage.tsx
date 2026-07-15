@@ -285,6 +285,7 @@ function AddBookModal({ libraryId, mediaTypes, onClose, onSaved, onDuplicate, in
   const [scanning, setScanning] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
+  const isbnInputRef = useRef<HTMLInputElement>(null)
 
   // ─── Freetext book search mode ─────────────────────────────────────────────
   const [searchInput, setSearchInput] = useState((!initialIsbn && initialTitle) ? initialTitle : '')
@@ -292,6 +293,8 @@ function AddBookModal({ libraryId, mediaTypes, onClose, onSaved, onDuplicate, in
   const [searchLoading, setSearchLoading] = useState(false)
   const [searchError, setSearchError] = useState<string | null>(null)
   const [searchProgress, setSearchProgress] = useState(0)
+  const searchInputRef = useRef<HTMLInputElement>(null)
+  const titleInputRef = useRef<HTMLInputElement>(null) 
 
   useEffect(() => {
     if (!searchLoading) { setSearchProgress(0); return }
@@ -376,6 +379,18 @@ function AddBookModal({ libraryId, mediaTypes, onClose, onSaved, onDuplicate, in
     else if (initialTitle) doBookSearch(initialTitle)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Focus the relevant input whenever the active mode changes (and when a
+  // barcode scan is cancelled, which remounts the ISBN input).
+  useEffect(() => {
+    if (mode === 'isbn') {
+      if (!scanning) isbnInputRef.current?.focus()
+    } else if (mode === 'search') {
+      searchInputRef.current?.focus()
+    } else if (mode === 'manual') {
+      titleInputRef.current?.focus()
+    }
+  }, [mode, scanning])
 
   const doISBNLookup = async (isbn: string) => {
     if (!isbn.trim()) return
@@ -654,6 +669,7 @@ function AddBookModal({ libraryId, mediaTypes, onClose, onSaved, onDuplicate, in
                 <>
                   <div className="flex gap-2">
                     <input type="text" value={isbnInput}
+                      ref={isbnInputRef}
                       onChange={e => setIsbnInput(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && doISBNLookup(isbnInput)}
                       placeholder="Enter ISBN-10 or ISBN-13…"
@@ -727,11 +743,11 @@ function AddBookModal({ libraryId, mediaTypes, onClose, onSaved, onDuplicate, in
             <div className="space-y-4">
               <div className="flex gap-2">
                 <input type="text" value={searchInput}
+                  ref={searchInputRef}
                   onChange={e => setSearchInput(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && doBookSearch(searchInput)}
                   placeholder="Search by title, author, or keyword…"
-                  className={inputCls}
-                  autoFocus />
+                  className={inputCls} />
                 <button type="button" onClick={() => doBookSearch(searchInput)} disabled={searchLoading || !searchInput.trim()}
                   className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
                   {searchLoading ? '…' : 'Search'}
@@ -794,7 +810,7 @@ function AddBookModal({ libraryId, mediaTypes, onClose, onSaved, onDuplicate, in
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className={labelCls}>Title <span className="text-red-500 normal-case tracking-normal font-normal">*</span></label>
-                <input type="text" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+                <input type="text" value={form.title} ref={titleInputRef} onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
                   placeholder="e.g. Attack on Titan" className={inputCls} />
               </div>
               <div>
