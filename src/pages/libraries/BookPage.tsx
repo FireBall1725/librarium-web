@@ -878,9 +878,22 @@ function MergedMetadataModal({ book, editions, libraryId, bookId, onClose, onApp
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { if (isbnInput) doSearch(isbnInput) }, [])
 
+  // Switching tabs clears any diff view from the other tab (e.g. the
+  // auto-run ISBN search on mount) so a stale result can't linger and look
+  // like it belongs to the tab you just switched to.
+  const switchMode = (m: 'isbn' | 'search') => {
+    setMode(m)
+    setMerged(null)
+    setError(null)
+  }
+
   const doBookSearch = async (query: string) => {
     const q = query.trim()
     if (!q) return
+    // Clear any diff view left over from the auto-run ISBN search on mount
+    // (or a previous pick) — otherwise the results list below stays hidden
+    // behind `!merged` and a title search silently appears to do nothing.
+    setMerged(null)
     setSearchLoading(true); setSearchError(null); setSearchResults([])
     try {
       const results = await callApi<ISBNLookupResult[]>(`/api/v1/lookup/books?q=${encodeURIComponent(q)}`)
@@ -1007,11 +1020,11 @@ function MergedMetadataModal({ book, editions, libraryId, bookId, onClose, onApp
               editions (the batch enrichment job only ever acts on an exact
               ISBN) can still be resolved, with a person picking the result. */}
           <div className="flex rounded-lg bg-gray-100 dark:bg-gray-800 p-1">
-            <button type="button" onClick={() => setMode('isbn')}
+            <button type="button" onClick={() => switchMode('isbn')}
               className={`flex-1 rounded-md py-1.5 text-sm font-medium transition-colors ${mode === 'isbn' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}>
               By ISBN
             </button>
-            <button type="button" onClick={() => setMode('search')}
+            <button type="button" onClick={() => switchMode('search')}
               className={`flex-1 rounded-md py-1.5 text-sm font-medium transition-colors ${mode === 'search' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}>
               By Title
             </button>
