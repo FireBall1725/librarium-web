@@ -897,16 +897,17 @@ function MergedMetadataModal({ book, editions, libraryId, bookId, onClose, onApp
   // this tab. When it has an ISBN, re-resolve through the merged-lookup
   // endpoint to pull in any other providers' data for that same edition too;
   // when it doesn't (common for older ISFDB editions), use its data directly.
+  // Deliberately never re-resolves through /lookup/isbn/{isbn}/merged, even
+  // when the picked result has an ISBN. A single ISBN can span several
+  // distinct ISFDB printings (same book, different publisher/year/cover —
+  // Panther reused one ISBN for 1969/1973/1977 reprints of Camp
+  // Concentration), and that endpoint has no way to know which one the user
+  // meant — it returns whichever ISFDB happens to pick first, which silently
+  // swapped in a different edition's data here during testing. Trusting only
+  // the exact record the user clicked is the whole point of this tab.
   const selectSearchResult = (r: ISBNLookupResult) => {
-    const isbn = r.isbn_13 || r.isbn_10
-    if (isbn) {
-      setIsbnInput(isbn)
-      setMode('isbn')
-      doSearch(isbn)
-    } else {
-      setError(null)
-      applyMergedResult(toMergedFromSingle(r))
-    }
+    setError(null)
+    applyMergedResult(toMergedFromSingle(r))
   }
 
   const resolveContributors = async (names: string[]) => {
