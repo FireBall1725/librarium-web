@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate, Link, useOutletContext } from 'react-router-dom'
 import { useAuth, ApiError } from '../../auth/AuthContext'
 import type { Crumb, LibraryOutletContext } from '../../components/LibraryOutlet'
-import type { Book, BookEdition, EditionFile, Loan, UserBookInteraction, Shelf, BookSeriesRef, ContributorResult, MergedBookResult, MergedFieldResult, StorageLocation, BrowseEntry } from '../../types'
+import type { Book, BookEdition, EditionFile, Loan, UserBookInteraction, Shelf, BookSeriesRef, ContributorResult, MergedBookResult, MergedFieldResult, StorageLocation, BrowseEntry, ISBNLookupResult } from '../../types'
 import { AddEditionModal } from '../../components/AddEditionModal'
 import EditBookModal from '../../components/EditBookModal'
 import LoanFormModal from '../../components/LoanFormModal'
@@ -777,13 +777,45 @@ interface MergedMetadataModalProps {
   onApplied: () => void
 }
 
+// A by-title search result may have no ISBN at all (common for older/small-press
+// editions — exactly the case ISFDB is strongest at). When one is picked and
+// there's no ISBN to re-resolve through the merged-lookup endpoint, build a
+// single-source "merged" result directly from it so the same field-diff/apply
+// UI still works — just without cross-provider alternatives.
+function toMergedFromSingle(r: ISBNLookupResult): MergedBookResult {
+  const field = (value: string): MergedFieldResult | undefined =>
+    value ? { value, source: r.provider, source_display: r.provider_display, alternatives: [] } : undefined
+  return {
+    title: field(r.title),
+    subtitle: field(r.subtitle),
+    authors: r.authors?.length ? { value: r.authors.join(', '), source: r.provider, source_display: r.provider_display, alternatives: [] } : undefined,
+    description: field(r.description),
+    publisher: field(r.publisher),
+    publish_date: field(r.publish_date),
+    language: field(r.language),
+    isbn_10: field(r.isbn_10),
+    isbn_13: field(r.isbn_13),
+    page_count: r.page_count != null ? { value: String(r.page_count), source: r.provider, source_display: r.provider_display, alternatives: [] } : undefined,
+    categories: r.categories,
+    covers: r.cover_url ? [{ source: r.provider, source_display: r.provider_display, cover_url: r.cover_url }] : [],
+  }
+}
+
 function MergedMetadataModal({ book, editions, libraryId, bookId, onClose, onApplied }: MergedMetadataModalProps) {
   const { callApi } = useAuth()
   const primaryEdition = editions.find(e => e.is_primary) ?? editions[0] ?? null
+  const [mode, setMode] = useState<'isbn' | 'search'>('isbn')
   const [isbnInput, setIsbnInput] = useState(primaryEdition?.isbn_13 || primaryEdition?.isbn_10 || '')
   const [merged, setMerged] = useState<MergedBookResult | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // ─── By-title search mode — lets the user resolve ambiguity manually,
+  // unlike the batch enrichment job which only ever acts on an exact ISBN ───
+  const [searchInput, setSearchInput] = useState(book.title)
+  const [searchResults, setSearchResults] = useState<ISBNLookupResult[]>([])
+  const [searchLoading, setSearchLoading] = useState(false)
+  const [searchError, setSearchError] = useState<string | null>(null)
 
   // For each field key, the chosen alternative source (undefined = use primary)
   const [altChoice, setAltChoice] = useState<Record<string, string>>({})
@@ -815,17 +847,25 @@ function MergedMetadataModal({ book, editions, libraryId, bookId, onClose, onApp
     { key: 'page_count',   label: 'Page count',  currentValue: primaryEdition?.page_count != null ? String(primaryEdition.page_count) : '', field: m.page_count },
   ].filter(fd => !!fd.field)
 
+  // Shared by both the ISBN and by-title paths once a MergedBookResult is in
+  // hand — pre-selects fields that actually differ from the book's current
+  // values, same as before.
+  const applyMergedResult = (result: MergedBookResult) => {
+    setAltChoice({})
+    setMerged(result)
+    const defs = fieldDefs(result)
+    setEnabled(new Set(defs.filter(fd => fd.field!.value !== fd.currentValue).map(fd => fd.key)))
+    setSelectedCoverIdx(!book.cover_url && (result.covers?.length ?? 0) > 0 ? 0 : -1)
+  }
+
   const doSearch = async (isbn: string) => {
     const q = isbn.trim()
     if (!q) return
-    setLoading(true); setError(null); setMerged(null); setAltChoice({})
+    setLoading(true); setError(null); setMerged(null)
     try {
       const result = await callApi<MergedBookResult>(`/api/v1/lookup/isbn/${encodeURIComponent(q)}/merged`)
       if (!result) { setError('No results found.'); return }
-      setMerged(result)
-      const defs = fieldDefs(result)
-      setEnabled(new Set(defs.filter(fd => fd.field!.value !== fd.currentValue).map(fd => fd.key)))
-      setSelectedCoverIdx(!book.cover_url && (result.covers?.length ?? 0) > 0 ? 0 : -1)
+      applyMergedResult(result)
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Lookup failed')
     } finally {
@@ -837,6 +877,51 @@ function MergedMetadataModal({ book, editions, libraryId, bookId, onClose, onApp
   // rather than reaching above its declaration. Runs once on open.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { if (isbnInput) doSearch(isbnInput) }, [])
+
+  // Switching tabs clears any diff view from the other tab (e.g. the
+  // auto-run ISBN search on mount) so a stale result can't linger and look
+  // like it belongs to the tab you just switched to.
+  const switchMode = (m: 'isbn' | 'search') => {
+    setMode(m)
+    setMerged(null)
+    setError(null)
+  }
+
+  const doBookSearch = async (query: string) => {
+    const q = query.trim()
+    if (!q) return
+    // Clear any diff view left over from the auto-run ISBN search on mount
+    // (or a previous pick) — otherwise the results list below stays hidden
+    // behind `!merged` and a title search silently appears to do nothing.
+    setMerged(null)
+    setSearchLoading(true); setSearchError(null); setSearchResults([])
+    try {
+      const results = await callApi<ISBNLookupResult[]>(`/api/v1/lookup/books?q=${encodeURIComponent(q)}`)
+      setSearchResults(results ?? [])
+      if (!results || results.length === 0) setSearchError('No results found.')
+    } catch (err) {
+      setSearchError(err instanceof ApiError ? err.message : 'Unable to retrieve results — please try again later.')
+    } finally {
+      setSearchLoading(false)
+    }
+  }
+
+  // Picking a search result resolves ambiguity manually — the whole point of
+  // this tab. When it has an ISBN, re-resolve through the merged-lookup
+  // endpoint to pull in any other providers' data for that same edition too;
+  // when it doesn't (common for older ISFDB editions), use its data directly.
+  // Deliberately never re-resolves through /lookup/isbn/{isbn}/merged, even
+  // when the picked result has an ISBN. A single ISBN can span several
+  // distinct ISFDB printings (same book, different publisher/year/cover —
+  // Panther reused one ISBN for 1969/1973/1977 reprints of Camp
+  // Concentration), and that endpoint has no way to know which one the user
+  // meant — it returns whichever ISFDB happens to pick first, which silently
+  // swapped in a different edition's data here during testing. Trusting only
+  // the exact record the user clicked is the whole point of this tab.
+  const selectSearchResult = (r: ISBNLookupResult) => {
+    setError(null)
+    applyMergedResult(toMergedFromSingle(r))
+  }
 
   const resolveContributors = async (names: string[]) => {
     const out: Array<{ contributor_id: string; role: string; display_order: number }> = []
@@ -931,20 +1016,84 @@ function MergedMetadataModal({ book, editions, libraryId, bookId, onClose, onApp
         </div>
 
         <div className="px-6 py-5 space-y-5">
-          {/* ISBN search */}
-          <div className="flex gap-2">
-            <input type="text" value={isbnInput} onChange={e => setIsbnInput(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && doSearch(isbnInput)}
-              placeholder="ISBN-10 or ISBN-13…"
-              className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
-            <button onClick={() => doSearch(isbnInput)} disabled={loading || !isbnInput.trim()}
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
-              {loading ? '…' : 'Search'}
+          {/* ISBN vs by-title tabs — by-title exists so ambiguous/no-ISBN
+              editions (the batch enrichment job only ever acts on an exact
+              ISBN) can still be resolved, with a person picking the result. */}
+          <div className="flex rounded-lg bg-gray-100 dark:bg-gray-800 p-1">
+            <button type="button" onClick={() => switchMode('isbn')}
+              className={`flex-1 rounded-md py-1.5 text-sm font-medium transition-colors ${mode === 'isbn' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}>
+              By ISBN
+            </button>
+            <button type="button" onClick={() => switchMode('search')}
+              className={`flex-1 rounded-md py-1.5 text-sm font-medium transition-colors ${mode === 'search' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}>
+              By Title
             </button>
           </div>
 
-          {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
-          {loading && <p className="text-sm text-gray-400 dark:text-gray-500">Searching providers…</p>}
+          {mode === 'isbn' ? (
+            <div className="flex gap-2">
+              <input type="text" value={isbnInput} onChange={e => setIsbnInput(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && doSearch(isbnInput)}
+                placeholder="ISBN-10 or ISBN-13…"
+                className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+              <button onClick={() => doSearch(isbnInput)} disabled={loading || !isbnInput.trim()}
+                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
+                {loading ? '…' : 'Search'}
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="flex gap-2">
+                <input type="text" value={searchInput} onChange={e => setSearchInput(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && doBookSearch(searchInput)}
+                  placeholder="Search by title, author, or keyword…"
+                  className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                <button onClick={() => doBookSearch(searchInput)} disabled={searchLoading || !searchInput.trim()}
+                  className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
+                  {searchLoading ? '…' : 'Search'}
+                </button>
+              </div>
+              {searchError && <p className="text-sm text-red-600 dark:text-red-400">{searchError}</p>}
+              {searchLoading && <p className="text-sm text-gray-400 dark:text-gray-500">Searching providers…</p>}
+              {!merged && searchResults.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                    {searchResults.length} result{searchResults.length !== 1 ? 's' : ''} — pick the edition you own
+                  </p>
+                  <div className="max-h-72 overflow-y-auto space-y-2">
+                    {searchResults.map((r, i) => (
+                      <button key={i} type="button" onClick={() => selectSearchResult(r)}
+                        className="w-full text-left rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-3 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
+                        <div className="flex gap-3">
+                          {r.cover_url ? (
+                            <img src={r.cover_url} alt="" referrerPolicy="no-referrer" className="w-10 h-14 object-cover rounded flex-shrink-0 bg-gray-200 dark:bg-gray-700" />
+                          ) : (
+                            <div className="w-10 h-14 rounded flex-shrink-0 bg-gray-200 dark:bg-gray-700" />
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm text-gray-900 dark:text-white truncate">{r.title}</p>
+                            {r.subtitle && <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{r.subtitle}</p>}
+                            {r.authors?.length > 0 && <p className="text-xs text-gray-600 dark:text-gray-300 mt-0.5 truncate">{r.authors.join(', ')}</p>}
+                            <div className="flex items-center gap-2 mt-1">
+                              {r.publisher && <span className="text-xs text-gray-400 dark:text-gray-500 truncate">{r.publisher}</span>}
+                              {r.publisher && r.publish_date && <span className="text-gray-300 dark:text-gray-600">·</span>}
+                              {r.publish_date && <span className="text-xs text-gray-400 dark:text-gray-500">{r.publish_date.slice(0, 4)}</span>}
+                              <span className="text-gray-300 dark:text-gray-600">·</span>
+                              <span className="text-xs text-gray-400 dark:text-gray-500">{r.provider_display}</span>
+                              {!r.isbn_13 && !r.isbn_10 && <span className="text-xs text-amber-600 dark:text-amber-500">no ISBN</span>}
+                            </div>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {mode === 'isbn' && error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+          {mode === 'isbn' && loading && <p className="text-sm text-gray-400 dark:text-gray-500">Searching providers…</p>}
 
           {merged && (
             <>
