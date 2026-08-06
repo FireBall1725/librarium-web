@@ -795,8 +795,6 @@ function MergedMetadataModal({ book, editions, libraryId, bookId, onClose, onApp
   const [applying, setApplying] = useState(false)
   const [applyError, setApplyError] = useState<string | null>(null)
 
-  useEffect(() => { if (isbnInput) doSearch(isbnInput) }, [])
-
   const getEffectiveValue = (key: string, field: MergedFieldResult | undefined): string => {
     if (!field) return ''
     const chosen = altChoice[key]
@@ -834,6 +832,11 @@ function MergedMetadataModal({ book, editions, libraryId, bookId, onClose, onApp
       setLoading(false)
     }
   }
+
+  // Declared after doSearch so the effect closes over the real function
+  // rather than reaching above its declaration. Runs once on open.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { if (isbnInput) doSearch(isbnInput) }, [])
 
   const resolveContributors = async (names: string[]) => {
     const out: Array<{ contributor_id: string; role: string; display_order: number }> = []
