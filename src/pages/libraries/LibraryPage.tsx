@@ -377,7 +377,11 @@ function AddBookModal({ libraryId, mediaTypes, onClose, onSaved, onDuplicate, in
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const doISBNLookup = async (isbn: string) => {
+  // Function declaration, not a const arrow: the barcode-scan callback above
+  // and the auto-trigger effect both call this before this line is reached.
+  // A hoisted declaration has no temporal dead zone and no stale-closure
+  // hazard, since the binding never gets reassigned.
+  async function doISBNLookup(isbn: string) {
     if (!isbn.trim()) return
     setIsbnLoading(true)
     setIsbnError(null)
@@ -1780,6 +1784,21 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
     localStorage.setItem('library-books-cols-v2', JSON.stringify([...visibleCols]))
   }, [visibleCols])
 
+  // Declared above the preferences effect below, which calls all three
+  // setters. They seed from localStorage so the UI has something before the
+  // server round-trip lands.
+  const [perPage, setPerPage] = useState(() => {
+    const saved = localStorage.getItem('librarium:books:perPage')
+    const n = saved ? Number(saved) : 25
+    return [25, 50, 100, 200].includes(n) ? n : 25
+  })
+  const [viewMode, setViewMode] = useState<'table' | 'grid'>(() =>
+    localStorage.getItem('librarium:books:viewMode') === 'grid' ? 'grid' : 'table'
+  )
+  const [showReadBadges, setShowReadBadges] = useState(() =>
+    localStorage.getItem('librarium:show_read_badges') !== 'false'
+  )
+
   // Load persisted preferences from the server once on mount.
   useEffect(() => {
     callApi<{ prefs: Record<string, unknown> }>('/api/v1/auth/me/preferences')
@@ -1856,18 +1875,6 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
   const [bulkMetaForce, setBulkMetaForce] = useState(false)
   const [bulkMetaUseAI, setBulkMetaUseAI] = useState(false)
   const [isBulkJobEnqueueing, setIsBulkJobEnqueueing] = useState(false)
-
-  const [perPage, setPerPage] = useState(() => {
-    const saved = localStorage.getItem('librarium:books:perPage')
-    const n = saved ? Number(saved) : 25
-    return [25, 50, 100, 200].includes(n) ? n : 25
-  })
-  const [viewMode, setViewMode] = useState<'table' | 'grid'>(() =>
-    localStorage.getItem('librarium:books:viewMode') === 'grid' ? 'grid' : 'table'
-  )
-  const [showReadBadges, setShowReadBadges] = useState(() =>
-    localStorage.getItem('librarium:show_read_badges') !== 'false'
-  )
 
   const pageIds = data?.items.map(b => b.id) ?? []
   const allOnPageSelected = pageIds.length > 0 && pageIds.every(id => selectedIds.has(id))
@@ -2230,6 +2237,12 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
       .catch(() => {})
   }
 
+  // Computed here rather than in an IIFE inside the JSX. The old inline
+  // version ran during render, which made every handler defined inside it
+  // look like render-time work to react-hooks/refs, since applySuggestion
+  // touches searchInputRef.
+  const dropdownSuggestions = showDropdown ? getSuggestions(getLastToken(query)) : []
+
   return (
     <div>
       <div className="flex items-center gap-3 mb-4">
@@ -2254,25 +2267,21 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
               placeholder='Search… type:Manga, tag:read, contributor:endo, NOT, OR, "phrase"'
               className="w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
-            {showDropdown && (() => {
-              const suggestions = getSuggestions(getLastToken(query))
-              if (suggestions.length === 0) return null
-              return (
-                <div className="absolute top-full left-0 right-0 mt-1 z-50 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg overflow-hidden">
-                  {suggestions.map((s, i) => (
-                    <button
-                      key={s.label}
-                      type="button"
-                      onMouseDown={e => { e.preventDefault(); applySuggestion(s.insert) }}
-                      className={`w-full flex items-center gap-3 px-3 py-2 text-left text-sm transition-colors ${i === dropdownIdx ? 'bg-blue-50 dark:bg-blue-950/50' : 'hover:bg-gray-50 dark:hover:bg-gray-800'}`}
-                    >
-                      <span className="font-mono font-medium text-blue-600 dark:text-blue-400 min-w-[7rem]">{s.label}</span>
-                      {s.description && <span className="text-xs text-gray-400 dark:text-gray-500">{s.description}</span>}
-                    </button>
-                  ))}
-                </div>
-              )
-            })()}
+            {showDropdown && dropdownSuggestions.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-1 z-50 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg overflow-hidden">
+                {dropdownSuggestions.map((s, i) => (
+                  <button
+                    key={s.label}
+                    type="button"
+                    onMouseDown={e => { e.preventDefault(); applySuggestion(s.insert) }}
+                    className={`w-full flex items-center gap-3 px-3 py-2 text-left text-sm transition-colors ${i === dropdownIdx ? 'bg-blue-50 dark:bg-blue-950/50' : 'hover:bg-gray-50 dark:hover:bg-gray-800'}`}
+                  >
+                    <span className="font-mono font-medium text-blue-600 dark:text-blue-400 min-w-[7rem]">{s.label}</span>
+                    {s.description && <span className="text-xs text-gray-400 dark:text-gray-500">{s.description}</span>}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           <button type="submit"
             className="rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Search</button>
@@ -5065,7 +5074,8 @@ function SeriesDetailView({ seriesId, libraryId, setExtraCrumbs, onBack }: Serie
   // list. Books without an arc cluster under "Unsorted"; missing volumes go to
   // a "Missing volumes" footer group.
   type Group = { key: string; label: string; arcId: string | null; rows: Row[] }
-  let groups: Group[] = []
+  // No initializer: both branches of the arcs check below assign it.
+  let groups: Group[]
 
   if (arcs.length > 0) {
     // Infer which arc a missing volume sits in. Two-tier strategy:
