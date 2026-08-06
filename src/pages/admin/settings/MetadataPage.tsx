@@ -24,15 +24,26 @@ type TestState = { status: 'idle' } | { status: 'testing' } | { status: 'ok'; ti
 function ProviderCard({ provider, onSaved }: ProviderCardProps) {
   const { callApi } = useAuth()
   const [apiKey, setApiKey] = useState('')
+  const [fieldValues, setFieldValues] = useState<Record<string, string>>({})
   const [enabled, setEnabled] = useState(provider.enabled)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const [testState, setTestState] = useState<TestState>({ status: 'idle' })
 
+  const hasConfigFields = (provider.config_fields?.length ?? 0) > 0
+
   useEffect(() => {
     setEnabled(provider.enabled)
   }, [provider.enabled])
+
+  // A required field is satisfied if either a saved value exists or the
+  // admin just typed one in.
+  const missingRequiredField = hasConfigFields
+    ? provider.config_fields!.some(
+        f => f.required && !provider.config?.[f.key] && !fieldValues[f.key]
+      )
+    : provider.requires_key && !provider.has_api_key && !apiKey
 
   const handleSave = async () => {
     setSaving(true)
@@ -40,7 +51,13 @@ function ProviderCard({ provider, onSaved }: ProviderCardProps) {
     setSuccess(false)
     try {
       const cfg: Record<string, string> = { enabled: enabled ? 'true' : 'false' }
-      if (provider.requires_key && apiKey) cfg.api_key = apiKey
+      if (hasConfigFields) {
+        for (const [key, value] of Object.entries(fieldValues)) {
+          if (value) cfg[key] = value
+        }
+      } else if (provider.requires_key && apiKey) {
+        cfg.api_key = apiKey
+      }
       const updated = await callApi<ProviderStatus[]>(
         `/api/v1/admin/providers/${provider.name}`,
         { method: 'PUT', body: JSON.stringify(cfg) }
@@ -48,6 +65,7 @@ function ProviderCard({ provider, onSaved }: ProviderCardProps) {
       if (updated) {
         onSaved(updated)
         setApiKey('')
+        setFieldValues({})
         setSuccess(true)
         setTimeout(() => setSuccess(false), 2000)
       }
@@ -107,14 +125,49 @@ function ProviderCard({ provider, onSaved }: ProviderCardProps) {
               className="sr-only peer"
               checked={enabled}
               onChange={e => setEnabled(e.target.checked)}
-              disabled={provider.requires_key && !provider.has_api_key && !apiKey}
+              disabled={missingRequiredField}
             />
             <div className="w-10 h-6 bg-gray-200 dark:bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full" />
           </label>
         )}
       </div>
 
-      {provider.requires_key && !isTest && (
+      {hasConfigFields && !isTest && (
+        <div className="mt-3 space-y-2">
+          {provider.help_text && (
+            <div className="rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 px-3 py-2 text-sm text-blue-700 dark:text-blue-300">
+              {provider.help_text}
+              {provider.help_url && (
+                <> <a href={provider.help_url} target="_blank" rel="noopener noreferrer" className="font-medium underline hover:no-underline">Learn more →</a></>
+              )}
+            </div>
+          )}
+          {provider.config_fields!.map(field => {
+            const savedValue = provider.config?.[field.key]
+            const isSaved = savedValue !== undefined && savedValue !== ''
+            const inputType = field.type === 'password' ? 'password' : field.type === 'url' ? 'url' : 'text'
+            return (
+              <div key={field.key}>
+                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                  {field.label} {isSaved && <span className="text-green-600 dark:text-green-400">(saved)</span>}
+                </label>
+                <input
+                  type={inputType}
+                  value={fieldValues[field.key] ?? ''}
+                  onChange={e => setFieldValues(prev => ({ ...prev, [field.key]: e.target.value }))}
+                  placeholder={isSaved ? (field.type === 'password' ? '••••••••••••••••' : savedValue) : (field.placeholder ?? `Enter ${field.label.toLowerCase()}…`)}
+                  className="w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+                {field.help_text && (
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{field.help_text}</p>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {!hasConfigFields && provider.requires_key && !isTest && (
         <div className="mt-3 space-y-2">
           {provider.help_text && (
             <div className="rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 px-3 py-2 text-sm text-blue-700 dark:text-blue-300">
