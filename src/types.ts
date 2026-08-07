@@ -436,6 +436,15 @@ export interface ISBNLookupResult {
   categories?: string[]
 }
 
+export interface ProviderConfigField {
+  key: string
+  label: string
+  type: string // "password" | "text" | "url"
+  required: boolean
+  placeholder?: string
+  help_text?: string
+}
+
 export interface ProviderStatus {
   name: string
   display_name: string
@@ -447,6 +456,10 @@ export interface ProviderStatus {
   enabled: boolean
   has_api_key: boolean
   config?: Record<string, string>
+  // Optional — providers whose config is more than a single API key (e.g. a
+  // self-hosted mirror needing a base URL) declare this; the settings page
+  // falls back to the legacy single-API-key form when it's absent.
+  config_fields?: ProviderConfigField[]
 }
 
 export interface SeriesLookupResult {

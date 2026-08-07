@@ -220,7 +220,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       throw new ApiError(0, 'Cannot reach API — is the server running?')
     }
     const text = await res.text()
-    let body: { error?: string; data?: unknown } = {}
+    // No initializer: the catch always throws, so body is definitely
+    // assigned by the time it's read below.
+    let body: { error?: string; data?: unknown }
     try { body = text ? JSON.parse(text) : {} } catch {
       throw new ApiError(res.status, `Unexpected response from /api/v1/setup/admin (HTTP ${res.status}). Is the API up to date?`)
     }
