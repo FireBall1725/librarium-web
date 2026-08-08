@@ -4,16 +4,18 @@ import tailwindcss from '@tailwindcss/vite'
 
 const apiTarget = process.env.VITE_API_PROXY_TARGET || 'http://localhost:8080'
 
-// Display version: release builds get LIBRARIUM_VERSION injected by CI (e.g. "26.4.1").
-// Local/dev builds auto-compute "{YY}.{M}.DEV" from today's date so an uninjected build
-// is visibly distinguishable from a release. Matches the api repo's version.go logic.
+// Display version: release builds get LIBRARIUM_VERSION injected by CI (e.g.
+// "26.8.1"). Anything else is a local build and says so.
+//
+// The release scheme has exactly three shapes and all three describe something
+// published: 26.8.1, 26.8.1-rc.1, 26.8.1-nightly.202608080642. A build from
+// someone's laptop is none of them, so it claims no version rather than
+// inventing a YY.M string for a release that does not exist. Mirrors
+// internal/version in the Go repos.
 function computeVersion(): string {
   const injected = process.env.LIBRARIUM_VERSION?.trim()
   if (injected) return injected
-  const now = new Date()
-  const yy = now.getUTCFullYear() % 100
-  const m = now.getUTCMonth() + 1
-  return `${yy}.${m}.DEV`
+  return '0.0.0-dev'
 }
 
 export default defineConfig({

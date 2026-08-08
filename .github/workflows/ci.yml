@@ -1,41 +1,21 @@
 name: CI
 
+# The jobs live in FireBall1725/workflows so every React client runs the same
+# ones. Change them there, not here.
+
 on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-
-      - uses: actions/setup-node@v7
-        with:
-          node-version: "22"
-          cache: "npm"
-
-      - run: npm ci
-
-      - run: npm run lint
-
-      - run: npm test
-
-      - run: npm run build
-
-  docker-build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
-
-      - name: Build image (no push)
-        uses: docker/build-push-action@v7
-        with:
-          context: .
-          push: false
-          tags: librarium-web:ci
+  ci:
+    uses: FireBall1725/workflows/.github/workflows/ci-node.yml@v1
+    with:
+      # Matches the Dockerfile. CI previously tested 22 while the image shipped
+      # 26, so it was validating a runtime nobody ran.
+      node-version: "26"
