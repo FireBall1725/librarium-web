@@ -294,7 +294,7 @@ function AddBookModal({ libraryId, mediaTypes, onClose, onSaved, onDuplicate, in
   const [searchError, setSearchError] = useState<string | null>(null)
   const [searchProgress, setSearchProgress] = useState(0)
   const searchInputRef = useRef<HTMLInputElement>(null)
-  const titleInputRef = useRef<HTMLInputElement>(null) 
+  const titleInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (!searchLoading) { setSearchProgress(0); return }
