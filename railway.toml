@@ -1,0 +1,24 @@
+# Railway build/deploy config for librarium-web.
+#
+# Build: uses the repo Dockerfile (multi-stage: vite build → nginx:alpine).
+# The container listens on :3000. On boot, nginx envsubsts nginx.conf.template
+# using API_UPSTREAM and API_UPSTREAM_PORT — set those on the Railway service
+# to point at the sibling api service's internal DNS.
+#
+# Required env vars on Railway:
+#   API_UPSTREAM       e.g. ${{api.RAILWAY_PRIVATE_DOMAIN}}
+#   API_UPSTREAM_PORT  e.g. 8080
+#
+# Leave them unset for a fresh one-click deploy and the Dockerfile defaults
+# (librarium-api:8080) kick in — which won't resolve on Railway's network,
+# so the template/README spells out wiring them up.
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+healthcheckPath = "/"
+healthcheckTimeout = 30
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10

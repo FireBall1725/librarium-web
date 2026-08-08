@@ -1,0 +1,55 @@
+server {
+    # PORT is envsubst'd at container start. Defaults to 3000 (set in the
+    # Dockerfile) so existing Docker Compose deployments keep working; on
+    # Railway / Fly / other PaaS, the platform-injected $PORT wins and
+    # nginx binds to whatever port the platform routes traffic to.
+    listen ${PORT};
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # Runtime DNS resolution for the api upstream. Without this, nginx
+    # resolves ${API_UPSTREAM} once at config-parse time and caches the
+    # IP forever — when the api instance rotates (Railway redeploy, k8s
+    # restart, anything that changes the backend IP) the cached address
+    # goes stale and every /api request times out.
+    #
+    # RESOLVERS is parsed from /etc/resolv.conf by docker-entrypoint-resolvers.sh
+    # (our wrapper entrypoint) and exported before the stock nginx entrypoint
+    # runs envsubst. Covers Docker's embedded DNS in compose, and whatever
+    # recursor the PaaS gives us on Railway/Fly/k8s.
+    resolver ${RESOLVERS} ipv6=on valid=10s;
+
+    # API_UPSTREAM is substituted at container start via nginx's
+    # /docker-entrypoint.d/20-envsubst-on-templates.sh. Default value is
+    # set in the Dockerfile so existing docker-compose deployments (where
+    # the api is reachable as `librarium-api`) keep working unchanged.
+    # On Railway / Fly / other PaaS, override it with the internal DNS
+    # name of the api service (e.g. ${{api.RAILWAY_PRIVATE_DOMAIN}}).
+    #
+    # The `set` + variable in proxy_pass forces per-request resolution
+    # via the resolver above rather than parse-time caching.
+    location /api {
+        set $api_upstream ${API_UPSTREAM}:${API_UPSTREAM_PORT};
+        proxy_pass http://$api_upstream;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 60s;
+    }
+
+    location /health {
+        set $health_upstream ${API_UPSTREAM}:${API_UPSTREAM_PORT};
+        proxy_pass http://$health_upstream;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+
+    # Serve the SPA — all routes fall back to index.html
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    gzip on;
+    gzip_types text/plain text/css application/javascript application/json image/svg+xml;
+}
