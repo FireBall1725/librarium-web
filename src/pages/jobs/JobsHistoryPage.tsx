@@ -10,7 +10,7 @@ import { usePageTitle } from '../../hooks/usePageTitle'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type JobType = 'import' | 'metadata' | 'cover' | 'cover_backfill' | 'ai_suggestions' | 'ai_metadata_proposal'
+type JobType = 'import' | 'metadata' | 'cover' | 'cover_backfill' | 'ai_suggestions' | 'ai_metadata_proposal' | 'history_prune'
 type JobStatus = 'pending' | 'processing' | 'done' | 'failed' | 'cancelled'
 
 interface ImportItem {
@@ -60,6 +60,9 @@ interface Job {
   user_id?: string
   run_error?: string
   finished_at?: string
+  // history_prune-only counters — what the retention sweep removed.
+  jobs_deleted?: number
+  ai_runs_deleted?: number
 }
 
 // UnifiedJobRow mirrors the JobView the unified /admin/jobs/history
@@ -121,6 +124,7 @@ function unifiedToJob(u: UnifiedJobRow): Job {
     case 'ai_suggestions':        jobType = 'ai_suggestions'; break
     case 'cover_backfill':        jobType = 'cover_backfill'; break
     case 'ai_metadata_proposal':  jobType = 'ai_metadata_proposal'; break
+    case 'history_prune':         jobType = 'history_prune'; break
     default:                      jobType = 'metadata'; break
   }
 
@@ -143,6 +147,8 @@ function unifiedToJob(u: UnifiedJobRow): Job {
     estimated_cost_usd: typeof p.cost_usd === 'number' ? (p.cost_usd as number) : 0,
     run_error: u.error || undefined,
     finished_at: u.finished_at || undefined,
+    jobs_deleted: num('jobs_deleted'),
+    ai_runs_deleted: num('ai_runs_deleted'),
   }
 }
 
@@ -159,6 +165,7 @@ function TypeBadge({ type }: { type: JobType }) {
     cover_backfill:       { label: 'Cover backfill', cls: 'bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300' },
     ai_suggestions:       { label: 'Suggestions',    cls: 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300' },
     ai_metadata_proposal: { label: 'AI proposal',    cls: 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300' },
+    history_prune:        { label: 'Cleanup',        cls: 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300' },
   }
   const { label, cls } = cfg[type] ?? cfg.import
   return (
@@ -324,12 +331,13 @@ function JobRow({
   const isAISuggestions = job.type === 'ai_suggestions'
   const isCoverBackfill = job.type === 'cover_backfill'
   const isAIMetadata    = job.type === 'ai_metadata_proposal'
+  const isHistoryPrune  = job.type === 'history_prune'
   // Cover-backfill parents and AI suggestion rows delete via the unified
   // /admin/jobs/:id route (cascades through the kind-specific legacy
   // tables); enrichment and import jobs still hit their per-kind endpoints.
   // AI-metadata-proposal jobs run synchronously and are already finished by
   // the time their row appears in history; no cancel path needed.
-  const canCancel   = !isCoverBackfill && !isAIMetadata && (job.status === 'pending' || job.status === 'processing')
+  const canCancel   = !isCoverBackfill && !isAIMetadata && !isHistoryPrune && (job.status === 'pending' || job.status === 'processing')
   const canDelete   = job.status === 'done' || job.status === 'failed' || job.status === 'cancelled'
   const isActive    = job.status === 'pending' || job.status === 'processing'
   const isEnrichment = job.type === 'metadata' || job.type === 'cover'
@@ -358,7 +366,7 @@ function JobRow({
     // AI suggestion runs expand into a RunDetailPanel, which self-fetches.
     // Cover-backfill parents are orchestrators with no items — the expand
     // panel just shows the summary, no fetch required.
-    if (!expanded && !isAISuggestions && !isCoverBackfill && !isAIMetadata) {
+    if (!expanded && !isAISuggestions && !isCoverBackfill && !isAIMetadata && !isHistoryPrune) {
       setLoadingItems(true)
       try {
         if (isEnr) {
@@ -403,7 +411,7 @@ function JobRow({
     if (!canDelete || deleting) return
     setDeleting(true)
     try {
-      const path = isCoverBackfill || isAISuggestions
+      const path = isCoverBackfill || isAISuggestions || isHistoryPrune
         ? `/api/v1/admin/jobs/${job.id}`
         : isEnrichment
           ? `/api/v1/enrichment-batches/${detailID}`
@@ -421,7 +429,7 @@ function JobRow({
 
   // Source column content — library for kinds that have one, otherwise who
   // triggered it (AI runs are user/admin-triggered without a library).
-  const sourceLabel = (isAISuggestions || isAIMetadata)
+  const sourceLabel = (isAISuggestions || isAIMetadata || isHistoryPrune)
     ? `Triggered by ${job.triggered_by ?? 'scheduler'}${job.user_id ? ` · user ${job.user_id.slice(0, 8)}` : ''}`
     : (job.library_name ?? job.library_id ?? '—')
 
@@ -446,7 +454,21 @@ function JobRow({
           </div>
         </td>
         <td className="px-3 py-3 min-w-0">
-          {(isAISuggestions || isAIMetadata) ? (
+          {isHistoryPrune ? (
+            <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+              <span className="tabular-nums">
+                {job.total_rows} record{job.total_rows === 1 ? '' : 's'} removed
+              </span>
+              {formatDurationSec(job.created_at, job.finished_at) && (
+                <span className="tabular-nums">{formatDurationSec(job.created_at, job.finished_at)}</span>
+              )}
+              {job.run_error && (
+                <span className="text-red-600 dark:text-red-400 truncate max-w-xs" title={job.run_error}>
+                  {job.run_error}
+                </span>
+              )}
+            </div>
+          ) : (isAISuggestions || isAIMetadata) ? (
             isActive ? (
               <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
                 <span className="inline-block w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
@@ -547,6 +569,20 @@ function JobRow({
                 endpoint={`/api/v1/admin/jobs/ai-metadata/runs/${job.id}`}
                 hideSummary
               />
+            </div>
+          ) : isHistoryPrune ? (
+            <div className="px-5 py-4 text-sm text-gray-600 dark:text-gray-400 space-y-1">
+              <p>
+                Deleted {job.jobs_deleted ?? 0} finished job{(job.jobs_deleted ?? 0) === 1 ? '' : 's'} (with their
+                event logs and per-row items) and {job.ai_runs_deleted ?? 0} AI call
+                record{(job.ai_runs_deleted ?? 0) === 1 ? '' : 's'}.
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-500">
+                Retention window is set on the Job history cleanup settings page.
+              </p>
+              {job.run_error && (
+                <p className="text-xs text-red-600 dark:text-red-400">{job.run_error}</p>
+              )}
             </div>
           ) : isCoverBackfill ? (
             <div className="px-5 py-4 text-sm text-gray-600 dark:text-gray-400 space-y-1">
@@ -806,6 +842,7 @@ export default function JobsHistoryPage() {
             <option value="cover_backfill">Cover backfill</option>
             <option value="ai_suggestions">AI suggestions</option>
             <option value="ai_metadata_proposal">AI proposal</option>
+            <option value="history_prune">Cleanup</option>
           </select>
         </label>
         <label className="flex items-center gap-2 text-sm">
