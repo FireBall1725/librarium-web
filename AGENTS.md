@@ -1,0 +1,128 @@
+# AGENTS.md
+
+Guidance for AI coding agents working in `librarium-web`. Humans should read
+[CONTRIBUTING.md](./CONTRIBUTING.md) first; this file assumes you have and does
+not repeat it.
+
+## What this repo is
+
+The web client for Librarium: a self-hosted, privacy-focused tracker for
+physical book, manga, and comic collections. It is a browser client for a
+Librarium server and holds no data of its own.
+
+Librarium is five repos that ship independently:
+
+| Repo | Role |
+| --- | --- |
+| [`librarium`](https://github.com/FireBall1725/librarium) | Marketing site at librarium.press |
+| [`librarium-api`](https://github.com/FireBall1725/librarium-api) | Go backend, the contract every client consumes |
+| **`librarium-web`** | **This repo. React, TypeScript, Tailwind v4, Vite** |
+| [`librarium-ios`](https://github.com/FireBall1725/librarium-ios) | SwiftUI client |
+| [`librarium-mcp`](https://github.com/FireBall1725/librarium-mcp) | MCP server |
+
+Each repo versions on its own. A web release does not imply an api release.
+
+## Product rules that shape design decisions
+
+- **The API owns the logic.** If a feature needs a new computed value, a new
+  filter, or a new aggregate, that belongs in `librarium-api` and arrives here
+  as a field. Recomputing server data in React is the wrong fix and will be
+  asked out of the PR.
+- **Self-hosted is canon.** There is no paid tier, no feature gating, no
+  licence check. Both editions are free.
+- **Multi-server.** A user can connect to several Librarium instances at once
+  and switch between them. Never hardcode a single origin or cache anything
+  under a key that ignores which server it came from.
+- **Everything is admin-configurable, nothing is env-configurable.** Instance
+  settings live in the API and are edited through the admin UI, not through
+  build-time variables.
+- **Telemetry is opt-in and off by default.**
+
+## Stack
+
+React 19, TypeScript, Vite, Tailwind v4 (through `@tailwindcss/vite`, no
+`tailwind.config.js`), React Router, i18next, Vitest with Testing Library and
+jsdom. No component library. No state management library: server state comes
+through `callApi` and local state through hooks.
+
+## Layout
+
+```
+src/
+  App.tsx                 route table and the shell
+  types.ts                TypeScript mirrors of the API's wire shapes
+  auth/AuthContext.tsx    auth state plus callApi, the single fetch wrapper
+  pages/                  one directory per area: admin, jobs, libraries,
+                          import, profile, plus the top-level pages
+  components/             shared UI. Anything used by two or more pages
+  hooks/                  reusable behaviour, each with its own test where it has one
+  lib/search.ts           client-side search and filter helpers
+  i18n/                   i18next setup; strings live in public/locales
+public/locales/           en-CA and fr-FR translation JSON
+```
+
+Every network call goes through `callApi` from `useAuth()`. It handles the
+active server, the bearer token, re-auth on expiry, and error shaping. Do not
+call `fetch` directly.
+
+## Build and test
+
+The full local stack (api, web, db, mcp) lives in the umbrella
+[`librarium`](https://github.com/FireBall1725/librarium) workspace under
+`local/docker-compose.yml`. For web-only work, `npm run dev` is faster and
+proxies to whatever `VITE_API_PROXY_TARGET` points at.
+
+Before opening a PR, run what CI runs:
+
+```bash
+npm ci
+npx tsc -b        # typecheck
+npm run lint      # eslint
+npm run test      # vitest
+npm run build
+```
+
+CI also runs `editorconfig-checker` and a Docker build, on Node 26 to match the
+Dockerfile. The jobs live in
+[FireBall1725/workflows](https://github.com/FireBall1725/workflows), so change
+them there rather than in this repo's `ci.yml`.
+
+`npm run lint` currently reports pre-existing warnings and exits 0. Do not
+silence them wholesale, and do not add new ones.
+
+## Things that will bite you
+
+- **Never hand-edit the version.** No version is committed to source.
+  `vite.config.ts` reads `LIBRARIUM_VERSION`, which the Dockerfile receives from
+  the release workflow. Local builds report `0.0.0-dev` on purpose.
+- **Never edit `CHANGELOG.md`.** Release notes are generated from PR titles.
+- **`types.ts` is a mirror, not a source.** When an API response shape changes,
+  update it here to match what the server actually sends. It is hand-maintained
+  and drifts silently.
+- **A PUT to a settings endpoint usually replaces the whole record.** Sending a
+  partial object clears the fields you left out. Read the current value, change
+  one field, send it all back.
+- **Tailwind v4 has no config file.** Everything lives in `src/index.css`,
+  which imports Tailwind and declares the dark variant. There is no
+  `tailwind.config.js` to add to.
+- **Dark mode is class-based, not media-query-based.** The variant is
+  `@custom-variant dark (&:where(.dark, .dark *))`, so it follows a `.dark`
+  class on an ancestor rather than the OS setting.
+- **Every string a user reads goes through i18next.** New copy needs keys in
+  both `en-CA` and `fr-FR`; an English string in the French bundle is worse than
+  a missing one, so leave a real translation or flag it in the PR.
+- Every colour needs its `dark:` variant. A component that only looks right in
+  light mode is not finished.
+
+## Conventions
+
+- Every file starts with the SPDX header and copyright line already used
+  throughout the repo. Copy the form from a neighbouring file.
+- Comments explain why a thing is the way it is. The codebase carries a lot of
+  rationale comments above non-obvious decisions; match that.
+- Components are function declarations with typed props, default export for the
+  page or component itself.
+- Prefer widening an existing component over adding a near-duplicate.
+- Commit messages are short and imperative with a scope:
+  `fix(jobs): keep schedule config on toggle`.
+- Every commit needs a DCO sign-off (`git commit -s`).
