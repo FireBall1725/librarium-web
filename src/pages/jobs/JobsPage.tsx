@@ -33,6 +33,7 @@ interface Schedule {
   description: string
   cron: string
   enabled: boolean
+  config: Record<string, unknown>
   last_fired_at?: string
   next_fire_at?: string
 }
@@ -75,7 +76,11 @@ export default function JobsPage() {
     try {
       await callApi(`/api/v1/admin/jobs/schedules/${encodeURIComponent(s.kind)}`, {
         method: 'PUT',
-        body: JSON.stringify({ cron: s.cron, enabled, config: {} }),
+        // Send the row's own config back — the PUT replaces the whole
+        // schedule, so posting {} here would wipe the kind's tunables
+        // (history retention window, and anything added later) every time
+        // somebody flicked the toggle.
+        body: JSON.stringify({ cron: s.cron, enabled, config: s.config ?? {} }),
       })
       showToast(
         enabled ? `${s.display_name} enabled` : `${s.display_name} disabled`,

@@ -8,6 +8,7 @@ import PageHeader from '../../components/PageHeader'
 import { useToast } from '../../components/Toast'
 import { usePageTitle } from '../../hooks/usePageTitle'
 import AISuggestionsJobCard from './AISuggestionsJobCard'
+import HistoryPruneJobCard from './HistoryPruneJobCard'
 import JobSchedulesSection from './JobSchedulesSection'
 
 interface Schedule {
@@ -144,6 +145,17 @@ export default function JobKindPage() {
               Configuration
             </h2>
             <AISuggestionsJobCard onRunKicked={() => setTimeout(load, 1500)} />
+          </section>
+        )}
+
+        {/* History cleanup carries the retention window in its schedule
+            config rather than a kind-specific endpoint. */}
+        {kind === 'history_prune' && (
+          <section>
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+              Retention
+            </h2>
+            <HistoryPruneJobCard />
           </section>
         )}
 
