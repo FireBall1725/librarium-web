@@ -92,9 +92,11 @@ silence them wholesale, and do not add new ones.
 
 ## Things that will bite you
 
-- **Never hand-edit the version.** No version is committed to source.
-  `vite.config.ts` reads `LIBRARIUM_VERSION`, which the Dockerfile receives from
-  the release workflow. Local builds report `0.0.0-dev` on purpose.
+- **Never hand-edit the version.** Releases are `YY.M.revision` (`26.8.0`,
+  `26.8.1`, resetting to `.0` when the month rolls over) and CI computes it from
+  the latest tag. No version is committed to source: `vite.config.ts` reads
+  `LIBRARIUM_VERSION`, which the Dockerfile receives from the release workflow.
+  Local builds report `0.0.0-dev` on purpose.
 - **Never edit `CHANGELOG.md`.** Release notes are generated from PR titles.
 - **`types.ts` is a mirror, not a source.** When an API response shape changes,
   update it here to match what the server actually sends. It is hand-maintained
