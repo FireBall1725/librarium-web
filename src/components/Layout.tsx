@@ -1,14 +1,16 @@
 import { useEffect, useState } from 'react'
-import { Link, NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom'
+import { Link, NavLink, Outlet, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
-import type { SuggestionQuotaView } from '../types'
+import type { Library, SuggestionQuotaView } from '../types'
 import { THEMES, applyTheme, readStoredTheme, storeTheme, type ThemeId } from '../lib/theme'
 // Params are compared normalised, not by substring: "status=read" is a prefix
 // of "status=reading", so a substring test lights up Finished while the reader
 // is looking at Reading now.
 import { loadViews, normaliseParams, type SavedView } from '../lib/views'
 import { sectionForPath } from '../lib/settingsTree'
+import { Icon, type IconName } from '../lib/icons'
+import AuthorAvatar from './AuthorAvatar'
 
 interface CollectionCounts {
   books: number
@@ -17,19 +19,77 @@ interface CollectionCounts {
 }
 
 /**
- * A total beside a nav entry.
+ * One row in the sidebar: icon, label, and a count or a warning dot.
  *
- * Tabular figures so the column of numbers lines up, and nothing at all until
- * the count arrives: a placeholder that later becomes a number is a layout
- * shift under the reader's pointer.
+ * The classes come from the ported reference stylesheet rather than being
+ * rebuilt as utilities, so the rail matches the design without a second
+ * description of it living here.
  */
-function NavCount({ value }: { value: number | undefined }) {
-  if (value === undefined) return null
-  return (
-    <span className="text-[11px] font-normal tabular-nums text-content-muted">
-      {value.toLocaleString()}
-    </span>
+function NavRow({
+  to,
+  icon,
+  label,
+  count,
+  warn,
+  dot,
+  end,
+  onClick,
+}: {
+  to?: string
+  icon?: IconName
+  label: string
+  count?: number
+  warn?: boolean
+  /** Colour swatch instead of an icon, for a library. */
+  dot?: string
+  end?: boolean
+  onClick?: () => void
+}) {
+  const inner = (
+    <>
+      {dot ? <span className="swatchdot" style={{ background: dot }} /> : icon && <Icon name={icon} />}
+      {label}
+      {warn
+        ? <span className="warn" />
+        : count !== undefined && <span className="count">{count.toLocaleString()}</span>}
+    </>
   )
+
+  if (!to) {
+    return (
+      <button type="button" className="lb-navrow" onClick={onClick}>
+        {inner}
+      </button>
+    )
+  }
+  return (
+    <NavLink to={to} end={end} className={({ isActive }) => `lb-navrow ${isActive ? 'on' : ''}`}>
+      {inner}
+    </NavLink>
+  )
+}
+
+/**
+ * An icon per view, chosen from the built-in ids where they are known and
+ * falling back to the generic one. Views are user data, so a view someone
+ * created gets the neutral icon rather than a wrong guess from its name.
+ */
+function viewIcon(v: SavedView): IconName {
+  switch (v.id) {
+    case 'reading': return 'next'
+    case 'unread': return 'books'
+    case 'read': return 'gaps'
+    case 'five-stars': return 'star'
+    case 'signed': return 'wish'
+    default: return 'newview'
+  }
+}
+
+/** A stable colour per library, derived from its id since the schema has none. */
+function libraryHue(id: string): string {
+  let h = 0
+  for (let i = 0; i < id.length; i++) h = (Math.imul(h, 31) + id.charCodeAt(i)) >>> 0
+  return `oklch(0.68 0.15 ${h % 360})`
 }
 
 const CONNECTIONS_ITEMS: Array<{ to: string; labelKey: string }> = [
@@ -49,6 +109,7 @@ export default function Layout() {
   const { user, logout, callApi } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+  const [params] = useSearchParams()
   const { t } = useTranslation()
   // Which settings section the reader is in, which is not the same as being
   // under /settings: People and the connection pages live elsewhere in the
@@ -82,6 +143,19 @@ export default function Layout() {
   // no number rather than a zero: "Books 0" beside a full library is worse than
   // a count that shows up a moment later.
   const [counts, setCounts] = useState<CollectionCounts | null>(null)
+
+  // Libraries in the rail, so a library is one click away as a filter rather
+  // than a folder you navigate into first.
+  const [libraries, setLibraries] = useState<Library[]>([])
+  const [railQuery, setRailQuery] = useState('')
+
+  useEffect(() => {
+    let cancelled = false
+    callApi<Library[]>('/api/v1/libraries')
+      .then(l => { if (!cancelled) setLibraries(l ?? []) })
+      .catch(() => { /* The rail works without them. */ })
+    return () => { cancelled = true }
+  }, [callApi])
 
   useEffect(() => {
     let cancelled = false
@@ -189,11 +263,9 @@ export default function Layout() {
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="px-4 py-5 border-b border-line flex items-center gap-2.5">
-          <img src="/logo.png" alt="" className="w-7 h-7 flex-shrink-0" />
-          <div className="min-w-0 flex-1">
-            <div className="text-lg font-semibold text-content">{t('app.name')}</div>
-          </div>
+        <div className="lb-brand px-2">
+          <img src="/logo.png" alt="" className="h-[25px] w-[25px] flex-none" />
+          <span className="nm min-w-0 flex-1">{t('app.name')}</span>
           <button
             type="button"
             onClick={() => setSidebarOpen(false)}
@@ -207,57 +279,76 @@ export default function Layout() {
         </div>
 
         <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
-          <NavLink to="/dashboard" className={navClass}>{t('nav.dashboard')}</NavLink>
-          <NavLink to="/books" className={navClass}>
-            <span className="flex items-center justify-between gap-2">
-              {t('nav.books')}
-              <NavCount value={counts?.books} />
-            </span>
-          </NavLink>
+          {/* Search sits at the top of the rail rather than on the Books page,
+              because it searches everything and is reachable from everywhere. */}
+          <form
+            onSubmit={e => {
+              e.preventDefault()
+              const q = railQuery.trim()
+              navigate(q ? `/books?q=${encodeURIComponent(q)}` : '/books')
+            }}
+          >
+            <input
+              className="lb-railsearch"
+              value={railQuery}
+              onChange={e => setRailQuery(e.target.value)}
+              placeholder={t('nav.search_everything', { defaultValue: 'Search everything…' })}
+              aria-label={t('nav.search_everything', { defaultValue: 'Search everything…' })}
+            />
+          </form>
+
+          <NavRow to="/dashboard" icon="home" label={t('nav.dashboard')} />
+          <NavRow to="/books" icon="books" label={t('nav.books')} count={counts?.books} end />
+          <NavRow to="/series" icon="series" label={t('nav.series')} count={counts?.series} />
+          <NavRow to="/authors" icon="authors" label={t('nav.authors')} count={counts?.authors} />
+
           {views.length > 0 && (
-            <div className="mt-1 ml-3 border-l border-line pl-3 space-y-0.5">
+            <>
+              <div className="lb-eyebrow px-2 pb-1.5 pt-4">
+                {t('nav.your_views', { defaultValue: 'Your views' })}
+              </div>
               {views.map(v => (
                 <NavLink
                   key={v.id}
                   to={`/books?${v.params}`}
-                  className={({ isActive }) =>
-                    `block truncate rounded-md px-2 py-1.5 text-sm transition-colors ${
-                      isActive && normaliseParams(location.search) === normaliseParams(v.params)
-                        ? 'font-medium text-accent'
-                        : 'text-content-tertiary hover:bg-surface-inset hover:text-content'
+                  className={() =>
+                    `lb-navrow ${
+                      normaliseParams(location.search) === normaliseParams(v.params) &&
+                      location.pathname === '/books'
+                        ? 'on'
+                        : ''
                     }`
                   }
                 >
+                  <Icon name={viewIcon(v)} />
                   {v.name}
                 </NavLink>
               ))}
-            </div>
+            </>
           )}
-          <NavLink to="/series" className={navClass}>
-            <span className="flex items-center justify-between gap-2">
-              {t('nav.series')}
-              <NavCount value={counts?.series} />
-            </span>
-          </NavLink>
-          <NavLink to="/authors" className={navClass}>
-            <span className="flex items-center justify-between gap-2">
-              {t('nav.authors')}
-              <NavCount value={counts?.authors} />
-            </span>
-          </NavLink>
-          <NavLink
-            to="/libraries"
-            end
-            className={({ isActive }) =>
-              `block px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                isActive || currentLibraryId
-                  ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
-              }`
-            }
-          >
-            {t('nav.libraries')}
-          </NavLink>
+
+          {libraries.length > 0 && (
+            <>
+              <div className="lb-eyebrow px-2 pb-1.5 pt-4">
+                {t('nav.libraries')}
+              </div>
+              {libraries.map(l => (
+                <NavLink
+                  key={l.id}
+                  to={`/books?lib=${l.id}`}
+                  className={() =>
+                    `lb-navrow ${
+                      location.pathname === '/books' && params.get('lib') === l.id ? 'on' : ''
+                    }`
+                  }
+                >
+                  <span className="swatchdot" style={{ background: libraryHue(l.id) }} />
+                  {l.name}
+                </NavLink>
+              ))}
+              <NavRow to="/libraries" icon="libraries" label={t('nav.manage_libraries', { defaultValue: 'Manage libraries' })} end />
+            </>
+          )}
           {currentLibraryId && (
             <div className="mt-1 ml-3 border-l border-line pl-3 space-y-0.5">
               {LIBRARY_SECTIONS.map(item => (
@@ -370,37 +461,40 @@ export default function Layout() {
         </nav>
 
         {/* User footer */}
-        <div className="border-t border-line px-4 py-3">
-          <p className="text-sm font-medium text-content truncate">{user?.display_name}</p>
-          <p className="text-xs text-content-muted truncate">{user?.email}</p>
-          <div className="mt-2 flex items-center justify-between">
+        {/* The account sits at the foot of the rail, with the theme picker
+            beside it. Sign-out is an icon button rather than a text link so it
+            cannot be mistaken for navigation. */}
+        <div className="lb-railfoot px-2">
+          <div className="lb-acct">
+            <Link to="/profile" className="lb-acctmain">
+              <AuthorAvatar name={user?.display_name || user?.username || '?'} size={28} />
+              <span className="min-w-0">
+                <span className="n1">{user?.display_name || user?.username}</span>
+                <span className="n2">{user?.email}</span>
+              </span>
+            </Link>
             <button
+              type="button"
               onClick={handleLogout}
-              className="text-xs text-content-muted hover:text-danger transition-colors"
+              className="lb-signout"
+              title={t('nav.sign_out')}
+              aria-label={t('nav.sign_out')}
             >
-              {t('nav.sign_out')}
+              ⏻
             </button>
-            <div className="flex items-center gap-2">
-              <Link
-                to="/profile"
-                className="text-xs text-content-muted hover:text-content-secondary transition-colors"
-              >
-                {t('nav.profile')}
-              </Link>
-              <select
-                value={theme}
-                onChange={e => setTheme(e.target.value as ThemeId)}
-                aria-label={t('theme.label')}
-                className="text-xs bg-transparent text-content-subtle hover:text-content-secondary transition-colors border-0 focus:outline-none focus:ring-0 cursor-pointer"
-              >
-                {THEMES.map(th => (
-                  <option key={th.id} value={th.id} className="bg-surface text-content">
-                    {th.label}
-                  </option>
-                ))}
-              </select>
-            </div>
           </div>
+          <select
+            value={theme}
+            onChange={e => setTheme(e.target.value as ThemeId)}
+            aria-label={t('theme.label')}
+            className="mt-1.5 w-full cursor-pointer border-0 bg-transparent px-2 text-[11px] text-content-subtle transition-colors hover:text-content-secondary focus:outline-none"
+          >
+            {THEMES.map(th => (
+              <option key={th.id} value={th.id} className="bg-surface text-content">
+                {th.label}
+              </option>
+            ))}
+          </select>
         </div>
       </aside>
 
