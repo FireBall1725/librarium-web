@@ -5,18 +5,19 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import {
   BUILT_IN_VIEWS,
   type ViewStore,
+  DEFAULT_VIEW_ID,
   defaultViewHref,
   deleteView,
+  findDefaultView,
   isDirty,
   loadViews,
   matchView,
   newViewId,
-  readDefaultViewId,
-  setDefaultViewId,
   normaliseParams,
   renameView,
   saveView,
   viewCount,
+  visibleViews,
   type SavedView,
 } from './views'
 
@@ -34,6 +35,10 @@ const fresh = (): ViewStore => {
 
 beforeEach(() => { store = fresh() })
 
+// Most of these tests are about ordinary views. The Default is always present
+// and never deletable, so counting it would make every assertion off by one.
+const ordinary = (s: ViewStore = store) => loadViews(s).filter(v => v.id !== DEFAULT_VIEW_ID)
+
 describe('seeding', () => {
   it('ships the built-ins on a first run', () => {
     expect(loadViews(store)).toHaveLength(BUILT_IN_VIEWS.length)
@@ -42,19 +47,21 @@ describe('seeding', () => {
   it('does not resurrect built-ins the user deleted', () => {
     loadViews(store)
     BUILT_IN_VIEWS.forEach(v => deleteView(v.id, store))
-    expect(loadViews(store)).toEqual([])
+    // The Default survives on purpose: Books has to open on something. Every
+    // other built-in stays deleted.
+    expect(loadViews(store).map(v => v.id)).toEqual([DEFAULT_VIEW_ID])
   })
 
   it('survives a corrupt entry rather than taking the page down', () => {
     store.setItem('librarium:views', '{not json')
     store.setItem('librarium:views_seeded', '1')
-    expect(loadViews(store)).toEqual([])
+    expect(ordinary()).toEqual([])
   })
 
   it('drops entries that are not views', () => {
     store.setItem('librarium:views_seeded', '1')
     store.setItem('librarium:views', JSON.stringify([view(), { nope: true }, null]))
-    expect(loadViews(store)).toHaveLength(1)
+    expect(ordinary()).toHaveLength(1)
   })
 })
 
@@ -63,20 +70,20 @@ describe('crud', () => {
 
   it('adds, updates in place, and deletes', () => {
     saveView(view(), store)
-    expect(loadViews(store)).toHaveLength(1)
+    expect(ordinary()).toHaveLength(1)
 
     saveView(view({ name: 'Renamed' }), store)
-    expect(loadViews(store)).toHaveLength(1)
-    expect(loadViews(store)[0].name).toBe('Renamed')
+    expect(ordinary()).toHaveLength(1)
+    expect(ordinary()[0].name).toBe('Renamed')
 
     deleteView('v1', store)
-    expect(loadViews(store)).toEqual([])
+    expect(ordinary()).toEqual([])
   })
 
   it('renames without disturbing the filter', () => {
     saveView(view(), store)
     renameView('v1', 'Something else', store)
-    expect(loadViews(store)[0]).toMatchObject({ name: 'Something else', params: 'status=read' })
+    expect(ordinary()[0]).toMatchObject({ name: 'Something else', params: 'status=read' })
   })
 
   it('mints unique ids', () => {
@@ -103,41 +110,50 @@ describe('dirty tracking', () => {
   })
 })
 
-describe('default view', () => {
-  beforeEach(() => { store.setItem('librarium:views_seeded', '1') })
-
-  it('is nothing until one is chosen', () => {
-    expect(readDefaultViewId(store)).toBeNull()
-    expect(defaultViewHref([], store)).toBe('/books')
+describe('the Default view', () => {
+  it('ships hidden, permanent, and holding no filter', () => {
+    const def = findDefaultView(loadViews(store))
+    expect(def).toMatchObject({ id: DEFAULT_VIEW_ID, hidden: true, permanent: true, params: '' })
   })
 
-  it('points Books at the chosen view', () => {
-    saveView(view({ id: 'v1', params: 'status=reading' }), store)
-    setDefaultViewId('v1', store)
-    expect(defaultViewHref(loadViews(store), store)).toBe('/books?status=reading')
+  it('is not listed in the rail', () => {
+    const views = loadViews(store)
+    expect(views.some(v => v.id === DEFAULT_VIEW_ID)).toBe(true)
+    expect(visibleViews(views).some(v => v.id === DEFAULT_VIEW_ID)).toBe(false)
   })
 
-  it('follows the view when its filter is edited', () => {
-    // The id is stored, not the params. Storing the params would leave the
-    // default pointing at what the view used to be.
-    saveView(view({ id: 'v1', params: 'status=reading' }), store)
-    setDefaultViewId('v1', store)
-    saveView(view({ id: 'v1', params: 'tag=signed' }), store)
-    expect(defaultViewHref(loadViews(store), store)).toBe('/books?tag=signed')
+  it('appears for a reader who was already seeded before it existed', () => {
+    // Seeding runs once. Without restoring it on read, every existing reader
+    // would be left with no Default and no way to get one.
+    store.setItem('librarium:views_seeded', '1')
+    store.setItem('librarium:views', JSON.stringify([
+      { id: 'reading', name: 'Reading now', params: 'status=reading', layout: 'grid' },
+    ]))
+    const views = loadViews(store)
+    expect(findDefaultView(views)).toBeDefined()
+    expect(views.some(v => v.id === 'reading')).toBe(true)
   })
 
-  it('falls back to the shelf when the view was deleted', () => {
-    // Otherwise Books opens on a filter with nothing on screen to remove it.
-    saveView(view({ id: 'v1' }), store)
-    setDefaultViewId('v1', store)
-    deleteView('v1', store)
-    expect(defaultViewHref(loadViews(store), store)).toBe('/books')
+  it('sends Books to the plain shelf until it holds a filter', () => {
+    expect(defaultViewHref(loadViews(store))).toBe('/books')
   })
 
-  it('can be cleared', () => {
-    setDefaultViewId('v1', store)
-    setDefaultViewId(null, store)
-    expect(readDefaultViewId(store)).toBeNull()
+  it('sends Books wherever it was saved', () => {
+    loadViews(store)
+    saveView({ id: DEFAULT_VIEW_ID, name: 'Default', params: 'status=reading', layout: 'rows', hidden: true, permanent: true }, store)
+    expect(defaultViewHref(loadViews(store))).toBe('/books?status=reading')
+  })
+
+  it('cannot be deleted, because Books has to open on something', () => {
+    loadViews(store)
+    deleteView(DEFAULT_VIEW_ID, store)
+    expect(findDefaultView(loadViews(store))).toBeDefined()
+  })
+
+  it('does not stop an ordinary view being deleted', () => {
+    loadViews(store)
+    deleteView('reading', store)
+    expect(loadViews(store).some(v => v.id === 'reading')).toBe(false)
   })
 })
 

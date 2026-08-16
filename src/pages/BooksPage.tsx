@@ -42,10 +42,10 @@ import {
   isDirty as viewIsDirty,
   loadViews,
   matchView,
+  DEFAULT_VIEW_ID,
+  findDefaultView,
   newViewId,
-  readDefaultViewId,
   saveView,
-  setDefaultViewId,
   type SavedView,
   type ViewLayout,
 } from '../lib/views'
@@ -150,9 +150,6 @@ export default function BooksPage() {
   const [views, setViews] = useState<SavedView[]>(() => loadViews())
   const [activeViewId, setActiveViewId] = useState<string | null>(null)
   const [naming, setNaming] = useState(false)
-  // The stored default is read on render like the views themselves; the tick
-  // exists only to re-run that read after this page changes it.
-  const [, setDefaultTick] = useState(0)
   const [layoutOverride, setLayoutOverride] = useState<{ viewId: string | null; layout: ViewLayout } | null>(null)
 
   const [books, setBooks] = useState<Book[]>([])
@@ -247,7 +244,17 @@ export default function BooksPage() {
   // navigate, and a bookmarked URL or the back button arrive with no click at
   // all, so matching on the filter is the only thing that covers every route in.
   const paramsNow = params.toString()
-  const activeView = views.find(v => v.id === activeViewId) ?? matchView(views, paramsNow)
+  // Falls back to the Default view rather than to nothing. Books is always
+  // showing *something*, and that something is the Default unless a real view
+  // was opened or the filter happens to describe one. Without the fallback,
+  // editing the Default drops the bar the moment the filter changes — which is
+  // precisely when "Save changes" needs to be on screen, since saving is how
+  // you set what Books opens on.
+  const activeView =
+    views.find(v => v.id === activeViewId) ??
+    matchView(views, paramsNow) ??
+    findDefaultView(views) ??
+    null
 
   // Layout belongs to the view, so it follows from whichever view is open
   // rather than being a separate toggle the reader has to reset on every
@@ -259,7 +266,7 @@ export default function BooksPage() {
       ? layoutOverride.layout
       : activeView?.layout ?? 'rows'
   const dirty = activeView ? viewIsDirty(activeView, paramsNow, layout) : false
-  const isDefaultView = activeView !== null && readDefaultViewId() === activeView.id
+  const isDefaultView = activeView?.id === DEFAULT_VIEW_ID
 
   const chooseLayout = (next: ViewLayout) =>
     setLayoutOverride({ viewId: activeView?.id ?? null, layout: next })
@@ -288,10 +295,6 @@ export default function BooksPage() {
   }
 
   const removeView = (id: string) => {
-    // Clear the default alongside it. defaultViewHref already falls back when
-    // the id is dangling, but leaving it set means the next view to reuse that
-    // id inherits a default nobody asked for.
-    if (readDefaultViewId() === id) setDefaultViewId(null)
     setViews(deleteView(id))
     announceViewsChanged()
     if (activeViewId === id) setActiveViewId(null)
@@ -355,7 +358,9 @@ export default function BooksPage() {
                 <span className={dirty ? 'text-warning-strong' : 'text-content-muted'}>
                   {dirty
                     ? t('views.modified', { defaultValue: 'modified' })
-                    : t('views.saved', { defaultValue: 'saved view' })}
+                    : isDefaultView
+                      ? t('views.default_hint', { defaultValue: 'what Books opens on' })
+                      : t('views.saved', { defaultValue: 'saved view' })}
                 </span>
                 <span className="flex-1" />
                 {dirty ? (
@@ -376,32 +381,16 @@ export default function BooksPage() {
                   </>
                 ) : (
                   <>
-                    {/* Toggling, not just setting: a default you cannot take
-                        off is a filter you are stuck with every time you open
-                        Books. */}
-                    <button type="button"
-                      onClick={() => {
-                        setDefaultViewId(isDefaultView ? null : activeView.id)
-                        setDefaultTick(n => n + 1)
-                        announceViewsChanged()
-                      }}
-                      className={`rounded-md border px-2.5 py-1 text-xs ${
-                        isDefaultView
-                          ? 'border-accent-line bg-accent-surface text-accent'
-                          : 'border-line-strong text-content-secondary hover:bg-surface-inset'
-                      }`}>
-                      {isDefaultView
-                        ? t('views.is_default', { defaultValue: 'Opens by default' })
-                        : t('views.make_default', { defaultValue: 'Open by default' })}
-                    </button>
                     <button type="button" onClick={() => { setActiveViewId(null); setLayoutOverride(null); setParams(new URLSearchParams(), { replace: true }) }}
                       className="rounded-md border border-line-strong px-2.5 py-1 text-xs text-content-secondary hover:bg-surface-inset">
                       {t('views.leave', { defaultValue: 'Leave view' })}
                     </button>
-                    <button type="button" onClick={() => removeView(activeView.id)}
-                      className="rounded-md border border-line-strong px-2.5 py-1 text-xs text-danger hover:bg-danger-surface">
-                      {t('views.delete', { defaultValue: 'Delete view' })}
-                    </button>
+                    {!activeView.permanent && (
+                      <button type="button" onClick={() => removeView(activeView.id)}
+                        className="rounded-md border border-line-strong px-2.5 py-1 text-xs text-danger hover:bg-danger-surface">
+                        {t('views.delete', { defaultValue: 'Delete view' })}
+                      </button>
+                    )}
                   </>
                 )}
               </div>

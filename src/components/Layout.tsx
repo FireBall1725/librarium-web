@@ -7,7 +7,7 @@ import { applyTheme, readStoredTheme, storeTheme } from '../lib/theme'
 // Params are compared normalised, not by substring: "status=read" is a prefix
 // of "status=reading", so a substring test lights up Finished while the reader
 // is looking at Reading now.
-import { VIEWS_CHANGED, announceViewsChanged, defaultViewHref, loadViews, newViewId, normaliseParams, saveView, viewCount, type SavedView } from '../lib/views'
+import { VIEWS_CHANGED, announceViewsChanged, defaultViewHref, loadViews, newViewId, normaliseParams, saveView, viewCount, visibleViews, type SavedView } from '../lib/views'
 import { SETTINGS_TREE } from '../lib/settingsTree'
 import { attentionRoutes, useSettingsAttention } from '../lib/settingsAttention'
 import type { BookFacets } from '../lib/bookBrowse'
@@ -416,12 +416,12 @@ export default function Layout() {
           <NavRow to="/series" icon="series" label={t('nav.series')} count={counts?.series} />
           <NavRow to="/authors" icon="authors" label={t('nav.authors')} count={counts?.authors} />
 
-          {views.length > 0 && (
+          {visibleViews(views).length > 0 && (
             <>
               <div className="lb-eyebrow px-2 pb-1.5 pt-4">
                 {t('nav.your_views', { defaultValue: 'Your views' })}
               </div>
-              {views.map(v => (
+              {visibleViews(views).map(v => (
                 <NavLink
                   key={v.id}
                   to={`/books?${v.params}`}

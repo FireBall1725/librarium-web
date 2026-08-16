@@ -141,8 +141,7 @@
     "name_label": "Nom",
     "name_placeholder": "Premières éditions signées",
     "save_as_view": "Enregistrer comme vue",
-    "make_default": "Ouvrir par défaut",
-    "is_default": "Ouverte par défaut"
+    "default_hint": "ce que Livres ouvre"
   },
   "index": {
     "all": "Tous"

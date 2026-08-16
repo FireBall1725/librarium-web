@@ -25,7 +25,25 @@ export interface SavedView {
   layout: ViewLayout
   /** Views we ship. Still deletable; the flag only drives first-run seeding. */
   builtIn?: boolean
+  /** Never listed in the rail. Only the Default view is. */
+  hidden?: boolean
+  /** Cannot be deleted. Books has to have something to open on. */
+  permanent?: boolean
 }
+
+/**
+ * The view Books opens on.
+ *
+ * A real view rather than a pointer at one, so changing what Books opens on is
+ * the same act as changing any other view: filter, then save. It ships empty,
+ * which is the plain shelf, so a new reader sees no behaviour they did not ask
+ * for.
+ *
+ * Hidden from the rail because it is not somewhere you navigate to — it is
+ * where Books already goes. Permanent because Books has to open on something,
+ * and a reader who deleted it would have no way to get it back.
+ */
+export const DEFAULT_VIEW_ID = 'default'
 
 const STORAGE_KEY = 'librarium:views'
 const SEEDED_KEY = 'librarium:views_seeded'
@@ -72,6 +90,7 @@ function defaultStore(): ViewStore {
  * toggle you have to reset every time you switch.
  */
 export const BUILT_IN_VIEWS: SavedView[] = [
+  { id: DEFAULT_VIEW_ID, name: 'Default', params: '', layout: 'rows', builtIn: true, hidden: true, permanent: true },
   { id: 'reading', name: 'Reading now', params: 'status=reading', layout: 'grid', builtIn: true },
   { id: 'unread', name: 'Up next', params: 'status=unread', layout: 'grid', builtIn: true },
   { id: 'read', name: 'Finished', params: 'status=read', layout: 'rows', builtIn: true },
@@ -115,7 +134,19 @@ export function loadViews(store: ViewStore = defaultStore()): SavedView[] {
     write(store, seeded)
     return seeded
   }
-  return read(store)
+
+  const views = read(store)
+
+  // The Default is an invariant of the store, not part of seeding: seeding
+  // runs once, so anyone who already had views when this shipped would never
+  // receive it and Books would have nothing to open on. Restored on read,
+  // which also covers a store edited by hand.
+  if (!views.some(v => v.id === DEFAULT_VIEW_ID)) {
+    const restored = [BUILT_IN_VIEWS[0], ...views]
+    write(store, restored)
+    return restored
+  }
+  return views
 }
 
 export function saveView(view: SavedView, store: ViewStore = defaultStore()): SavedView[] {
@@ -128,9 +159,13 @@ export function saveView(view: SavedView, store: ViewStore = defaultStore()): Sa
 }
 
 export function deleteView(id: string, store: ViewStore = defaultStore()): SavedView[] {
-  const views = read(store).filter(v => v.id !== id)
-  write(store, views)
-  return views
+  const views = read(store)
+  // Refused rather than hidden behind an absent button: a caller that gets the
+  // id from somewhere else should not be able to leave Books with nothing to
+  // open on.
+  const next = views.filter(v => v.id !== id || v.permanent)
+  write(store, next)
+  return next
 }
 
 export function renameView(id: string, name: string, store: ViewStore = defaultStore()): SavedView[] {
@@ -169,24 +204,10 @@ export function viewCount(view: SavedView, facets: BookFacets | null): number | 
   return facets[dimension]?.find(v => v.value === value)?.count
 }
 
-const DEFAULT_VIEW_KEY = 'librarium:default_view'
-
 /**
- * The view Books opens on.
+ * Broadcast that the stored views changed.
  *
- * Null means no default: Books opens on the plain shelf. Stored as an id
- * rather than as a copy of the filter so that editing the view moves the
- * default with it; storing the params would leave the default pointing at what
- * the view used to be.
- */
-export function readDefaultViewId(store: ViewStore = defaultStore()): string | null {
-  return store.getItem(DEFAULT_VIEW_KEY) || null
-}
-
-/**
- * Broadcast that the stored views or the default changed.
- *
- * The rail reads both on render, and nothing else makes it render when this
+ * The rail reads them on render, and nothing else makes it render when another
  * page is what changed them. Same shape as librarium:collection-changed.
  */
 export const VIEWS_CHANGED = 'librarium:views-changed'
@@ -195,25 +216,20 @@ export function announceViewsChanged(): void {
   if (typeof window !== 'undefined') window.dispatchEvent(new Event(VIEWS_CHANGED))
 }
 
-export function setDefaultViewId(id: string | null, store: ViewStore = defaultStore()): void {
-  // Empty rather than removed: ViewStore is the two methods this module needs,
-  // and adding removeItem to it for one caller is more surface than the null
-  // check below costs.
-  store.setItem(DEFAULT_VIEW_KEY, id ?? '')
-}
+/** The views the rail lists: everything except the hidden Default. */
+export const visibleViews = (views: SavedView[]): SavedView[] =>
+  views.filter(v => !v.hidden)
+
+export const findDefaultView = (views: SavedView[]): SavedView | undefined =>
+  views.find(v => v.id === DEFAULT_VIEW_ID)
 
 /**
- * Where the Books link should point.
- *
- * Resolves through the view list, so a default naming a view that has since
- * been deleted falls back to the plain shelf rather than opening a filter
- * nobody can see or remove.
+ * Where the Books link points: the Default view's filter, or the plain shelf
+ * when it holds none.
  */
-export function defaultViewHref(views: SavedView[], store: ViewStore = defaultStore()): string {
-  const id = readDefaultViewId(store)
-  if (!id) return '/books'
-  const view = views.find(v => v.id === id)
-  return view?.params ? `/books?${view.params}` : '/books'
+export function defaultViewHref(views: SavedView[]): string {
+  const params = findDefaultView(views)?.params
+  return params ? `/books?${params}` : '/books'
 }
 
 /** Ids are only unique within one browser, so time plus a suffix is enough. */
