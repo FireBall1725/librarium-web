@@ -87,6 +87,19 @@ export function toApiQuery(state: BrowseState, perPage: number, forFacets = fals
   const params = new URLSearchParams()
   if (state.query) params.set('q', state.query)
 
+  // The facets endpoint takes each dimension separately, using the same short
+  // parameter names the URL already carries. It needs them apart so it can
+  // count a dimension with its OWN selection excluded: applying every filter
+  // uniformly collapses the facet you just used, leaving Fantasy as the only
+  // genre on offer once Fantasy is ticked.
+  if (forFacets) {
+    for (const key of FACET_ORDER) {
+      const vals = state.selection[key]
+      if (vals.length) params.set(PARAM[key], vals.join(','))
+    }
+    return params.toString()
+  }
+
   // Values within one facet are OR (Fiction or Manga); separate facets are AND
   // (Fiction AND unread). One group per facet gives exactly that, and the
   // groups format is what the books endpoints already parse.

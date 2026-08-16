@@ -91,6 +91,18 @@ describe('API query', () => {
     expect(params.get('per_page')).toBeNull()
   })
 
+  it('sends each dimension separately for facets, not flattened filter JSON', () => {
+    // The server counts a dimension with its own selection excluded, which it
+    // can only do if the dimensions arrive apart.
+    const s = base({
+      selection: { ...emptySelection(), genre: ['Fantasy', 'Horror'], tag: ['signed'] },
+    })
+    const params = new URLSearchParams(toApiQuery(s, 50, true))
+    expect(params.get('genre')).toBe('Fantasy,Horror')
+    expect(params.get('tag')).toBe('signed')
+    expect(params.get('filter')).toBeNull()
+  })
+
   it('sends no filter when nothing is selected', () => {
     expect(new URLSearchParams(toApiQuery(base(), 50)).get('filter')).toBeNull()
   })

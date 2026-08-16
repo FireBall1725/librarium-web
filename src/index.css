@@ -328,8 +328,15 @@
     .app-sidebar {
       position: static;
       width: 14rem;
-      transform: none !important;
       transition: none;
+
+      /* Tailwind v4 compiles -translate-x-full to the standalone `translate`
+         property, not `transform`. Neutralising only `transform` leaves the
+         drawer sitting at -100% with a computed transform of "none", which
+         looks like the sidebar failing to render at all. Both are reset here
+         so the utility cannot win whichever property it uses. */
+      translate: none !important;
+      transform: none !important;
     }
   }
 }
