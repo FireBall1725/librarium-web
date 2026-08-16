@@ -7,8 +7,9 @@ import { THEMES, applyTheme, readStoredTheme, storeTheme, type ThemeId } from '.
 // Params are compared normalised, not by substring: "status=read" is a prefix
 // of "status=reading", so a substring test lights up Finished while the reader
 // is looking at Reading now.
-import { loadViews, normaliseParams, type SavedView } from '../lib/views'
+import { loadViews, newViewId, normaliseParams, saveView, viewCount, type SavedView } from '../lib/views'
 import { sectionForPath } from '../lib/settingsTree'
+import type { BookFacets } from '../lib/bookBrowse'
 import { Icon, type IconName } from '../lib/icons'
 import AuthorAvatar from './AuthorAvatar'
 
@@ -67,6 +68,18 @@ function NavRow({
       {inner}
     </NavLink>
   )
+}
+
+/**
+ * A count on a view or library row.
+ *
+ * Nothing at all when the number is unknown, which happens before the facets
+ * land and for any view combining two facets. A zero would claim the shelf is
+ * empty, which is a different and wrong statement.
+ */
+function ViewCount({ value }: { value: number | undefined }) {
+  if (value === undefined) return null
+  return <span className="count">{value.toLocaleString()}</span>
 }
 
 /**
@@ -131,7 +144,6 @@ export default function Layout() {
   // That is what makes a view saved on Books appear here without a reload, and
   // Layout renders rarely enough that a localStorage read and a small JSON
   // parse cost less than the extra render an effect would trigger.
-  const views: SavedView[] = loadViews()
   // Hide the Suggestions nav entry when AI is unavailable for this user
   // (job disabled, no active provider, or not opted in). Start undefined so
   // we don't flash the link before we know — the nav just omits it for the
@@ -149,13 +161,55 @@ export default function Layout() {
   const [libraries, setLibraries] = useState<Library[]>([])
   const [railQuery, setRailQuery] = useState('')
 
+  // One unfiltered facet block answers the count for every view and every
+  // library in the rail. Eight views would otherwise be eight requests per
+  // page load, for numbers nobody waits on.
+  const [facets, setFacets] = useState<BookFacets | null>(null)
+
+  // Views are read from storage on every render rather than held in state,
+  // which is what makes one saved on Books appear here without a reload.
+  //
+  // The counter's value is never read: setting it is the whole point, because
+  // saving a view from this component has to make it render again to re-read
+  // storage. A memo keyed on it would list dependencies its callback never
+  // touches, which is the thing the exhaustive-deps rule exists to catch.
+  const [, setViewsTick] = useState(0)
+  const views: SavedView[] = loadViews()
+
   useEffect(() => {
     let cancelled = false
-    callApi<Library[]>('/api/v1/libraries')
-      .then(l => { if (!cancelled) setLibraries(l ?? []) })
-      .catch(() => { /* The rail works without them. */ })
-    return () => { cancelled = true }
+    const load = () => {
+      callApi<Library[]>('/api/v1/libraries')
+        .then(l => { if (!cancelled) setLibraries(l ?? []) })
+        .catch(() => { /* The rail works without them. */ })
+      callApi<{ data: BookFacets }>('/api/v1/me/books/facets')
+        .then(r => { if (!cancelled) setFacets(r.data ?? null) })
+        .catch(() => { /* Counts are an enhancement, not the nav. */ })
+    }
+    load()
+    window.addEventListener('librarium:collection-changed', load)
+    return () => {
+      cancelled = true
+      window.removeEventListener('librarium:collection-changed', load)
+    }
   }, [callApi])
+
+  /** Save the filter on screen as a new view, or go to Books to build one. */
+  const newView = () => {
+    const params = normaliseParams(location.search)
+    if (location.pathname !== '/books' || !params) {
+      navigate('/books')
+      return
+    }
+    const name = window.prompt(t('views.name_prompt', { defaultValue: 'Name this view' }))
+    if (!name?.trim()) return
+    saveView({ id: newViewId(), name: name.trim(), params, layout: 'rows' })
+    // Views are read from storage on every render rather than held in state, so
+    // the rail needs a reason to render again. A counter, not setRailQuery with
+    // its own value: React bails out when the value is unchanged.
+    setViewsTick(n => n + 1)
+    navigate(`/books?${params}`)
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -322,8 +376,10 @@ export default function Layout() {
                 >
                   <Icon name={viewIcon(v)} />
                   {v.name}
+                  <ViewCount value={viewCount(v, facets)} />
                 </NavLink>
               ))}
+              <NavRow icon="newview" label={t('views.new', { defaultValue: 'New view' })} onClick={newView} />
             </>
           )}
 
@@ -344,9 +400,9 @@ export default function Layout() {
                 >
                   <span className="swatchdot" style={{ background: libraryHue(l.id) }} />
                   {l.name}
+                  <ViewCount value={facets?.library.find(f => f.value === l.id)?.count} />
                 </NavLink>
               ))}
-              <NavRow to="/libraries" icon="libraries" label={t('nav.manage_libraries', { defaultValue: 'Manage libraries' })} end />
             </>
           )}
           {currentLibraryId && (

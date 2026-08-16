@@ -13,6 +13,7 @@ import {
   normaliseParams,
   renameView,
   saveView,
+  viewCount,
   type SavedView,
 } from './views'
 
@@ -96,6 +97,55 @@ describe('dirty tracking', () => {
 
   it('notices a changed layout, since layout belongs to the view', () => {
     expect(isDirty(view(), 'status=read', 'grid')).toBe(true)
+  })
+})
+
+describe('viewCount', () => {
+  const facets = {
+    library: [{ value: 'lib-a', label: 'Fiction', count: 108 }],
+    read_status: [
+      { value: 'reading', label: 'reading', count: 28 },
+      { value: 'unread', label: 'unread', count: 143 },
+    ],
+    media_type: [],
+    genre: [],
+    tag: [{ value: 'signed', label: 'signed', count: 12 }],
+    rating: [{ value: '5', label: '5', count: 56 }],
+  }
+
+  it('reads a status view out of the facet block', () => {
+    expect(viewCount(view({ params: 'status=reading' }), facets)).toBe(28)
+  })
+
+  it('reads a rating view, whose values are strings on the wire', () => {
+    expect(viewCount(view({ params: 'rating=5' }), facets)).toBe(56)
+  })
+
+  it('reads a tag view', () => {
+    expect(viewCount(view({ params: 'tag=signed' }), facets)).toBe(12)
+  })
+
+  it('ignores page, which is reading not filtering', () => {
+    expect(viewCount(view({ params: 'status=reading&page=3' }), facets)).toBe(28)
+  })
+
+  it('declines a two-facet view rather than guessing', () => {
+    // The block holds each dimension separately, so it cannot answer an
+    // intersection. Taking one side would print a number bigger than the view.
+    expect(viewCount(view({ params: 'status=reading&tag=signed' }), facets)).toBeUndefined()
+  })
+
+  it('declines a multi-value facet for the same reason', () => {
+    expect(viewCount(view({ params: 'status=reading,unread' }), facets)).toBeUndefined()
+  })
+
+  it('returns undefined for an unknown value rather than zero', () => {
+    // Zero would claim the shelf is empty; undefined renders no count at all.
+    expect(viewCount(view({ params: 'tag=nonexistent' }), facets)).toBeUndefined()
+  })
+
+  it('returns undefined before the facets arrive', () => {
+    expect(viewCount(view({ params: 'status=reading' }), null)).toBeUndefined()
   })
 })
 

@@ -13,6 +13,8 @@
 // record would be, so moving to /api/v1/me/views later is a transport change
 // rather than a redesign.
 
+import { PARAM, type BookFacets, type FacetKey } from './bookBrowse'
+
 export type ViewLayout = 'rows' | 'grid'
 
 export interface SavedView {
@@ -135,6 +137,36 @@ export function renameView(id: string, name: string, store: ViewStore = defaultS
   const views = read(store).map(v => (v.id === id ? { ...v, name } : v))
   write(store, views)
   return views
+}
+
+/**
+ * How many books a view holds, read out of the facet block rather than by
+ * querying per view.
+ *
+ * The facets endpoint already returns a count for every value of every
+ * dimension, so an unfiltered call answers "how many are reading", "how many
+ * are five stars" and "how many are tagged signed" in one request. Eight views
+ * would otherwise be eight round trips on every page, for numbers that sit in
+ * the sidebar and are read at a glance.
+ *
+ * Only single-dimension views resolve this way. A view combining two facets is
+ * an intersection the block cannot answer, and guessing from one dimension
+ * would print a number larger than the view actually contains, so those return
+ * undefined and render no count at all.
+ */
+export function viewCount(view: SavedView, facets: BookFacets | null): number | undefined {
+  if (!facets) return undefined
+  const params = new URLSearchParams(view.params)
+  const entries = [...params.entries()].filter(([k]) => k !== 'page')
+  if (entries.length !== 1) return undefined
+
+  const [key, value] = entries[0]
+  if (value.includes(',')) return undefined
+
+  const dimension = (Object.keys(PARAM) as FacetKey[]).find(k => PARAM[k] === key)
+  if (!dimension) return undefined
+
+  return facets[dimension]?.find(v => v.value === value)?.count
 }
 
 /** Ids are only unique within one browser, so time plus a suffix is enough. */

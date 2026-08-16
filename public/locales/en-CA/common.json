@@ -123,7 +123,8 @@
     "save": "Save as a view",
     "name_prompt": "Name this view",
     "layout_rows": "Rows",
-    "layout_grid": "Grid"
+    "layout_grid": "Grid",
+    "new": "New view"
   },
   "index": {
     "all": "All"

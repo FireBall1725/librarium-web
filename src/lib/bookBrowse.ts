@@ -18,7 +18,7 @@ export type FacetKey = 'library' | 'read_status' | 'media_type' | 'genre' | 'tag
 export const FACET_ORDER: FacetKey[] = ['library', 'read_status', 'media_type', 'genre', 'tag', 'rating']
 
 /** Query-string key for each facet. Short, because these end up in shared links. */
-const PARAM: Record<FacetKey, string> = {
+export const PARAM: Record<FacetKey, string> = {
   library: 'lib',
   read_status: 'status',
   media_type: 'type',

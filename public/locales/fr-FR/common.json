@@ -123,7 +123,8 @@
     "save": "Enregistrer comme vue",
     "name_prompt": "Nommer cette vue",
     "layout_rows": "Lignes",
-    "layout_grid": "Grille"
+    "layout_grid": "Grille",
+    "new": "Nouvelle vue"
   },
   "index": {
     "all": "Tous"
