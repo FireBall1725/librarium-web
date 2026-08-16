@@ -35,12 +35,12 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-surface-muted">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <img src="/logo.png" alt="Librarium" className="mx-auto h-32 w-auto mb-4" />
-          <h1 className="text-3xl font-bold text-content">{t('app.name')}</h1>
+          <img src="/logo.png" alt="Librarium" className="mx-auto mb-4 h-24 w-auto" />
+          <h1 className="lb-display text-4xl text-content">{t('app.name')}</h1>
           <p className="mt-1 text-sm text-content-muted">{t('auth.sign_in_subtitle')}</p>
         </div>
 
-        <div className="bg-surface rounded-xl border border-line shadow-sm px-8 py-8">
+        <div className="lb-card px-8 py-8">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label htmlFor="identifier" className="block text-sm font-medium text-content-secondary mb-1">
@@ -53,7 +53,7 @@ export default function LoginPage() {
                 required
                 value={identifier}
                 onChange={e => setIdentifier(e.target.value)}
-                className="w-full rounded-lg border border-line-strong px-3 py-2 text-sm text-content dark:bg-gray-800 placeholder-gray-400 dark:placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="lb-field"
                 placeholder={t('auth.username_placeholder')}
               />
             </div>
@@ -69,7 +69,7 @@ export default function LoginPage() {
                 required
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                className="w-full rounded-lg border border-line-strong px-3 py-2 text-sm text-content dark:bg-gray-800 placeholder-gray-400 dark:placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="lb-field"
                 placeholder="••••••••"
               />
             </div>
@@ -79,7 +79,7 @@ export default function LoginPage() {
                 type="checkbox"
                 checked={rememberMe}
                 onChange={e => setRememberMe(e.target.checked)}
-                className="rounded border-line-strong text-blue-600 focus:ring-blue-500"
+                className="rounded border-line-strong text-accent focus:ring-accent"
               />
               {t('auth.remember_me')}
             </label>
@@ -93,7 +93,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="lb-btn w-full"
             >
               {isLoading ? t('auth.signing_in') : t('auth.sign_in')}
             </button>

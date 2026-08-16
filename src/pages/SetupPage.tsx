@@ -66,7 +66,7 @@ export default function SetupPage() {
  </p>
  </div>
 
- <div className="bg-white dark:bg-gray-900 rounded-xl border border-line shadow-sm">
+ <div className="bg-white rounded-xl border border-line shadow-sm">
  {step === 'admin' && (
             <AdminStep
               form={form}
@@ -81,7 +81,7 @@ export default function SetupPage() {
           )}
         </div>
 
-        <p className="mt-6 text-center text-xs text-gray-400 dark:text-gray-500">
+        <p className="mt-6 text-center text-xs text-content-muted">
           Step {step === 'admin' ? 1 : 2} of 2
         </p>
       </div>
@@ -101,8 +101,8 @@ function AdminStep({ form, update, error, isLoading, onSubmit }: AdminStepProps)
  return (
  <form onSubmit={onSubmit} className="px-8 py-8 space-y-5">
  <div>
- <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Create your admin account</h2>
- <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+ <h2 className="text-lg font-semibold text-content dark:text-white">Create your admin account</h2>
+ <p className="mt-1 text-sm text-content-muted">
  This account is the instance owner with full administrative rights.
  </p>
  </div>
@@ -117,7 +117,7 @@ function AdminStep({ form, update, error, isLoading, onSubmit }: AdminStepProps)
  autoComplete="name"
  value={form.display_name}
  onChange={update('display_name')}
- className="w-full rounded-lg border border-line-strong px-3 py-2 text-sm text-content dark:bg-gray-800 placeholder-gray-400 dark:placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+ className="lb-field"
  placeholder="Jane Doe"
  />
  </div>
@@ -133,7 +133,7 @@ function AdminStep({ form, update, error, isLoading, onSubmit }: AdminStepProps)
  required
  value={form.username}
  onChange={update('username')}
- className="w-full rounded-lg border border-line-strong px-3 py-2 text-sm text-content dark:bg-gray-800 placeholder-gray-400 dark:placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+ className="lb-field"
  placeholder="jane"
  />
  </div>
@@ -149,7 +149,7 @@ function AdminStep({ form, update, error, isLoading, onSubmit }: AdminStepProps)
  required
  value={form.email}
  onChange={update('email')}
- className="w-full rounded-lg border border-line-strong px-3 py-2 text-sm text-content dark:bg-gray-800 placeholder-gray-400 dark:placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+ className="lb-field"
  placeholder="jane@example.com"
  />
  </div>
@@ -166,7 +166,7 @@ function AdminStep({ form, update, error, isLoading, onSubmit }: AdminStepProps)
  minLength={8}
  value={form.password}
  onChange={update('password')}
- className="w-full rounded-lg border border-line-strong px-3 py-2 text-sm text-content dark:bg-gray-800 placeholder-gray-400 dark:placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+ className="lb-field"
  placeholder="at least 8 characters"
  />
  </div>
@@ -182,12 +182,12 @@ function AdminStep({ form, update, error, isLoading, onSubmit }: AdminStepProps)
  required
  value={form.confirm}
  onChange={update('confirm')}
- className="w-full rounded-lg border border-line-strong px-3 py-2 text-sm text-content dark:bg-gray-800 placeholder-gray-400 dark:placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+ className="lb-field"
  />
  </div>
 
  {error && (
- <div className="rounded-lg bg-danger-surface border border-danger-line px-3 py-2 text-sm text-red-700 dark:text-red-400">
+ <div className="rounded-lg bg-danger-surface border border-danger-line px-3 py-2 text-sm text-danger">
  {error}
  </div>
  )}
@@ -195,7 +195,7 @@ function AdminStep({ form, update, error, isLoading, onSubmit }: AdminStepProps)
  <button
  type="submit"
  disabled={isLoading}
- className="w-full rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+ className="lb-btn w-full"
  >
  {isLoading ? 'Creating account…' : 'Create admin account'}
       </button>
@@ -207,7 +207,7 @@ function DonePlaceholder({ onContinue }: { onContinue: () => void }) {
   return (
     <div className="px-8 py-8 space-y-5">
       <div>
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">You're in</h2>
+        <h2 className="text-lg font-semibold text-content dark:text-white">You're in</h2>
         <p className="mt-1 text-sm text-content-muted">
           Your admin account is ready. More setup steps — branding, your first library,
           connecting metadata providers — will live here in the future. For now, head to
@@ -217,7 +217,7 @@ function DonePlaceholder({ onContinue }: { onContinue: () => void }) {
 
       <button
         onClick={onContinue}
-        className="w-full rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+        className="w-full rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 transition-colors"
       >
         Go to dashboard
       </button>
