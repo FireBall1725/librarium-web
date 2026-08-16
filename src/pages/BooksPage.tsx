@@ -14,7 +14,9 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import PageHeader from '../components/PageHeader'
 import FacetRail from '../components/FacetRail'
+import BookCover, { BookCoverThumb } from '../components/BookCover'
 import { usePageTitle } from '../hooks/usePageTitle'
+import type { TFunction } from 'i18next'
 import type { Book } from '../types'
 import {
   DEFAULT_PAGE_SIZE,
@@ -30,6 +32,70 @@ import {
   type BrowseState,
   type FacetKey,
 } from '../lib/bookBrowse'
+import {
+  deleteView,
+  isDirty as viewIsDirty,
+  loadViews,
+  matchView,
+  newViewId,
+  saveView,
+  type SavedView,
+  type ViewLayout,
+} from '../lib/views'
+
+/**
+ * Colour a whole series alike, so twenty volumes read as one run on the shelf.
+ * Falls back to the title for a standalone book.
+ */
+const coverSeed = (book: Book) => book.series?.[0]?.series_name || book.title
+
+/**
+ * Read state as a chip, because it is a value the reader scans for rather than
+ * prose they read. Reading shows the percentage instead of the word: at that
+ * point "how far in" is the useful part, and the colour already says reading.
+ */
+function StatusChip({ book, t }: { book: Book; t: TFunction }) {
+  // The API sends '' for a book the caller has never interacted with, while the
+  // facet rail counts those same books as unread. Treating the two as one keeps
+  // the chip agreeing with the count: 140 unread in the rail should not sit
+  // beside a list where most rows are blank.
+  const status = book.user_read_status || 'unread'
+
+  const pct = Math.round(book.user_progress_pct ?? 0)
+  const tone =
+    status === 'read' ? 'text-success border-success-line'
+    : status === 'reading' ? 'text-accent border-accent-line'
+    : status === 'did_not_finish' ? 'text-warning border-warning-line'
+    : 'text-content-tertiary border-line-strong'
+
+  const label = status === 'reading' && pct > 0
+    ? `${pct}%`
+    : t(`read_status.${status}`, { defaultValue: status })
+
+  return (
+    <span className={`flex-none rounded-full border px-2.5 py-[3px] text-[11px] ${tone}`}>
+      {label}
+    </span>
+  )
+}
+
+/**
+ * Fixed-width so the titles beside it stay on one left edge down the list;
+ * a rating that sized itself would make every row start somewhere different.
+ */
+function Stars({ rating }: { rating: number }) {
+  if (!rating) return <span className="hidden w-[66px] flex-none sm:block" aria-hidden="true" />
+  return (
+    <span className="hidden w-[66px] flex-none text-right text-xs tracking-[1px] text-warning sm:block"
+      aria-label={`${rating} out of 5`}>
+      {'★'.repeat(rating)}
+    </span>
+  )
+}
+
+/** Book detail still lives under a library, so link via the first one holding it. */
+const bookHref = (book: Book) =>
+  book.library_id ? `/libraries/${book.library_id}/books/${book.id}` : `/books/${book.id}`
 
 interface PagedBooks {
   items: Book[]
@@ -52,6 +118,18 @@ export default function BooksPage() {
     const raw = Number(localStorage.getItem('librarium:books_per_page'))
     return PAGE_SIZES.includes(raw) ? raw : DEFAULT_PAGE_SIZE
   })
+
+  // Views are a saved filter plus a layout. The layout lives here rather than in
+  // the URL for the same reason page size does: it is how you like to read a
+  // list, not part of what the link selects.
+  //
+  // The override is keyed on the filter it was made against. A view is reachable
+  // from the sidebar, which only navigates, so the layout has to follow from the
+  // filter rather than from having gone through openView; without the key, the
+  // toggle you flipped on one view would follow you onto the next one.
+  const [views, setViews] = useState<SavedView[]>(() => loadViews())
+  const [activeViewId, setActiveViewId] = useState<string | null>(null)
+  const [layoutOverride, setLayoutOverride] = useState<{ viewId: string | null; layout: ViewLayout } | null>(null)
 
   const [books, setBooks] = useState<Book[]>([])
   const [total, setTotal] = useState(0)
@@ -119,6 +197,53 @@ export default function BooksPage() {
   const pages = Math.max(1, Math.ceil(total / perPage))
   const activeFilters = selectionCount(state.selection)
 
+  // A view is "open" either because it was clicked, or because the filter on
+  // screen describes it. The second case is not a nicety: the sidebar links only
+  // navigate, and a bookmarked URL or the back button arrive with no click at
+  // all, so matching on the filter is the only thing that covers every route in.
+  const paramsNow = params.toString()
+  const activeView = views.find(v => v.id === activeViewId) ?? matchView(views, paramsNow)
+
+  // Layout belongs to the view, so it follows from whichever view is open
+  // rather than being a separate toggle the reader has to reset on every
+  // switch. An override is remembered against the view it was made on, which
+  // means flipping to rows inside one view survives editing that view's filter
+  // but does not leak onto the next one.
+  const layout: ViewLayout =
+    layoutOverride && layoutOverride.viewId === (activeView?.id ?? null)
+      ? layoutOverride.layout
+      : activeView?.layout ?? 'rows'
+  const dirty = activeView ? viewIsDirty(activeView, paramsNow, layout) : false
+
+  const chooseLayout = (next: ViewLayout) =>
+    setLayoutOverride({ viewId: activeView?.id ?? null, layout: next })
+
+  const openView = (v: SavedView) => {
+    setActiveViewId(v.id)
+    setLayoutOverride(null)
+    setParams(new URLSearchParams(v.params), { replace: true })
+  }
+
+  const saveCurrentAs = (name: string) => {
+    const v: SavedView = { id: newViewId(), name, params: paramsNow, layout }
+    setViews(saveView(v))
+    setActiveViewId(v.id)
+  }
+
+  const commitView = () => {
+    if (!activeView) return
+    setViews(saveView({ ...activeView, params: paramsNow, layout }))
+    // The layout is part of the view now, so the override has nothing left to
+    // override; leaving it would keep the bar reading "modified" after a save.
+    setLayoutOverride(null)
+  }
+
+  const removeView = (id: string) => {
+    setViews(deleteView(id))
+    if (activeViewId === id) setActiveViewId(null)
+    setLayoutOverride(null)
+  }
+
   const changePageSize = (next: number) => {
     // Keep the reader next to what they were looking at instead of dumping them
     // on page 1: item 101 stays item 101, only its page number moves.
@@ -163,6 +288,53 @@ export default function BooksPage() {
           </aside>
 
           <div>
+            {/* View bar. Present only when a view is open, so an unfiltered
+                browse is not cluttered by controls for a thing that does not
+                exist yet. */}
+            {activeView && (
+              <div className={`mb-4 flex flex-wrap items-center gap-2 rounded-lg border px-3 py-2 text-sm ${
+                dirty
+                  ? 'border-warning-line bg-warning-surface'
+                  : 'border-accent-line bg-accent-surface'
+              }`}>
+                <span className="font-medium text-content">{activeView.name}</span>
+                <span className={dirty ? 'text-warning-strong' : 'text-content-muted'}>
+                  {dirty
+                    ? t('views.modified', { defaultValue: 'modified' })
+                    : t('views.saved', { defaultValue: 'saved view' })}
+                </span>
+                <span className="flex-1" />
+                {dirty ? (
+                  <>
+                    <button type="button" onClick={commitView}
+                      className="rounded-md bg-accent px-2.5 py-1 text-xs font-medium text-white hover:brightness-110">
+                      {t('views.save_changes', { defaultValue: 'Save changes' })}
+                    </button>
+                    <button type="button" onClick={() => openView(activeView)}
+                      className="rounded-md border border-line-strong px-2.5 py-1 text-xs text-content-secondary hover:bg-surface-inset">
+                      {t('views.revert', { defaultValue: 'Revert' })}
+                    </button>
+                    <button type="button"
+                      onClick={() => { const n = window.prompt(t('views.name_prompt', { defaultValue: 'Name this view' })); if (n?.trim()) saveCurrentAs(n.trim()) }}
+                      className="rounded-md border border-line-strong px-2.5 py-1 text-xs text-content-secondary hover:bg-surface-inset">
+                      {t('views.save_as_new', { defaultValue: 'Save as new' })}
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button type="button" onClick={() => { setActiveViewId(null); setLayoutOverride(null); setParams(new URLSearchParams(), { replace: true }) }}
+                      className="rounded-md border border-line-strong px-2.5 py-1 text-xs text-content-secondary hover:bg-surface-inset">
+                      {t('views.leave', { defaultValue: 'Leave view' })}
+                    </button>
+                    <button type="button" onClick={() => removeView(activeView.id)}
+                      className="rounded-md border border-line-strong px-2.5 py-1 text-xs text-danger hover:bg-danger-surface">
+                      {t('views.delete', { defaultValue: 'Delete view' })}
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+
             <div className="mb-4 flex flex-wrap items-center gap-3 text-sm text-content-muted">
               <span className="tabular-nums">
                 {loading && !books.length
@@ -177,6 +349,29 @@ export default function BooksPage() {
                   {t('facets.active', { count: activeFilters, defaultValue: `${activeFilters} filters` })}
                 </span>
               )}
+
+              <span className="flex-1" />
+
+              {/* Offered only when there is something worth naming. */}
+              {!activeView && (activeFilters > 0 || state.query) && (
+                <button type="button"
+                  onClick={() => { const n = window.prompt(t('views.name_prompt', { defaultValue: 'Name this view' })); if (n?.trim()) saveCurrentAs(n.trim()) }}
+                  className="rounded-md bg-accent px-2.5 py-1 text-xs font-medium text-white hover:brightness-110">
+                  {t('views.save', { defaultValue: 'Save as a view' })}
+                </button>
+              )}
+
+              <div className="flex overflow-hidden rounded-md border border-line-strong">
+                {(['rows', 'grid'] as ViewLayout[]).map(opt => (
+                  <button key={opt} type="button" onClick={() => chooseLayout(opt)}
+                    aria-pressed={layout === opt}
+                    className={`px-2.5 py-1 text-xs font-medium transition-colors ${
+                      layout === opt ? 'bg-accent text-white' : 'text-content-secondary hover:bg-surface-inset'
+                    }`}>
+                    {t(`views.layout_${opt}`, { defaultValue: opt === 'rows' ? 'Rows' : 'Grid' })}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {error && (
@@ -198,29 +393,66 @@ export default function BooksPage() {
               </div>
             )}
 
-            {books.length > 0 && (
-              <ul className="divide-y divide-line-subtle">
+            {books.length > 0 && layout === 'rows' && (
+              <ul>
                 {books.map(book => (
-                  <li key={book.id}>
-                    <Link
-                      to={book.library_id
-                        ? `/libraries/${book.library_id}/books/${book.id}`
-                        : `/books/${book.id}`}
-                      className="flex items-center gap-3 px-1 py-2.5 transition-colors hover:bg-surface-inset"
-                    >
+                  <li key={book.id} className="border-b border-line-subtle">
+                    <Link to={bookHref(book)}
+                      className="flex items-center gap-3 px-1 py-2.5 transition-colors hover:bg-surface-inset">
+                      <BookCoverThumb
+                        title={book.title}
+                        coverUrl={book.cover_url}
+                        readStatus={book.user_read_status}
+                        seed={coverSeed(book)}
+                      />
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate font-medium text-content">{book.title}</span>
-                        <span className="block truncate text-xs text-content-muted">
-                          {book.contributors?.[0]?.name ?? '—'}
-                          {book.publish_year ? ` · ${book.publish_year}` : ''}
-                          {book.media_type ? ` · ${book.media_type}` : ''}
+                        {/* The display face on the title and a small muted line
+                            under it: the same pairing the page heading uses, so
+                            a list of books reads as a catalogue rather than as
+                            table rows. */}
+                        <span className="font-display block truncate text-[1.03rem] leading-tight text-content">
+                          {book.title}
+                        </span>
+                        <span className="block truncate text-[11px] text-content-muted">
+                          {[
+                            book.contributors?.[0]?.name,
+                            book.publish_year || null,
+                            book.media_type,
+                          ].filter(Boolean).join(' · ')}
                         </span>
                       </span>
-                      {book.user_read_status && (
-                        <span className="flex-none text-xs text-content-muted">
-                          {t(`read_status.${book.user_read_status}`, {
-                            defaultValue: book.user_read_status,
-                          })}
+                      <StatusChip book={book} t={t} />
+                      <Stars rating={book.user_rating ?? 0} />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {books.length > 0 && layout === 'grid' && (
+              <ul className="grid grid-cols-[repeat(auto-fill,minmax(7rem,1fr))] items-start gap-[18px]">
+                {books.map(book => (
+                  <li key={book.id}>
+                    <Link to={bookHref(book)} className="group block">
+                      <BookCover
+                        title={book.title}
+                        coverUrl={book.cover_url}
+                        readStatus={book.user_read_status}
+                        seed={coverSeed(book)}
+                        className="w-full"
+                      />
+                      <span className="mt-2 block truncate text-[12.5px] font-semibold text-content group-hover:text-accent">
+                        {book.title}
+                      </span>
+                      <span className="block truncate text-[11px] text-content-muted">
+                        {book.contributors?.[0]?.name ?? '—'}
+                      </span>
+                      {/* Progress only where it means something. A bar under
+                          every cover reads as a loading state for the page. */}
+                      {book.user_read_status === 'reading' && (book.user_progress_pct ?? 0) > 0 && (
+                        <span className="mt-1.5 block h-[3px] overflow-hidden rounded-full bg-surface-strong">
+                          <span className="block h-full bg-accent"
+                            style={{ width: `${Math.min(100, book.user_progress_pct ?? 0)}%` }} />
                         </span>
                       )}
                     </Link>

@@ -4,6 +4,10 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import type { SuggestionQuotaView } from '../types'
 import { THEMES, applyTheme, readStoredTheme, storeTheme, type ThemeId } from '../lib/theme'
+// Params are compared normalised, not by substring: "status=read" is a prefix
+// of "status=reading", so a substring test lights up Finished while the reader
+// is looking at Reading now.
+import { loadViews, normaliseParams, type SavedView } from '../lib/views'
 
 const SETTINGS_ITEMS: Array<{ to: string; labelKey: string }> = [
   { to: '/admin/settings/media-management', labelKey: 'settings_nav.media_management' },
@@ -41,6 +45,16 @@ export default function Layout() {
   const [apiVersion, setApiVersion] = useState<string | null>(null)
   const [theme, setTheme] = useState<ThemeId>(readStoredTheme)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  // Views live in the sidebar because they are how you actually get to a
+  // shelf: "what am I reading" is a more common intent than "show me every
+  // book".
+  //
+  // Read on every render rather than cached in state and synced by an effect.
+  // That is what makes a view saved on Books appear here without a reload, and
+  // Layout renders rarely enough that a localStorage read and a small JSON
+  // parse cost less than the extra render an effect would trigger.
+  const views: SavedView[] = loadViews()
   // Hide the Suggestions nav entry when AI is unavailable for this user
   // (job disabled, no active provider, or not opted in). Start undefined so
   // we don't flash the link before we know — the nav just omits it for the
@@ -157,6 +171,25 @@ export default function Layout() {
         <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
           <NavLink to="/dashboard" className={navClass}>{t('nav.dashboard')}</NavLink>
           <NavLink to="/books" className={navClass}>{t('nav.books')}</NavLink>
+          {views.length > 0 && (
+            <div className="mt-1 ml-3 border-l border-line pl-3 space-y-0.5">
+              {views.map(v => (
+                <NavLink
+                  key={v.id}
+                  to={`/books?${v.params}`}
+                  className={({ isActive }) =>
+                    `block truncate rounded-md px-2 py-1.5 text-sm transition-colors ${
+                      isActive && normaliseParams(location.search) === normaliseParams(v.params)
+                        ? 'font-medium text-accent'
+                        : 'text-content-tertiary hover:bg-surface-inset hover:text-content'
+                    }`
+                  }
+                >
+                  {v.name}
+                </NavLink>
+              ))}
+            </div>
+          )}
           <NavLink
             to="/libraries"
             end

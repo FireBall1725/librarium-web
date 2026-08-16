@@ -128,6 +128,11 @@ export interface Book {
   publish_year: number | null
   language: string
   user_read_status?: string
+  // Caller-scoped, and all three pick the same interaction row, so a user who
+  // owns several editions of one work gets a consistent status, rating and
+  // progress rather than three answers from three editions. 0 means unrated.
+  user_rating?: number
+  user_progress_pct?: number
   // active_loan_count is on every book row (drives the "loaned" badge in
   // list views). active_loans is only populated by single-book reads (the
   // GetBook endpoint) for the loan panel.

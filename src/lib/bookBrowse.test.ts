@@ -64,25 +64,33 @@ describe('selection', () => {
 })
 
 describe('API query', () => {
-  it('groups values within a facet as OR and separate facets as AND', () => {
+  it('sends values within a facet as one comma-separated parameter', () => {
     const s = base({
       selection: { ...emptySelection(), library: ['a', 'b'], read_status: ['read'] },
     })
-    const filter = JSON.parse(new URLSearchParams(toApiQuery(s, 50)).get('filter')!)
-    expect(filter.groups).toHaveLength(2)
-    expect(filter.groups[0]).toEqual({
-      mode: 'OR',
-      conditions: [
-        { field: 'library', op: 'equals', value: 'a' },
-        { field: 'library', op: 'equals', value: 'b' },
-      ],
-    })
+    const params = new URLSearchParams(toApiQuery(s, 50))
+    expect(params.get('lib')).toBe('a,b')
+    expect(params.get('status')).toBe('read')
   })
 
-  it('sends media_type as the type field the API already understands', () => {
+  it('sends media_type under the short name the API reads', () => {
     const s = base({ selection: { ...emptySelection(), media_type: ['manga'] } })
-    const filter = JSON.parse(new URLSearchParams(toApiQuery(s, 50)).get('filter')!)
-    expect(filter.groups[0].conditions[0].field).toBe('type')
+    expect(new URLSearchParams(toApiQuery(s, 50)).get('type')).toBe('manga')
+  })
+
+  it('sends the list the same filters as the facets, not a different shape', () => {
+    // The two diverging is what let status, rating and library filter the rail
+    // while the list below it ignored them.
+    const s = base({
+      selection: { ...emptySelection(), read_status: ['reading'], rating: ['5'] },
+      page: 2,
+    })
+    const list = new URLSearchParams(toApiQuery(s, 50))
+    const facets = new URLSearchParams(toApiQuery(s, 50, true))
+    for (const key of ['status', 'rating', 'lib', 'type', 'genre', 'tag']) {
+      expect(list.get(key)).toBe(facets.get(key))
+    }
+    expect(list.get('filter')).toBeNull()
   })
 
   it('omits paging for the facet request, which counts the whole set', () => {
@@ -91,7 +99,7 @@ describe('API query', () => {
     expect(params.get('per_page')).toBeNull()
   })
 
-  it('sends each dimension separately for facets, not flattened filter JSON', () => {
+  it('sends each dimension separately, not flattened filter JSON', () => {
     // The server counts a dimension with its own selection excluded, which it
     // can only do if the dimensions arrive apart.
     const s = base({
@@ -103,8 +111,9 @@ describe('API query', () => {
     expect(params.get('filter')).toBeNull()
   })
 
-  it('sends no filter when nothing is selected', () => {
-    expect(new URLSearchParams(toApiQuery(base(), 50)).get('filter')).toBeNull()
+  it('sends no facet parameters when nothing is selected', () => {
+    const params = new URLSearchParams(toApiQuery(base(), 50))
+    expect([...params.keys()].sort()).toEqual(['page', 'per_page'])
   })
 })
 

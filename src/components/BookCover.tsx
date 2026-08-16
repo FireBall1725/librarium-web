@@ -1,154 +1,125 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (C) 2026 fireball1725
+// Copyright (C) 2026 FireBall1725
 
 import { useState } from 'react'
 import { useAuthenticatedImage } from '../hooks/useAuthenticatedImage'
 
-const COVER_GRADIENTS = [
-  'from-blue-500 to-blue-700',
-  'from-violet-500 to-violet-700',
-  'from-emerald-500 to-emerald-700',
-  'from-rose-500 to-rose-700',
-  'from-amber-500 to-amber-700',
-  'from-cyan-500 to-cyan-700',
-  'from-indigo-500 to-indigo-700',
-  'from-pink-500 to-pink-700',
-  'from-teal-500 to-teal-700',
-  'from-orange-500 to-orange-700',
-]
+/**
+ * Cover art, falling back to a generated placeholder.
+ *
+ * Most collections are mostly coverless, so the placeholder is the common case
+ * rather than the exception and gets the same care as the real thing: the title
+ * set in the display face on a tinted ground. The four tints come from the
+ * theme's own accent colours, so a wall of placeholders still looks like the
+ * rest of the product.
+ */
 
-function gradient(title: string) {
-  return COVER_GRADIENTS[title.charCodeAt(0) % COVER_GRADIENTS.length]
+const TINTS = ['cover-a', 'cover-g', 'cover-s', 'cover-r'] as const
+
+/**
+ * Pick a tint from the whole string, not its first character.
+ *
+ * Keying on the first letter puts every title starting with T on the same
+ * colour, which in an alphabetical list produces long visible runs of one tint.
+ * A cheap FNV-style walk spreads them without needing a stored value.
+ */
+function tintFor(seed: string): string {
+  let h = 2166136261
+  for (let i = 0; i < seed.length; i++) {
+    h ^= seed.charCodeAt(i)
+    h = Math.imul(h, 16777619)
+  }
+  return TINTS[Math.abs(h) % TINTS.length]
+}
+
+function flagClass(readStatus: string | undefined): string | null {
+  if (readStatus === 'read') return 'cover-flag'
+  if (readStatus === 'reading') return 'cover-flag cover-flag-reading'
+  if (readStatus === 'did_not_finish') return 'cover-flag cover-flag-dnf'
+  return null
 }
 
 interface BookCoverProps {
   title: string
   coverUrl: string | null | undefined
-  /** Tailwind class for the outer wrapper — controls size, e.g. "w-28 sm:w-36" */
+  /** Sizing for the outer wrapper, e.g. "w-28 sm:w-36". */
   className?: string
-  /** Extra classes on the inner aspect-ratio box */
+  /** Extra classes on the aspect-ratio box itself. */
   innerClassName?: string
   readStatus?: string
+  /**
+   * What the tint is drawn from, when it should not be the title. Pass the
+   * series name and every volume gets one colour, so twenty volumes read as a
+   * run of one series on the shelf instead of a row of unrelated books.
+   */
+  seed?: string
+  /**
+   * Hide the placeholder title. Set at thumbnail sizes, where the text would
+   * be a grey smudge rather than something anyone can read.
+   */
+  hideLabel?: boolean
 }
 
-export default function BookCover({ title, coverUrl, className = 'w-28 sm:w-36', innerClassName = '', readStatus }: BookCoverProps) {
+export default function BookCover({
+  title,
+  coverUrl,
+  className = 'w-28 sm:w-36',
+  innerClassName = '',
+  readStatus,
+  seed,
+  hideLabel = false,
+}: BookCoverProps) {
   const [imgError, setImgError] = useState(false)
   const src = useAuthenticatedImage(coverUrl)
   const showImage = !!src && !imgError
+  const flag = flagClass(readStatus)
 
   return (
     <div className={`${className} flex-shrink-0`}>
-      <div className={`relative aspect-[2/3] rounded-lg overflow-hidden shadow-lg  ${innerClassName}`}>
+      <div className={`cover ${showImage ? '' : tintFor(seed || title)} ${innerClassName}`}>
         {showImage ? (
           <img
             src={src}
             alt={title}
-            className="w-full h-full object-cover"
+            className="h-full w-full object-cover"
             onError={() => setImgError(true)}
           />
         ) : (
-          <div className={`w-full h-full bg-gradient-to-br ${gradient(title)} flex items-center justify-center`}>
-            <span className="text-white text-4xl sm:text-5xl font-bold opacity-40 select-none">
-              {title.charAt(0).toUpperCase()}
-            </span>
-          </div>
+          !hideLabel && <span className="cover-label">{title}</span>
         )}
-        {readStatus && readStatus !== '' && (
-          <div className="absolute top-0 right-0 overflow-hidden w-8 h-8 pointer-events-none">
-            <div className={`absolute -top-4 -right-4 w-8 h-8 rotate-45 ${
-              readStatus === 'read' ? 'bg-green-500' :
-              readStatus === 'reading' ? 'bg-blue-500' :
-              'bg-amber-500'
-            }`} />
-            {readStatus === 'read' && (
-              <svg className="absolute top-0.5 right-0.5 w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-              </svg>
-            )}
-            {readStatus === 'reading' && (
-              <svg className="absolute top-0.5 right-0.5 w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z"/>
-              </svg>
-            )}
-            {readStatus === 'did_not_finish' && (
-              <svg className="absolute top-0.5 right-0.5 w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            )}
-          </div>
-        )}
+        {flag && <span className={flag} aria-hidden="true" />}
       </div>
     </div>
   )
 }
 
-/** Small thumbnail variant for book list rows — fixed size, no shadow. */
-export function BookCoverThumb({ title, coverUrl, readStatus }: { title: string; coverUrl: string | null | undefined; readStatus?: string }) {
-  const [imgError, setImgError] = useState(false)
-  const [hovered, setHovered] = useState(false)
-  const src = useAuthenticatedImage(coverUrl)
-  const showImage = !!src && !imgError
-
-  const isDark = document.documentElement.classList.contains('dark')
-  const border = isDark ? '0 0 0 1px rgba(255,255,255,0.15)' : '0 0 0 1px rgba(0,0,0,0.2)'
-
-  const glowStyle: React.CSSProperties = (() => {
-    const intensity = hovered ? '1' : '0.8'
-    const spread = hovered ? '4px' : '3px'
-    if (readStatus === 'read')           return { boxShadow: `${border}, 0 0 12px ${spread} rgba(34,197,94,${intensity})`,    transition: 'box-shadow 0.2s ease' }
-    if (readStatus === 'reading')        return { boxShadow: `${border}, 0 0 12px ${spread} rgba(59,130,246,${intensity})`,   transition: 'box-shadow 0.2s ease' }
-    if (readStatus === 'did_not_finish') return { boxShadow: `${border}, 0 0 12px ${spread} rgba(245,158,11,${intensity})`,   transition: 'box-shadow 0.2s ease' }
-    if (hovered)                         return { boxShadow: `${border}, ${isDark ? '0 0 12px 3px rgba(255,255,255,0.28)' : '0 0 12px 3px rgba(0,0,0,0.28)'}`, transition: 'box-shadow 0.2s ease' }
-    return { boxShadow: border,                                                                                                 transition: 'box-shadow 0.2s ease' }
-  })()
-
+/**
+ * Row-sized cover.
+ *
+ * A separate export rather than a prop because the small size is a different
+ * design, not a smaller one: the title is dropped and the shadow goes with it,
+ * leaving a spine-like block that reads as texture down the left of a list.
+ */
+export function BookCoverThumb({
+  title,
+  coverUrl,
+  readStatus,
+  seed,
+}: {
+  title: string
+  coverUrl: string | null | undefined
+  readStatus?: string
+  seed?: string
+}) {
   return (
-    <div
-      className="w-7 flex-shrink-0 rounded"
-      style={glowStyle}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      <div className="relative aspect-[2/3] rounded overflow-hidden">
-        {showImage ? (
-          <img
-            src={src}
-            alt=""
-            className="w-full h-full object-cover"
-            onError={() => setImgError(true)}
-          />
-        ) : (
-          <div className={`w-full h-full bg-gradient-to-br ${gradient(title)} flex items-center justify-center`}>
-            <span className="text-white text-xs font-bold opacity-60 select-none">
-              {title.charAt(0).toUpperCase()}
-            </span>
-          </div>
-        )}
-        {readStatus && readStatus !== '' && (
-          <div className="absolute top-0 right-0 overflow-hidden w-7 h-7 pointer-events-none">
-            <div className={`absolute -top-3.5 -right-3.5 w-7 h-7 rotate-45 ${
-              readStatus === 'read' ? 'bg-green-500' :
-              readStatus === 'reading' ? 'bg-blue-500' :
-              'bg-amber-500'
-            }`} />
-            {readStatus === 'read' && (
-              <svg className="absolute top-0.5 right-0.5 w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-              </svg>
-            )}
-            {readStatus === 'reading' && (
-              <svg className="absolute top-0.5 right-0.5 w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z"/>
-              </svg>
-            )}
-            {readStatus === 'did_not_finish' && (
-              <svg className="absolute top-0.5 right-0.5 w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
+    <BookCover
+      title={title}
+      coverUrl={coverUrl}
+      readStatus={readStatus}
+      seed={seed}
+      hideLabel
+      className="w-[30px]"
+      innerClassName="shadow-none"
+    />
   )
 }

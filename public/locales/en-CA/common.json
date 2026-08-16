@@ -26,7 +26,8 @@
     "sign_out": "Sign out",
     "open_menu": "Open navigation menu",
     "close_menu": "Close navigation menu",
-    "books": "Books"
+    "books": "Books",
+    "views": "Views"
   },
   "library_nav": {
     "books": "Books",
@@ -101,5 +102,18 @@
     "reading": "Reading",
     "unread": "Unread",
     "did_not_finish": "Did not finish"
+  },
+  "views": {
+    "saved": "saved view",
+    "modified": "modified",
+    "save_changes": "Save changes",
+    "revert": "Revert",
+    "save_as_new": "Save as new",
+    "leave": "Leave view",
+    "delete": "Delete view",
+    "save": "Save as a view",
+    "name_prompt": "Name this view",
+    "layout_rows": "Rows",
+    "layout_grid": "Grid"
   }
 }

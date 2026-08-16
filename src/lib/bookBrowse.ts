@@ -87,29 +87,20 @@ export function toApiQuery(state: BrowseState, perPage: number, forFacets = fals
   const params = new URLSearchParams()
   if (state.query) params.set('q', state.query)
 
-  // The facets endpoint takes each dimension separately, using the same short
-  // parameter names the URL already carries. It needs them apart so it can
-  // count a dimension with its OWN selection excluded: applying every filter
-  // uniformly collapses the facet you just used, leaving Fantasy as the only
-  // genre on offer once Fantasy is ticked.
-  if (forFacets) {
-    for (const key of FACET_ORDER) {
-      const vals = state.selection[key]
-      if (vals.length) params.set(PARAM[key], vals.join(','))
-    }
-    return params.toString()
-  }
-
-  // Values within one facet are OR (Fiction or Manga); separate facets are AND
-  // (Fiction AND unread). One group per facet gives exactly that, and the
-  // groups format is what the books endpoints already parse.
-  const groups = FACET_ORDER.flatMap(key => {
+  // Both endpoints take each dimension separately, under the same short
+  // parameter names the URL already carries. Values within one facet are OR
+  // (Fiction or Manga); separate facets are AND (Fiction AND unread).
+  //
+  // Not the structured `filter` JSON, even for the list. The counts have to
+  // arrive per dimension so the server can exclude a dimension's own selection
+  // when counting it, and sending the list a different shape is how the rail
+  // ends up reporting 29 unread beside a list that never filtered: the query
+  // language has no field for read status, rating, or library, so those three
+  // silently did nothing. One format for both keeps them honest.
+  for (const key of FACET_ORDER) {
     const vals = state.selection[key]
-    if (!vals.length) return []
-    const field = key === 'media_type' ? 'type' : key
-    return [{ mode: 'OR', conditions: vals.map(v => ({ field, op: 'equals', value: v })) }]
-  })
-  if (groups.length) params.set('filter', JSON.stringify({ groups }))
+    if (vals.length) params.set(PARAM[key], vals.join(','))
+  }
 
   if (!forFacets) {
     params.set('page', String(state.page))
