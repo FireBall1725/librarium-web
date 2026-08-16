@@ -8,6 +8,7 @@ import LoginPage from './pages/LoginPage'
 import SetupPage from './pages/SetupPage'
 import ApiUnavailablePage from './pages/ApiUnavailablePage'
 import DashboardPage from './pages/DashboardPage'
+import BooksPage from './pages/BooksPage'
 import LibrariesPage from './pages/libraries/LibrariesPage'
 import LibraryPage from './pages/libraries/LibraryPage'
 import BookPage from './pages/libraries/BookPage'
@@ -44,6 +45,7 @@ function AppRoutes() {
             {/* Global layout — dashboard, library list, tools, admin */}
             <Route element={<Layout />}>
               <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/books" element={<BooksPage />} />
               <Route path="/libraries" element={<LibrariesPage />} />
               <Route path="/import" element={<ImportPage />} />
               <Route path="/profile" element={<ProfilePage />} />

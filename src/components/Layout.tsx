@@ -156,6 +156,7 @@ export default function Layout() {
 
         <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
           <NavLink to="/dashboard" className={navClass}>{t('nav.dashboard')}</NavLink>
+          <NavLink to="/books" className={navClass}>{t('nav.books')}</NavLink>
           <NavLink
             to="/libraries"
             end

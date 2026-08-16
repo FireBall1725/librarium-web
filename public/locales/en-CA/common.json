@@ -25,7 +25,8 @@
     "profile": "Profile",
     "sign_out": "Sign out",
     "open_menu": "Open navigation menu",
-    "close_menu": "Close navigation menu"
+    "close_menu": "Close navigation menu",
+    "books": "Books"
   },
   "library_nav": {
     "books": "Books",
@@ -69,5 +70,36 @@
   "errors": {
     "failed_to_load": "Failed to load",
     "failed_to_load_libraries": "Failed to load libraries"
+  },
+  "books": {
+    "title": "Books",
+    "description": "Everything across the libraries you can read.",
+    "search_placeholder": "Title, author, series, ISBN…",
+    "count": "{{total}} books",
+    "empty_title": "Nothing matches",
+    "empty_filtered": "Loosen a filter, or clear them all.",
+    "empty_shelf": "No books in your libraries yet.",
+    "range": "{{from}} to {{to}} of {{total}}",
+    "per_page": "Show"
+  },
+  "facets": {
+    "library": "Library",
+    "read_status": "Status",
+    "media_type": "Media type",
+    "genre": "Genre",
+    "tag": "Tag",
+    "rating": "Rating",
+    "stars": "{{count}} stars",
+    "clear": "Clear {{count}} filters",
+    "active": "{{count}} filters"
+  },
+  "common": {
+    "loading": "Loading…"
+  },
+  "read_status": {
+    "read": "Read",
+    "reading": "Reading",
+    "unread": "Unread",
+    "did_not_finish": "Did not finish"
   }
 }

@@ -25,7 +25,8 @@
     "profile": "Profile",
     "sign_out": "Sign out",
     "open_menu": "Open navigation menu",
-    "close_menu": "Close navigation menu"
+    "close_menu": "Close navigation menu",
+    "books": "Livres"
   },
   "library_nav": {
     "books": "Books",
@@ -69,5 +70,36 @@
   "errors": {
     "failed_to_load": "Failed to load",
     "failed_to_load_libraries": "Failed to load libraries"
+  },
+  "books": {
+    "title": "Livres",
+    "description": "Tout dans les bibliothèques auxquelles vous avez accès.",
+    "search_placeholder": "Titre, auteur, série, ISBN…",
+    "count": "{{total}} livres",
+    "empty_title": "Aucun résultat",
+    "empty_filtered": "Assouplissez un filtre ou effacez-les tous.",
+    "empty_shelf": "Aucun livre dans vos bibliothèques.",
+    "range": "{{from}} à {{to}} sur {{total}}",
+    "per_page": "Afficher"
+  },
+  "facets": {
+    "library": "Bibliothèque",
+    "read_status": "Statut",
+    "media_type": "Type de média",
+    "genre": "Genre",
+    "tag": "Étiquette",
+    "rating": "Note",
+    "stars": "{{count}} étoiles",
+    "clear": "Effacer {{count}} filtres",
+    "active": "{{count}} filtres"
+  },
+  "common": {
+    "loading": "Chargement…"
+  },
+  "read_status": {
+    "read": "Lu",
+    "reading": "En cours",
+    "unread": "Non lu",
+    "did_not_finish": "Abandonné"
   }
 }
