@@ -33,7 +33,6 @@ import GenresPage from './pages/admin/settings/GenresPage'
 import MediaTypesPage from './pages/admin/settings/MediaTypesPage'
 import ProfilesPage from './pages/admin/settings/ProfilesPage'
 import GeneralPage from './pages/admin/settings/GeneralPage'
-import ConnectionsLayout from './pages/admin/ConnectionsLayout'
 import AIPage from './pages/admin/connections/AIPage'
 import { AiPrivacyPage, ApiTokensPage, ProfilePage } from './pages/settings/AccountPages'
 import SuggestionsPage from './pages/SuggestionsPage'
@@ -80,10 +79,11 @@ function AppRoutes() {
 
               <Route element={<ProtectedRoute requireAdmin />}>
                 <Route path="/admin/users" element={<UsersPage />} />
-                <Route path="/admin/connections" element={<ConnectionsLayout />}>
-                  <Route index element={<Navigate to="ai" replace />} />
-                  <Route path="ai" element={<AIPage />} />
-                </Route>
+                {/* Connections was a shell whose only child was AI, and whose
+                    index redirected there. Both settings rows that pointed at
+                    it therefore opened the same page. */}
+                <Route path="/admin/connections" element={<Navigate to="/settings/ai" replace />} />
+                <Route path="/admin/connections/ai" element={<Navigate to="/settings/ai" replace />} />
                 {/* Settings moved out from under /admin: most of these are
                     instance configuration rather than user administration, and
                     the split was the reason nobody could find anything. The old
@@ -91,6 +91,7 @@ function AppRoutes() {
                 <Route path="/settings" element={<SettingsLayout />}>
                   <Route index element={<SettingsIndexPage />} />
                   <Route path="metadata"          element={<MetadataPage />} />
+                  <Route path="ai"                element={<AIPage />} />
                   <Route path="media-management"  element={<MediaManagementPage />} />
                   <Route path="tags"               element={<TagsPage />} />
                   <Route path="genres"             element={<GenresPage />} />

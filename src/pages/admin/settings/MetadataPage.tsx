@@ -229,7 +229,7 @@ export default function MetadataPage() {
   const [providerOrder, setProviderOrder] = useState<string[]>([])
   const [orderSaving, setOrderSaving] = useState(false)
   const [orderSaved, setOrderSaved] = useState(false)
-  usePageTitle('Metadata')
+  usePageTitle('Metadata providers')
 
   const loadOrder = useCallback(async () => {
     try {
@@ -276,9 +276,9 @@ export default function MetadataPage() {
   return (
     <>
       <PageHeader
-        title="Metadata"
-        description="Configure metadata providers for book and series lookups."
-        breadcrumbs={[{ label: 'Settings', to: '/settings' }, { label: 'Metadata' }]}
+        title="Metadata providers"
+        description="Where book and series details are looked up. Order is priority: the first provider that answers a lookup wins."
+        breadcrumbs={[{ label: 'Settings', to: '/settings' }, { label: 'Metadata providers' }]}
       />
       <div className="px-8 py-6 space-y-6">
 

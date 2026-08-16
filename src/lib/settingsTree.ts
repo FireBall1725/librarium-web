@@ -64,7 +64,6 @@ export const SETTINGS_TREE: SettingsSection[] = [
       { id: 'media-types', to: '/settings/media-types', labelKey: 'settings_nav.media_types', labelFallback: 'Media Types', fact: 'mediaTypes' },
       { id: 'genres', to: '/settings/genres', labelKey: 'settings_nav.genres', labelFallback: 'Genres', fact: 'genres' },
       { id: 'tags', to: '/settings/tags', labelKey: 'settings_nav.tags', labelFallback: 'Tags' },
-      { id: 'metadata', to: '/settings/metadata', labelKey: 'settings_nav.metadata', labelFallback: 'Metadata' },
       { id: 'profiles', to: '/settings/profiles', labelKey: 'settings_nav.profiles', labelFallback: 'Profiles' },
     ],
   },
@@ -73,8 +72,13 @@ export const SETTINGS_TREE: SettingsSection[] = [
     labelKey: 'settings_section.sources',
     labelFallback: 'Sources',
     pages: [
-      { id: 'providers', to: '/admin/connections', labelKey: 'settings_nav.providers', labelFallback: 'Metadata providers', fact: 'providers' },
-      { id: 'ai', to: '/admin/connections/ai', labelKey: 'connections_nav.ai', labelFallback: 'AI provider', fact: 'aiProvider' },
+      // Both of these used to be wrong. Metadata providers pointed at
+      // /admin/connections, whose index route redirects to ai, so the two rows
+      // opened the same page and the providers page was unreachable from the
+      // tree. The providers page itself was filed under Collection as
+      // "Metadata", a name that does not say what it holds.
+      { id: 'providers', to: '/settings/metadata', labelKey: 'settings_nav.providers', labelFallback: 'Metadata providers', fact: 'providers' },
+      { id: 'ai', to: '/settings/ai', labelKey: 'connections_nav.ai', labelFallback: 'AI provider', fact: 'aiProvider' },
     ],
   },
   {

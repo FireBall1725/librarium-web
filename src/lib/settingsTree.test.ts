@@ -3,6 +3,9 @@
 
 import { describe, expect, it } from 'vitest'
 import { SETTINGS_TREE, pageForPath, sectionForPath } from './settingsTree'
+// The route table as text. Vite's ?raw import keeps this inside the bundler's
+// world, so the test needs no node types and no filesystem path to go stale.
+import appSource from '../App.tsx?raw'
 
 describe('the tree itself', () => {
   it('gives every page a unique route', () => {
@@ -20,6 +23,44 @@ describe('the tree itself', () => {
       for (const p of s.pages) expect(p.to.startsWith('/')).toBe(true)
     }
   })
+})
+
+describe('every page in the tree reaches a real page', () => {
+  // Read the route table as text rather than rendering it: this is about what
+  // the tree points at, and mounting the whole app to find out would need a
+  // DOM, a router and an auth provider to answer a question the source already
+  // answers.
+  const app = appSource
+
+  /** Routes declared as a redirect rather than a page. */
+  const redirects = new Set(
+    [...app.matchAll(/<Route\s+path="([^"]+)"\s+element=\{<Navigate/g)].map(m => m[1])
+  )
+
+  /** Every path App declares, redirect or not. */
+  const declared = new Set([...app.matchAll(/<Route\s+path="([^"]+)"/g)].map(m => m[1]))
+
+  const pages = SETTINGS_TREE.flatMap(s => s.pages)
+
+  it.each(pages.map(p => [p.id, p.to] as const))(
+    '%s does not point at a redirect',
+    (_id, to) => {
+      // Two rows pointing at /admin/connections and /admin/connections/ai both
+      // opened AI, because the first was a redirect to the second. The tree
+      // looked fine: the routes were distinct strings.
+      expect(redirects.has(to)).toBe(false)
+    }
+  )
+
+  it.each(pages.map(p => [p.id, p.to] as const))(
+    '%s has a route declared for it',
+    (_id, to) => {
+      // Appearance sat in the tree for several commits with no route at all,
+      // so the link fell through the catch-all and landed on the Dashboard.
+      const nested = to.replace(/^\/settings\//, '')
+      expect(declared.has(to) || declared.has(nested)).toBe(true)
+    }
+  )
 })
 
 describe('sectionForPath', () => {
