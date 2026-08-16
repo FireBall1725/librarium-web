@@ -124,7 +124,7 @@ function ChipCombo({
                 type="button"
                 key={r.id}
                 onClick={() => onPick(r)}
-                className="block w-full text-left px-3 py-1.5 text-sm text-content-secondary hover:bg-accent-surface "
+                className="block w-full text-left px-3 py-1.5 text-sm text-content-secondary hover:bg-accent-surface"
               >
                 {r.label}
               </button>
@@ -136,7 +136,7 @@ function ChipCombo({
         )}
       </div>
       {footnote && (
-        <p className="mt-1 text-[11px] text-content-muted ">{footnote}</p>
+        <p className="mt-1 text-[11px] text-content-muted">{footnote}</p>
       )}
     </div>
   )
@@ -362,7 +362,7 @@ export default function CustomRequestModal({
       >
         <div className="p-5 border-b border-line flex items-start justify-between gap-4">
           <div>
-            <h3 className="text-base font-semibold text-content ">
+            <h3 className="text-base font-semibold text-content">
               Custom suggestion request
             </h3>
             <p className="text-xs text-content-muted mt-1">

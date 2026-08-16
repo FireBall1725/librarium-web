@@ -48,11 +48,11 @@ export default function PreferencesPage() {
           <h2 className="text-xs font-semibold uppercase tracking-wider text-content-subtle mb-3">
             Display
           </h2>
-          <div className="rounded-xl border border-line bg-surface divide-y divide-line-subtle ">
+          <div className="rounded-xl border border-line bg-surface divide-y divide-line-subtle">
             {/* Show read status badges */}
             <div className="flex items-center justify-between px-6 py-4">
               <div className="min-w-0 mr-6">
-                <p className="text-sm font-medium text-content ">
+                <p className="text-sm font-medium text-content">
                   Show read status badges
                 </p>
                 <p className="text-xs text-content-muted mt-0.5">

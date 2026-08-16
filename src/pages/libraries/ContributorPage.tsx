@@ -50,7 +50,7 @@ function Section({ title, action, children }: { title: string; action?: React.Re
   return (
     <div className="pt-6">
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-content-muted ">{title}</h2>
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-content-muted">{title}</h2>
         {action}
       </div>
       {children}
@@ -113,8 +113,8 @@ function EditContributorModal({ contributorId, contributor, onClose, onSaved }: 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 overflow-y-auto py-16 p-4" onClick={onClose}>
       <div className="w-full max-w-md rounded-xl bg-surface shadow-xl" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between px-6 py-4 border-b border-line ">
-          <h2 className="text-base font-semibold text-content ">Edit contributor</h2>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-line">
+          <h2 className="text-base font-semibold text-content">Edit contributor</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-content-tertiary text-xl leading-none">×</button>
         </div>
         <form onSubmit={submit} className="px-6 py-5 space-y-4">
@@ -134,7 +134,7 @@ function EditContributorModal({ contributorId, contributor, onClose, onSaved }: 
             <input id="is-corporate" type="checkbox" checked={isCorporate}
               onChange={e => setIsCorporate(e.target.checked)}
               className="h-4 w-4 rounded border-line-strong text-blue-600 focus:ring-blue-500" />
-            <label htmlFor="is-corporate" className="text-sm text-content-secondary ">
+            <label htmlFor="is-corporate" className="text-sm text-content-secondary">
               Corporate entity (publisher, studio, etc.) — don't invert name for sorting
             </label>
           </div>

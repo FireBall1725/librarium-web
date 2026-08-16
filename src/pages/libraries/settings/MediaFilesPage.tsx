@@ -100,7 +100,7 @@ export default function MediaFilesPage() {
     <div className="max-w-3xl px-8 py-8 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-base font-semibold text-content ">Storage Locations</h2>
+          <h2 className="text-base font-semibold text-content">Storage Locations</h2>
           <p className="text-sm text-content-muted mt-0.5">
             Configure server-side directories containing ebook or audiobook files.
             Scan to automatically link files to editions by ISBN.
@@ -122,7 +122,7 @@ export default function MediaFilesPage() {
       {/* Add / edit form */}
       {showAdd && (
         <div className="rounded-xl border border-accent-line bg-accent-surface p-5 space-y-3">
-          <h3 className="text-sm font-semibold text-content ">{editingId ? 'Edit location' : 'Add location'}</h3>
+          <h3 className="text-sm font-semibold text-content">{editingId ? 'Edit location' : 'Add location'}</h3>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className={labelCls}>Name</label>
@@ -147,7 +147,7 @@ export default function MediaFilesPage() {
               placeholder="{title}" className={inputCls} />
             <p className="text-xs text-content-muted mt-1">Used for scan matching. Tokens: {'{title}'}, {'{author}'}, {'{year}'}, {'{isbn13}'}, {'{isbn10}'}, {'{edition}'}</p>
           </div>
-          {error && <p className="text-sm text-danger ">{error}</p>}
+          {error && <p className="text-sm text-danger">{error}</p>}
           <div className="flex gap-2 pt-1">
             <button onClick={() => { setShowAdd(false); setEditingId(null); setError(null) }}
               className="rounded-lg border border-line-strong px-3 py-1.5 text-sm text-content-secondary hover:bg-surface-muted transition-colors">
@@ -163,7 +163,7 @@ export default function MediaFilesPage() {
 
       {/* Location list */}
       {locations.length === 0 && !showAdd && (
-        <p className="text-sm text-content-subtle ">No storage locations configured yet.</p>
+        <p className="text-sm text-content-subtle">No storage locations configured yet.</p>
       )}
       {locations.map(loc => {
         const result = scanResults[loc.id]
@@ -172,7 +172,7 @@ export default function MediaFilesPage() {
           <div key={loc.id} className="rounded-xl border border-line bg-surface overflow-hidden">
             <div className="flex items-start justify-between gap-3 px-4 py-3">
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-content ">{loc.name}</p>
+                <p className="text-sm font-semibold text-content">{loc.name}</p>
                 <p className="text-xs text-content-muted mt-0.5 font-mono truncate">{loc.root_path}</p>
                 <span className="mt-1 inline-block text-xs bg-surface-inset text-content-tertiary px-1.5 py-0.5 rounded">
                   {loc.media_format}
@@ -201,10 +201,10 @@ export default function MediaFilesPage() {
             {/* Scan results */}
             {result && (
               <div className="border-t border-line-subtle px-4 py-3 space-y-3 text-xs">
-                <div className="flex gap-4 text-content-muted ">
-                  <span><span className="font-semibold text-success ">{result.linked?.length ?? 0}</span> linked</span>
-                  <span><span className="font-semibold text-warning ">{result.unlinked?.length ?? 0}</span> unmatched</span>
-                  <span><span className="font-semibold text-danger ">{result.missing_files?.length ?? 0}</span> editions without files</span>
+                <div className="flex gap-4 text-content-muted">
+                  <span><span className="font-semibold text-success">{result.linked?.length ?? 0}</span> linked</span>
+                  <span><span className="font-semibold text-warning">{result.unlinked?.length ?? 0}</span> unmatched</span>
+                  <span><span className="font-semibold text-danger">{result.missing_files?.length ?? 0}</span> editions without files</span>
                 </div>
                 {result.linked?.length > 0 && (
                   <div>
@@ -235,7 +235,7 @@ export default function MediaFilesPage() {
                     <p className="font-medium text-content-secondary mb-1">Editions without files</p>
                     <ul className="space-y-0.5">
                       {result.missing_files.map((m, i) => (
-                        <li key={i} className="text-content-muted ">
+                        <li key={i} className="text-content-muted">
                           {m.book_title || m.edition_id} <span className="text-gray-400">({m.format})</span>
                           {m.isbn_13 && <span className="ml-1 font-mono">{m.isbn_13}</span>}
                         </li>

@@ -90,7 +90,7 @@ function AddUserModal({ onClose, onCreated }: AddUserModalProps) {
           {field('display_name', 'Display name')}
           {field('password', 'Password', 'password')}
           {error && (
-            <div className="rounded-lg bg-danger-surface border border-danger-line px-3 py-2 text-sm text-danger-strong ">
+            <div className="rounded-lg bg-danger-surface border border-danger-line px-3 py-2 text-sm text-danger-strong">
               {error}
             </div>
           )}
@@ -189,7 +189,7 @@ function EditUserModal({ user, isSelf, onClose, onSaved }: EditUserModalProps) {
               Instance admin
             </label>
             {isSelf && (
-              <p className="mt-1 ml-6 text-xs text-content-muted ">
+              <p className="mt-1 ml-6 text-xs text-content-muted">
                 You can't remove your own admin privileges. Have another admin do it.
  </p>
  )}
@@ -293,7 +293,7 @@ function SetPasswordModal({ user, onClose, onSaved }: SetPasswordModalProps) {
               }`}
             />
             {mismatch && (
-              <p className="mt-1 text-xs text-danger ">Passwords don't match.</p>
+              <p className="mt-1 text-xs text-danger">Passwords don't match.</p>
  )}
  </div>
  {error && (

@@ -104,10 +104,10 @@ export default function Layout() {
     }`
 
   return (
-    <div className="h-screen flex flex-col bg-surface-muted ">
-     <div className="flex-1 min-h-0 flex flex-col lg:flex-row">
+    <div className="app-shell h-screen flex flex-col bg-surface-muted">
+     <div className="app-shell-body">
       {/* Mobile top bar */}
-      <div className="lg:hidden flex-shrink-0 flex items-center gap-3 border-b border-line bg-surface px-4 h-14">
+      <div className="app-topbar flex-shrink-0 items-center gap-3 border-b border-line bg-surface px-4 h-14">
         <button
           type="button"
           onClick={() => setSidebarOpen(true)}
@@ -119,13 +119,13 @@ export default function Layout() {
           </svg>
         </button>
         <img src="/logo.png" alt="" className="w-6 h-6 flex-shrink-0" />
-        <span className="text-base font-semibold text-content ">{t('app.name')}</span>
+        <span className="text-base font-semibold text-content">{t('app.name')}</span>
       </div>
 
       {/* Backdrop */}
       {sidebarOpen && (
         <div
-          className="lg:hidden fixed inset-0 bg-black/40 z-30"
+          className="app-scrim fixed inset-0 bg-black/40 z-30"
           onClick={() => setSidebarOpen(false)}
           aria-hidden="true"
         />
@@ -133,20 +133,20 @@ export default function Layout() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-64 border-r border-line bg-surface flex flex-col transform transition-transform duration-200 ease-out lg:static lg:w-56 lg:translate-x-0 lg:transition-none ${
+        className={`app-sidebar border-r border-line bg-surface flex flex-col transform transition-transform duration-200 ease-out ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         <div className="px-4 py-5 border-b border-line flex items-center gap-2.5">
           <img src="/logo.png" alt="" className="w-7 h-7 flex-shrink-0" />
           <div className="min-w-0 flex-1">
-            <div className="text-lg font-semibold text-content ">{t('app.name')}</div>
+            <div className="text-lg font-semibold text-content">{t('app.name')}</div>
           </div>
           <button
             type="button"
             onClick={() => setSidebarOpen(false)}
             aria-label={t('nav.close_menu')}
-            className="lg:hidden p-1 rounded-md text-content-muted hover:bg-surface-inset transition-colors"
+            className="app-topbar p-1 rounded-md text-content-muted hover:bg-surface-inset transition-colors"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -194,7 +194,7 @@ export default function Layout() {
           )}
 
           <div className="pt-4">
-            <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wider text-content-subtle ">
+            <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wider text-content-subtle">
               {t('nav.tools')}
             </p>
             <NavLink to="/import" className={navClass}>{t('nav.import')}</NavLink>
@@ -202,7 +202,7 @@ export default function Layout() {
 
           {user?.is_instance_admin && (
             <div className="pt-4">
-              <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wider text-content-subtle ">
+              <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wider text-content-subtle">
                 {t('nav.admin')}
               </p>
               <NavLink to="/admin/users" className={navClass}>{t('nav.users')}</NavLink>
@@ -314,10 +314,10 @@ export default function Layout() {
      </div>
 
       {/* Footer */}
-      <footer className="flex-shrink-0 border-t border-line bg-surface px-4 py-2.5 text-xs text-content-muted ">
+      <footer className="flex-shrink-0 border-t border-line bg-surface px-4 py-2.5 text-xs text-content-muted">
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5">
-            <span className="font-medium text-content-tertiary ">{t('app.name')}</span>
+            <span className="font-medium text-content-tertiary">{t('app.name')}</span>
             <a
               href="https://github.com/FireBall1725/librarium-web/releases"
               target="_blank"

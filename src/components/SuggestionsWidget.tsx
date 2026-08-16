@@ -52,9 +52,9 @@ export default function SuggestionsWidget({ type }: SuggestionsWidgetProps) {
   const title = type === 'buy' ? t('suggestions.buy_title') : t('suggestions.read_next_title')
 
   return (
-    <div className="rounded-xl border border-line bg-surface ">
+    <div className="rounded-xl border border-line bg-surface">
       <div className="flex items-center justify-between px-5 pt-4 pb-2">
-        <h2 className="text-sm font-semibold text-content ">{title}</h2>
+        <h2 className="text-sm font-semibold text-content">{title}</h2>
         <Link
           to={`/suggestions?type=${type}`}
           className="text-xs font-medium text-accent hover:underline"

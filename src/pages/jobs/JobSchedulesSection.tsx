@@ -51,17 +51,17 @@ export default function JobSchedulesSection({ kind }: JobSchedulesSectionProps =
 
   if (error) {
     return (
-      <div className="rounded-lg bg-danger-surface border border-danger-line px-4 py-3 text-sm text-danger-strong ">
+      <div className="rounded-lg bg-danger-surface border border-danger-line px-4 py-3 text-sm text-danger-strong">
         {error}
       </div>
     )
   }
   if (schedules === null) {
-    return <div className="text-sm text-content-subtle ">Loading schedules…</div>
+    return <div className="text-sm text-content-subtle">Loading schedules…</div>
   }
   if (schedules.length === 0) {
     return (
-      <div className="rounded-md border border-dashed border-line-strong px-4 py-6 text-center text-sm text-content-muted ">
+      <div className="rounded-md border border-dashed border-line-strong px-4 py-6 text-center text-sm text-content-muted">
         No scheduled jobs registered.
       </div>
     )
@@ -120,10 +120,10 @@ function ScheduleRow({ initial, onSaved, onError, showToast }: {
 
   return (
     <div className="rounded-lg border border-line bg-surface overflow-hidden">
-      <div className="flex items-center justify-between gap-3 px-4 py-3 bg-surface-muted ">
+      <div className="flex items-center justify-between gap-3 px-4 py-3 bg-surface-muted">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <h3 className="text-sm font-semibold text-content ">{initial.display_name}</h3>
+            <h3 className="text-sm font-semibold text-content">{initial.display_name}</h3>
             <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
               enabled
                 ? 'bg-green-50 dark:bg-green-950/50 text-green-700 dark:text-green-400 ring-1 ring-green-200 dark:ring-green-800'
@@ -132,7 +132,7 @@ function ScheduleRow({ initial, onSaved, onError, showToast }: {
               {enabled ? 'Enabled' : 'Disabled'}
             </span>
             {initial.last_fired_at && (
-              <span className="text-xs text-content-subtle ">
+              <span className="text-xs text-content-subtle">
                 Last fired: {new Date(initial.last_fired_at).toLocaleString()}
               </span>
             )}
@@ -165,9 +165,9 @@ function ScheduleRow({ initial, onSaved, onError, showToast }: {
               clearButton={false}
             />
           </div>
-          <p className="mt-2 font-mono text-xs text-content-tertiary ">{cron}</p>
+          <p className="mt-2 font-mono text-xs text-content-tertiary">{cron}</p>
           {cronErr && (
-            <p className="mt-1 text-xs text-danger ">{cronErr.description}</p>
+            <p className="mt-1 text-xs text-danger">{cronErr.description}</p>
           )}
         </div>
         <div className="flex justify-end gap-2">

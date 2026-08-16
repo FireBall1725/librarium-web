@@ -59,7 +59,7 @@ export default function PreferencesTab() {
         <div className={cardClass}>
           <div className="flex items-center justify-between px-6 py-4 gap-6">
             <div className="min-w-0">
-              <p className="text-sm font-medium text-content ">Interface language</p>
+              <p className="text-sm font-medium text-content">Interface language</p>
               <p className="text-xs text-content-muted mt-0.5">
                 Switches the language used throughout the web interface.
               </p>
@@ -84,7 +84,7 @@ export default function PreferencesTab() {
         <div className={cardClass}>
           <div className="flex items-center justify-between px-6 py-4">
             <div className="min-w-0 mr-6">
-              <p className="text-sm font-medium text-content ">Show read status badges</p>
+              <p className="text-sm font-medium text-content">Show read status badges</p>
               <p className="text-xs text-content-muted mt-0.5">
                 Show a coloured corner badge on book covers indicating your read status
                 (read, reading, did not finish)

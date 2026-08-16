@@ -270,7 +270,7 @@ export default function SuggestionsPage() {
             <div className="flex items-center gap-3">
               {quota !== null && (
                 <span
-                  className="text-xs text-content-muted "
+                  className="text-xs text-content-muted"
                   title={quota.resets_at ? t('suggestions_page.quota.resets_at', { at: new Date(quota.resets_at).toLocaleString() }) : undefined}
                 >
                   {quota.unlimited
@@ -351,7 +351,7 @@ export default function SuggestionsPage() {
                   <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
                     {t('suggestions_page.progress.title')}
                   </p>
-                  <p className="text-xs text-accent-strong ">
+                  <p className="text-xs text-accent-strong">
                     {activeEventCount > 0
                       ? t('suggestions_page.progress.steps', { count: activeEventCount })
                       : t('suggestions_page.progress.starting')}
@@ -361,7 +361,7 @@ export default function SuggestionsPage() {
             )}
 
             {error ? (
-              <div className="rounded-lg border border-danger-line bg-danger-surface p-4 text-sm text-danger-strong ">
+              <div className="rounded-lg border border-danger-line bg-danger-surface p-4 text-sm text-danger-strong">
                 {error}
               </div>
             ) : filtered === null ? (
@@ -376,10 +376,10 @@ export default function SuggestionsPage() {
               </div>
             ) : filtered.length === 0 ? (
               <div className="rounded-xl border border-dashed border-line-strong p-8 text-center">
-                <p className="text-sm font-medium text-content ">
+                <p className="text-sm font-medium text-content">
                   {t(isSaved ? 'suggestions_page.saved_empty.title' : 'suggestions_page.empty.title')}
                 </p>
-                <p className="mt-1 text-sm text-content-muted ">
+                <p className="mt-1 text-sm text-content-muted">
                   {t(isSaved ? 'suggestions_page.saved_empty.hint' : 'suggestions_page.empty.hint')}
                 </p>
               </div>
@@ -593,7 +593,7 @@ function SteeringBanner({
               )}
             </div>
           ) : (
-            <p className="mt-1.5 text-xs text-accent-strong ">
+            <p className="mt-1.5 text-xs text-accent-strong">
               Showing the results of this scheduled run. Clear to return to the mixed pool.
             </p>
           )}
@@ -651,11 +651,11 @@ function RecentRunsPanel({
   return (
     <div className="border-t border-line pt-4">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold text-content ">Recent runs</h3>
+        <h3 className="text-sm font-semibold text-content">Recent runs</h3>
         <button
           type="button"
           onClick={onToggle}
-          className="text-xs text-content-muted hover:text-content-secondary "
+          className="text-xs text-content-muted hover:text-content-secondary"
         >
           {expanded ? 'Collapse' : 'Expand'}
         </button>
@@ -704,7 +704,7 @@ function RecentRunsPanel({
                         >
                           {isSteered ? 'Custom' : 'Scheduled'}
                         </span>
-                        <span className="text-xs text-content-muted ">
+                        <span className="text-xs text-content-muted">
                           · {when}
                           {run.status === 'running' ? ' · running…' : ` · ${count} suggestions`}
                         </span>

@@ -1,5 +1,40 @@
 @import "tailwindcss";
 
+/* ---------------------------------------------------------------------------
+   Typefaces
+   ---------------------------------------------------------------------------
+   Two families with one job each. Cormorant Garamond sets titles and headings;
+   Crimson Pro sets reading-length prose. Everything functional (labels, chips,
+   buttons, numbers) stays on the system sans stack, which keeps the serif from
+   becoming decoration.
+
+   Both are SIL OFL 1.1 and self-hosted: a font CDN is a third party watching
+   every page load, which a privacy-focused self-hosted app should not require.
+
+   Variable fonts, subset to Latin, Latin Extended-A/B and punctuation, since
+   author names carry accents well past ASCII. 1.4 MB of TTF became 114 KB of
+   woff2 with the weight axis intact. Regenerate with:
+     pyftsubset FONT.ttf --output-file=FONT.woff2 --flavor=woff2 \
+       --unicodes="U+0000-00FF,U+0100-017F,U+0180-024F,U+1E00-1EFF,U+2000-206F,..." \
+       --layout-features='kern,liga,clig,calt,onum,tnum,frac'
+--------------------------------------------------------------------------- */
+
+@font-face {
+  font-family: "Cormorant Garamond";
+  src: url("/fonts/CormorantGaramond.woff2") format("woff2-variations");
+  font-weight: 300 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Crimson Pro";
+  src: url("/fonts/CrimsonPro.woff2") format("woff2-variations");
+  font-weight: 200 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* ---------------------------------------------------------------------------
@@ -21,6 +56,11 @@
 --------------------------------------------------------------------------- */
 
 @theme inline {
+  /* Typefaces. `font-display` and `font-read` rather than overriding
+     font-sans, so the system stack stays the default for UI chrome. */
+  --font-display: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+  --font-read: "Crimson Pro", Georgia, "Times New Roman", serif;
+
   /* Surfaces, back to front */
   --color-surface:          var(--t-surface);
   --color-surface-raised:   var(--t-surface-raised);
@@ -253,5 +293,43 @@
     --t-warning-strong:  oklch(88% 0.100 84);
     --t-warning-surface: --alpha(oklch(50% 0.105 80) / 32%);
     --t-warning-line:    oklch(54% 0.098 80);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Shell layout
+   ---------------------------------------------------------------------------
+   The shell measures ITSELF rather than the viewport. `lg:` asks how wide the
+   browser window is, which is the wrong question: the same client renders in a
+   split pane, an iPad slide-over and a desktop window, and only the container's
+   width decides whether a sidebar fits.
+
+   One breakpoint, `@container shell (min-width: 64rem)`, replaces the `lg:`
+   variants in Layout. Below it the sidebar is a drawer over the content; above
+   it the drawer styles are unwound and it sits inline.
+--------------------------------------------------------------------------- */
+
+@layer components {
+  .app-shell {
+    container-type: inline-size;
+    container-name: shell;
+  }
+
+  /* Narrow is the default, so a container query is never needed to reach it. */
+  .app-shell-body { display: flex; flex-direction: column; min-height: 0; flex: 1 1 0%; }
+  .app-topbar     { display: flex; }
+  .app-sidebar    { position: fixed; inset-block: 0; left: 0; z-index: 40; width: 16rem; }
+  .app-scrim      { display: block; }
+
+  @container shell (min-width: 64rem) {
+    .app-shell-body { flex-direction: row; }
+    .app-topbar     { display: none; }
+    .app-scrim      { display: none; }
+    .app-sidebar {
+      position: static;
+      width: 14rem;
+      transform: none !important;
+      transition: none;
+    }
   }
 }

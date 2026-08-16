@@ -247,13 +247,13 @@ export default function TagsPage() {
       </div>
 
       {tagsError && (
-        <div className="rounded-lg bg-danger-surface border border-danger-line px-3 py-2 text-sm text-danger-strong ">
+        <div className="rounded-lg bg-danger-surface border border-danger-line px-3 py-2 text-sm text-danger-strong">
           {tagsError}
         </div>
       )}
 
       {selectedLibId && (
-        <div className="rounded-xl border border-line overflow-hidden bg-surface ">
+        <div className="rounded-xl border border-line overflow-hidden bg-surface">
           {/* Add form */}
           <div className="px-4 py-3 bg-surface-muted border-b border-line space-y-2">
             <div className="flex items-center gap-2">
@@ -287,11 +287,11 @@ export default function TagsPage() {
               <div className="w-4 h-4 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
             </div>
           ) : tags.length === 0 ? (
-            <p className="px-4 py-6 text-sm text-center text-content-subtle ">
+            <p className="px-4 py-6 text-sm text-center text-content-subtle">
               No tags in this library yet.
             </p>
           ) : (
-            <div className="divide-y divide-line-subtle ">
+            <div className="divide-y divide-line-subtle">
               {tags.map(t => (
                 <div key={t.id}>
                   {editingId === t.id ? (
@@ -323,7 +323,7 @@ export default function TagsPage() {
                         className="w-2.5 h-2.5 rounded-full flex-shrink-0"
                         style={{ background: t.color || '#9ca3af' }}
                       />
-                      <span className="flex-1 text-sm text-content-strong ">{t.name}</span>
+                      <span className="flex-1 text-sm text-content-strong">{t.name}</span>
                       <div className="flex items-center gap-0.5">
                         <button onClick={() => startEdit(t)}
                           className="p-1 rounded text-content-faint group-hover:text-content-subtle hover:!text-blue-500 dark:hover:!text-blue-400 hover:!bg-blue-50 dark:hover:!bg-blue-900/20 transition-colors"

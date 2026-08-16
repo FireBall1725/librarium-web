@@ -81,11 +81,11 @@ function LibraryModal({ library, onClose, onSaved }: LibraryModalProps) {
               onChange={e => setForm(f => ({ ...f, is_public: e.target.checked }))}
               className="rounded border-line-strong text-blue-600 focus:ring-blue-500"
             />
-            <span className="text-sm text-content-secondary ">Public library</span>
+            <span className="text-sm text-content-secondary">Public library</span>
           </label>
 
           {error && (
-            <div className="rounded-lg bg-danger-surface border border-danger-line px-3 py-2 text-sm text-danger-strong ">
+            <div className="rounded-lg bg-danger-surface border border-danger-line px-3 py-2 text-sm text-danger-strong">
               {error}
             </div>
           )}
@@ -243,7 +243,7 @@ function CardMenu({ onEdit, onDelete }: CardMenuProps) {
           <button
             type="button"
             onClick={stop(onEdit)}
-            className="w-full text-left px-3 py-2 text-sm text-content-secondary hover:bg-surface-muted "
+            className="w-full text-left px-3 py-2 text-sm text-content-secondary hover:bg-surface-muted"
           >
             Edit
           </button>
@@ -316,7 +316,7 @@ export default function LibrariesPage() {
       <div className="p-8">
 
       {error && (
-        <div className="mb-4 rounded-lg bg-danger-surface border border-danger-line px-4 py-3 text-sm text-danger-strong ">
+        <div className="mb-4 rounded-lg bg-danger-surface border border-danger-line px-4 py-3 text-sm text-danger-strong">
           {error}
         </div>
       )}
@@ -327,8 +327,8 @@ export default function LibrariesPage() {
 
       {libraries && libraries.length === 0 && (
         <div className="rounded-xl border border-dashed border-line-strong bg-surface p-12 text-center">
-          <p className="text-sm font-medium text-content-muted ">No libraries yet</p>
-          <p className="mt-1 text-xs text-content-subtle ">Create one to get started.</p>
+          <p className="text-sm font-medium text-content-muted">No libraries yet</p>
+          <p className="mt-1 text-xs text-content-subtle">Create one to get started.</p>
           <button
             onClick={() => setShowCreate(true)}
             className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
@@ -353,7 +353,7 @@ export default function LibrariesPage() {
                 <p className="font-semibold text-content truncate flex-1">{lib.name}</p>
                 <div className="flex items-center gap-1.5 flex-shrink-0">
                   {lib.is_public && (
-                    <span className="inline-flex items-center rounded-full bg-success-surface px-2 py-0.5 text-xs font-medium text-success-strong ring-1 ring-success-line ">
+                    <span className="inline-flex items-center rounded-full bg-success-surface px-2 py-0.5 text-xs font-medium text-success-strong ring-1 ring-success-line">
                       Public
                     </span>
                   )}
@@ -366,7 +366,7 @@ export default function LibrariesPage() {
               {lib.description && (
                 <p className="mt-1 text-sm text-content-muted line-clamp-2">{lib.description}</p>
               )}
-              <p className="mt-3 text-xs text-content-subtle ">/{lib.slug}</p>
+              <p className="mt-3 text-xs text-content-subtle">/{lib.slug}</p>
             </div>
           ))}
         </div>

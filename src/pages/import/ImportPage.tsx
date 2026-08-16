@@ -619,8 +619,8 @@ export default function ImportPage() {
         <div className="space-y-6">
           {/* Library badge */}
           <div className="flex items-center gap-2 text-sm">
-            <span className="text-content-muted ">Importing into:</span>
-            <span className="font-semibold text-content ">{selectedLibrary.name}</span>
+            <span className="text-content-muted">Importing into:</span>
+            <span className="font-semibold text-content">{selectedLibrary.name}</span>
             <button
               onClick={() => setStep(1)}
               className="text-accent hover:underline text-xs"
@@ -652,8 +652,8 @@ export default function ImportPage() {
                 <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <p className="font-medium text-content ">{csvFile.name}</p>
-                <p className="text-xs text-content-muted ">
+                <p className="font-medium text-content">{csvFile.name}</p>
+                <p className="text-xs text-content-muted">
                   {headers.length} column{headers.length !== 1 ? 's' : ''} — click to change
                 </p>
               </div>
@@ -662,7 +662,7 @@ export default function ImportPage() {
                 <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                 </svg>
-                <p className="font-medium text-content-secondary ">Drop a CSV here, or click to browse</p>
+                <p className="font-medium text-content-secondary">Drop a CSV here, or click to browse</p>
                 <p className="text-xs text-gray-400">CSV, TSV, or TXT</p>
               </div>
             )}
@@ -673,7 +673,7 @@ export default function ImportPage() {
             <div className="rounded-xl border border-line bg-surface p-4">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
-                  <p className="text-sm font-medium text-content-strong ">Importing from…</p>
+                  <p className="text-sm font-medium text-content-strong">Importing from…</p>
                   <p className="text-xs text-content-muted mt-0.5">
                     Picking a source pre-fills the column mapping below. Detected automatically from the file's headers; override here if it picked wrong.
  </p>
@@ -805,7 +805,7 @@ export default function ImportPage() {
                   {user?.is_instance_admin && members.length > 1 && (
                     <div className="flex items-center justify-between px-4 py-3.5">
                       <div>
-                        <p className="text-sm font-medium text-content-strong ">Reading data attributed to</p>
+                        <p className="text-sm font-medium text-content-strong">Reading data attributed to</p>
                         <p className="text-xs text-content-muted mt-0.5">Read status, rating, review, and dates land on this user.</p>
                       </div>
                       <select
@@ -825,15 +825,15 @@ export default function ImportPage() {
               </section>
 
               {/* Duplicate policy */}
-              <section className="rounded-xl border border-line bg-surface ">
+              <section className="rounded-xl border border-line bg-surface">
                 <header className="px-4 pt-3.5 pb-2">
-                  <h3 className="text-sm font-semibold text-content ">When a book already exists</h3>
+                  <h3 className="text-sm font-semibold text-content">When a book already exists</h3>
                   <p className="text-xs text-content-muted mt-0.5">Default: do nothing. Enable either action — they compose.</p>
                 </header>
-                <div className="border-t border-line-subtle divide-y divide-line-subtle ">
+                <div className="border-t border-line-subtle divide-y divide-line-subtle">
                   <div className="flex items-center justify-between px-4 py-3.5">
                     <div>
-                      <p className="text-sm font-medium text-content-strong ">Add to copy count</p>
+                      <p className="text-sm font-medium text-content-strong">Add to copy count</p>
                       <p className="text-xs text-content-muted mt-0.5">Bump the per-edition copy count for each duplicate row</p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
@@ -843,7 +843,7 @@ export default function ImportPage() {
                   </div>
                   <div className="flex items-center justify-between px-4 py-3.5">
                     <div>
-                      <p className="text-sm font-medium text-content-strong ">Update read state, rating, review, dates</p>
+                      <p className="text-sm font-medium text-content-strong">Update read state, rating, review, dates</p>
                       <p className="text-xs text-content-muted mt-0.5">Refresh your interaction fields from the CSV row</p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
@@ -855,15 +855,15 @@ export default function ImportPage() {
               </section>
 
               {/* Post-import enrichment */}
-              <section className="rounded-xl border border-line bg-surface ">
+              <section className="rounded-xl border border-line bg-surface">
                 <header className="px-4 pt-3.5 pb-2">
-                  <h3 className="text-sm font-semibold text-content ">After import</h3>
+                  <h3 className="text-sm font-semibold text-content">After import</h3>
                   <p className="text-xs text-content-muted mt-0.5">Run these in the background on books this import added to the library. Pure duplicates already in this library are skipped, and books that already have the data are no-ops.</p>
                 </header>
-                <div className="border-t border-line-subtle divide-y divide-line-subtle ">
+                <div className="border-t border-line-subtle divide-y divide-line-subtle">
                   <div className="flex items-center justify-between px-4 py-3.5">
                     <div>
-                      <p className="text-sm font-medium text-content-strong ">Fill missing metadata</p>
+                      <p className="text-sm font-medium text-content-strong">Fill missing metadata</p>
                       <p className="text-xs text-content-muted mt-0.5">Look each book up against metadata providers to populate blank fields</p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
@@ -873,7 +873,7 @@ export default function ImportPage() {
                   </div>
                   <div className="flex items-center justify-between px-4 py-3.5">
                     <div>
-                      <p className="text-sm font-medium text-content-strong ">Download cover art</p>
+                      <p className="text-sm font-medium text-content-strong">Download cover art</p>
                       <p className="text-xs text-content-muted mt-0.5">Pull cover images from metadata providers for books that don't have one</p>
  </div>
  <label className="relative inline-flex items-center cursor-pointer">

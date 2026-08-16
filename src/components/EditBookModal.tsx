@@ -184,7 +184,7 @@ export default function EditBookModal({ libraryId, book, onClose, onSaved, initi
       <div className="w-full max-w-xl rounded-xl bg-surface shadow-xl flex flex-col">
 
         {/* Header with tabs */}
-        <div className="px-6 pt-4 pb-0 border-b border-line ">
+        <div className="px-6 pt-4 pb-0 border-b border-line">
           <div className="flex items-center justify-between mb-3">
             <p className="text-xs text-content-muted truncate max-w-sm font-medium">{book.title}</p>
             <button onClick={onClose} className="text-gray-400 hover:text-content-tertiary text-xl leading-none">×</button>
@@ -279,7 +279,7 @@ export default function EditBookModal({ libraryId, book, onClose, onSaved, initi
                     ))}
                     {tagQuery.trim() && (
                       <li>
-                        <div className="flex items-center gap-2 px-3 py-2 border-t border-line-subtle ">
+                        <div className="flex items-center gap-2 px-3 py-2 border-t border-line-subtle">
                           <input type="color" value={newTagColor} onChange={e => setNewTagColor(e.target.value)} className="w-6 h-6 rounded cursor-pointer border-0 p-0" />
                           <button type="button" onMouseDown={e => e.preventDefault()} onClick={() => createTag(tagQuery)}
                             disabled={isCreatingTag}
@@ -299,7 +299,7 @@ export default function EditBookModal({ libraryId, book, onClose, onSaved, initi
               <label className={labelCls}>Genres</label>
               <div className="flex flex-wrap gap-1.5 mb-1.5">
                 {selectedGenres.map(g => (
-                  <span key={g.id} className="inline-flex items-center gap-1 rounded-full bg-surface-inset px-2 py-0.5 text-xs font-medium text-content-secondary ">
+                  <span key={g.id} className="inline-flex items-center gap-1 rounded-full bg-surface-inset px-2 py-0.5 text-xs font-medium text-content-secondary">
                     {g.name}
                     <button type="button" onClick={() => setSelectedGenres(gs => gs.filter(x => x.id !== g.id))} className="hover:opacity-70 text-sm leading-none">×</button>
                   </span>
@@ -316,14 +316,14 @@ export default function EditBookModal({ libraryId, book, onClose, onSaved, initi
                       <li key={g.id}>
                         <button type="button" onMouseDown={e => e.preventDefault()}
                           onClick={() => { setSelectedGenres(gs => [...gs, g]); setGenreQuery('') }}
-                          className="w-full text-left px-3 py-2 text-sm hover:bg-accent-surface ">{g.name}</button>
+                          className="w-full text-left px-3 py-2 text-sm hover:bg-accent-surface">{g.name}</button>
                       </li>
                     ))}
                   </ul>
                 )}
                 {genreDropdownOpen && filteredGenres.length === 0 && genreQuery && (
                   <div className="absolute z-20 mt-1 w-full rounded-lg border border-line bg-surface-raised shadow-lg px-3 py-2">
-                    <p className="text-xs text-content-subtle ">No matching genres</p>
+                    <p className="text-xs text-content-subtle">No matching genres</p>
                   </div>
                 )}
               </div>
@@ -359,7 +359,7 @@ export default function EditBookModal({ libraryId, book, onClose, onSaved, initi
               </div>
             )}
 
-            {error && <p className="text-sm text-danger ">{error}</p>}
+            {error && <p className="text-sm text-danger">{error}</p>}
 
             <div className="flex justify-end gap-3 pt-2">
               <button type="button" onClick={onClose}
@@ -378,7 +378,7 @@ export default function EditBookModal({ libraryId, book, onClose, onSaved, initi
         {tab === 'editions' && (
           <div className="flex flex-col max-h-[70vh]">
             <div className="px-6 py-3 border-b border-line flex items-center justify-between flex-shrink-0">
-              <p className="text-xs text-content-muted ">Paperback, hardcover, ebook, audiobook, etc.</p>
+              <p className="text-xs text-content-muted">Paperback, hardcover, ebook, audiobook, etc.</p>
               <button onClick={() => setShowAddEdition(true)}
                 className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 transition-colors">
                 Add edition
@@ -408,17 +408,17 @@ export default function EditBookModal({ libraryId, book, onClose, onSaved, initi
                 return (
                   <div key={e.id} className="rounded-xl border border-line bg-surface-muted overflow-hidden">
                     {/* Header */}
-                    <div className="flex items-center justify-between gap-2 px-4 py-3 bg-surface border-b border-line-subtle ">
+                    <div className="flex items-center justify-between gap-2 px-4 py-3 bg-surface border-b border-line-subtle">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ring-1 ${formatBadgeClass(e.format)}`}>
                           {e.format}
                         </span>
                         {e.is_primary && (
-                          <span className="inline-flex items-center rounded-full bg-success-surface px-2 py-0.5 text-xs font-medium text-success-strong ring-1 ring-success-line ">
+                          <span className="inline-flex items-center rounded-full bg-success-surface px-2 py-0.5 text-xs font-medium text-success-strong ring-1 ring-success-line">
                             Primary
                           </span>
                         )}
-                        {e.edition_name && <span className="text-sm font-medium text-content ">{e.edition_name}</span>}
+                        {e.edition_name && <span className="text-sm font-medium text-content">{e.edition_name}</span>}
                       </div>
                       <div className="flex items-center gap-3 flex-shrink-0">
                         <button onClick={() => setEditEdition(e)}
@@ -432,7 +432,7 @@ export default function EditBookModal({ libraryId, book, onClose, onSaved, initi
                       <dl className="px-4 py-3 grid grid-cols-2 gap-x-6 gap-y-2">
                         {meta.map(item => (
                           <div key={item.label}>
-                            <dt className="text-xs text-content-subtle ">{item.label}</dt>
+                            <dt className="text-xs text-content-subtle">{item.label}</dt>
                             <dd className="text-xs font-medium text-content-secondary mt-0.5 font-mono">{item.value}</dd>
                           </div>
                         ))}

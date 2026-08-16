@@ -126,7 +126,7 @@ function OllamaModelPicker({
           {loading ? '…' : '↻'}
         </button>
         {error && !loading && (
-          <span className="self-center text-xs text-warning ">{error}</span>
+          <span className="self-center text-xs text-warning">{error}</span>
         )}
       </div>
     )
@@ -266,7 +266,7 @@ function OsaurusModelPicker({
           {loading ? '…' : '↻'}
         </button>
         {error && !loading && (
-          <span className="self-center text-xs text-warning ">{error}</span>
+          <span className="self-center text-xs text-warning">{error}</span>
         )}
       </div>
     )
@@ -417,14 +417,14 @@ function ProviderCard({ provider, onSaved, onActivate, activating }: ProviderCar
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <h3 className="font-semibold text-content ">{provider.display_name}</h3>
+            <h3 className="font-semibold text-content">{provider.display_name}</h3>
             {provider.active && (
-              <span className="inline-flex items-center rounded-full bg-blue-100 dark:bg-blue-900/40 px-2 py-0.5 text-xs font-medium text-accent-strong ">
+              <span className="inline-flex items-center rounded-full bg-blue-100 dark:bg-blue-900/40 px-2 py-0.5 text-xs font-medium text-accent-strong">
                 Active
               </span>
             )}
           </div>
-          <p className="mt-1 text-sm text-content-muted ">{provider.description}</p>
+          <p className="mt-1 text-sm text-content-muted">{provider.description}</p>
         </div>
         <label className="relative inline-flex items-center cursor-pointer shrink-0" title={
           !canToggleOn ? 'Save an API key first' : ''
@@ -441,7 +441,7 @@ function ProviderCard({ provider, onSaved, onActivate, activating }: ProviderCar
       </div>
 
       {provider.help_text && (
-        <div className="mt-3 rounded-lg bg-accent-surface border border-accent-line px-3 py-2 text-sm text-accent-strong ">
+        <div className="mt-3 rounded-lg bg-accent-surface border border-accent-line px-3 py-2 text-sm text-accent-strong">
           {provider.help_text}
           {provider.help_url && (
             <> <a href={provider.help_url} target="_blank" rel="noopener noreferrer" className="font-medium underline hover:no-underline">Learn more →</a></>
@@ -462,7 +462,7 @@ function ProviderCard({ provider, onSaved, onActivate, activating }: ProviderCar
               <label className="block text-xs font-medium text-content-tertiary mb-1">
                 {field.label}
                 {sensitive && provider.has_api_key && (
-                  <span className="ml-1 text-success ">(saved)</span>
+                  <span className="ml-1 text-success">(saved)</span>
                 )}
                 {field.required && !provider.has_api_key && sensitive && (
                   <span className="ml-1 text-gray-400">*</span>
@@ -522,7 +522,7 @@ function ProviderCard({ provider, onSaved, onActivate, activating }: ProviderCar
                 />
               )}
               {field.help_text && (
-                <p className="mt-1 text-xs text-content-muted ">{field.help_text}</p>
+                <p className="mt-1 text-xs text-content-muted">{field.help_text}</p>
               )}
             </div>
           )
@@ -558,16 +558,16 @@ function ProviderCard({ provider, onSaved, onActivate, activating }: ProviderCar
               {activating ? 'Activating…' : 'Set active'}
             </button>
           )}
-          {success && <span className="text-sm text-success ">Saved</span>}
-          {error && <span className="text-sm text-danger ">{error}</span>}
+          {success && <span className="text-sm text-success">Saved</span>}
+          {error && <span className="text-sm text-danger">{error}</span>}
         </div>
         {testState.status === 'ok' && (
-          <div className="rounded-lg bg-green-50 dark:bg-green-900/20 border border-success-line px-3 py-2 text-sm text-success-strong ">
+          <div className="rounded-lg bg-green-50 dark:bg-green-900/20 border border-success-line px-3 py-2 text-sm text-success-strong">
             Connected — reply: <span className="font-medium">{testState.reply}</span>
           </div>
         )}
         {testState.status === 'fail' && (
-          <div className="rounded-lg bg-danger-surface border border-danger-line px-3 py-2 text-sm text-danger-strong ">
+          <div className="rounded-lg bg-danger-surface border border-danger-line px-3 py-2 text-sm text-danger-strong">
             {testState.error}
           </div>
         )}
@@ -655,8 +655,8 @@ function PermissionsCard({ permissions, onSaved }: PermissionsCardProps) {
 
   return (
     <div className="rounded-xl border border-line bg-surface-raised p-5">
-      <h3 className="font-semibold text-content ">Data-access permissions</h3>
-      <p className="mt-1 text-sm text-content-muted ">
+      <h3 className="font-semibold text-content">Data-access permissions</h3>
+      <p className="mt-1 text-sm text-content-muted">
         Controls which personal data the AI may see. Combined restrictively with each user's opt-in — if either
  is off, that category is withheld.
  </p>

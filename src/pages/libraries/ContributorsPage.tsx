@@ -105,8 +105,8 @@ function ContributorModal({
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 overflow-y-auto py-16 p-4" onClick={onClose}>
       <div className="w-full max-w-md rounded-xl bg-surface shadow-xl" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between px-6 py-4 border-b border-line ">
-          <h2 className="text-base font-semibold text-content ">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-line">
+          <h2 className="text-base font-semibold text-content">
             {initial ? 'Edit contributor' : 'Add contributor'}
           </h2>
           <button onClick={onClose} className="text-gray-400 hover:text-content-tertiary text-xl leading-none">×</button>
@@ -115,7 +115,7 @@ function ContributorModal({
           {initial && (
             <div className="flex items-center gap-3">
               <ContributorAvatar photoUrl={initial.photo_url} name={initial.name} size="lg" />
-              <div className="flex-1 text-xs text-content-muted ">
+              <div className="flex-1 text-xs text-content-muted">
                 {libraryId ? (
                   <Link
                     to={`/libraries/${libraryId}/contributors/${initial.id}`}
@@ -149,13 +149,13 @@ function ContributorModal({
                 <input id="list-is-corporate" type="checkbox" checked={isCorporate}
                   onChange={e => setIsCorporate(e.target.checked)}
                   className="h-4 w-4 rounded border-line-strong text-blue-600 focus:ring-blue-500" />
-                <label htmlFor="list-is-corporate" className="text-sm text-content-secondary ">
+                <label htmlFor="list-is-corporate" className="text-sm text-content-secondary">
                   Corporate entity (publisher, studio, etc.)
                 </label>
               </div>
             </>
           )}
-          {error && <p className="text-sm text-danger ">{error}</p>}
+          {error && <p className="text-sm text-danger">{error}</p>}
           <div className="flex gap-2 pt-1">
             <button
               type="submit"
@@ -184,7 +184,7 @@ function Pagination({ page, perPage, total, onPage }: { page: number; perPage: n
   const totalPages = Math.ceil(total / perPage)
   if (totalPages <= 1) return null
   return (
-    <div className="flex items-center justify-between mt-4 text-sm text-content-tertiary ">
+    <div className="flex items-center justify-between mt-4 text-sm text-content-tertiary">
       <span>{((page - 1) * perPage) + 1}–{Math.min(page * perPage, total)} of {total}</span>
       <div className="flex gap-1">
         <button
@@ -497,7 +497,7 @@ export default function ContributorsPage() {
 
       {/* ── Empty ── */}
       {!loading && items.length === 0 && (
-        <div className="text-center py-16 text-content-muted ">
+        <div className="text-center py-16 text-content-muted">
           {search || activeLetter ? 'No contributors match your filter.' : 'No contributors yet — add some books to get started.'}
         </div>
       )}
@@ -506,7 +506,7 @@ export default function ContributorsPage() {
       {!loading && items.length > 0 && viewMode === 'table' && (
         <div className="rounded-xl border border-line bg-surface overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-surface-muted border-b border-line ">
+            <thead className="bg-surface-muted border-b border-line">
               <tr>
                 <th className="w-8 px-3 py-3">
                   <input
@@ -520,18 +520,18 @@ export default function ContributorsPage() {
                     className="rounded border-line-strong text-blue-600 focus:ring-blue-500 cursor-pointer"
                   />
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-content-muted ">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-content-muted">
                   <button type="button" onClick={() => handleSort('sort_name')} className="flex items-center gap-1 hover:text-content-secondary transition-colors">
                     Name {sortIcon('sort_name') ?? <span className="opacity-0">↑</span>}
                   </button>
                 </th>
                 {visibleCols.has('nationality') && (
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-content-muted ">Nationality</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-content-muted">Nationality</th>
                 )}
                 {visibleCols.has('born') && (
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-content-muted ">Born</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-content-muted">Born</th>
                 )}
-                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-content-muted ">
+                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-content-muted">
                   <button type="button" onClick={() => handleSort('book_count')} className="flex items-center gap-1 ml-auto hover:text-content-secondary transition-colors">
                     Books {sortIcon('book_count') ?? <span className="opacity-0">↑</span>}
                   </button>
@@ -539,7 +539,7 @@ export default function ContributorsPage() {
                 <th className="sticky right-0 px-4 py-3 bg-surface-muted w-16" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-line-subtle ">
+            <tbody className="divide-y divide-line-subtle">
               {items.map(c => (
                 <tr key={c.id} className="group hover:bg-surface-muted transition-colors">
                   <td className="w-8 px-3 py-2" onClick={e => e.stopPropagation()}>
@@ -560,17 +560,17 @@ export default function ContributorsPage() {
                       className="flex items-center gap-2.5 hover:text-accent transition-colors"
                     >
                       <ContributorAvatar photoUrl={c.photo_url} name={c.name} />
-                      <span className="font-medium text-content ">{c.name}</span>
+                      <span className="font-medium text-content">{c.name}</span>
                     </Link>
                   </td>
                   {visibleCols.has('nationality') && (
-                    <td className="px-4 py-2 text-content-muted ">
-                      {c.nationality || <span className="text-content-faint ">—</span>}
+                    <td className="px-4 py-2 text-content-muted">
+                      {c.nationality || <span className="text-content-faint">—</span>}
                     </td>
                   )}
                   {visibleCols.has('born') && (
-                    <td className="px-4 py-2 text-content-muted ">
-                      {c.born_date ? new Date(c.born_date).getFullYear() : <span className="text-content-faint ">—</span>}
+                    <td className="px-4 py-2 text-content-muted">
+                      {c.born_date ? new Date(c.born_date).getFullYear() : <span className="text-content-faint">—</span>}
                     </td>
                   )}
                   <td className="px-4 py-2 text-right text-content-muted tabular-nums">
@@ -590,7 +590,7 @@ export default function ContributorsPage() {
                       <button
                         onClick={() => deleteContributor(c)}
                         disabled={c.book_count > 0}
-                        className="p-1.5 rounded text-content-subtle hover:text-danger hover:bg-danger-surface transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-content-subtle "
+                        className="p-1.5 rounded text-content-subtle hover:text-danger hover:bg-danger-surface transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-content-subtle"
                         title={c.book_count > 0 ? 'Cannot delete: has books' : 'Delete'}
                       >
                         <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">

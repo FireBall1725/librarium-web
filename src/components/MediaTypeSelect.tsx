@@ -63,7 +63,7 @@ export default function MediaTypeSelect({ value, mediaTypes, onChange }: Props) 
                       : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
                   }`}
                 >
-                  <span className="mt-0.5 w-4 flex-shrink-0 text-accent ">
+                  <span className="mt-0.5 w-4 flex-shrink-0 text-accent">
                     {isSelected && (
                       <svg viewBox="0 0 16 16" fill="currentColor" className="w-4 h-4">
                         <path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.75.75 0 0 1 1.06-1.06L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0z" />
@@ -71,7 +71,7 @@ export default function MediaTypeSelect({ value, mediaTypes, onChange }: Props) 
                     )}
                   </span>
                   <span className="min-w-0">
-                    <span className="block text-sm font-medium text-content ">{mt.display_name}</span>
+                    <span className="block text-sm font-medium text-content">{mt.display_name}</span>
                     {mt.description && (
                       <span className="block text-xs text-content-muted mt-0.5 leading-snug">{mt.description}</span>
                     )}

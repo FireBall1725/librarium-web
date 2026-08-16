@@ -122,14 +122,14 @@ export default function GenresPage() {
       <div className="max-w-3xl px-8 py-8 space-y-6">
 
       {error && (
-        <div className="rounded-lg bg-danger-surface border border-danger-line px-3 py-2 text-sm text-danger-strong ">
+        <div className="rounded-lg bg-danger-surface border border-danger-line px-3 py-2 text-sm text-danger-strong">
           {error}
         </div>
       )}
 
-      <div className="rounded-xl border border-line overflow-hidden bg-surface ">
+      <div className="rounded-xl border border-line overflow-hidden bg-surface">
         {/* Add row */}
-        <div className="flex items-center gap-2 px-4 py-3 bg-surface-muted border-b border-line ">
+        <div className="flex items-center gap-2 px-4 py-3 bg-surface-muted border-b border-line">
           <input
             ref={inputRef}
             type="text"
@@ -158,11 +158,11 @@ export default function GenresPage() {
             <div className="w-4 h-4 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
           </div>
         ) : genres.length === 0 ? (
-          <p className="px-4 py-6 text-sm text-center text-content-subtle ">
+          <p className="px-4 py-6 text-sm text-center text-content-subtle">
             No genres yet.
           </p>
         ) : (
-          <div className="divide-y divide-line-subtle ">
+          <div className="divide-y divide-line-subtle">
             {genres.map(g => (
               <div key={g.id}>
                 {editingId === g.id ? (
@@ -187,7 +187,7 @@ export default function GenresPage() {
                   </div>
                 ) : (
                   <div className="flex items-center justify-between px-4 py-2.5 group hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
-                    <span className="text-sm text-content-strong ">{g.name}</span>
+                    <span className="text-sm text-content-strong">{g.name}</span>
                     <div className="flex items-center gap-0.5">
                       <button onClick={() => startEdit(g)}
                         className="p-1 rounded text-content-faint group-hover:text-content-subtle hover:!text-blue-500 dark:hover:!text-blue-400 hover:!bg-blue-50 dark:hover:!bg-blue-900/20 transition-colors"

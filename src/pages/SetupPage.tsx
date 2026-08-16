@@ -60,8 +60,8 @@ export default function SetupPage() {
       <div className="w-full max-w-lg">
         <div className="text-center mb-8">
           <img src="/logo.png" alt="Librarium" className="mx-auto h-24 w-auto mb-4" />
-          <h1 className="text-3xl font-bold text-content ">Welcome to Librarium</h1>
-          <p className="mt-2 text-sm text-content-muted ">
+          <h1 className="text-3xl font-bold text-content">Welcome to Librarium</h1>
+          <p className="mt-2 text-sm text-content-muted">
             Let's get your instance set up.
  </p>
  </div>
@@ -208,7 +208,7 @@ function DonePlaceholder({ onContinue }: { onContinue: () => void }) {
     <div className="px-8 py-8 space-y-5">
       <div>
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white">You're in</h2>
-        <p className="mt-1 text-sm text-content-muted ">
+        <p className="mt-1 text-sm text-content-muted">
           Your admin account is ready. More setup steps — branding, your first library,
           connecting metadata providers — will live here in the future. For now, head to
           the dashboard and configure them from the admin settings whenever you're ready.

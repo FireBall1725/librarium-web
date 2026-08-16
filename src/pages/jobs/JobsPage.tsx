@@ -122,30 +122,30 @@ export default function JobsPage() {
       />
       <div className="max-w-3xl px-8 py-8 space-y-6">
         {error && (
-          <div className="mb-6 rounded-lg bg-danger-surface border border-danger-line px-4 py-3 text-sm text-danger-strong ">
+          <div className="mb-6 rounded-lg bg-danger-surface border border-danger-line px-4 py-3 text-sm text-danger-strong">
             {error}
           </div>
         )}
 
         {schedules === null ? (
-          <div className="text-sm text-content-subtle ">Loading…</div>
+          <div className="text-sm text-content-subtle">Loading…</div>
         ) : schedules.length === 0 ? (
           <div className="rounded-xl border border-dashed border-line-strong p-12 text-center">
-            <p className="text-sm font-medium text-content-muted ">No scheduled jobs registered</p>
+            <p className="text-sm font-medium text-content-muted">No scheduled jobs registered</p>
           </div>
         ) : (
           <div className="rounded-xl border border-line bg-surface overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="bg-surface-muted border-b border-line ">
+              <thead className="bg-surface-muted border-b border-line">
                 <tr>
                   {['Name', 'Cron', 'Next run', 'Enabled', ''].map(h => (
-                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-content-muted ">
+                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-content-muted">
                       {h}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-line-subtle ">
+              <tbody className="divide-y divide-line-subtle">
                 {schedules.map(s => (
                   <tr
                     key={s.kind}
@@ -153,7 +153,7 @@ export default function JobsPage() {
                     className="hover:bg-surface-muted transition-colors cursor-pointer"
                   >
                     <td className="px-4 py-3">
-                      <p className="font-medium text-content ">{s.display_name}</p>
+                      <p className="font-medium text-content">{s.display_name}</p>
                       {s.description && (
                         <p className="text-xs text-content-subtle max-w-md">
                           {s.description}
@@ -166,7 +166,7 @@ export default function JobsPage() {
                     <td className="px-4 py-3 text-xs text-content-tertiary whitespace-nowrap">
                       {s.enabled && s.next_fire_at
                         ? formatCountdown(new Date(s.next_fire_at).getTime() - now)
-                        : <span className="text-content-faint ">—</span>}
+                        : <span className="text-content-faint">—</span>}
                     </td>
                     <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                       <label className="relative inline-flex items-center cursor-pointer">

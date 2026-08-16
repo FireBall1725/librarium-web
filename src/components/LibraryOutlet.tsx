@@ -84,13 +84,13 @@ export default function LibraryOutlet() {
           </Link>
           {library && (
             <>
-              <span className="text-content-faint ">/</span>
+              <span className="text-content-faint">/</span>
               <span className="text-content-muted truncate max-w-xs">{library.name}</span>
             </>
           )}
           {extraCrumbs.map((crumb, i) => (
             <Fragment key={i}>
-              <span className="text-content-faint ">/</span>
+              <span className="text-content-faint">/</span>
               {crumb.to ? (
                 <Link to={crumb.to} className="text-content-muted hover:text-content-secondary transition-colors truncate max-w-xs">
                   {crumb.label}
@@ -102,11 +102,11 @@ export default function LibraryOutlet() {
           ))}
         </nav>
         {extraCrumbs.length > 0 ? (
-          <h1 className="text-xl font-bold text-content ">
+          <h1 className="text-xl font-bold text-content">
             {extraCrumbs[extraCrumbs.length - 1].label}
           </h1>
         ) : (
-          library && <h1 className="text-xl font-bold text-content ">{library.name}</h1>
+          library && <h1 className="text-xl font-bold text-content">{library.name}</h1>
         )}
 
         {/* Library section tabs (hidden when rendering deeper views with their own crumbs) */}

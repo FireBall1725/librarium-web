@@ -139,12 +139,12 @@ export default function MediaTypesPage() {
       <div className="max-w-3xl px-8 py-8 space-y-6">
 
         {error && (
-          <div className="rounded-lg bg-danger-surface border border-danger-line px-3 py-2 text-sm text-danger-strong ">
+          <div className="rounded-lg bg-danger-surface border border-danger-line px-3 py-2 text-sm text-danger-strong">
             {error}
           </div>
         )}
 
-        <div className="rounded-xl border border-line overflow-hidden bg-surface ">
+        <div className="rounded-xl border border-line overflow-hidden bg-surface">
           {/* Add form */}
           <div className="px-4 py-3 bg-surface-muted border-b border-line space-y-2">
             <div className="flex items-center gap-2">
@@ -191,11 +191,11 @@ export default function MediaTypesPage() {
               <div className="w-4 h-4 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
             </div>
           ) : mediaTypes.length === 0 ? (
-            <p className="px-4 py-6 text-sm text-center text-content-subtle ">
+            <p className="px-4 py-6 text-sm text-center text-content-subtle">
               No media types yet.
             </p>
           ) : (
-            <div className="divide-y divide-line-subtle ">
+            <div className="divide-y divide-line-subtle">
               {mediaTypes.map(mt => (
                 <div key={mt.id}>
                   {editingId === mt.id ? (
@@ -238,15 +238,15 @@ export default function MediaTypesPage() {
                       <div className="flex items-start justify-between px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
                         <div className="min-w-0">
                           <div className="flex items-baseline gap-2">
-                            <span className="text-sm font-medium text-content-strong ">{mt.display_name}</span>
+                            <span className="text-sm font-medium text-content-strong">{mt.display_name}</span>
                             {mt.book_count > 0 && (
-                              <span className="text-xs text-content-subtle ">
+                              <span className="text-xs text-content-subtle">
                                 {mt.book_count} {mt.book_count === 1 ? 'book' : 'books'}
                               </span>
                             )}
                           </div>
                           {mt.description && (
-                            <p className="mt-0.5 text-xs text-content-muted ">{mt.description}</p>
+                            <p className="mt-0.5 text-xs text-content-muted">{mt.description}</p>
                           )}
                         </div>
                         <div className="ml-4 flex-shrink-0 flex items-center gap-0.5">
@@ -275,7 +275,7 @@ export default function MediaTypesPage() {
                         </div>
                       </div>
                       {deleteErrors[mt.id] && (
-                        <p className="px-4 pb-2 text-xs text-danger ">
+                        <p className="px-4 pb-2 text-xs text-danger">
                           {deleteErrors[mt.id]}
                         </p>
                       )}

@@ -100,7 +100,7 @@ function ProviderCard({ provider, onSaved }: ProviderCardProps) {
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <h3 className="font-semibold text-content ">{provider.display_name}</h3>
+            <h3 className="font-semibold text-content">{provider.display_name}</h3>
             {provider.capabilities.map(cap => {
               const meta = CAP_LABELS[cap]
               return (
@@ -110,12 +110,12 @@ function ProviderCard({ provider, onSaved }: ProviderCardProps) {
               )
             })}
             {isTest && (
-              <span className="inline-flex items-center rounded-full bg-amber-100 dark:bg-amber-900/40 px-2 py-0.5 text-xs font-medium text-warning-strong ">
+              <span className="inline-flex items-center rounded-full bg-amber-100 dark:bg-amber-900/40 px-2 py-0.5 text-xs font-medium text-warning-strong">
                 Built-in
               </span>
             )}
           </div>
-          <p className="mt-1 text-sm text-content-muted ">{provider.description}</p>
+          <p className="mt-1 text-sm text-content-muted">{provider.description}</p>
         </div>
 
         {!isTest && (
@@ -135,7 +135,7 @@ function ProviderCard({ provider, onSaved }: ProviderCardProps) {
       {hasConfigFields && !isTest && (
         <div className="mt-3 space-y-2">
           {provider.help_text && (
-            <div className="rounded-lg bg-accent-surface border border-accent-line px-3 py-2 text-sm text-accent-strong ">
+            <div className="rounded-lg bg-accent-surface border border-accent-line px-3 py-2 text-sm text-accent-strong">
               {provider.help_text}
               {provider.help_url && (
                 <> <a href={provider.help_url} target="_blank" rel="noopener noreferrer" className="font-medium underline hover:no-underline">Learn more →</a></>
@@ -149,7 +149,7 @@ function ProviderCard({ provider, onSaved }: ProviderCardProps) {
             return (
               <div key={field.key}>
                 <label className="block text-xs font-medium text-content-tertiary mb-1">
-                  {field.label} {isSaved && <span className="text-success ">(saved)</span>}
+                  {field.label} {isSaved && <span className="text-success">(saved)</span>}
                 </label>
                 <input
                   type={inputType}
@@ -159,7 +159,7 @@ function ProviderCard({ provider, onSaved }: ProviderCardProps) {
                   className="w-full rounded-lg border border-line-strong dark:bg-gray-700 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
                 {field.help_text && (
-                  <p className="mt-1 text-xs text-content-muted ">{field.help_text}</p>
+                  <p className="mt-1 text-xs text-content-muted">{field.help_text}</p>
                 )}
               </div>
             )
@@ -170,7 +170,7 @@ function ProviderCard({ provider, onSaved }: ProviderCardProps) {
       {!hasConfigFields && provider.requires_key && !isTest && (
         <div className="mt-3 space-y-2">
           {provider.help_text && (
-            <div className="rounded-lg bg-accent-surface border border-accent-line px-3 py-2 text-sm text-accent-strong ">
+            <div className="rounded-lg bg-accent-surface border border-accent-line px-3 py-2 text-sm text-accent-strong">
               {provider.help_text}
               {provider.help_url && (
                 <> <a href={provider.help_url} target="_blank" rel="noopener noreferrer" className="font-medium underline hover:no-underline">Get API key →</a></>
@@ -179,7 +179,7 @@ function ProviderCard({ provider, onSaved }: ProviderCardProps) {
           )}
           <div>
             <label className="block text-xs font-medium text-content-tertiary mb-1">
-              API Key {provider.has_api_key && <span className="text-success ">(saved)</span>}
+              API Key {provider.has_api_key && <span className="text-success">(saved)</span>}
             </label>
             <input
               type="password"
@@ -203,16 +203,16 @@ function ProviderCard({ provider, onSaved }: ProviderCardProps) {
               className="rounded-lg border border-line-strong px-3 py-1.5 text-sm font-medium text-content-secondary hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors">
               {testState.status === 'testing' ? 'Testing…' : 'Test'}
             </button>
-            {success && <span className="text-sm text-success ">Saved</span>}
-            {error && <span className="text-sm text-danger ">{error}</span>}
+            {success && <span className="text-sm text-success">Saved</span>}
+            {error && <span className="text-sm text-danger">{error}</span>}
           </div>
           {testState.status === 'ok' && (
-            <div className="rounded-lg bg-green-50 dark:bg-green-900/20 border border-success-line px-3 py-2 text-sm text-success-strong ">
+            <div className="rounded-lg bg-green-50 dark:bg-green-900/20 border border-success-line px-3 py-2 text-sm text-success-strong">
               Connected — returned: <span className="font-medium">{testState.title}</span>
             </div>
           )}
           {testState.status === 'fail' && (
-            <div className="rounded-lg bg-danger-surface border border-danger-line px-3 py-2 text-sm text-danger-strong ">
+            <div className="rounded-lg bg-danger-surface border border-danger-line px-3 py-2 text-sm text-danger-strong">
               {testState.error}
             </div>
           )}
@@ -284,23 +284,23 @@ export default function MetadataPage() {
       <div className="max-w-3xl px-8 py-8 space-y-8">
 
         {error && (
-          <div className="rounded-lg bg-danger-surface border border-danger-line p-4 text-sm text-danger-strong ">
+          <div className="rounded-lg bg-danger-surface border border-danger-line p-4 text-sm text-danger-strong">
             {error}
           </div>
         )}
 
         {loading ? (
-          <div className="flex items-center justify-center py-20 text-content-muted ">
+          <div className="flex items-center justify-center py-20 text-content-muted">
             Loading…
           </div>
         ) : (
           <>
             {/* All providers in one section */}
             <section>
-              <h2 className="mb-1 text-sm font-semibold uppercase tracking-wider text-content-muted ">
+              <h2 className="mb-1 text-sm font-semibold uppercase tracking-wider text-content-muted">
                 Providers
               </h2>
-              <p className="mb-3 text-xs text-content-subtle ">
+              <p className="mb-3 text-xs text-content-subtle">
                 Each provider can support multiple capabilities. Badges indicate what each provider can do.
               </p>
               <div className="space-y-3">
@@ -313,19 +313,19 @@ export default function MetadataPage() {
             {/* Search order — only meaningful when multiple book providers are enabled */}
             {providerOrder.length > 1 && (
               <section>
-                <h2 className="mb-1 text-sm font-semibold uppercase tracking-wider text-content-muted ">
+                <h2 className="mb-1 text-sm font-semibold uppercase tracking-wider text-content-muted">
                   Search Order
                 </h2>
-                <p className="mb-3 text-xs text-content-subtle ">
+                <p className="mb-3 text-xs text-content-subtle">
                   When multiple providers return conflicting data for the same book, the higher-ranked provider wins.
                 </p>
-                <div className="rounded-xl border border-line overflow-hidden bg-surface-raised divide-y divide-line-subtle ">
+                <div className="rounded-xl border border-line overflow-hidden bg-surface-raised divide-y divide-line-subtle">
                   {providerOrder.map((name, idx) => {
                     const p = providers.find(p => p.name === name)
                     return (
                       <div key={name} className="flex items-center gap-3 px-4 py-3">
-                        <span className="w-5 text-center text-xs font-semibold text-content-subtle ">{idx + 1}</span>
-                        <span className="flex-1 text-sm font-medium text-content-strong ">
+                        <span className="w-5 text-center text-xs font-semibold text-content-subtle">{idx + 1}</span>
+                        <span className="flex-1 text-sm font-medium text-content-strong">
                           {p?.display_name ?? name}
                         </span>
                         <div className="flex gap-1">
@@ -353,7 +353,7 @@ export default function MetadataPage() {
                     className="rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
                     {orderSaving ? 'Saving…' : 'Save order'}
                   </button>
-                  {orderSaved && <span className="text-sm text-success ">Saved</span>}
+                  {orderSaved && <span className="text-sm text-success">Saved</span>}
                 </div>
               </section>
             )}

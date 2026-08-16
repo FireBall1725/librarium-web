@@ -85,7 +85,7 @@ export default function AccountTab() {
         <SectionHeading label="Profile" />
         <form onSubmit={handleProfileSave} className={cardClass}>
           <FieldRow label="Username">
-            <p className="text-sm text-content-secondary ">{user?.username}</p>
+            <p className="text-sm text-content-secondary">{user?.username}</p>
           </FieldRow>
           <FieldRow label="Display name" htmlFor="display-name">
             <input

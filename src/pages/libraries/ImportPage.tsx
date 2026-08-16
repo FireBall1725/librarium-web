@@ -346,20 +346,20 @@ export default function ImportPage() {
                 <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <p className="font-medium text-content ">{csvFile.name}</p>
-                <p className="text-xs text-content-muted ">
+                <p className="font-medium text-content">{csvFile.name}</p>
+                <p className="text-xs text-content-muted">
                   {headers.length} column{headers.length !== 1 ? 's' : ''} detected &mdash; click to change file
                 </p>
               </div>
             ) : (
               <div className="flex flex-col items-center gap-2">
-                <svg className="w-8 h-8 text-content-subtle " fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-8 h-8 text-content-subtle" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                 </svg>
-                <p className="font-medium text-content-secondary ">
+                <p className="font-medium text-content-secondary">
                   Drop a CSV file here, or click to browse
                 </p>
-                <p className="text-xs text-content-subtle ">CSV, TSV, or TXT with comma/semicolon/tab delimiters</p>
+                <p className="text-xs text-content-subtle">CSV, TSV, or TXT with comma/semicolon/tab delimiters</p>
               </div>
             )}
           </div>
@@ -368,19 +368,19 @@ export default function ImportPage() {
           {headers.length > 0 && (
             <div>
               <h3 className="text-base font-semibold text-content mb-3">Column Mapping</h3>
-              <div className="rounded-xl border border-line overflow-hidden bg-surface ">
+              <div className="rounded-xl border border-line overflow-hidden bg-surface">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="bg-surface-muted border-b border-line ">
+                    <tr className="bg-surface-muted border-b border-line">
                       <th className="text-left px-4 py-2.5 font-semibold text-content-tertiary w-2/5">Book Field</th>
                       <th className="text-left px-4 py-2.5 font-semibold text-content-tertiary w-2/5">CSV Column</th>
                       <th className="text-left px-4 py-2.5 font-semibold text-content-tertiary w-1/5">Prefer CSV</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-line-subtle ">
+                  <tbody className="divide-y divide-line-subtle">
                     {IMPORT_FIELDS.map(field => (
                       <tr key={field.value} className="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
-                        <td className="px-4 py-2.5 font-medium text-content-strong ">
+                        <td className="px-4 py-2.5 font-medium text-content-strong">
                           {field.label}
                         </td>
                         <td className="px-4 py-2.5">
@@ -406,10 +406,10 @@ export default function ImportPage() {
                                 onChange={e => setPreferCsv(prev => ({ ...prev, [field.value]: e.target.checked }))}
                                 className="w-4 h-4 rounded border-line-strong text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
                               />
-                              <span className="text-xs text-content-muted ">Over lookup</span>
+                              <span className="text-xs text-content-muted">Over lookup</span>
                             </label>
                           ) : (
-                            <span className="text-xs text-content-faint ">—</span>
+                            <span className="text-xs text-content-faint">—</span>
                           )}
                         </td>
                       </tr>
@@ -418,7 +418,7 @@ export default function ImportPage() {
                 </table>
               </div>
               {mappedFields.size === 0 && (
-                <p className="mt-2 text-xs text-warning ">
+                <p className="mt-2 text-xs text-warning">
                   Map at least one field to proceed.
                 </p>
               )}
@@ -429,10 +429,10 @@ export default function ImportPage() {
           {headers.length > 0 && (
             <div>
               <h3 className="text-base font-semibold text-content mb-3">Import Options</h3>
-              <div className="rounded-xl border border-line bg-surface divide-y divide-line-subtle ">
+              <div className="rounded-xl border border-line bg-surface divide-y divide-line-subtle">
                 <div className="flex items-center justify-between px-4 py-3.5">
                   <div>
-                    <p className="text-sm font-medium text-content-strong ">Skip duplicates</p>
+                    <p className="text-sm font-medium text-content-strong">Skip duplicates</p>
                     <p className="text-xs text-content-muted mt-0.5">Books already in the library will be skipped</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
@@ -447,7 +447,7 @@ export default function ImportPage() {
                 </div>
                 <div className="flex items-center justify-between px-4 py-3.5">
                   <div>
-                    <p className="text-sm font-medium text-content-strong ">Default format</p>
+                    <p className="text-sm font-medium text-content-strong">Default format</p>
                     <p className="text-xs text-content-muted mt-0.5">Applied when the CSV does not specify a format</p>
                   </div>
                   <select
@@ -462,7 +462,7 @@ export default function ImportPage() {
                 </div>
                 <div className="flex items-center justify-between px-4 py-3.5">
                   <div>
-                    <p className="text-sm font-medium text-content-strong ">Use metadata lookup for missing data</p>
+                    <p className="text-sm font-medium text-content-strong">Use metadata lookup for missing data</p>
                     <p className="text-xs text-content-muted mt-0.5">After import, look up each book from metadata providers to fill in any blank fields (runs in background)</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
@@ -472,7 +472,7 @@ export default function ImportPage() {
                 </div>
                 <div className="flex items-center justify-between px-4 py-3.5">
                   <div>
-                    <p className="text-sm font-medium text-content-strong ">Fetch cover images from metadata</p>
+                    <p className="text-sm font-medium text-content-strong">Fetch cover images from metadata</p>
                     <p className="text-xs text-content-muted mt-0.5">After import, download cover art for each book from metadata providers (runs in background)</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
@@ -485,7 +485,7 @@ export default function ImportPage() {
           )}
 
           {submitError && (
-            <div className="rounded-lg bg-danger-surface border border-danger-line px-4 py-3 text-sm text-danger-strong ">
+            <div className="rounded-lg bg-danger-surface border border-danger-line px-4 py-3 text-sm text-danger-strong">
               {submitError}
             </div>
           )}
@@ -508,12 +508,12 @@ export default function ImportPage() {
           <div className="rounded-xl border border-line bg-surface p-6">
             <div className="mb-4">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-sm font-medium text-content-secondary ">
+                <span className="text-sm font-medium text-content-secondary">
                   {importJob.status === 'pending'
                     ? 'Queued…'
                     : `Processing… ${importJob.processed_rows}/${importJob.total_rows} rows`}
                 </span>
-                <span className="text-sm text-content-muted ">
+                <span className="text-sm text-content-muted">
                   {importJob.total_rows > 0
                     ? `${Math.round((importJob.processed_rows / importJob.total_rows) * 100)}%`
                     : '—'}
@@ -533,21 +533,21 @@ export default function ImportPage() {
 
             <div className="grid grid-cols-3 gap-4 mt-5">
               <div className="rounded-lg bg-surface-muted px-4 py-3 text-center">
-                <p className="text-xl font-bold text-content ">{importJob.processed_rows}</p>
+                <p className="text-xl font-bold text-content">{importJob.processed_rows}</p>
                 <p className="text-xs text-content-muted mt-0.5">Processed</p>
               </div>
               <div className="rounded-lg bg-danger-surface px-4 py-3 text-center">
-                <p className="text-xl font-bold text-danger ">{importJob.failed_rows}</p>
+                <p className="text-xl font-bold text-danger">{importJob.failed_rows}</p>
                 <p className="text-xs text-content-muted mt-0.5">Failed</p>
               </div>
               <div className="rounded-lg bg-warning-surface px-4 py-3 text-center">
-                <p className="text-xl font-bold text-warning ">{importJob.skipped_rows}</p>
+                <p className="text-xl font-bold text-warning">{importJob.skipped_rows}</p>
                 <p className="text-xs text-content-muted mt-0.5">Skipped</p>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 text-sm text-content-subtle ">
+          <div className="flex items-center gap-2 text-sm text-content-subtle">
             <div className="w-3 h-3 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
             Checking for updates every 2 seconds…
           </div>
@@ -565,13 +565,13 @@ export default function ImportPage() {
             <div className="flex items-center gap-3 mb-4">
               {importJob.status === 'failed' ? (
                 <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-5 h-5 text-danger " fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-danger" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </div>
               ) : (
                 <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-5 h-5 text-success " fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
@@ -592,15 +592,15 @@ export default function ImportPage() {
 
             <div className="grid grid-cols-3 gap-4">
               <div className="rounded-lg bg-surface px-4 py-3 text-center">
-                <p className="text-2xl font-bold text-content ">{importJob.processed_rows}</p>
+                <p className="text-2xl font-bold text-content">{importJob.processed_rows}</p>
                 <p className="text-xs text-content-muted mt-0.5">Processed</p>
               </div>
               <div className="rounded-lg bg-surface px-4 py-3 text-center">
-                <p className="text-2xl font-bold text-danger ">{importJob.failed_rows}</p>
+                <p className="text-2xl font-bold text-danger">{importJob.failed_rows}</p>
                 <p className="text-xs text-content-muted mt-0.5">Failed</p>
               </div>
               <div className="rounded-lg bg-surface px-4 py-3 text-center">
-                <p className="text-2xl font-bold text-warning ">{importJob.skipped_rows}</p>
+                <p className="text-2xl font-bold text-warning">{importJob.skipped_rows}</p>
                 <p className="text-xs text-content-muted mt-0.5">Skipped</p>
               </div>
             </div>

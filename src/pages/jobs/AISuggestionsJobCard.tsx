@@ -89,7 +89,7 @@ export default function AISuggestionsJobCard({ onRunKicked }: AISuggestionsJobCa
 
   if (loading) {
     return (
-      <div className="border border-line rounded-xl bg-surface px-5 py-4 text-sm text-content-muted ">
+      <div className="border border-line rounded-xl bg-surface px-5 py-4 text-sm text-content-muted">
         Loading job config…
       </div>
     )
@@ -97,14 +97,14 @@ export default function AISuggestionsJobCard({ onRunKicked }: AISuggestionsJobCa
 
   if (!config) {
     return (
-      <div className="border border-line rounded-xl bg-surface px-5 py-4 text-sm text-danger ">
+      <div className="border border-line rounded-xl bg-surface px-5 py-4 text-sm text-danger">
         {error ?? 'Failed to load job config.'}
       </div>
     )
   }
 
   return (
-    <div className="border border-line rounded-xl overflow-hidden bg-surface ">
+    <div className="border border-line rounded-xl overflow-hidden bg-surface">
       <button
         type="button"
         onClick={() => setExpanded(e => !e)}
@@ -119,7 +119,7 @@ export default function AISuggestionsJobCard({ onRunKicked }: AISuggestionsJobCa
           </svg>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-content ">AI suggestions</span>
+              <span className="text-sm font-medium text-content">AI suggestions</span>
               <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
                 config.enabled
                   ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300'
@@ -150,7 +150,7 @@ export default function AISuggestionsJobCard({ onRunKicked }: AISuggestionsJobCa
           {/* Enabled */}
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <p className="text-sm font-medium text-content ">Enabled</p>
+              <p className="text-sm font-medium text-content">Enabled</p>
               <p className="text-xs text-content-muted mt-0.5">
                 Master switch. When off, the scheduler won't enqueue any runs.
               </p>
@@ -171,7 +171,7 @@ export default function AISuggestionsJobCard({ onRunKicked }: AISuggestionsJobCa
               individual user so they don't get a new run more often than
               this even if the cron fires more frequently. */}
           <div>
-            <label className="block text-sm font-medium text-content ">Per-user cooldown</label>
+            <label className="block text-sm font-medium text-content">Per-user cooldown</label>
             <p className="text-xs text-content-muted mt-0.5">
               Minimum time between scheduled runs for the same user. Manual and admin runs bypass this.
             </p>
@@ -183,14 +183,14 @@ export default function AISuggestionsJobCard({ onRunKicked }: AISuggestionsJobCa
                 onChange={e => set('interval_minutes', Math.max(0, Number(e.target.value)))}
                 className="w-28 rounded-md border border-line-strong dark:bg-gray-800 dark:text-white px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
-              <span className="text-xs text-content-muted ">minutes</span>
+              <span className="text-xs text-content-muted">minutes</span>
             </div>
           </div>
 
           {/* Per-user caps */}
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
-              <label className="block text-sm font-medium text-content ">Max buy suggestions / run</label>
+              <label className="block text-sm font-medium text-content">Max buy suggestions / run</label>
               <input
                 type="number"
                 min={0}
@@ -200,7 +200,7 @@ export default function AISuggestionsJobCard({ onRunKicked }: AISuggestionsJobCa
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-content ">Max read-next suggestions / run</label>
+              <label className="block text-sm font-medium text-content">Max read-next suggestions / run</label>
               <input
                 type="number"
                 min={0}
@@ -214,7 +214,7 @@ export default function AISuggestionsJobCard({ onRunKicked }: AISuggestionsJobCa
           {/* Include taste profile */}
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <p className="text-sm font-medium text-content ">Include taste profile in prompt</p>
+              <p className="text-sm font-medium text-content">Include taste profile in prompt</p>
               <p className="text-xs text-content-muted mt-0.5">
                 Still gated by each user's opt-in and the deployment permission toggle.
               </p>

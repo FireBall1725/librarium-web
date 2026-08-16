@@ -158,8 +158,8 @@ function ChipSubcategory({
 
   return (
     <div>
-      <h3 className="text-sm font-semibold text-content ">{title}</h3>
-      <p className="mt-0.5 text-xs text-content-muted ">{description}</p>
+      <h3 className="text-sm font-semibold text-content">{title}</h3>
+      <p className="mt-0.5 text-xs text-content-muted">{description}</p>
       <div className="mt-3 flex flex-wrap gap-2">
         {allItems.map(item => (
           <TriChip
@@ -261,7 +261,7 @@ export default function TasteProfileForm({ disabled }: TasteProfileFormProps) {
 
   if (loading) {
     return (
-      <div className="rounded-xl border border-line bg-surface p-6 text-sm text-content-muted ">
+      <div className="rounded-xl border border-line bg-surface p-6 text-sm text-content-muted">
         Loading taste profile…
       </div>
     )
@@ -305,8 +305,8 @@ export default function TasteProfileForm({ disabled }: TasteProfileFormProps) {
       </div>
 
       <div className="rounded-xl border border-line bg-surface p-6">
-        <h3 className="text-sm font-semibold text-content ">Era</h3>
-        <p className="mt-0.5 text-xs text-content-muted ">Time period you gravitate toward.</p>
+        <h3 className="text-sm font-semibold text-content">Era</h3>
+        <p className="mt-0.5 text-xs text-content-muted">Time period you gravitate toward.</p>
         <div className="mt-3 flex flex-wrap gap-2">
           {ERA_OPTIONS.map(opt => {
             const active = (profile.era ?? '') === opt.value
@@ -329,8 +329,8 @@ export default function TasteProfileForm({ disabled }: TasteProfileFormProps) {
       </div>
 
       <div className="rounded-xl border border-line bg-surface p-6">
-        <h3 className="text-sm font-semibold text-content ">Favourite authors</h3>
-        <p className="mt-0.5 text-xs text-content-muted ">Comma-separated. Three to five works best.</p>
+        <h3 className="text-sm font-semibold text-content">Favourite authors</h3>
+        <p className="mt-0.5 text-xs text-content-muted">Comma-separated. Three to five works best.</p>
         <input
           type="text"
           value={(profile.favourite_authors ?? []).join(', ')}
@@ -341,8 +341,8 @@ export default function TasteProfileForm({ disabled }: TasteProfileFormProps) {
       </div>
 
       <div className="rounded-xl border border-line bg-surface p-6">
-        <h3 className="text-sm font-semibold text-content ">Hard nos / content boundaries</h3>
-        <p className="mt-0.5 text-xs text-content-muted ">
+        <h3 className="text-sm font-semibold text-content">Hard nos / content boundaries</h3>
+        <p className="mt-0.5 text-xs text-content-muted">
           Anything the AI should steer away from (free-form).
         </p>
         <textarea
@@ -363,7 +363,7 @@ export default function TasteProfileForm({ disabled }: TasteProfileFormProps) {
         >
           {saving ? 'Saving…' : 'Save taste profile'}
         </button>
-        {error && <span className="text-sm text-danger ">{error}</span>}
+        {error && <span className="text-sm text-danger">{error}</span>}
       </div>
     </div>
   )

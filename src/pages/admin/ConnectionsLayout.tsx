@@ -5,7 +5,7 @@ import { Outlet } from 'react-router-dom'
 
 export default function ConnectionsLayout() {
   return (
-    <div className="h-full overflow-auto bg-surface-muted ">
+    <div className="h-full overflow-auto bg-surface-muted">
       <Outlet />
     </div>
   )

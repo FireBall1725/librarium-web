@@ -149,7 +149,7 @@ export default function SuggestionCard({ suggestion, onChanged }: SuggestionCard
               <button
                 type="button"
                 onClick={() => block('book')}
-                className="block w-full text-left px-3 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 text-content-secondary "
+                className="block w-full text-left px-3 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 text-content-secondary"
               >
                 Block this book
               </button>
@@ -157,7 +157,7 @@ export default function SuggestionCard({ suggestion, onChanged }: SuggestionCard
                 <button
                   type="button"
                   onClick={() => block('author')}
-                  className="block w-full text-left px-3 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 text-content-secondary "
+                  className="block w-full text-left px-3 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 text-content-secondary"
                 >
                   Block by {suggestion.author}
                 </button>

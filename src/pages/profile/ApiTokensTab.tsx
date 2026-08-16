@@ -170,13 +170,13 @@ function TokenRow({ token, onRevoke }: { token: APIToken; onRevoke: (id: string)
     <div className="px-6 py-4 flex items-start gap-4">
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <p className="text-sm font-medium text-content ">{token.name}</p>
-          <span className="rounded bg-surface-inset px-2 py-0.5 text-xs text-content-tertiary ">
+          <p className="text-sm font-medium text-content">{token.name}</p>
+          <span className="rounded bg-surface-inset px-2 py-0.5 text-xs text-content-tertiary">
             {scopeLabel}
           </span>
         </div>
         <p className="mt-1 font-mono text-xs text-content-muted truncate">{masked}</p>
-        <p className="mt-1 text-xs text-content-subtle ">
+        <p className="mt-1 text-xs text-content-subtle">
           Created {formatDate(token.created_at)}
           {token.last_used_at
             ? ` · last used ${formatDate(token.last_used_at)}`
@@ -288,7 +288,7 @@ function CreateTokenModal({
                   className="mt-0.5 accent-blue-600"
                 />
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-content ">{PRESET_LABELS[p].title}</p>
+                  <p className="text-sm font-medium text-content">{PRESET_LABELS[p].title}</p>
                   <p className="text-xs text-content-muted mt-0.5">{PRESET_LABELS[p].body}</p>
                 </div>
               </label>

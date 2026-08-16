@@ -85,7 +85,7 @@ export default function ContributorRow({ contributor, role, onContributorChange,
             {query.trim().length >= 2 && (
               <li>
                 <button type="button" onMouseDown={e => e.preventDefault()} onClick={createAndSelect}
-                  className="w-full text-left px-3 py-2 text-sm text-blue-600 hover:bg-accent-surface transition-colors border-t border-line-subtle ">
+                  className="w-full text-left px-3 py-2 text-sm text-blue-600 hover:bg-accent-surface transition-colors border-t border-line-subtle">
                   + Create "{query.trim()}"
                 </button>
               </li>

@@ -4,7 +4,7 @@
 export default function GeneralPage() {
   return (
     <div className="p-8 max-w-2xl">
-      <div className="rounded-xl border border-dashed border-line-strong p-10 text-center text-sm text-content-subtle ">
+      <div className="rounded-xl border border-dashed border-line-strong p-10 text-center text-sm text-content-subtle">
         Coming soon
       </div>
     </div>

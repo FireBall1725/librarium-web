@@ -32,12 +32,12 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-surface-muted ">
+    <div className="min-h-screen flex items-center justify-center bg-surface-muted">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <img src="/logo.png" alt="Librarium" className="mx-auto h-32 w-auto mb-4" />
-          <h1 className="text-3xl font-bold text-content ">{t('app.name')}</h1>
-          <p className="mt-1 text-sm text-content-muted ">{t('auth.sign_in_subtitle')}</p>
+          <h1 className="text-3xl font-bold text-content">{t('app.name')}</h1>
+          <p className="mt-1 text-sm text-content-muted">{t('auth.sign_in_subtitle')}</p>
         </div>
 
         <div className="bg-surface rounded-xl border border-line shadow-sm px-8 py-8">
@@ -85,7 +85,7 @@ export default function LoginPage() {
             </label>
 
             {error && (
-              <div className="rounded-lg bg-danger-surface border border-danger-line px-3 py-2 text-sm text-danger-strong ">
+              <div className="rounded-lg bg-danger-surface border border-danger-line px-3 py-2 text-sm text-danger-strong">
                 {error}
               </div>
             )}
@@ -100,7 +100,7 @@ export default function LoginPage() {
           </form>
         </div>
 
-        <p className="mt-4 text-center text-xs text-content-subtle ">
+        <p className="mt-4 text-center text-xs text-content-subtle">
           v{__APP_VERSION__}
         </p>
       </div>

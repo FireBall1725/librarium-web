@@ -180,14 +180,14 @@ export default function BookDetailPage() {
   if (error) {
     return (
       <div className="p-8">
-        <div className="rounded-lg bg-danger-surface border border-danger-line px-4 py-3 text-sm text-danger-strong ">
+        <div className="rounded-lg bg-danger-surface border border-danger-line px-4 py-3 text-sm text-danger-strong">
           {error}
         </div>
       </div>
     )
   }
   if (!book) {
-    return <div className="p-8 text-sm text-content-subtle ">Loading…</div>
+    return <div className="p-8 text-sm text-content-subtle">Loading…</div>
   }
 
   const metaItems = [
@@ -203,7 +203,7 @@ export default function BookDetailPage() {
         {/* ── Left: cover ── */}
         <div className="w-48 flex-shrink-0 space-y-4">
           <BookCover title={book.title} coverUrl={book.cover_url} className="w-full" />
-          <div className="rounded-md border border-dashed border-line-strong px-3 py-2 text-xs text-content-muted ">
+          <div className="rounded-md border border-dashed border-line-strong px-3 py-2 text-xs text-content-muted">
             Not in any library yet
           </div>
         </div>
@@ -212,12 +212,12 @@ export default function BookDetailPage() {
         <div className="flex-1 min-w-0 space-y-5">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <h1 className="text-2xl font-semibold text-content ">{book.title}</h1>
+              <h1 className="text-2xl font-semibold text-content">{book.title}</h1>
               {book.subtitle && (
-                <p className="mt-1 text-base text-content-tertiary ">{book.subtitle}</p>
+                <p className="mt-1 text-base text-content-tertiary">{book.subtitle}</p>
               )}
               {book.contributors && book.contributors.length > 0 && (
-                <p className="mt-2 text-sm text-content-secondary ">
+                <p className="mt-2 text-sm text-content-secondary">
                   {book.contributors.filter(c => c.role === 'author').map(c => c.name).join(', ')}
                 </p>
               )}
@@ -263,8 +263,8 @@ export default function BookDetailPage() {
             <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
               {metaItems.map(m => (
                 <div key={m.label} className="flex gap-2">
-                  <dt className="text-content-muted ">{m.label}:</dt>
-                  <dd className="text-content-strong ">{m.value}</dd>
+                  <dt className="text-content-muted">{m.label}:</dt>
+                  <dd className="text-content-strong">{m.value}</dd>
                 </div>
               ))}
             </dl>
@@ -306,7 +306,7 @@ export default function BookDetailPage() {
                     <button
                       type="button"
                       onClick={() => blockSuggestion('book')}
-                      className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 text-content-secondary "
+                      className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 text-content-secondary"
                     >
                       Block this book
                     </button>
@@ -314,7 +314,7 @@ export default function BookDetailPage() {
                       <button
                         type="button"
                         onClick={() => blockSuggestion('author')}
-                        className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 text-content-secondary "
+                        className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 text-content-secondary"
                       >
                         Block by {suggestions[0].author}
                       </button>
@@ -332,8 +332,8 @@ export default function BookDetailPage() {
             )}
           </div>
 
-          <div className="pt-4 text-xs text-content-muted ">
-            <Link to="/suggestions" className="hover:text-content-secondary ">
+          <div className="pt-4 text-xs text-content-muted">
+            <Link to="/suggestions" className="hover:text-content-secondary">
               ← Back to suggestions
             </Link>
           </div>
@@ -389,7 +389,7 @@ function AddToLibraryButton({ disabled, open, onOpenChange, onPick }: {
                 key={lib.id}
                 type="button"
                 onClick={() => onPick(lib.id)}
-                className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 text-content-secondary "
+                className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 text-content-secondary"
               >
                 {lib.name}
               </button>

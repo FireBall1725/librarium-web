@@ -136,16 +136,16 @@ function JobRow({ job, libraryId }: { job: ImportJob; libraryId: string }) {
               {(job.status === 'processing' || job.status === 'pending') ? (
                 <ProgressBar job={job} />
               ) : (
-                <div className="flex items-center gap-3 text-xs text-content-muted ">
+                <div className="flex items-center gap-3 text-xs text-content-muted">
                   <span>{job.total_rows} rows</span>
                   {successRows !== null && successRows > 0 && (
-                    <span className="text-success ">{successRows} added</span>
+                    <span className="text-success">{successRows} added</span>
                   )}
                   {job.skipped_rows > 0 && (
-                    <span className="text-warning ">{job.skipped_rows} skipped</span>
+                    <span className="text-warning">{job.skipped_rows} skipped</span>
                   )}
                   {job.failed_rows > 0 && (
-                    <span className="text-danger ">{job.failed_rows} failed</span>
+                    <span className="text-danger">{job.failed_rows} failed</span>
                   )}
                 </div>
               )}
@@ -160,14 +160,14 @@ function JobRow({ job, libraryId }: { job: ImportJob; libraryId: string }) {
 
       {/* Items list */}
       {expanded && (
-        <div className="border-t border-line-subtle bg-surface-muted ">
+        <div className="border-t border-line-subtle bg-surface-muted">
           {loadingItems ? (
-            <div className="flex items-center justify-center py-8 text-sm text-content-subtle ">
+            <div className="flex items-center justify-center py-8 text-sm text-content-subtle">
               <div className="w-4 h-4 rounded-full border-2 border-blue-500 border-t-transparent animate-spin mr-2" />
               Loading…
             </div>
           ) : items && items.length > 0 ? (
-            <div className="divide-y divide-line-subtle ">
+            <div className="divide-y divide-line-subtle">
               {items.map(item => (
                 <div key={item.id} className="flex items-start gap-3 px-5 py-2.5 text-sm">
                   <span className="text-xs tabular-nums text-content-subtle w-8 flex-shrink-0 pt-0.5 text-right">
@@ -206,7 +206,7 @@ function JobRow({ job, libraryId }: { job: ImportJob; libraryId: string }) {
               ))}
             </div>
           ) : (
-            <p className="px-5 py-4 text-sm text-content-subtle ">No items.</p>
+            <p className="px-5 py-4 text-sm text-content-subtle">No items.</p>
           )}
         </div>
       )}
@@ -260,7 +260,7 @@ export default function ImportJobsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20 text-content-subtle ">
+      <div className="flex items-center justify-center py-20 text-content-subtle">
         <div className="w-5 h-5 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
       </div>
     )
@@ -278,14 +278,14 @@ export default function ImportJobsPage() {
       </div>
 
       {error && (
-        <div className="mb-6 rounded-lg bg-danger-surface border border-danger-line px-4 py-3 text-sm text-danger-strong ">
+        <div className="mb-6 rounded-lg bg-danger-surface border border-danger-line px-4 py-3 text-sm text-danger-strong">
           {error}
         </div>
       )}
 
       {jobs.length === 0 ? (
         <div className="rounded-xl border border-dashed border-line-strong p-12 text-center">
-          <p className="text-sm font-medium text-content-muted ">No import jobs yet</p>
+          <p className="text-sm font-medium text-content-muted">No import jobs yet</p>
           <p className="text-xs text-content-subtle mt-1 mb-4">
             Start your first import to populate this library.
           </p>

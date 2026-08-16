@@ -78,7 +78,7 @@ export default function HistoryPruneJobCard() {
 
   if (loading) {
     return (
-      <div className="border border-line rounded-xl bg-surface px-5 py-4 text-sm text-content-muted ">
+      <div className="border border-line rounded-xl bg-surface px-5 py-4 text-sm text-content-muted">
         Loading retention config…
       </div>
     )
@@ -86,7 +86,7 @@ export default function HistoryPruneJobCard() {
 
   if (!schedule) {
     return (
-      <div className="border border-line rounded-xl bg-surface px-5 py-4 text-sm text-danger ">
+      <div className="border border-line rounded-xl bg-surface px-5 py-4 text-sm text-danger">
         {error ?? 'No history_prune schedule registered.'}
       </div>
     )
@@ -94,7 +94,7 @@ export default function HistoryPruneJobCard() {
 
   return (
     <div className="border border-line rounded-xl bg-surface px-5 py-5 space-y-5">
-      <p className="text-xs text-content-muted ">
+      <p className="text-xs text-content-muted">
         Each sweep deletes finished runs that fall outside either limit, along with their
         event logs, per-row items, and AI call records. Pending and running jobs are never
         touched. Set a limit to <code>0</code> to switch it off.
@@ -102,7 +102,7 @@ export default function HistoryPruneJobCard() {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label htmlFor="prune-max-age" className="block text-sm font-medium text-content ">
+          <label htmlFor="prune-max-age" className="block text-sm font-medium text-content">
             Keep history for
           </label>
           <p className="text-xs text-content-muted mt-0.5">
@@ -118,12 +118,12 @@ export default function HistoryPruneJobCard() {
               onChange={e => setMaxAgeDays(Math.max(0, Number(e.target.value)))}
               className="w-28 rounded-md border border-line-strong dark:bg-gray-800 dark:text-white px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
-            <span className="text-xs text-content-muted ">days</span>
+            <span className="text-xs text-content-muted">days</span>
           </div>
         </div>
 
         <div>
-          <label htmlFor="prune-max-per-kind" className="block text-sm font-medium text-content ">
+          <label htmlFor="prune-max-per-kind" className="block text-sm font-medium text-content">
             Keep at most
           </label>
           <p className="text-xs text-content-muted mt-0.5">
@@ -139,13 +139,13 @@ export default function HistoryPruneJobCard() {
               onChange={e => setMaxPerKind(Math.max(0, Number(e.target.value)))}
               className="w-28 rounded-md border border-line-strong dark:bg-gray-800 dark:text-white px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
-            <span className="text-xs text-content-muted ">runs per kind</span>
+            <span className="text-xs text-content-muted">runs per kind</span>
           </div>
         </div>
       </div>
 
       {maxAgeDays === 0 && maxPerKind === 0 && (
-        <p className="text-xs text-warning ">
+        <p className="text-xs text-warning">
           Both limits are off, so nothing will be deleted and job history will grow without bound.
         </p>
       )}
@@ -159,7 +159,7 @@ export default function HistoryPruneJobCard() {
         >
           {saving ? 'Saving…' : 'Save retention'}
         </button>
-        {error && <span className="text-sm text-danger ">{error}</span>}
+        {error && <span className="text-sm text-danger">{error}</span>}
       </div>
     </div>
   )

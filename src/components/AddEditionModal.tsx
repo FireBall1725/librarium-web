@@ -161,7 +161,7 @@ export function AddEditionModal({ libraryId, bookId, edition, contributors = [],
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4">
       <div className="w-full max-w-2xl rounded-xl bg-surface shadow-xl p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-semibold text-content ">{edition ? 'Edit edition' : 'Add edition'}</h3>
+          <h3 className="text-base font-semibold text-content">{edition ? 'Edit edition' : 'Add edition'}</h3>
           <button type="button" onClick={onClose}
             className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-surface-inset transition-colors"
             aria-label="Close">
@@ -296,14 +296,14 @@ export function AddEditionModal({ libraryId, bookId, edition, contributors = [],
               refactor — both are now per-library properties (library_book_editions
               junction). Per-library copy UI will return as a follow-up feature. */}
 
-          <label className="flex items-center gap-2 text-sm text-content-secondary ">
+          <label className="flex items-center gap-2 text-sm text-content-secondary">
             <input type="checkbox" checked={form.is_primary} onChange={e => setForm(f => ({ ...f, is_primary: e.target.checked }))}
-              className="rounded border-line-strong " />
+              className="rounded border-line-strong" />
             Primary edition
           </label>
 
           {error && (
-            <div className="rounded-lg bg-danger-surface border border-danger-line px-3 py-2 text-sm text-danger-strong ">
+            <div className="rounded-lg bg-danger-surface border border-danger-line px-3 py-2 text-sm text-danger-strong">
               {error}
             </div>
           )}

@@ -49,7 +49,7 @@ export default function AITab() {
         <div className={cardClass}>
           <div className="flex items-center justify-between px-6 py-4">
             <div className="min-w-0 mr-6">
-              <p className="text-sm font-medium text-content ">Allow AI features to use my data</p>
+              <p className="text-sm font-medium text-content">Allow AI features to use my data</p>
               <p className="text-xs text-content-muted mt-0.5">
                 When on, AI-powered suggestions may read categories the admin has allowed
                 (reading history, ratings, favourites, full library, and your taste profile
@@ -83,7 +83,7 @@ export default function AITab() {
 
       <section>
         <SectionHeading label="Taste profile" />
-        <p className="mb-3 -mt-2 text-xs text-content-muted ">
+        <p className="mb-3 -mt-2 text-xs text-content-muted">
           Optional. Helps the AI generate more personal suggestions. All fields are optional;
           empty categories aren't sent.
           {!aiOptIn && !aiPrefsLoading && (

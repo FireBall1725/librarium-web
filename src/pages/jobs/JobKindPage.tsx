@@ -90,7 +90,7 @@ export default function JobKindPage() {
       <>
         <PageHeader title="Job" breadcrumbs={[{ label: 'Settings', to: '/admin/settings' }, { label: 'Jobs', to: '/admin/settings/jobs' }]} />
         <div className="max-w-3xl px-8 py-8">
-          <div className="rounded-lg bg-danger-surface border border-danger-line px-4 py-3 text-sm text-danger-strong ">
+          <div className="rounded-lg bg-danger-surface border border-danger-line px-4 py-3 text-sm text-danger-strong">
             {error}
           </div>
         </div>
@@ -126,13 +126,13 @@ export default function JobKindPage() {
             this one kind. */}
         {schedule ? (
           <section>
-            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-content-muted ">
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-content-muted">
               Schedule
             </h2>
             <JobSchedulesSection kind={kind} />
           </section>
         ) : (
-          <div className="rounded-md border border-dashed border-line-strong px-4 py-6 text-center text-sm text-content-muted ">
+          <div className="rounded-md border border-dashed border-line-strong px-4 py-6 text-center text-sm text-content-muted">
             No schedule registered for this kind.
           </div>
         )}
@@ -141,7 +141,7 @@ export default function JobKindPage() {
             caps, token budgets, per-user cooldown. Rendered inline. */}
         {kind === 'ai_suggestions' && (
           <section>
-            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-content-muted ">
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-content-muted">
               Configuration
             </h2>
             <AISuggestionsJobCard onRunKicked={() => setTimeout(load, 1500)} />
@@ -152,7 +152,7 @@ export default function JobKindPage() {
             config rather than a kind-specific endpoint. */}
         {kind === 'history_prune' && (
           <section>
-            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-content-muted ">
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-content-muted">
               Retention
             </h2>
             <HistoryPruneJobCard />
@@ -163,7 +163,7 @@ export default function JobKindPage() {
             page for a full list. */}
         <section>
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-content-muted ">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-content-muted">
               Recent runs
             </h2>
             <Link
@@ -182,17 +182,17 @@ export default function JobKindPage() {
 
 function RecentRuns({ rows }: { rows: UnifiedJobRow[] | null }) {
   if (rows === null) {
-    return <div className="text-sm text-content-subtle ">Loading…</div>
+    return <div className="text-sm text-content-subtle">Loading…</div>
   }
   if (rows.length === 0) {
     return (
-      <div className="rounded-md border border-dashed border-line-strong px-4 py-6 text-center text-sm text-content-muted ">
+      <div className="rounded-md border border-dashed border-line-strong px-4 py-6 text-center text-sm text-content-muted">
         No runs yet.
       </div>
     )
   }
   return (
-    <div className="rounded-lg border border-line bg-surface divide-y divide-line-subtle ">
+    <div className="rounded-lg border border-line bg-surface divide-y divide-line-subtle">
       {rows.map(r => (
         <div key={r.id} className="flex items-center gap-3 px-4 py-2.5 text-sm">
           <StatusDot status={r.status} />
@@ -201,15 +201,15 @@ function RecentRuns({ rows }: { rows: UnifiedJobRow[] | null }) {
               <span className="text-content-strong font-medium capitalize">
                 {r.status}
               </span>
-              <span className="text-xs text-content-subtle ">
+              <span className="text-xs text-content-subtle">
                 · {new Date(r.created_at).toLocaleString()}
               </span>
-              <span className="text-xs text-content-subtle ">
+              <span className="text-xs text-content-subtle">
                 · {r.triggered_by}
               </span>
             </div>
             {r.error && (
-              <p className="mt-0.5 text-xs text-danger ">{r.error}</p>
+              <p className="mt-0.5 text-xs text-danger">{r.error}</p>
             )}
           </div>
         </div>

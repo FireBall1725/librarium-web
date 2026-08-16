@@ -109,7 +109,7 @@ export function BookCoverThumb({ title, coverUrl, readStatus }: { title: string;
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      <div className="relative aspect-[2/3] rounded overflow-hidden ">
+      <div className="relative aspect-[2/3] rounded overflow-hidden">
         {showImage ? (
           <img
             src={src}

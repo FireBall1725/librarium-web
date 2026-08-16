@@ -110,23 +110,23 @@ function InteractionForm({ libraryId, bookId, editionId, onStatusChange }: {
         </div>
       </div>
       <div className="mt-2">
-        <label className="block text-xs text-content-tertiary mb-1">Notes <span className="text-content-subtle ">(private)</span></label>
+        <label className="block text-xs text-content-tertiary mb-1">Notes <span className="text-content-subtle">(private)</span></label>
         <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
           rows={2} placeholder="Personal notes…" className={`${inputCls} resize-none`} />
       </div>
       <div className="mt-2">
-        <label className="block text-xs text-content-tertiary mb-1">Review <span className="text-content-subtle ">(visible to members)</span></label>
+        <label className="block text-xs text-content-tertiary mb-1">Review <span className="text-content-subtle">(visible to members)</span></label>
         <textarea value={form.review} onChange={e => setForm(f => ({ ...f, review: e.target.value }))}
           rows={2} placeholder="Share your thoughts…" className={`${inputCls} resize-none`} />
       </div>
       <div className="mt-2 flex items-center justify-between">
-        <label className="flex items-center gap-1.5 text-xs text-content-tertiary ">
+        <label className="flex items-center gap-1.5 text-xs text-content-tertiary">
           <input type="checkbox" checked={form.is_favorite} onChange={e => setForm(f => ({ ...f, is_favorite: e.target.checked }))}
-            className="rounded border-line-strong " />
+            className="rounded border-line-strong" />
           Favourite
         </label>
         <div className="flex items-center gap-2">
-          {isSaved && <span className="text-xs text-success ">Saved!</span>}
+          {isSaved && <span className="text-xs text-success">Saved!</span>}
           {interaction && (
             <button onClick={async () => {
               if (!confirm('Remove your reading record for this edition?')) return
@@ -301,7 +301,7 @@ function FileBrowserModal({ libraryId, bookId, editionId, editionFormat, onLink,
       <div className="bg-surface rounded-xl shadow-xl w-full max-w-2xl flex flex-col" style={{ maxHeight: '80vh' }}>
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-line flex-shrink-0">
-          <h2 className="text-sm font-semibold text-content ">Browse server files</h2>
+          <h2 className="text-sm font-semibold text-content">Browse server files</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -314,7 +314,7 @@ function FileBrowserModal({ libraryId, bookId, editionId, editionFormat, onLink,
           <div className="w-48 flex-shrink-0 border-r border-line overflow-y-auto p-3 space-y-3">
             {/* Built-in upload paths */}
             <div>
-              <p className="px-2 pb-1 text-xs font-semibold uppercase tracking-wider text-content-subtle ">Upload paths</p>
+              <p className="px-2 pb-1 text-xs font-semibold uppercase tracking-wider text-content-subtle">Upload paths</p>
               <div className="space-y-0.5">
                 {uploadTargets.map(t => (
                   <button key={t.kind === 'upload' ? t.format : ''} onClick={() => selectTarget(t)}
@@ -327,7 +327,7 @@ function FileBrowserModal({ libraryId, bookId, editionId, editionFormat, onLink,
             {/* Configured storage locations */}
             {locations.length > 0 && (
               <div>
-                <p className="px-2 pb-1 text-xs font-semibold uppercase tracking-wider text-content-subtle ">Storage locations</p>
+                <p className="px-2 pb-1 text-xs font-semibold uppercase tracking-wider text-content-subtle">Storage locations</p>
                 <div className="space-y-0.5">
                   {locations.map(loc => (
                     <button key={loc.id} onClick={() => selectTarget({ kind: 'location', location: loc })}
@@ -357,7 +357,7 @@ function FileBrowserModal({ libraryId, bookId, editionId, editionFormat, onLink,
                   const segPath = arr.slice(0, i + 1).join('/')
                   return (
                     <span key={segPath} className="flex items-center gap-1 flex-shrink-0">
-                      <span className="text-content-faint ">/</span>
+                      <span className="text-content-faint">/</span>
                       <button onClick={() => navigateToSegment(segPath)} className="hover:text-content-secondary transition-colors max-w-[100px] truncate">
                         {seg}
                       </button>
@@ -590,13 +590,13 @@ function EditionCard({ edition: initialEdition, libraryId, bookId, onEdit, onDel
   return (
     <div className="rounded-xl border border-line bg-surface overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between gap-2 px-4 py-3 bg-surface-muted ">
+      <div className="flex items-center justify-between gap-2 px-4 py-3 bg-surface-muted">
         <div className="flex items-center gap-2 flex-wrap">
           <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ring-1 ${formatBadgeCls()}`}>
             {edition.format}
           </span>
           {edition.is_primary && (
-            <span className="inline-flex items-center rounded-full bg-success-surface px-2 py-0.5 text-xs font-medium text-success-strong ring-1 ring-success-line ">
+            <span className="inline-flex items-center rounded-full bg-success-surface px-2 py-0.5 text-xs font-medium text-success-strong ring-1 ring-success-line">
               Primary
             </span>
           )}
@@ -606,7 +606,7 @@ function EditionCard({ edition: initialEdition, libraryId, bookId, onEdit, onDel
               {READ_STATUS_PILL[readStatus].label}
             </span>
           )}
-          {edition.edition_name && <span className="text-sm font-medium text-content ">{edition.edition_name}</span>}
+          {edition.edition_name && <span className="text-sm font-medium text-content">{edition.edition_name}</span>}
         </div>
         <div className="flex items-center gap-1 flex-shrink-0">
           <button onClick={() => onEdit(edition)}
@@ -631,7 +631,7 @@ function EditionCard({ edition: initialEdition, libraryId, bookId, onEdit, onDel
         <dl className="px-4 py-3 grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-2.5">
           {(metaItems as Array<{ label: string; value: React.ReactNode }>).map(item => (
             <div key={item.label}>
-              <dt className="text-xs text-content-subtle ">{item.label}</dt>
+              <dt className="text-xs text-content-subtle">{item.label}</dt>
               <dd className="text-sm text-content-secondary mt-0.5">{item.value}</dd>
             </div>
           ))}
@@ -659,13 +659,13 @@ function EditionCard({ edition: initialEdition, libraryId, bookId, onEdit, onDel
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                   </svg>
                   <div className="min-w-0">
-                    <span className="text-xs text-content-tertiary ">
+                    <span className="text-xs text-content-tertiary">
                       {ef.file_name || ef.file_format.toUpperCase()}
-                      {ef.file_size != null && <span className="ml-1 text-content-subtle ">({(ef.file_size / (1024 * 1024)).toFixed(1)} MB)</span>}
+                      {ef.file_size != null && <span className="ml-1 text-content-subtle">({(ef.file_size / (1024 * 1024)).toFixed(1)} MB)</span>}
                     </span>
                     {ef.file_path && (
                       <p className="text-xs text-content-subtle font-mono truncate">
-                        {ef.root_path ? <><span className="text-content-faint ">{ef.root_path}/</span>{ef.file_path}</> : ef.file_path}
+                        {ef.root_path ? <><span className="text-content-faint">{ef.root_path}/</span>{ef.file_path}</> : ef.file_path}
                       </p>
                     )}
                   </div>
@@ -745,7 +745,7 @@ function EditionCard({ edition: initialEdition, libraryId, bookId, onEdit, onDel
       )}
 
       {/* Collapsible reading section */}
-      <div className="border-t border-line-subtle ">
+      <div className="border-t border-line-subtle">
         <button
           type="button"
           onClick={() => setShowReading(v => !v)}
@@ -1010,8 +1010,8 @@ function MergedMetadataModal({ book, editions, libraryId, bookId, onClose, onApp
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 overflow-y-auto py-16 px-4">
       <div className="w-full max-w-xl rounded-xl bg-surface shadow-xl">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-line ">
-          <h2 className="text-base font-semibold text-content ">Refresh metadata</h2>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-line">
+          <h2 className="text-base font-semibold text-content">Refresh metadata</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-content-tertiary text-xl leading-none">×</button>
         </div>
 
@@ -1053,11 +1053,11 @@ function MergedMetadataModal({ book, editions, libraryId, bookId, onClose, onApp
                   {searchLoading ? '…' : 'Search'}
                 </button>
               </div>
-              {searchError && <p className="text-sm text-danger ">{searchError}</p>}
-              {searchLoading && <p className="text-sm text-content-subtle ">Searching providers…</p>}
+              {searchError && <p className="text-sm text-danger">{searchError}</p>}
+              {searchLoading && <p className="text-sm text-content-subtle">Searching providers…</p>}
               {!merged && searchResults.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-content-subtle ">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-content-subtle">
                     {searchResults.length} result{searchResults.length !== 1 ? 's' : ''} — pick the edition you own
                   </p>
                   <div className="max-h-72 overflow-y-auto space-y-2">
@@ -1066,9 +1066,9 @@ function MergedMetadataModal({ book, editions, libraryId, bookId, onClose, onApp
                         className="w-full text-left rounded-xl border border-line bg-surface-muted p-3 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-accent-surface transition-colors">
                         <div className="flex gap-3">
                           {r.cover_url ? (
-                            <img src={r.cover_url} alt="" referrerPolicy="no-referrer" className="w-10 h-14 object-cover rounded flex-shrink-0 bg-surface-strong " />
+                            <img src={r.cover_url} alt="" referrerPolicy="no-referrer" className="w-10 h-14 object-cover rounded flex-shrink-0 bg-surface-strong" />
                           ) : (
-                            <div className="w-10 h-14 rounded flex-shrink-0 bg-surface-strong " />
+                            <div className="w-10 h-14 rounded flex-shrink-0 bg-surface-strong" />
                           )}
                           <div className="flex-1 min-w-0">
                             <p className="font-medium text-sm text-content truncate">{r.title}</p>
@@ -1076,10 +1076,10 @@ function MergedMetadataModal({ book, editions, libraryId, bookId, onClose, onApp
                             {r.authors?.length > 0 && <p className="text-xs text-content-tertiary mt-0.5 truncate">{r.authors.join(', ')}</p>}
                             <div className="flex items-center gap-2 mt-1">
                               {r.publisher && <span className="text-xs text-content-subtle truncate">{r.publisher}</span>}
-                              {r.publisher && r.publish_date && <span className="text-content-faint ">·</span>}
-                              {r.publish_date && <span className="text-xs text-content-subtle ">{r.publish_date.slice(0, 4)}</span>}
-                              <span className="text-content-faint ">·</span>
-                              <span className="text-xs text-content-subtle ">{r.provider_display}</span>
+                              {r.publisher && r.publish_date && <span className="text-content-faint">·</span>}
+                              {r.publish_date && <span className="text-xs text-content-subtle">{r.publish_date.slice(0, 4)}</span>}
+                              <span className="text-content-faint">·</span>
+                              <span className="text-xs text-content-subtle">{r.provider_display}</span>
                               {!r.isbn_13 && !r.isbn_10 && <span className="text-xs text-amber-600 dark:text-amber-500">no ISBN</span>}
                             </div>
                           </div>
@@ -1092,14 +1092,14 @@ function MergedMetadataModal({ book, editions, libraryId, bookId, onClose, onApp
             </div>
           )}
 
-          {mode === 'isbn' && error && <p className="text-sm text-danger ">{error}</p>}
-          {mode === 'isbn' && loading && <p className="text-sm text-content-subtle ">Searching providers…</p>}
+          {mode === 'isbn' && error && <p className="text-sm text-danger">{error}</p>}
+          {mode === 'isbn' && loading && <p className="text-sm text-content-subtle">Searching providers…</p>}
 
           {merged && (
             <>
               {/* Field rows */}
               <div className="rounded-xl border border-line overflow-hidden">
-                <div className="divide-y divide-line-subtle ">
+                <div className="divide-y divide-line-subtle">
                   {defs.map(fd => {
                     const effectiveValue = getEffectiveValue(fd.key, fd.field)
                     const isSame = effectiveValue === fd.currentValue
@@ -1115,7 +1115,7 @@ function MergedMetadataModal({ book, editions, libraryId, bookId, onClose, onApp
                           onChange={() => { if (!isSame) setEnabled(prev => { const s = new Set(prev); if (isOn) s.delete(fd.key); else s.add(fd.key); return s }) }}
                           className="mt-0.5 rounded border-line-strong text-blue-600 flex-shrink-0" />
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs font-semibold uppercase tracking-wider text-content-subtle ">{fd.label}</p>
+                          <p className="text-xs font-semibold uppercase tracking-wider text-content-subtle">{fd.label}</p>
                           {isSame ? (
                             <p className={`mt-0.5 text-sm text-content-muted ${fd.multiline ? 'line-clamp-2' : 'truncate'}`}>
                               {effectiveValue || '(empty)'}
@@ -1133,7 +1133,7 @@ function MergedMetadataModal({ book, editions, libraryId, bookId, onClose, onApp
                         </div>
                         <div className="flex-shrink-0 flex flex-col items-end gap-1">
                           {isSame ? (
-                            <span className="text-xs text-content-faint ">same</span>
+                            <span className="text-xs text-content-faint">same</span>
                           ) : hasAlts ? (
                             <select
                               value={altChoice[fd.key] ?? ''}
@@ -1146,7 +1146,7 @@ function MergedMetadataModal({ book, editions, libraryId, bookId, onClose, onApp
                               ))}
                             </select>
                           ) : (
-                            <span className="text-xs text-content-subtle ">{sourceDisplay}</span>
+                            <span className="text-xs text-content-subtle">{sourceDisplay}</span>
                           )}
                         </div>
                       </div>
@@ -1171,7 +1171,7 @@ function MergedMetadataModal({ book, editions, libraryId, bookId, onClose, onApp
                       <button key={cover.source} type="button" onClick={() => setSelectedCoverIdx(idx)}
                         className={`flex flex-col items-center gap-1 rounded-lg border-2 p-1.5 transition-colors ${selectedCoverIdx === idx ? 'border-blue-500' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'}`}>
                         <img src={cover.cover_url} alt="" referrerPolicy="no-referrer" className="h-16 w-11 object-cover rounded" />
-                        <span className="text-xs text-content-muted ">{cover.source_display}</span>
+                        <span className="text-xs text-content-muted">{cover.source_display}</span>
                       </button>
                     ))}
                   </div>
@@ -1179,7 +1179,7 @@ function MergedMetadataModal({ book, editions, libraryId, bookId, onClose, onApp
               )}
 
               {applyError && (
-                <p className="text-sm text-danger ">{applyError}</p>
+                <p className="text-sm text-danger">{applyError}</p>
               )}
 
               <div className="flex justify-end">
@@ -1202,7 +1202,7 @@ function Section({ title, action, children }: { title: string; action?: React.Re
   return (
     <div className="pt-6">
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-content-muted ">{title}</h2>
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-content-muted">{title}</h2>
         {action}
       </div>
       {children}
@@ -1285,7 +1285,7 @@ export default function BookPage() {
   if (error) {
     return (
       <div className="p-8">
-        <div className="rounded-lg bg-danger-surface border border-danger-line px-4 py-3 text-sm text-danger-strong ">
+        <div className="rounded-lg bg-danger-surface border border-danger-line px-4 py-3 text-sm text-danger-strong">
           {error}
         </div>
       </div>
@@ -1336,7 +1336,7 @@ export default function BookPage() {
   }
 
   if (!book) {
-    return <div className="p-8 text-sm text-content-subtle ">Loading…</div>
+    return <div className="p-8 text-sm text-content-subtle">Loading…</div>
   }
 
   return (
@@ -1369,7 +1369,7 @@ export default function BookPage() {
 
           {/* Media type + tags */}
           <div className="flex flex-wrap gap-1.5">
-            <span className="inline-flex items-center rounded-full bg-surface-inset px-2.5 py-0.5 text-xs font-medium text-content-tertiary ">
+            <span className="inline-flex items-center rounded-full bg-surface-inset px-2.5 py-0.5 text-xs font-medium text-content-tertiary">
               {book.media_type}
             </span>
             {book.tags.map(tag => (
@@ -1385,7 +1385,7 @@ export default function BookPage() {
             <div className="flex flex-wrap gap-1.5">
               {book.genres.map(genre => (
                 <span key={genre.id}
-                  className="inline-flex items-center rounded-full border border-line px-2.5 py-0.5 text-xs font-medium text-content-tertiary ">
+                  className="inline-flex items-center rounded-full border border-line px-2.5 py-0.5 text-xs font-medium text-content-tertiary">
                   {genre.name}
                 </span>
               ))}
@@ -1428,7 +1428,7 @@ export default function BookPage() {
               <dl className="space-y-2.5">
                 {rows.map(row => (
                   <div key={row.label}>
-                    <dt className="text-xs text-content-subtle ">{row.label}</dt>
+                    <dt className="text-xs text-content-subtle">{row.label}</dt>
                     <dd className={`text-sm text-content-secondary mt-0.5 ${row.mono ? 'font-mono text-xs' : ''}`}>
                       {row.value}
                     </dd>
@@ -1447,7 +1447,7 @@ export default function BookPage() {
             <div className="min-w-0">
               <h1 className="text-2xl font-bold text-content leading-tight">{book.title}</h1>
               {book.subtitle && (
-                <p className="mt-0.5 text-base text-content-muted ">{book.subtitle}</p>
+                <p className="mt-0.5 text-base text-content-muted">{book.subtitle}</p>
               )}
             </div>
             <div className="flex items-center gap-1 flex-shrink-0">
@@ -1495,7 +1495,7 @@ export default function BookPage() {
                           <p className="text-sm font-medium text-content truncate">
                             Lent to {loan.loaned_to}
                           </p>
-                          <p className="text-xs text-content-muted ">
+                          <p className="text-xs text-content-muted">
                             <span>Loaned {loan.loaned_at}</span>
                             {loan.due_date && (
                               <span className={overdue ? 'ml-2 text-danger font-medium' : 'ml-2'}>
@@ -1527,27 +1527,27 @@ export default function BookPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
                 Loan history
-                <span className="text-xs font-normal normal-case tracking-normal text-content-subtle ">
+                <span className="text-xs font-normal normal-case tracking-normal text-content-subtle">
                   ({history.length})
                 </span>
               </button>
               {historyOpen && (
                 <div className="mt-3 rounded-xl border border-line bg-surface overflow-hidden">
                   <table className="w-full text-sm">
-                    <thead className="bg-surface-muted border-b border-line ">
+                    <thead className="bg-surface-muted border-b border-line">
                       <tr>
                         {['Loaned to', 'Loaned', 'Due', 'Returned'].map(h => (
-                          <th key={h} className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-content-muted ">{h}</th>
+                          <th key={h} className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-content-muted">{h}</th>
                         ))}
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-line-subtle ">
+                    <tbody className="divide-y divide-line-subtle">
                       {history.map(loan => (
                         <tr key={loan.id}>
-                          <td className="px-4 py-2.5 text-content-secondary ">{loan.loaned_to}</td>
-                          <td className="px-4 py-2.5 text-xs text-content-muted ">{loan.loaned_at}</td>
-                          <td className="px-4 py-2.5 text-xs text-content-muted ">{loan.due_date ?? <span className="text-content-faint ">—</span>}</td>
-                          <td className="px-4 py-2.5 text-xs text-content-muted ">{loan.returned_at ?? <span className="text-warning ">Active</span>}</td>
+                          <td className="px-4 py-2.5 text-content-secondary">{loan.loaned_to}</td>
+                          <td className="px-4 py-2.5 text-xs text-content-muted">{loan.loaned_at}</td>
+                          <td className="px-4 py-2.5 text-xs text-content-muted">{loan.due_date ?? <span className="text-content-faint">—</span>}</td>
+                          <td className="px-4 py-2.5 text-xs text-content-muted">{loan.returned_at ?? <span className="text-warning">Active</span>}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -1580,8 +1580,8 @@ export default function BookPage() {
                         </svg>
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-content ">{ref.series_name}</p>
-                        <p className="text-xs text-content-muted ">Vol. {formatPosition(ref.position)}</p>
+                        <p className="text-sm font-semibold text-content">{ref.series_name}</p>
+                        <p className="text-xs text-content-muted">Vol. {formatPosition(ref.position)}</p>
                       </div>
                     </div>
                     <svg className="w-4 h-4 text-content-subtle group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1599,7 +1599,7 @@ export default function BookPage() {
               <div className="flex flex-wrap gap-2">
                 {shelves.map(shelf => (
                   <span key={shelf.id}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-surface px-3 py-1.5 text-sm text-content-secondary ">
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-surface px-3 py-1.5 text-sm text-content-secondary">
                     {shelf.icon && <span>{shelf.icon}</span>}
                     {shelf.name}
                   </span>
@@ -1622,7 +1622,7 @@ export default function BookPage() {
             }
           >
             {editions.length === 0 ? (
-              <p className="text-sm text-content-subtle ">No editions recorded yet.</p>
+              <p className="text-sm text-content-subtle">No editions recorded yet.</p>
             ) : (
               <div className="space-y-3">
                 {editions.map(e => (

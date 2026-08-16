@@ -90,7 +90,7 @@ export default function LoanFormModal({ libraryId, loan, prefillBook, onClose, o
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       <div className="w-full max-w-sm rounded-xl bg-surface shadow-xl p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-semibold text-content ">{loan ? 'Edit loan' : 'New loan'}</h3>
+          <h3 className="text-base font-semibold text-content">{loan ? 'Edit loan' : 'New loan'}</h3>
           <button type="button" onClick={onClose}
             className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-surface-inset transition-colors"
             aria-label="Close">
@@ -125,7 +125,7 @@ export default function LoanFormModal({ libraryId, loan, prefillBook, onClose, o
                 <p className="text-xs text-content-subtle mt-1">No matches.</p>
               )}
               {!isSearching && bookResults.length > 0 && !selectedBook && (
-                <ul className="mt-1 rounded-lg border border-line bg-surface-raised shadow max-h-40 overflow-y-auto divide-y divide-line-subtle ">
+                <ul className="mt-1 rounded-lg border border-line bg-surface-raised shadow max-h-40 overflow-y-auto divide-y divide-line-subtle">
                   {bookResults.map(b => (
                     <li key={b.id}>
                       <button type="button"
@@ -175,7 +175,7 @@ export default function LoanFormModal({ libraryId, loan, prefillBook, onClose, o
               className="w-full rounded-lg border border-line-strong dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
           </div>
 
-          {error && <div className="rounded-lg bg-danger-surface border border-danger-line px-3 py-2 text-sm text-danger-strong ">{error}</div>}
+          {error && <div className="rounded-lg bg-danger-surface border border-danger-line px-3 py-2 text-sm text-danger-strong">{error}</div>}
           <div className="flex gap-3 pt-1">
             <button type="button" onClick={onClose}
               className="flex-1 rounded-lg border border-line-strong px-4 py-2 text-sm font-medium text-content-secondary hover:bg-surface-muted transition-colors">Cancel</button>

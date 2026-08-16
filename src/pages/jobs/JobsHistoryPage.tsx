@@ -266,9 +266,9 @@ function AICallsPanel({ jobID }: { jobID: string }) {
     <div className="border-t border-line-subtle px-5 py-3">
       <div className="flex items-center gap-3 mb-2">
         <span className="text-xs uppercase tracking-wide text-content-muted font-semibold">AI calls</span>
-        <span className="text-xs text-content-subtle ">{runs.length} · {totalTokens.toLocaleString()} tokens · ${totalCost.toFixed(4)}</span>
+        <span className="text-xs text-content-subtle">{runs.length} · {totalTokens.toLocaleString()} tokens · ${totalCost.toFixed(4)}</span>
       </div>
-      <div className="divide-y divide-line-subtle ">
+      <div className="divide-y divide-line-subtle">
         {runs.map(r => (
           <div key={r.id}>
             <button
@@ -278,8 +278,8 @@ function AICallsPanel({ jobID }: { jobID: string }) {
               <ItemStatusDot status={r.status === 'completed' ? 'done' : r.status === 'failed' ? 'failed' : 'pending'} />
               <span className="text-content-secondary font-medium font-mono text-xs">{r.kind}</span>
               <span className="text-xs text-content-subtle flex-1 truncate">{r.target_type} {r.target_id.slice(0, 8)}</span>
-              <span className="text-xs text-content-subtle ">{r.tokens_in + r.tokens_out} tok</span>
-              <span className="text-xs text-content-subtle ">${r.estimated_cost_usd.toFixed(4)}</span>
+              <span className="text-xs text-content-subtle">{r.tokens_in + r.tokens_out} tok</span>
+              <span className="text-xs text-content-subtle">${r.estimated_cost_usd.toFixed(4)}</span>
               <svg className={`w-3.5 h-3.5 text-gray-400 transition-transform ${expanded === r.id ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
@@ -292,11 +292,11 @@ function AICallsPanel({ jobID }: { jobID: string }) {
                   </div>
                 )}
                 <details className="text-xs">
-                  <summary className="cursor-pointer text-content-muted hover:text-content-secondary ">Prompt ({r.prompt.length} chars)</summary>
+                  <summary className="cursor-pointer text-content-muted hover:text-content-secondary">Prompt ({r.prompt.length} chars)</summary>
                   <pre className="mt-1 whitespace-pre-wrap font-mono text-[11px] bg-surface-muted px-3 py-2 rounded border border-line max-h-96 overflow-y-auto">{r.prompt}</pre>
                 </details>
                 <details className="text-xs" open>
-                  <summary className="cursor-pointer text-content-muted hover:text-content-secondary ">Response ({r.response_text.length} chars)</summary>
+                  <summary className="cursor-pointer text-content-muted hover:text-content-secondary">Response ({r.response_text.length} chars)</summary>
                   <pre className="mt-1 whitespace-pre-wrap font-mono text-[11px] bg-surface-muted px-3 py-2 rounded border border-line max-h-96 overflow-y-auto">{r.response_text}</pre>
                 </details>
                 <div className="text-[11px] text-content-subtle font-mono">
@@ -455,7 +455,7 @@ function JobRow({
         </td>
         <td className="px-3 py-3 min-w-0">
           {isHistoryPrune ? (
-            <div className="flex items-center gap-3 text-xs text-content-muted ">
+            <div className="flex items-center gap-3 text-xs text-content-muted">
               <span className="tabular-nums">
                 {job.total_rows} record{job.total_rows === 1 ? '' : 's'} removed
               </span>
@@ -470,7 +470,7 @@ function JobRow({
             </div>
           ) : (isAISuggestions || isAIMetadata) ? (
             isActive ? (
-              <div className="flex items-center gap-2 text-xs text-content-muted ">
+              <div className="flex items-center gap-2 text-xs text-content-muted">
                 <span className="inline-block w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
                 <span>Running…</span>
                 {job.provider_type && (
@@ -478,7 +478,7 @@ function JobRow({
                 )}
               </div>
             ) : (
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-content-muted ">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-content-muted">
                 {job.provider_type && (
                   <span>{job.provider_type}{job.model_id ? ` (${job.model_id})` : ''}</span>
                 )}
@@ -519,15 +519,15 @@ function JobRow({
               )
             })()
           ) : (
-            <div className="flex items-center gap-3 text-xs text-content-muted ">
+            <div className="flex items-center gap-3 text-xs text-content-muted">
               <span>{job.total_rows} {isEnrichment ? 'books' : 'rows'}</span>
               {successRows !== null && successRows > 0 && (
-                <span className="text-success ">
+                <span className="text-success">
                   {successRows} {isEnrichment ? 'updated' : 'added'}
                 </span>
               )}
-              {job.skipped_rows > 0 && <span className="text-warning ">{job.skipped_rows} skipped</span>}
-              {job.failed_rows > 0 && <span className="text-danger ">{job.failed_rows} failed</span>}
+              {job.skipped_rows > 0 && <span className="text-warning">{job.skipped_rows} skipped</span>}
+              {job.failed_rows > 0 && <span className="text-danger">{job.failed_rows} failed</span>}
             </div>
           )}
         </td>
@@ -554,7 +554,7 @@ function JobRow({
         </td>
       </tr>
       {expanded && (
-        <tr className="bg-surface-muted ">
+        <tr className="bg-surface-muted">
           <td colSpan={7} className="border-b border-line-subtle p-0">
           {isAISuggestions ? (
             <div className="px-5 py-4">
@@ -577,11 +577,11 @@ function JobRow({
                 event logs and per-row items) and {job.ai_runs_deleted ?? 0} AI call
                 record{(job.ai_runs_deleted ?? 0) === 1 ? '' : 's'}.
               </p>
-              <p className="text-xs text-content-muted ">
+              <p className="text-xs text-content-muted">
                 Retention window is set on the Job history cleanup settings page.
               </p>
               {job.run_error && (
-                <p className="text-xs text-danger ">{job.run_error}</p>
+                <p className="text-xs text-danger">{job.run_error}</p>
               )}
             </div>
           ) : isCoverBackfill ? (
@@ -589,22 +589,22 @@ function JobRow({
               <p>
                 Enumerated {job.total_rows} book{job.total_rows === 1 ? '' : 's'} missing covers and dispatched cover-only enrichment batches.
               </p>
-              <p className="text-xs text-content-muted ">
+              <p className="text-xs text-content-muted">
                 Per-book progress lives on the child Metadata rows above/below.
               </p>
               {job.run_error && (
-                <p className="text-xs text-danger ">{job.run_error}</p>
+                <p className="text-xs text-danger">{job.run_error}</p>
               )}
             </div>
           ) : loadingItems ? (
-            <div className="flex items-center justify-center py-8 text-sm text-content-subtle ">
+            <div className="flex items-center justify-center py-8 text-sm text-content-subtle">
               <div className="w-4 h-4 rounded-full border-2 border-blue-500 border-t-transparent animate-spin mr-2" />
               Loading…
             </div>
           ) : isEnrichment ? (
             <>
               {enrichItems && enrichItems.length > 0 ? (
-                <div className="divide-y divide-line-subtle ">
+                <div className="divide-y divide-line-subtle">
                   {enrichItems.map(item => (
                     <div key={item.id} className="flex items-start gap-3 px-5 py-2.5 text-sm">
                       <ItemStatusDot status={item.status} />
@@ -637,12 +637,12 @@ function JobRow({
                   ))}
                 </div>
               ) : (
-                <p className="px-5 py-4 text-sm text-content-subtle ">No items.</p>
+                <p className="px-5 py-4 text-sm text-content-subtle">No items.</p>
               )}
               <AICallsPanel jobID={job.id} />
             </>
           ) : items && items.length > 0 ? (
-            <div className="divide-y divide-line-subtle ">
+            <div className="divide-y divide-line-subtle">
               {items.map(item => (
                 <div key={item.id} className="flex items-start gap-3 px-5 py-2.5 text-sm">
                   <span className="text-xs tabular-nums text-content-subtle w-8 flex-shrink-0 pt-0.5 text-right">
@@ -677,7 +677,7 @@ function JobRow({
               ))}
             </div>
           ) : (
-            <p className="px-5 py-4 text-sm text-content-subtle ">No items.</p>
+            <p className="px-5 py-4 text-sm text-content-subtle">No items.</p>
           )}
           </td>
         </tr>
@@ -790,7 +790,7 @@ export default function JobsHistoryPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20 text-content-subtle ">
+      <div className="flex items-center justify-center py-20 text-content-subtle">
         <div className="w-5 h-5 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
       </div>
     )
@@ -824,7 +824,7 @@ export default function JobsHistoryPage() {
       <div className="max-w-7xl px-8 py-8">
 
       {error && (
-        <div className="mb-6 rounded-lg bg-danger-surface border border-danger-line px-4 py-3 text-sm text-danger-strong ">
+        <div className="mb-6 rounded-lg bg-danger-surface border border-danger-line px-4 py-3 text-sm text-danger-strong">
           {error}
         </div>
       )}
@@ -832,7 +832,7 @@ export default function JobsHistoryPage() {
       {/* Filter row */}
       <div className="flex flex-wrap items-center gap-3 mb-4">
         <label className="flex items-center gap-2 text-sm">
-          <span className="text-xs uppercase tracking-wide text-content-muted ">Type</span>
+          <span className="text-xs uppercase tracking-wide text-content-muted">Type</span>
           <select value={kindFilter} onChange={e => setKindFilter(e.target.value)}
             className="rounded-lg border border-line-strong dark:bg-gray-800 dark:text-white px-2 py-1 text-sm">
             <option value="">All</option>
@@ -846,7 +846,7 @@ export default function JobsHistoryPage() {
           </select>
         </label>
         <label className="flex items-center gap-2 text-sm">
-          <span className="text-xs uppercase tracking-wide text-content-muted ">Status</span>
+          <span className="text-xs uppercase tracking-wide text-content-muted">Status</span>
           <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
             className="rounded-lg border border-line-strong dark:bg-gray-800 dark:text-white px-2 py-1 text-sm">
             <option value="">All</option>
@@ -859,18 +859,18 @@ export default function JobsHistoryPage() {
         </label>
         {(kindFilter !== '' || statusFilter !== '') && (
           <button onClick={() => { setKindFilter(''); setStatusFilter('') }}
-            className="text-xs text-content-muted hover:text-content-secondary ">
+            className="text-xs text-content-muted hover:text-content-secondary">
             Clear filters
           </button>
         )}
-        <span className="ml-auto text-xs text-content-subtle ">
+        <span className="ml-auto text-xs text-content-subtle">
           {total === 0 ? 'No matches' : total === 1 ? '1 job' : `${total.toLocaleString()} jobs`}
         </span>
       </div>
 
       {jobs.length === 0 ? (
         <div className="rounded-xl border border-dashed border-line-strong p-12 text-center">
-          <p className="text-sm font-medium text-content-muted ">
+          <p className="text-sm font-medium text-content-muted">
             {kindFilter !== '' || statusFilter !== '' ? 'No jobs match these filters' : 'No jobs yet'}
           </p>
           <p className="text-xs text-content-subtle mt-1">
@@ -883,14 +883,14 @@ export default function JobsHistoryPage() {
         <>
           <div className="rounded-xl border border-line bg-surface overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-surface-muted border-b border-line ">
+              <thead className="bg-surface-muted border-b border-line">
                 <tr>
                   {['', 'Type', 'Status', 'Source', 'Summary', 'Created', ''].map((h, i) => (
                     <th key={i} className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-content-muted whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-line-subtle ">
+              <tbody className="divide-y divide-line-subtle">
                 {jobs.map(job => (
                   <JobRow
                     key={job.id}
@@ -907,7 +907,7 @@ export default function JobsHistoryPage() {
               one page. Server enforces newest-first ordering. */}
           {total > PAGE_SIZE && (
             <div className="flex items-center justify-between mt-4 text-sm">
-              <span className="text-xs text-content-muted ">
+              <span className="text-xs text-content-muted">
                 Page {page} of {Math.max(1, Math.ceil(total / PAGE_SIZE))} · showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, total)} of {total.toLocaleString()}
               </span>
               <div className="flex items-center gap-2">

@@ -11,7 +11,7 @@ function PlannedItem({ label, description }: { label: string; description: strin
         <div className="w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600" />
       </div>
       <div>
-        <p className="text-sm font-medium text-content-secondary ">{label}</p>
+        <p className="text-sm font-medium text-content-secondary">{label}</p>
         <p className="text-xs text-content-muted mt-0.5">{description}</p>
       </div>
     </div>
@@ -31,16 +31,16 @@ export default function ProfilesPage() {
         <div className="rounded-xl border border-line bg-surface p-6">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-9 h-9 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0">
-              <svg className="w-5 h-5 text-warning " fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v6l4 2m6-2a10 10 0 11-20 0 10 10 0 0120 0z" />
               </svg>
             </div>
             <div>
               <p className="font-semibold text-content text-sm">Coming soon</p>
-              <p className="text-xs text-content-muted ">Planned for a future release</p>
+              <p className="text-xs text-content-muted">Planned for a future release</p>
             </div>
           </div>
-          <div className="divide-y divide-line-subtle ">
+          <div className="divide-y divide-line-subtle">
             <PlannedItem label="Reading Profiles" description="Preferred formats, languages, and edition preferences per library." />
             <PlannedItem label="Quality Profiles" description="Define which media types and formats are acceptable for a collection." />
             <PlannedItem label="Notification Profiles" description="Configure per-user alerts for new releases and overdue loans." />

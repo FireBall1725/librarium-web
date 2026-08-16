@@ -31,9 +31,9 @@ export default function EmojiPicker({ value, onChange }: EmojiPickerProps) {
       >
         {value
           ? <span className="text-xl leading-none">{value}</span>
-          : <span className="text-content-subtle ">☺</span>
+          : <span className="text-content-subtle">☺</span>
         }
-        <span className="flex-1 text-left text-content-muted ">
+        <span className="flex-1 text-left text-content-muted">
           {value ? '' : 'None'}
         </span>
         <svg className="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">

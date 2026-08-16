@@ -114,7 +114,7 @@ function AddMemberModal({ libraryId, onClose, onAdded }: AddMemberModalProps) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
       <div className="w-full max-w-sm rounded-xl bg-surface shadow-xl p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-content ">Add member</h2>
+          <h2 className="text-lg font-semibold text-content">Add member</h2>
           <button type="button" onClick={onClose}
             className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-surface-inset transition-colors"
             aria-label="Close">
@@ -128,7 +128,7 @@ function AddMemberModal({ libraryId, onClose, onAdded }: AddMemberModalProps) {
             <label className="block text-sm font-medium text-content-secondary mb-1">User</label>
             {selected ? (
               <div className="flex items-center gap-2 rounded-lg border border-accent-line bg-accent-surface px-3 py-2">
-                <span className="flex-1 text-sm text-content ">
+                <span className="flex-1 text-sm text-content">
                   <span className="font-medium">{selected.display_name}</span>
                   <span className="text-content-muted ml-1">@{selected.username}</span>
                 </span>
@@ -149,15 +149,15 @@ function AddMemberModal({ libraryId, onClose, onAdded }: AddMemberModalProps) {
                     <button type="button" onMouseDown={e => e.preventDefault()}
                       onClick={() => { setSelected(u); setQuery(''); setShowDropdown(false) }}
                       className="w-full text-left px-3 py-2 hover:bg-accent-surface transition-colors">
-                      <p className="text-sm font-medium text-content ">{u.display_name}</p>
-                      <p className="text-xs text-content-muted ">@{u.username} · {u.email}</p>
+                      <p className="text-sm font-medium text-content">{u.display_name}</p>
+                      <p className="text-xs text-content-muted">@{u.username} · {u.email}</p>
                     </button>
                   </li>
                 ))}
               </ul>
             )}
             {showDropdown && results.length === 0 && query.length >= 2 && !selected && (
-              <div className="absolute z-10 mt-1 w-full rounded-lg border border-line bg-surface-raised shadow-lg px-3 py-2 text-sm text-content-subtle ">
+              <div className="absolute z-10 mt-1 w-full rounded-lg border border-line bg-surface-raised shadow-lg px-3 py-2 text-sm text-content-subtle">
                 No users found
               </div>
             )}
@@ -171,7 +171,7 @@ function AddMemberModal({ libraryId, onClose, onAdded }: AddMemberModalProps) {
               <option value="library_viewer">Viewer</option>
             </select>
           </div>
-          {error && <div className="rounded-lg bg-danger-surface border border-danger-line px-3 py-2 text-sm text-danger-strong ">{error}</div>}
+          {error && <div className="rounded-lg bg-danger-surface border border-danger-line px-3 py-2 text-sm text-danger-strong">{error}</div>}
           <div className="flex gap-3 pt-1">
             <button type="button" onClick={onClose}
               className="flex-1 rounded-lg border border-line-strong px-4 py-2 text-sm font-medium text-content-secondary hover:bg-surface-muted transition-colors">Cancel</button>
@@ -631,7 +631,7 @@ function AddBookModal({ libraryId, mediaTypes, onClose, onSaved, onDuplicate, in
         {/* Header */}
         <div className="px-6 py-4 border-b border-line flex-shrink-0">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-semibold text-content ">Add book</h2>
+            <h2 className="text-base font-semibold text-content">Add book</h2>
             <button type="button" onClick={onClose}
               className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-surface-inset transition-colors"
               aria-label="Close">
@@ -662,7 +662,7 @@ function AddBookModal({ libraryId, mediaTypes, onClose, onSaved, onDuplicate, in
             <div className="space-y-4">
               {scanning ? (
                 <div className="space-y-3">
-                  <p className="text-sm text-content-tertiary ">Point your camera at a barcode…</p>
+                  <p className="text-sm text-content-tertiary">Point your camera at a barcode…</p>
                   <video ref={videoRef} className="w-full rounded-lg bg-black aspect-video object-cover" playsInline />
                   <button type="button" onClick={stopScan}
                     className="w-full rounded-lg border border-line-strong py-2 text-sm font-medium text-content-secondary hover:bg-surface-muted transition-colors">
@@ -686,11 +686,11 @@ function AddBookModal({ libraryId, mediaTypes, onClose, onSaved, onDuplicate, in
                       className="rounded-lg border border-line-strong px-3 py-2 text-sm text-content-tertiary hover:bg-surface-muted transition-colors"
                       title="Scan barcode">📷</button>
                   </div>
-                  {isbnError && <p className="text-sm text-danger ">{isbnError}</p>}
-                  {isbnLoading && <p className="text-sm text-content-muted ">Searching providers…</p>}
+                  {isbnError && <p className="text-sm text-danger">{isbnError}</p>}
+                  {isbnLoading && <p className="text-sm text-content-muted">Searching providers…</p>}
                   {isbnDuplicate && (
                     <div className="rounded-xl border border-amber-300 dark:border-amber-700 bg-warning-surface px-4 py-3 text-sm">
-                      <p className="font-medium text-warning-strong ">Already in your library</p>
+                      <p className="font-medium text-warning-strong">Already in your library</p>
                       <p className="mt-0.5 text-warning-strong truncate">{isbnDuplicate.title}</p>
                       <div className="mt-2 flex gap-3">
                         <Link to={`/libraries/${libraryId}/books/${isbnDuplicate.id}`}
@@ -703,7 +703,7 @@ function AddBookModal({ libraryId, mediaTypes, onClose, onSaved, onDuplicate, in
                   )}
                   {isbnResults.length > 0 && (
                     <div className="space-y-3">
-                      <p className="text-xs font-semibold uppercase tracking-wider text-content-subtle ">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-content-subtle">
                         {isbnResults.length} result{isbnResults.length !== 1 ? 's' : ''}
                       </p>
                       {[...isbnResults].sort((a, b) => countISBNFields(b) - countISBNFields(a)).map((r, i) => {
@@ -715,12 +715,12 @@ function AddBookModal({ libraryId, mediaTypes, onClose, onSaved, onDuplicate, in
                                 <img src={r.cover_url} alt="" referrerPolicy="no-referrer" className="w-14 h-20 object-cover rounded-lg flex-shrink-0 bg-surface-strong shadow-sm" />
                               )}
                               <div className="flex-1 min-w-0">
-                                <p className="font-semibold text-content ">{r.title}</p>
+                                <p className="font-semibold text-content">{r.title}</p>
                                 {r.subtitle && <p className="text-sm text-content-muted mt-0.5">{r.subtitle}</p>}
                                 {r.authors?.length > 0 && <p className="text-sm text-content-tertiary mt-1">{r.authors.join(', ')}</p>}
                                 <div className="flex items-center gap-2 mt-2">
-                                  <span className="text-xs text-content-subtle ">via {r.provider_display}</span>
-                                  <span className="text-content-faint ">·</span>
+                                  <span className="text-xs text-content-subtle">via {r.provider_display}</span>
+                                  <span className="text-content-faint">·</span>
                                   <span className={`text-xs font-medium ${fieldCount >= 8 ? 'text-green-600 dark:text-green-400' : fieldCount >= 5 ? 'text-amber-500' : 'text-gray-400'}`}>
                                     {fieldCount}/{TOTAL_ISBN_FIELDS} fields
                                   </span>
@@ -757,7 +757,7 @@ function AddBookModal({ libraryId, mediaTypes, onClose, onSaved, onDuplicate, in
                   {searchLoading ? '…' : 'Search'}
                 </button>
               </div>
-              {searchError && <p className="text-sm text-danger ">{searchError}</p>}
+              {searchError && <p className="text-sm text-danger">{searchError}</p>}
               {searchLoading && (
                 <div>
                   <div className="h-1.5 w-full rounded-full bg-surface-inset overflow-hidden">
@@ -769,12 +769,12 @@ function AddBookModal({ libraryId, mediaTypes, onClose, onSaved, onDuplicate, in
                       }}
                     />
                   </div>
-                  <p className="mt-1.5 text-xs text-content-subtle ">Searching providers…</p>
+                  <p className="mt-1.5 text-xs text-content-subtle">Searching providers…</p>
                 </div>
               )}
               {searchResults.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-content-subtle ">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-content-subtle">
                     {searchResults.length} result{searchResults.length !== 1 ? 's' : ''}
                   </p>
                   {searchResults.map((r, i) => (
@@ -783,18 +783,18 @@ function AddBookModal({ libraryId, mediaTypes, onClose, onSaved, onDuplicate, in
                       className="w-full text-left rounded-xl border border-line bg-surface-muted p-3 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-accent-surface transition-colors">
                       <div className="flex gap-3">
                         {r.cover_url ? (
-                          <img src={r.cover_url} alt="" referrerPolicy="no-referrer" className="w-10 h-14 object-cover rounded flex-shrink-0 bg-surface-strong " />
+                          <img src={r.cover_url} alt="" referrerPolicy="no-referrer" className="w-10 h-14 object-cover rounded flex-shrink-0 bg-surface-strong" />
                         ) : (
-                          <div className="w-10 h-14 rounded flex-shrink-0 bg-surface-strong " />
+                          <div className="w-10 h-14 rounded flex-shrink-0 bg-surface-strong" />
                         )}
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-sm text-content truncate">{r.title}</p>
                           {r.subtitle && <p className="text-xs text-content-muted truncate">{r.subtitle}</p>}
                           {r.authors?.length > 0 && <p className="text-xs text-content-tertiary mt-0.5 truncate">{r.authors.join(', ')}</p>}
                           <div className="flex items-center gap-2 mt-1">
-                            {r.publish_date && <span className="text-xs text-content-subtle ">{r.publish_date.slice(0, 4)}</span>}
-                            {r.publish_date && <span className="text-content-faint ">·</span>}
-                            <span className="text-xs text-content-subtle ">{r.provider_display}</span>
+                            {r.publish_date && <span className="text-xs text-content-subtle">{r.publish_date.slice(0, 4)}</span>}
+                            {r.publish_date && <span className="text-content-faint">·</span>}
+                            <span className="text-xs text-content-subtle">{r.provider_display}</span>
                           </div>
                         </div>
                       </div>
@@ -858,7 +858,7 @@ function AddBookModal({ libraryId, mediaTypes, onClose, onSaved, onDuplicate, in
                     onRemove={() => setContributors(cs => cs.filter((_, j) => j !== i))} />
                 ))}
                 {contributors.length === 0 && (
-                  <p className="text-xs text-content-subtle ">No contributors added.</p>
+                  <p className="text-xs text-content-subtle">No contributors added.</p>
                 )}
               </div>
             </div>
@@ -901,7 +901,7 @@ function AddBookModal({ libraryId, mediaTypes, onClose, onSaved, onDuplicate, in
                           onMouseDown={e => { e.preventDefault(); setSelectedTags(ts => [...ts, tag]); setTagQuery(''); tagInputRef.current?.focus() }}
                           className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                           <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: tag.color || '#6b7280' }} />
-                          <span className="text-content-strong ">{tag.name}</span>
+                          <span className="text-content-strong">{tag.name}</span>
                         </button>
                       ))}
                       {tagQuery.trim() && !tagQueryMatchesExisting && (
@@ -915,14 +915,14 @@ function AddBookModal({ libraryId, mediaTypes, onClose, onSaved, onDuplicate, in
                             <select value={newTagColor} onChange={e => { e.stopPropagation(); setNewTagColor(e.target.value) }}
                               onMouseDown={e => e.stopPropagation()}
                               onClick={e => e.stopPropagation()}
-                              className="text-xs border border-line rounded px-1 py-0.5 bg-surface-raised text-content-tertiary ">
+                              className="text-xs border border-line rounded px-1 py-0.5 bg-surface-raised text-content-tertiary">
                               {TAG_COLORS.filter(c => c.value).map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
                             </select>
                           </div>
                         </button>
                       )}
                       {filteredTags.length === 0 && !tagQuery.trim() && (
-                        <p className="px-3 py-2 text-xs text-content-subtle ">No more tags available</p>
+                        <p className="px-3 py-2 text-xs text-content-subtle">No more tags available</p>
                       )}
                     </div>
                   )}
@@ -968,7 +968,7 @@ function AddBookModal({ libraryId, mediaTypes, onClose, onSaved, onDuplicate, in
                   )}
                   {genreDropdownOpen && filteredGenres.length === 0 && genreQuery && (
                     <div className="absolute z-10 mt-1 w-full rounded-lg border border-line bg-surface-raised shadow-lg px-3 py-2">
-                      <p className="text-xs text-content-subtle ">No matching genres</p>
+                      <p className="text-xs text-content-subtle">No matching genres</p>
                     </div>
                   )}
                 </div>
@@ -1013,10 +1013,10 @@ function AddBookModal({ libraryId, mediaTypes, onClose, onSaved, onDuplicate, in
                       <path fillRule="evenodd" d="M7.293 4.293a1 1 0 011.414 0L14 9.586l-5.293 5.293a1 1 0 01-1.414-1.414L11.586 9.586 6.293 4.293a1 1 0 010-1.414z" clipRule="evenodd" />
                     </svg>
                     <span>Edition details</span>
-                    {!showEdition && <span className="text-xs font-normal text-content-subtle ">— no edition will be created</span>}
+                    {!showEdition && <span className="text-xs font-normal text-content-subtle">— no edition will be created</span>}
                   </span>
                   {isbnEntered && !showEdition && (
-                    <span className="text-xs text-accent ">ISBN entered</span>
+                    <span className="text-xs text-accent">ISBN entered</span>
                   )}
                 </button>
                 {showEdition && (() => {
@@ -1152,7 +1152,7 @@ function AddBookModal({ libraryId, mediaTypes, onClose, onSaved, onDuplicate, in
                 })()}
               </div>
 
-            {error && <div className="rounded-xl bg-danger-surface border border-danger-line px-4 py-2.5 text-sm text-danger-strong ">{error}</div>}
+            {error && <div className="rounded-xl bg-danger-surface border border-danger-line px-4 py-2.5 text-sm text-danger-strong">{error}</div>}
           </form>
           )}
         </div>
@@ -1261,7 +1261,7 @@ function ShelfFormModal({ libraryId, shelf, onClose, onSaved }: ShelfFormModalPr
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       <div className="w-full max-w-sm rounded-xl bg-surface shadow-xl p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-semibold text-content ">{shelf ? 'Edit shelf' : 'New shelf'}</h3>
+          <h3 className="text-base font-semibold text-content">{shelf ? 'Edit shelf' : 'New shelf'}</h3>
           <button type="button" onClick={onClose}
             className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-surface-inset transition-colors"
             aria-label="Close">
@@ -1297,7 +1297,7 @@ function ShelfFormModal({ libraryId, shelf, onClose, onSaved }: ShelfFormModalPr
           </div>
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="text-sm font-medium text-content-secondary ">Tags</label>
+              <label className="text-sm font-medium text-content-secondary">Tags</label>
               <button type="button" onClick={() => setShowNewTag(v => !v)}
                 className="text-xs text-blue-600 hover:underline">+ New tag</button>
             </div>
@@ -1316,7 +1316,7 @@ function ShelfFormModal({ libraryId, shelf, onClose, onSaved }: ShelfFormModalPr
                 )
               })}
               {libraryTags.length === 0 && !showNewTag && (
-                <p className="text-xs text-content-subtle ">No tags in this library yet.</p>
+                <p className="text-xs text-content-subtle">No tags in this library yet.</p>
               )}
             </div>
             {showNewTag && (
@@ -1338,7 +1338,7 @@ function ShelfFormModal({ libraryId, shelf, onClose, onSaved }: ShelfFormModalPr
               </div>
             )}
           </div>
-          {error && <div className="rounded-lg bg-danger-surface border border-danger-line px-3 py-2 text-sm text-danger-strong ">{error}</div>}
+          {error && <div className="rounded-lg bg-danger-surface border border-danger-line px-3 py-2 text-sm text-danger-strong">{error}</div>}
           <div className="flex gap-3 pt-1">
             <button type="button" onClick={onClose}
               className="flex-1 rounded-lg border border-line-strong px-4 py-2 text-sm font-medium text-content-secondary hover:bg-surface-muted transition-colors">Cancel</button>
@@ -1395,7 +1395,7 @@ function AddBookToShelfModal({ libraryId, shelfId, existingBookIds, onClose, onA
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       <div className="w-full max-w-md rounded-xl bg-surface shadow-xl p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-semibold text-content ">Add book to shelf</h3>
+          <h3 className="text-base font-semibold text-content">Add book to shelf</h3>
           <button type="button" onClick={onClose}
             className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-surface-inset transition-colors"
             aria-label="Close">
@@ -1496,24 +1496,24 @@ function ShelfDetailView({ shelf, libraryId, onBack }: ShelfDetailViewProps) {
       {!isLoading && books.length > 0 && (
         <div className="rounded-xl border border-line bg-surface overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-surface-muted border-b border-line ">
+            <thead className="bg-surface-muted border-b border-line">
               <tr>
                 {['Title', 'Type', 'Tags', 'Contributors', ''].map(h => (
-                  <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-content-muted ">{h}</th>
+                  <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-content-muted">{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-line-subtle ">
+            <tbody className="divide-y divide-line-subtle">
               {books.map(book => (
                 <tr key={book.id} className="hover:bg-surface-muted transition-colors">
                   <td className="px-4 py-3">
-                    <p className="font-medium text-content ">{book.title}</p>
+                    <p className="font-medium text-content">{book.title}</p>
                     {book.subtitle && <p className="text-xs text-content-subtle truncate max-w-xs">{book.subtitle}</p>}
                     {book.genres?.length > 0 && (
                       <div className="flex flex-wrap gap-1 mt-1">
                         {book.genres.map(genre => (
                           <span key={genre.id}
-                            className="inline-flex items-center rounded-full border border-line px-1.5 py-0.5 text-xs font-medium text-content-tertiary ">
+                            className="inline-flex items-center rounded-full border border-line px-1.5 py-0.5 text-xs font-medium text-content-tertiary">
                             {genre.name}
                           </span>
                         ))}
@@ -1534,13 +1534,13 @@ function ShelfDetailView({ shelf, libraryId, onBack }: ShelfDetailViewProps) {
                           {tag.name}
                         </span>
                       ))}
-                      {!book.tags.length && <span className="text-content-faint ">—</span>}
+                      {!book.tags.length && <span className="text-content-faint">—</span>}
                     </div>
                   </td>
                   <td className="px-4 py-3 text-content-tertiary text-xs">
                     {book.contributors.length > 0
                       ? book.contributors.map(c => c.name).join(', ')
-                      : <span className="text-content-faint ">—</span>}
+                      : <span className="text-content-faint">—</span>}
                   </td>
                   <td className="px-4 py-3 text-right">
                     <button onClick={() => removeBook(book.id)}
@@ -1682,14 +1682,14 @@ function ShelvesTab({ libraryId, setExtraCrumbs }: ShelvesTabProps) {
       {!isLoading && shelves.length > 0 && (
         <div className="rounded-xl border border-line bg-surface overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-surface-muted border-b border-line ">
+            <thead className="bg-surface-muted border-b border-line">
               <tr>
                 {['Name', 'Tags', 'Books', ''].map(h => (
-                  <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-content-muted ">{h}</th>
+                  <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-content-muted">{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-line-subtle ">
+            <tbody className="divide-y divide-line-subtle">
               {shelves.map(shelf => (
                 <tr key={shelf.id} className="hover:bg-surface-muted transition-colors">
                   <td className="px-4 py-3">
@@ -1716,7 +1716,7 @@ function ShelvesTab({ libraryId, setExtraCrumbs }: ShelvesTabProps) {
                           </span>
                         ))}
                       </div>
-                    ) : <span className="text-content-faint ">—</span>}
+                    ) : <span className="text-content-faint">—</span>}
                   </td>
                   <td className="px-4 py-3 text-content-muted text-xs whitespace-nowrap">
                     {shelf.book_count} book{shelf.book_count !== 1 ? 's' : ''}
@@ -2293,7 +2293,7 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
                     className={`w-full flex items-center gap-3 px-3 py-2 text-left text-sm transition-colors ${i === dropdownIdx ? 'bg-blue-50 dark:bg-blue-950/50' : 'hover:bg-gray-50 dark:hover:bg-gray-800'}`}
                   >
                     <span className="font-mono font-medium text-accent min-w-[7rem]">{s.label}</span>
-                    {s.description && <span className="text-xs text-content-subtle ">{s.description}</span>}
+                    {s.description && <span className="text-xs text-content-subtle">{s.description}</span>}
                   </button>
                 ))}
               </div>
@@ -2419,13 +2419,13 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
         )
       })()}
 
-      {error && <div className="mb-4 rounded-lg bg-danger-surface border border-danger-line px-4 py-3 text-sm text-danger-strong ">{error}</div>}
+      {error && <div className="mb-4 rounded-lg bg-danger-surface border border-danger-line px-4 py-3 text-sm text-danger-strong">{error}</div>}
 
       {!data && <div className="text-sm text-content-subtle text-center py-16">Loading…</div>}
 
       {data?.items.length === 0 && (
         <div className="rounded-xl border border-dashed border-line-strong bg-surface p-12 text-center">
-          <p className="text-sm font-medium text-content-muted ">{search ? 'No books match your search.' : 'No books yet'}</p>
+          <p className="text-sm font-medium text-content-muted">{search ? 'No books match your search.' : 'No books yet'}</p>
           {!search && <button onClick={() => setShowAdd(true)}
             className="mt-3 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors">
             Add your first book
@@ -2436,14 +2436,14 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
       {selectedIds.size > 0 && (
         <>
           <div className="mb-3 flex flex-wrap items-center gap-3 rounded-lg border border-accent-line bg-accent-surface px-4 py-2.5 text-sm">
-            <span className="font-medium text-accent-strong ">
+            <span className="font-medium text-accent-strong">
               {selectedIds.size} selected
             </span>
             <div className="h-4 w-px bg-blue-200 dark:bg-blue-700" />
 
             {/* Type */}
             <div className="flex items-center gap-1.5">
-              <span className="text-xs text-content-tertiary ">Type:</span>
+              <span className="text-xs text-content-tertiary">Type:</span>
               <select
                 disabled={isBulkApplying}
                 defaultValue=""
@@ -2464,7 +2464,7 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
             {allTags.length > 0 && (
               <>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xs text-content-tertiary ">Add tag:</span>
+                  <span className="text-xs text-content-tertiary">Add tag:</span>
                   <select
                     disabled={isBulkApplying}
                     defaultValue=""
@@ -2481,7 +2481,7 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
                   </select>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xs text-content-tertiary ">Remove tag:</span>
+                  <span className="text-xs text-content-tertiary">Remove tag:</span>
                   <select
                     disabled={isBulkApplying}
                     defaultValue=""
@@ -2504,7 +2504,7 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
             {allGenres.length > 0 && (
               <>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xs text-content-tertiary ">Add genre:</span>
+                  <span className="text-xs text-content-tertiary">Add genre:</span>
                   <select
                     disabled={isBulkApplying}
                     defaultValue=""
@@ -2521,7 +2521,7 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
                   </select>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xs text-content-tertiary ">Remove genre:</span>
+                  <span className="text-xs text-content-tertiary">Remove genre:</span>
                   <select
                     disabled={isBulkApplying}
                     defaultValue=""
@@ -2602,9 +2602,9 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
                     type="checkbox"
                     checked={bulkMetaForce}
                     onChange={e => setBulkMetaForce(e.target.checked)}
-                    className="mt-0.5 h-4 w-4 rounded border-line-strong "
+                    className="mt-0.5 h-4 w-4 rounded border-line-strong"
                   />
-                  <span className="text-sm text-content-secondary ">
+                  <span className="text-sm text-content-secondary">
                     Override existing fields
                     <span className="block text-xs text-content-muted mt-0.5">
                       When unchecked, only empty fields are filled in. When checked, provider data replaces existing values.
@@ -2616,9 +2616,9 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
                     type="checkbox"
                     checked={bulkMetaUseAI}
                     onChange={e => setBulkMetaUseAI(e.target.checked)}
-                    className="mt-0.5 h-4 w-4 rounded border-line-strong "
+                    className="mt-0.5 h-4 w-4 rounded border-line-strong"
                   />
-                  <span className="text-sm text-content-secondary ">
+                  <span className="text-sm text-content-secondary">
                     Clean descriptions with AI
                     <span className="block text-xs text-content-muted mt-0.5">
                       Strip marketing fluff and retailer boilerplate from each book's description after enrichment. Uses AI tokens.
@@ -4559,7 +4559,7 @@ function SeriesMetadataProposalCard({ proposal, onAccept, onReject }: { proposal
     return (
       <div className="rounded-xl border border-warning-line bg-warning-surface p-4 text-sm">
         <div className="flex items-center justify-between">
-          <p className="text-warning-strong ">AI didn't have evidence for any series-level fields.</p>
+          <p className="text-warning-strong">AI didn't have evidence for any series-level fields.</p>
  <button onClick={() => onReject(proposal.id)} className="text-xs text-warning-strong hover:underline">Dismiss</button>
  </div>
  </div>
@@ -4646,7 +4646,7 @@ function SeriesArcsProposalCard({ proposal, existingArcCount, onAccept, onReject
               : 'Pick which arcs to create.'}
           </p>
         </div>
-        <button onClick={() => onReject(proposal.id)} className="text-xs text-content-muted hover:text-danger ">Dismiss</button>
+        <button onClick={() => onReject(proposal.id)} className="text-xs text-content-muted hover:text-danger">Dismiss</button>
       </div>
       <ul className="space-y-1.5 mb-3">
         {payload.arcs.map((arc, i) => {
@@ -4655,10 +4655,10 @@ function SeriesArcsProposalCard({ proposal, existingArcCount, onAccept, onReject
             <li key={i}>
               <label className="flex items-start gap-2.5 cursor-pointer select-none">
                 <input type="checkbox" checked={selected.has(i)} onChange={() => toggle(i)}
-                  className="mt-0.5 h-4 w-4 rounded border-line-strong " />
+                  className="mt-0.5 h-4 w-4 rounded border-line-strong" />
                 <span className="text-sm text-content-strong flex-1">
                   <span className="font-medium">{arc.name}</span>
-                  <span className="ml-2 text-xs text-content-muted ">{range}</span>
+                  <span className="ml-2 text-xs text-content-muted">{range}</span>
                 </span>
               </label>
             </li>
@@ -4667,12 +4667,12 @@ function SeriesArcsProposalCard({ proposal, existingArcCount, onAccept, onReject
       </ul>
       <label className="flex items-center gap-2.5 mb-3 cursor-pointer select-none">
         <input type="checkbox" checked={assignBooks} onChange={e => setAssignBooks(e.target.checked)}
-          className="h-4 w-4 rounded border-line-strong " />
-        <span className="text-xs text-content-secondary ">Auto-assign books in suggested ranges to their arcs</span>
+          className="h-4 w-4 rounded border-line-strong" />
+        <span className="text-xs text-content-secondary">Auto-assign books in suggested ranges to their arcs</span>
       </label>
       <div className="flex gap-2 justify-end">
         <button onClick={() => onReject(proposal.id)}
-          className="rounded-md px-3 py-1.5 text-xs font-medium text-content-secondary hover:bg-surface-inset ">
+          className="rounded-md px-3 py-1.5 text-xs font-medium text-content-secondary hover:bg-surface-inset">
           Reject all
         </button>
         <button onClick={apply} disabled={selected.size === 0}
@@ -4705,15 +4705,15 @@ function ArcManagerPanel({ libraryId, seriesId, arcs, open, onToggle, onChanged,
   const sorted = [...arcs].sort((a, b) => a.position - b.position || a.name.localeCompare(b.name))
 
   return (
-    <div className="mb-4 rounded-xl border border-line bg-surface ">
+    <div className="mb-4 rounded-xl border border-line bg-surface">
       <button onClick={onToggle}
         className="w-full flex items-center justify-between px-4 py-2.5 text-left hover:bg-surface-muted transition-colors rounded-t-xl">
         <div className="flex items-center gap-2">
           <svg className={`w-4 h-4 text-gray-400 transition-transform ${open ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
-          <span className="font-medium text-sm text-content ">Arcs</span>
-          <span className="text-xs text-content-muted ">{arcs.length === 0 ? 'none yet' : `${arcs.length} arc${arcs.length !== 1 ? 's' : ''}`}</span>
+          <span className="font-medium text-sm text-content">Arcs</span>
+          <span className="text-xs text-content-muted">{arcs.length === 0 ? 'none yet' : `${arcs.length} arc${arcs.length !== 1 ? 's' : ''}`}</span>
         </div>
       </button>
 
@@ -4735,13 +4735,13 @@ function ArcManagerPanel({ libraryId, seriesId, arcs, open, onToggle, onChanged,
                   <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-surface-inset text-xs font-semibold text-content-tertiary flex-shrink-0">
                     {formatPosition(arc.position)}
                   </span>
-                  <span className="flex-1 font-medium text-content ">{arc.name}</span>
+                  <span className="flex-1 font-medium text-content">{arc.name}</span>
                   {arc.vol_start != null && arc.vol_end != null && (
-                    <span className="text-xs text-content-subtle ">
+                    <span className="text-xs text-content-subtle">
                       vols {formatPosition(arc.vol_start)}–{formatPosition(arc.vol_end)}
                     </span>
                   )}
-                  <span className="text-xs text-content-subtle ">{arc.book_count} book{arc.book_count !== 1 ? 's' : ''}</span>
+                  <span className="text-xs text-content-subtle">{arc.book_count} book{arc.book_count !== 1 ? 's' : ''}</span>
                   <button onClick={() => setEditingArc(arc)}
                     className="p-1 rounded text-content-muted hover:text-accent hover:bg-surface-inset transition-colors"
                     title="Edit arc">
@@ -4867,7 +4867,7 @@ function ArcEditRow({ libraryId, seriesId, arc, defaultPosition, onCancel, onSav
         </span>
       </div>
       <div className="flex items-center gap-2 justify-end">
-        <button onClick={onCancel} className="text-xs text-content-muted hover:text-content-secondary ">Cancel</button>
+        <button onClick={onCancel} className="text-xs text-content-muted hover:text-content-secondary">Cancel</button>
         <button onClick={save} disabled={saving || !name.trim()}
           className="rounded bg-blue-600 px-3 py-1 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
           {saving ? 'Saving…' : (arc ? 'Save' : 'Add')}
@@ -4912,7 +4912,7 @@ function BookArcAssigner({ entry, arcs, isOpen, onOpen, onClose, onAssign }: Boo
             className={`w-full text-left px-3 py-1.5 text-xs transition-colors ${!entry.arc_id ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'}`}>
             Unsorted
           </button>
-          <div className="my-1 border-t border-line-subtle " />
+          <div className="my-1 border-t border-line-subtle" />
           {sorted.map(arc => (
             <button key={arc.id} onClick={() => onAssign(arc.id)}
               className={`w-full text-left px-3 py-1.5 text-xs transition-colors ${entry.arc_id === arc.id ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'}`}>
@@ -5211,7 +5211,7 @@ function SeriesDetailView({ seriesId, libraryId, setExtraCrumbs, onBack }: Serie
     <div>
       <div className="flex items-center gap-3 mb-4 flex-wrap">
         <button onClick={onBack} className="text-sm text-content-muted hover:text-content-secondary transition-colors">← Back</button>
-        <span className="text-xs text-content-muted ">
+        <span className="text-xs text-content-muted">
           {seriesStatusLabel(series.status)}
           {series.total_count != null && ` · ${series.book_count} / ${series.total_count} volumes`}
         </span>
@@ -5251,7 +5251,7 @@ function SeriesDetailView({ seriesId, libraryId, setExtraCrumbs, onBack }: Serie
 
       {(series.description || series.url) && (
         <div className="mb-4 space-y-1">
-          {series.description && <p className="text-sm text-content-muted ">{series.description}</p>}
+          {series.description && <p className="text-sm text-content-muted">{series.description}</p>}
           {series.url && (
             <a href={series.url} target="_blank" rel="noopener noreferrer"
               className="text-sm text-accent hover:underline inline-flex items-center gap-1">
@@ -5290,22 +5290,22 @@ function SeriesDetailView({ seriesId, libraryId, setExtraCrumbs, onBack }: Serie
       {!isLoading && hasAnyRows && (
         <div className="rounded-xl border border-line bg-surface overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-surface-muted border-b border-line ">
+            <thead className="bg-surface-muted border-b border-line">
               <tr>
                 {['', 'Title', 'Type', 'Contributors', ''].map((h, i) => (
-                  <th key={i} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-content-muted ">{h}</th>
+                  <th key={i} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-content-muted">{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-line-subtle ">
+            <tbody className="divide-y divide-line-subtle">
               {groups.map(group => (
                 <Fragment key={group.key}>
                   {arcs.length > 0 && group.label && (
                     <tr className="bg-gray-50/60 dark:bg-gray-800/40">
                       <td colSpan={COL_COUNT} className="px-4 py-2">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-semibold uppercase tracking-wide text-content-muted ">{group.label}</span>
-                          <span className="text-xs text-content-subtle ">· {group.rows.filter(r => r.type === 'entry').length} book{group.rows.filter(r => r.type === 'entry').length !== 1 ? 's' : ''}</span>
+                          <span className="text-xs font-semibold uppercase tracking-wide text-content-muted">{group.label}</span>
+                          <span className="text-xs text-content-subtle">· {group.rows.filter(r => r.type === 'entry').length} book{group.rows.filter(r => r.type === 'entry').length !== 1 ? 's' : ''}</span>
                         </div>
                       </td>
                     </tr>
@@ -5325,7 +5325,7 @@ function SeriesDetailView({ seriesId, libraryId, setExtraCrumbs, onBack }: Serie
                           className="font-medium text-content hover:text-accent transition-colors">
                           {row.entry.title}
                         </Link>
-                        {row.entry.subtitle && <p className="text-xs text-content-subtle ">{row.entry.subtitle}</p>}
+                        {row.entry.subtitle && <p className="text-xs text-content-subtle">{row.entry.subtitle}</p>}
                       </td>
                       <td className="px-4 py-3">
                         <span className="inline-flex items-center rounded-full bg-surface-inset px-2 py-0.5 text-xs font-medium text-content-tertiary whitespace-nowrap">
@@ -5335,7 +5335,7 @@ function SeriesDetailView({ seriesId, libraryId, setExtraCrumbs, onBack }: Serie
                       <td className="px-4 py-3 text-content-tertiary text-xs">
                         {row.entry.contributors.length > 0
                           ? row.entry.contributors.map(c => c.name).join(', ')
-                          : <span className="text-content-faint ">—</span>}
+                          : <span className="text-content-faint">—</span>}
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3 justify-end">
@@ -5377,11 +5377,11 @@ function SeriesDetailView({ seriesId, libraryId, setExtraCrumbs, onBack }: Serie
                         />
                       </td>
                       <td className="px-4 py-3">
-                        <p className="italic text-content-subtle ">
+                        <p className="italic text-content-subtle">
                           {row.volume?.title || `Vol. ${row.position}`}
                         </p>
                         {row.volume?.release_date && (
-                          <p className="text-xs text-content-subtle ">
+                          <p className="text-xs text-content-subtle">
                             {new Date(row.volume.release_date + 'T00:00:00').toLocaleDateString(undefined, { year: 'numeric', month: 'short' })}
                           </p>
                         )}
@@ -5480,7 +5480,7 @@ function SeriesMosaic({ series, size = 'md' }: { series: Series; size?: 'sm' | '
   return (
     <div className={`${containerCls} aspect-square rounded-lg overflow-hidden grid grid-cols-2 grid-rows-2 gap-0.5 bg-surface-strong shadow-md`}>
       {padded.map((p, i) => (
-        <div key={i} className="relative overflow-hidden bg-surface-inset ">
+        <div key={i} className="relative overflow-hidden bg-surface-inset">
           {p ? <SeriesMosaicTile p={p} fallbackTitle={series.name} /> : <SeriesMosaicGradient title={series.name} idx={i} />}
         </div>
       ))}
@@ -5523,7 +5523,7 @@ function readingState(s: Series): ReadingState {
 }
 
 function ReadingStatePill({ state }: { state: ReadingState }) {
-  if (state === 'read_all') return <span className="inline-flex items-center rounded-full bg-success-surface px-2 py-0.5 text-xs font-medium text-success-strong ring-1 ring-success-line ">Read</span>
+  if (state === 'read_all') return <span className="inline-flex items-center rounded-full bg-success-surface px-2 py-0.5 text-xs font-medium text-success-strong ring-1 ring-success-line">Read</span>
   if (state === 'reading') return <span className="inline-flex items-center rounded-full bg-accent-surface px-2 py-0.5 text-xs font-medium text-accent-strong ring-1 ring-blue-200 dark:ring-blue-800">Reading</span>
   return null
 }
@@ -5751,7 +5751,7 @@ function SeriesTab({ libraryId, setExtraCrumbs }: SeriesTabProps) {
                         <span className="text-xs text-content-muted ml-auto">{s.arc_count} arc{s.arc_count !== 1 ? 's' : ''}</span>
                       )}
                     </div>
-                    <div className="text-xs text-content-muted ">
+                    <div className="text-xs text-content-muted">
                       {seriesStatusLabel(s.status)} · {s.book_count}{total > 0 ? ` / ${total}` : ''} owned
                       {showReadBadges && s.read_count > 0 && rs !== 'read_all' && (
                         <span> · {s.read_count} read</span>
@@ -5784,14 +5784,14 @@ function SeriesTab({ libraryId, setExtraCrumbs }: SeriesTabProps) {
       {!isLoading && visibleSeries.length > 0 && viewMode === 'table' && (
         <div className="rounded-xl border border-line bg-surface overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-surface-muted border-b border-line ">
+            <thead className="bg-surface-muted border-b border-line">
               <tr>
                 {['', 'Name', 'Status', 'Tags', 'Volumes', 'Arcs', ''].map((h, i) => (
-                  <th key={i} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-content-muted ">{h}</th>
+                  <th key={i} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-content-muted">{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-line-subtle ">
+            <tbody className="divide-y divide-line-subtle">
               {visibleSeries.map(s => (
                 <tr key={s.id} className="hover:bg-surface-muted transition-colors">
                   <td className="pl-4 pr-2 py-2"><SeriesMosaic series={s} size="sm" /></td>
@@ -5799,12 +5799,12 @@ function SeriesTab({ libraryId, setExtraCrumbs }: SeriesTabProps) {
                     <button onClick={() => navigate(`/libraries/${libraryId}/series/${s.id}`)} className="text-left group">
                       <p className="font-medium text-content group-hover:text-blue-600 transition-colors">{s.name}</p>
                       {s.description && <p className="text-xs text-content-subtle truncate max-w-xs">{s.description}</p>}
-                      {s.demographic && <p className="text-xs text-content-subtle ">{s.demographic}</p>}
+                      {s.demographic && <p className="text-xs text-content-subtle">{s.demographic}</p>}
                     </button>
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-content-muted ">{seriesStatusLabel(s.status)}</span>
+                      <span className="text-xs text-content-muted">{seriesStatusLabel(s.status)}</span>
                       {showReadBadges && <ReadingStatePill state={readingState(s)} />}
                     </div>
                   </td>
@@ -5819,18 +5819,18 @@ function SeriesTab({ libraryId, setExtraCrumbs }: SeriesTabProps) {
                           </span>
                         ))}
                       </div>
-                    ) : <span className="text-content-faint ">—</span>}
+                    ) : <span className="text-content-faint">—</span>}
                   </td>
                   <td className="px-4 py-3 text-xs text-content-muted whitespace-nowrap">
                     {s.book_count}{s.total_count != null ? ` / ${s.total_count}` : ''}
                     {s.next_release_date && (
-                      <p className="text-content-subtle ">
+                      <p className="text-content-subtle">
                         Next: {new Date(s.next_release_date + 'T00:00:00').toLocaleDateString(undefined, { year: 'numeric', month: 'short' })}
                       </p>
                     )}
                   </td>
                   <td className="px-4 py-3 text-xs text-content-muted whitespace-nowrap">
-                    {s.arc_count > 0 ? `${s.arc_count} arc${s.arc_count !== 1 ? 's' : ''}` : <span className="text-content-faint ">—</span>}
+                    {s.arc_count > 0 ? `${s.arc_count} arc${s.arc_count !== 1 ? 's' : ''}` : <span className="text-content-faint">—</span>}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3 justify-end">
@@ -6006,15 +6006,15 @@ function LoansTab({ libraryId }: LoansTabProps) {
       {!isLoading && visibleLoans.length > 0 && (
         <div className="rounded-xl border border-line bg-surface overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-surface-muted border-b border-line ">
+            <thead className="bg-surface-muted border-b border-line">
               <tr>
                 {['Book', 'Loaned to', 'Loaned', 'Due', showReturnedColumn ? 'Returned' : '', ''].map((h, i) => (
-                  h ? <th key={i} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-content-muted ">{h}</th>
+                  h ? <th key={i} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-content-muted">{h}</th>
                     : <th key={i} />
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-line-subtle ">
+            <tbody className="divide-y divide-line-subtle">
               {visibleLoans.map(loan => (
                 <tr key={loan.id} className="hover:bg-surface-muted transition-colors">
                   <td className="px-4 py-3 font-medium">
@@ -6023,18 +6023,18 @@ function LoansTab({ libraryId }: LoansTabProps) {
                       {loan.book_title}
                     </Link>
                   </td>
-                  <td className="px-4 py-3 text-content-secondary ">{loan.loaned_to}</td>
+                  <td className="px-4 py-3 text-content-secondary">{loan.loaned_to}</td>
                   <td className="px-4 py-3 text-content-muted text-xs">{loan.loaned_at}</td>
                   <td className="px-4 py-3 text-xs">
                     {loan.due_date ? (
                       <span className={isOverdue(loan) ? 'text-danger font-medium' : 'text-content-muted '}>
                         {loan.due_date}{isOverdue(loan) && ' ⚠'}
                       </span>
-                    ) : <span className="text-content-faint ">—</span>}
+                    ) : <span className="text-content-faint">—</span>}
                   </td>
                   {showReturnedColumn && (
-                    <td className="px-4 py-3 text-xs text-content-muted ">
-                      {loan.returned_at ?? <span className="text-content-faint ">—</span>}
+                    <td className="px-4 py-3 text-xs text-content-muted">
+                      {loan.returned_at ?? <span className="text-content-faint">—</span>}
                     </td>
                   )}
                   <td className="px-4 py-3">
@@ -6163,7 +6163,7 @@ export default function LibraryPage({ section }: { section: 'books' | 'shelves' 
       {section === 'members' && (
         <>
           {actionError && (
-            <div className="mb-4 rounded-lg bg-danger-surface border border-danger-line px-4 py-3 text-sm text-danger-strong ">{actionError}</div>
+            <div className="mb-4 rounded-lg bg-danger-surface border border-danger-line px-4 py-3 text-sm text-danger-strong">{actionError}</div>
           )}
           <div className="mb-4 relative">
             <input
@@ -6179,20 +6179,20 @@ export default function LibraryPage({ section }: { section: 'books' | 'shelves' 
           </div>
           <div className="rounded-xl border border-line bg-surface overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="bg-surface-muted border-b border-line ">
+              <thead className="bg-surface-muted border-b border-line">
                 <tr>
                   {['User', 'Email', 'Tags', 'Role', 'Joined', ''].map(h => (
-                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-content-muted ">{h}</th>
+                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-content-muted">{h}</th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-line-subtle ">
-                {!members && <tr><td colSpan={6} className="px-4 py-8 text-center text-sm text-content-subtle ">Loading…</td></tr>}
-                {members?.length === 0 && <tr><td colSpan={6} className="px-4 py-8 text-center text-sm text-content-subtle ">{memberSearch ? 'No members match your search.' : 'No members yet.'}</td></tr>}
+              <tbody className="divide-y divide-line-subtle">
+                {!members && <tr><td colSpan={6} className="px-4 py-8 text-center text-sm text-content-subtle">Loading…</td></tr>}
+                {members?.length === 0 && <tr><td colSpan={6} className="px-4 py-8 text-center text-sm text-content-subtle">{memberSearch ? 'No members match your search.' : 'No members yet.'}</td></tr>}
                 {members?.map(m => (
                   <tr key={m.user_id} className="hover:bg-surface-muted transition-colors">
-                    <td className="px-4 py-3 font-medium text-content ">{m.display_name}</td>
-                    <td className="px-4 py-3 text-content-tertiary ">{m.email}</td>
+                    <td className="px-4 py-3 font-medium text-content">{m.display_name}</td>
+                    <td className="px-4 py-3 text-content-tertiary">{m.email}</td>
                     <td className="px-4 py-3">
                       {m.tags && m.tags.length > 0 ? (
                         <div className="flex flex-wrap gap-1">
@@ -6204,14 +6204,14 @@ export default function LibraryPage({ section }: { section: 'books' | 'shelves' 
                             </span>
                           ))}
                         </div>
-                      ) : <span className="text-content-faint ">—</span>}
+                      ) : <span className="text-content-faint">—</span>}
                     </td>
                     <td className="px-4 py-3">
-                      <span className="inline-flex items-center rounded-full bg-surface-inset px-2 py-0.5 text-xs font-medium text-content-tertiary ">
+                      <span className="inline-flex items-center rounded-full bg-surface-inset px-2 py-0.5 text-xs font-medium text-content-tertiary">
                         {roleLabel[m.role] ?? m.role}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-content-muted ">{new Date(m.joined_at).toLocaleDateString()}</td>
+                    <td className="px-4 py-3 text-content-muted">{new Date(m.joined_at).toLocaleDateString()}</td>
                     <td className="px-4 py-3 text-right">
                       {m.role !== 'library_owner' && (
                         <button onClick={() => removeMember(m.user_id)}

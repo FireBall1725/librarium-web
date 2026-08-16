@@ -75,7 +75,7 @@ export default function InteractionForm({ libraryId, bookId, editionId }: Props)
   }
 
   return (
-    <div className="mt-3 pt-3 border-t border-line-subtle ">
+    <div className="mt-3 pt-3 border-t border-line-subtle">
       <p className="text-xs font-semibold text-content-muted uppercase tracking-wide mb-2">My reading</p>
       <div className="grid grid-cols-2 gap-2">
         <div>
@@ -104,25 +104,25 @@ export default function InteractionForm({ libraryId, bookId, editionId }: Props)
         </div>
       </div>
       <div className="mt-2">
-        <label className="block text-xs text-content-tertiary mb-1">Notes <span className="text-content-subtle ">(private)</span></label>
+        <label className="block text-xs text-content-tertiary mb-1">Notes <span className="text-content-subtle">(private)</span></label>
         <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
           rows={2} placeholder="Personal notes…"
           className="w-full rounded border border-line-strong dark:bg-gray-800 dark:text-white px-2 py-1.5 text-xs focus:border-blue-500 focus:outline-none resize-none" />
       </div>
       <div className="mt-2">
-        <label className="block text-xs text-content-tertiary mb-1">Review <span className="text-content-subtle ">(visible to members)</span></label>
+        <label className="block text-xs text-content-tertiary mb-1">Review <span className="text-content-subtle">(visible to members)</span></label>
         <textarea value={form.review} onChange={e => setForm(f => ({ ...f, review: e.target.value }))}
           rows={2} placeholder="Share your thoughts…"
           className="w-full rounded border border-line-strong dark:bg-gray-800 dark:text-white px-2 py-1.5 text-xs focus:border-blue-500 focus:outline-none resize-none" />
       </div>
       <div className="mt-2 flex items-center justify-between">
-        <label className="flex items-center gap-1.5 text-xs text-content-tertiary ">
+        <label className="flex items-center gap-1.5 text-xs text-content-tertiary">
           <input type="checkbox" checked={form.is_favorite} onChange={e => setForm(f => ({ ...f, is_favorite: e.target.checked }))}
-            className="rounded border-line-strong " />
+            className="rounded border-line-strong" />
           Favourite
         </label>
         <div className="flex items-center gap-2">
-          {isSaved && <span className="text-xs text-success ">Saved!</span>}
+          {isSaved && <span className="text-xs text-success">Saved!</span>}
           {interaction && (
             <button onClick={async () => {
               if (!confirm('Remove your reading record for this edition?')) return
