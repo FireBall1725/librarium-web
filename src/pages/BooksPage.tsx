@@ -62,32 +62,30 @@ function StatusChip({ book, t }: { book: Book; t: TFunction }) {
   const status = book.user_read_status || 'unread'
 
   const pct = Math.round(book.user_progress_pct ?? 0)
+  // Tone modifiers come from the reference chip: good, on, warn, or the plain
+  // outline for unread.
   const tone =
-    status === 'read' ? 'text-success border-success-line'
-    : status === 'reading' ? 'text-accent border-accent-line'
-    : status === 'did_not_finish' ? 'text-warning border-warning-line'
-    : 'text-content-tertiary border-line-strong'
+    status === 'read' ? 'good'
+    : status === 'reading' ? 'on'
+    : status === 'did_not_finish' ? 'warn'
+    : ''
 
   const label = status === 'reading' && pct > 0
     ? `${pct}%`
     : t(`read_status.${status}`, { defaultValue: status })
 
-  return (
-    <span className={`flex-none rounded-full border px-2.5 py-[3px] text-[11px] ${tone}`}>
-      {label}
-    </span>
-  )
+  return <span className={`lb-chip flex-none ${tone}`}>{label}</span>
 }
 
 /**
- * Fixed-width so the titles beside it stay on one left edge down the list;
- * a rating that sized itself would make every row start somewhere different.
+ * Fixed-width so the titles beside it stay on one left edge down the list; a
+ * rating that sized itself would make every row start somewhere different. The
+ * width and the narrow-screen hiding both come from `.lb-rowitem .stars`.
  */
 function Stars({ rating }: { rating: number }) {
-  if (!rating) return <span className="hidden w-[66px] flex-none sm:block" aria-hidden="true" />
+  if (!rating) return <span className="stars" aria-hidden="true" />
   return (
-    <span className="hidden w-[66px] flex-none text-right text-xs tracking-[1px] text-warning sm:block"
-      aria-label={`${rating} out of 5`}>
+    <span className="stars text-warning" aria-label={`${rating} out of 5`}>
       {'★'.repeat(rating)}
     </span>
   )
@@ -396,9 +394,11 @@ export default function BooksPage() {
             {books.length > 0 && layout === 'rows' && (
               <ul>
                 {books.map(book => (
-                  <li key={book.id} className="border-b border-line-subtle">
-                    <Link to={bookHref(book)}
-                      className="flex items-center gap-3 px-1 py-2.5 transition-colors hover:bg-surface-inset">
+                  <li key={book.id}>
+                    {/* .lb-rowitem carries the row's gap, padding and separator
+                        from the reference stylesheet, so this markup describes
+                        what is in the row and nothing about how it looks. */}
+                    <Link to={bookHref(book)} className="lb-rowitem">
                       <BookCoverThumb
                         title={book.title}
                         coverUrl={book.cover_url}
@@ -406,14 +406,10 @@ export default function BooksPage() {
                         seed={coverSeed(book)}
                       />
                       <span className="min-w-0 flex-1">
-                        {/* The display face on the title and a small muted line
-                            under it: the same pairing the page heading uses, so
-                            a list of books reads as a catalogue rather than as
-                            table rows. */}
-                        <span className="font-display block truncate text-[1.03rem] leading-tight text-content">
+                        <span className="lb-display block truncate text-[16.5px] leading-tight text-content">
                           {book.title}
                         </span>
-                        <span className="block truncate text-[11px] text-content-muted">
+                        <span className="block truncate text-[11px] text-content-tertiary">
                           {[
                             book.contributors?.[0]?.name,
                             book.publish_year || null,

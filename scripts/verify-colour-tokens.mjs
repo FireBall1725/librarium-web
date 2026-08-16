@@ -3,16 +3,24 @@
 //
 // Guard for the semantic colour tokens in src/index.css.
 //
-// The token layer replaced ~2,100 paired `dark:` utilities. This asserts that
-// every token still resolves to the exact palette colour the classes it
-// replaced were using, in both themes, so a later edit cannot quietly shift a
-// shade across the whole client.
+// What this used to check: that every token still resolved to the exact palette
+// colour the `dark:` utilities it replaced had been using. That was the right
+// assertion while the token layer was a mechanical conversion meant to change
+// nothing on screen, and it is the wrong one now — the themes carry the
+// reference implementation's palette on purpose, so pinning them to the old
+// blue and grey would forbid the redesign it was written to protect.
+//
+// What it checks instead is the property that still has to hold: a theme is
+// complete. Every theme defines the full sixteen-colour palette, every derived
+// token is defined once, and the aliases the ported reference CSS reads are all
+// present. A theme missing a colour renders one surface from another theme's
+// value, which is the failure that actually reaches a reader.
 //
 // Run against a production build:  npm run build && node scripts/verify-colour-tokens.mjs
 //
-// Note: Tailwind splits `.dark` across several rules when a value uses
-// `--alpha()`, so every matching block has to be merged before checking. Reading
-// only the first one reports the coloured families as missing.
+// Note: Tailwind splits a selector across several rules when a value uses
+// `--alpha()`, so every matching block has to be merged before checking.
+// Reading only the first one reports whole families as missing.
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
@@ -24,144 +32,92 @@ if (!cssFile) {
 }
 const css = readFileSync(join(DIST, cssFile), "utf8");
 
-// Match any rule whose selector LIST mentions the target, so `:root,
-// [data-theme="paper"] { ... }` is found by either name. Tailwind also splits a
-// selector across several rules when a value uses --alpha(), so all matching
-// blocks are merged.
+/** Every custom property declared by rules whose selector list mentions needle. */
 function mergedVars(needle) {
   const out = {};
   for (const m of css.matchAll(/([^{}]+)\{([^}]*)\}/g)) {
     const [, selector, body] = m;
     if (!selector.replace(/["']/g, "").includes(needle)) continue;
-    if (!body.includes("--t-")) continue;
-    for (const v of body.matchAll(/--t-([a-z-]+):var\(--color-([a-z0-9-]+)\)/g)) out[v[1]] = v[2];
+    for (const v of body.matchAll(/(--[a-z0-9-]+)\s*:\s*([^;}]+)/g)) {
+      out[v[1].trim()] = v[2].trim();
+    }
   }
   return out;
 }
 
-// Same, but for the alpha-blended surfaces.
-function mergedAlpha(needle) {
-  const out = {};
-  for (const m of css.matchAll(/([^{}]+)\{([^}]*)\}/g)) {
-    const [, selector, body] = m;
-    if (!selector.replace(/["']/g, "").includes(needle)) continue;
-    for (const v of body.matchAll(/--t-([a-z-]+-surface):color-mix\(in oklab,\s*var\(--color-([a-z0-9-]+)\)\s*([0-9]+)%/g))
-      out[v[1]] = [v[2], v[3]];
-  }
-  return out;
-}
+// The sixteen a theme must name. Everything else is derived from these.
+const PALETTE = [
+  "--r-bg", "--r-bg-raise", "--r-card",
+  "--r-text", "--r-text-2", "--r-text-3",
+  "--r-line", "--r-line-2",
+  "--r-accent", "--r-accent-2", "--r-accent-sf",
+  "--r-good", "--r-warn", "--r-bad", "--r-shadow",
+];
 
-// The minifier strips quotes from attribute selectors, so compare unquoted.
-function mergedVarsAny(needle) {
-  const out = {};
-  for (const m of css.matchAll(/([^{}]+)\{([^}]*)\}/g)) {
-    const [, selector, body] = m;
-    if (!selector.replace(/["']/g, "").includes(needle)) continue;
-    for (const v of body.matchAll(/--t-([a-z-]+):/g)) out[v[1]] = true;
-  }
-  return out;
-}
+// The tokens components actually consume.
+const TOKENS = [
+  "surface", "surface-raised", "surface-muted", "surface-inset", "surface-strong",
+  "content", "content-strong", "content-secondary", "content-tertiary",
+  "content-muted", "content-subtle", "content-faint",
+  "line", "line-strong", "line-subtle",
+  "accent", "accent-strong", "accent-surface", "accent-line",
+  "danger", "danger-strong", "danger-surface", "danger-line",
+  "success", "success-strong", "success-surface", "success-line",
+  "warning", "warning-strong", "warning-surface", "warning-line",
+].map((n) => `--t-${n}`);
 
-const light = mergedVars("[data-theme=paper]");
-const dark = mergedVars("[data-theme=ink]");
+// What the ported reference stylesheet reads. A missing alias renders a ported
+// component with no colour at all, which is far louder than a wrong shade.
+const ALIASES = [
+  "--bg", "--bg-raise", "--card", "--text", "--text-2", "--text-3",
+  "--line", "--line-2", "--accent", "--accent-2", "--accent-sf",
+  "--good", "--warn", "--gold", "--bad", "--shadow",
+];
 
-// token -> [light palette entry, dark palette entry] it must equal
-const EXPECT = {
-  surface: ["white", "gray-900"],
-  "surface-raised": ["white", "gray-800"],
-  "surface-muted": ["gray-50", "gray-800"],
-  "surface-inset": ["gray-100", "gray-800"],
-  "surface-strong": ["gray-200", "gray-700"],
+const THEMES = [
+  ["paper", ':root'],
+  ["ink", '[data-theme=ink]'],
+  ["sepia", '[data-theme=sepia]'],
+  ["nocturne", '[data-theme=nocturne]'],
+];
 
-  content: ["gray-900", "white"],
-  "content-strong": ["gray-800", "gray-200"],
-  "content-secondary": ["gray-700", "gray-300"],
-  "content-tertiary": ["gray-600", "gray-400"],
-  "content-muted": ["gray-500", "gray-400"],
-  "content-subtle": ["gray-400", "gray-500"],
-  "content-faint": ["gray-300", "gray-600"],
+let failed = 0;
 
-  line: ["gray-200", "gray-700"],
-  "line-strong": ["gray-300", "gray-600"],
-  "line-subtle": ["gray-100", "gray-800"],
-
-  accent: ["blue-600", "blue-400"],
-  "accent-strong": ["blue-700", "blue-300"],
-  "accent-line": ["blue-300", "blue-700"],
-
-  danger: ["red-600", "red-400"],
-  "danger-strong": ["red-700", "red-400"],
-  "danger-line": ["red-200", "red-800"],
-
-  success: ["green-600", "green-400"],
-  "success-strong": ["green-700", "green-400"],
-  "success-line": ["green-200", "green-800"],
-
-  warning: ["amber-600", "amber-400"],
-  "warning-strong": ["amber-700", "amber-300"],
-  "warning-line": ["amber-200", "amber-800"],
-};
-
-// the *-surface tokens are alpha blends in dark, checked separately
-const EXPECT_ALPHA = {
-  "accent-surface": ["blue-50", "blue-900", "30"],
-  "danger-surface": ["red-50", "red-950", "50"],
-  "success-surface": ["green-50", "green-950", "50"],
-  "warning-surface": ["amber-50", "amber-950", "50"],
-};
-
-let bad = 0;
-let ok = 0;
-for (const [tok, [wantL, wantD]] of Object.entries(EXPECT)) {
-  if (light[tok] === wantL && dark[tok] === wantD) { ok++; continue; }
-  bad++;
-  console.log(`  MISMATCH ${tok}: light ${light[tok]} (want ${wantL}), dark ${dark[tok]} (want ${wantD})`);
-}
-
-// The alpha surfaces are emitted twice by the minifier: a precomputed hex and a
-// color-mix() fallback, and which one appears where is its business, not ours.
-// So intent is checked in the SOURCE and presence in the build.
-const srcCss = readFileSync("src/index.css", "utf8");
-const inkBlock = srcCss.slice(srcCss.indexOf('[data-theme="ink"]'), srcCss.indexOf('[data-theme="sepia"]'));
-for (const [tok, [wantL, wantDColour, wantPct]] of Object.entries(EXPECT_ALPHA)) {
-  const declared = new RegExp(`--t-${tok}:\\s*--alpha\\(var\\(--color-${wantDColour}\\)\\s*/\\s*${wantPct}%\\)`).test(inkBlock);
-  const present = new RegExp(`--t-${tok}:`).test(css);
-  if (light[tok] === wantL && declared && present) { ok++; continue; }
-  bad++;
-  console.log(`  MISMATCH ${tok}: light ${light[tok]} (want ${wantL}), ink declares ${wantDColour} @ ${wantPct}%? ${declared}, in build? ${present}`);
-}
-
-console.log(`\n${ok} tokens resolve to the colour they replaced, ${bad} mismatched`);
-if (bad) process.exit(1);
-
-// Nothing outside index.css should be naming a raw palette shade in a dark: variant.
-const files = [];
-(function walk(d) {
-  for (const n of readdirSync(d, { withFileTypes: true })) {
-    if (n.isDirectory()) walk(join(d, n.name));
-    else if (/\.tsx?$/.test(n.name)) files.push(join(d, n.name));
-  }
-})("src");
-const PALETTE = /dark:(bg|text|border|divide|ring)-(gray|red|blue|green|amber|slate|zinc)-\d{2,3}/g;
-let leftovers = 0;
-for (const f of files) {
-  const hits = readFileSync(f, "utf8").match(PALETTE);
-  if (hits) leftovers += hits.length;
-}
-console.log(`${leftovers} paired dark: palette utilities remain (tail, not yet tokenised)`);
-
-// Every theme must define the full token set, or a component falls back to
-// whatever :root left behind and the theme is subtly broken rather than absent.
-const REQUIRED = [...Object.keys(EXPECT), ...Object.keys(EXPECT_ALPHA)];
-let incomplete = 0;
-for (const theme of ["paper", "ink", "sepia", "nocturne"]) {
-  const plain = mergedVarsAny(`[data-theme=${theme}]`);
-  const missing = REQUIRED.filter((t) => !(t in plain));
+for (const [name, selector] of THEMES) {
+  const vars = mergedVars(selector);
+  const missing = PALETTE.filter((p) => !(p in vars));
   if (missing.length) {
-    incomplete++;
-    console.log(`  ${theme} is missing ${missing.length} token(s): ${missing.slice(0, 6).join(", ")}`);
+    console.error(`  ${name}: missing ${missing.length} palette colours: ${missing.join(" ")}`);
+    failed++;
   } else {
-    console.log(`  ${theme}: all ${REQUIRED.length} tokens defined`);
+    console.log(`  ${name}: all ${PALETTE.length} palette colours defined`);
   }
 }
-if (incomplete) process.exit(1);
+
+// Derived tokens and aliases live on a bare :root, so they are checked once.
+const root = mergedVars(":root");
+
+for (const [label, list] of [["tokens", TOKENS], ["reference aliases", ALIASES]]) {
+  const missing = list.filter((n) => !(n in root));
+  if (missing.length) {
+    console.error(`  ${label}: missing ${missing.length}: ${missing.join(" ")}`);
+    failed++;
+  } else {
+    console.log(`  ${label}: all ${list.length} defined`);
+  }
+}
+
+// A token that resolves to nothing is worse than one that resolves oddly: the
+// property is dropped and the element inherits, which looks like a bug
+// somewhere else entirely.
+const empty = [...TOKENS, ...ALIASES].filter((n) => root[n] !== undefined && root[n] === "");
+if (empty.length) {
+  console.error(`  empty values: ${empty.join(" ")}`);
+  failed++;
+}
+
+if (failed) {
+  console.error(`\n${failed} check(s) failed`);
+  process.exit(1);
+}
+console.log("\nAll themes complete.");

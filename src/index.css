@@ -107,225 +107,188 @@
 }
 
 @layer base {
-  /* Compatibility aliases for the ported reference CSS.
+  /* Themes.
      ------------------------------------------------------------------------
-     The reference implementation names its colours --bg / --text-2 / --good.
-     Rather than rewriting 22 KB of rules to our token names, which would make
-     every future re-port a translation instead of a copy, the sixteen names
-     are aliased here. They point at our tokens, so all four themes drive the
-     ported components with no further work.
+     These are the reference implementation's palettes, not the colours the
+     client shipped before the redesign. The earlier token work deliberately
+     kept the old values so the mechanical conversion changed nothing on screen;
+     that job is finished, and holding onto them afterwards is what made the app
+     draw the mockup's shapes in the old blue and grey.
+
+     Each theme names sixteen colours, which is what the reference uses. The
+     rest of our token set is derived from those with color-mix rather than
+     hand-picked, so a theme is sixteen decisions instead of thirty-one, and a
+     tweak to an accent carries through everything built on it.
+
+     Deriving toward --t-content works in both directions without a special
+     case: on a dark theme the content colour is light, so mixing brightens; on
+     a light theme it is near-black, so the same expression darkens. */
+
+  :root,
+  [data-theme="paper"] {
+    color-scheme: light;
+
+    --r-bg:        #f7f4ec;
+    --r-bg-raise:  #fffdf7;
+    --r-card:      #fffdf7;
+    --r-text:      #1d1b16;
+    --r-text-2:    #56514a;
+    --r-text-3:    #8b857b;
+    --r-line:      rgb(29 27 22 / 0.10);
+    --r-line-2:    rgb(29 27 22 / 0.18);
+    --r-accent:    #4b53c9;
+    --r-accent-2:  #343bab;
+    --r-accent-sf: rgb(75 83 201 / 0.12);
+    --r-good:      #2f8a63;
+    --r-warn:      #b3701f;
+    --r-bad:       #b4474c;
+    --r-shadow:    rgb(29 27 22 / 0.14);
+  }
+
+  /* `.dark` is listed alongside the attribute because roughly 980 `dark:`
+     utilities have not been converted yet and still key off the class. When
+     that count reaches zero the `.dark` selector here can go. */
+  [data-theme="ink"],
+  .dark {
+    color-scheme: dark;
+
+    --r-bg:        #0c0d12;
+    --r-bg-raise:  #16181f;
+    --r-card:      #1b1d25;
+    --r-text:      #f1ede2;
+    --r-text-2:    #b9b3a4;
+    --r-text-3:    #6e6a5f;
+    --r-line:      rgb(255 255 255 / 0.07);
+    --r-line-2:    rgb(255 255 255 / 0.13);
+    --r-accent:    #8089ff;
+    --r-accent-2:  #aab1ff;
+    --r-accent-sf: rgb(128 137 255 / 0.18);
+    --r-good:      #7bd6a8;
+    --r-warn:      #ffb866;
+    --r-bad:       #ff8a8a;
+    --r-shadow:    rgb(0 0 0 / 0.5);
+  }
+
+  [data-theme="sepia"] {
+    color-scheme: dark;
+
+    --r-bg:        #1a1512;
+    --r-bg-raise:  #241d18;
+    --r-card:      #2a221c;
+    --r-text:      #f0e4d4;
+    --r-text-2:    #c2ae97;
+    --r-text-3:    #877661;
+    --r-line:      rgb(240 228 212 / 0.08);
+    --r-line-2:    rgb(240 228 212 / 0.15);
+    --r-accent:    #d9a441;
+    --r-accent-2:  #edbe63;
+    --r-accent-sf: rgb(217 164 65 / 0.16);
+    --r-good:      #8fbf7a;
+    --r-warn:      #e0954a;
+    --r-bad:       #d97b6c;
+    --r-shadow:    rgb(0 0 0 / 0.55);
+  }
+
+  [data-theme="nocturne"] {
+    color-scheme: dark;
+
+    --r-bg:        #0a1018;
+    --r-bg-raise:  #111b26;
+    --r-card:      #14202d;
+    --r-text:      #e4eef5;
+    --r-text-2:    #9fb3c2;
+    --r-text-3:    #607585;
+    --r-line:      rgb(228 238 245 / 0.07);
+    --r-line-2:    rgb(228 238 245 / 0.14);
+    --r-accent:    #56b6d4;
+    --r-accent-2:  #85d3ea;
+    --r-accent-sf: rgb(86 182 212 / 0.16);
+    --r-good:      #6fcf9f;
+    --r-warn:      #e8b268;
+    --r-bad:       #ef8a8a;
+    --r-shadow:    rgb(0 0 0 / 0.55);
+  }
+
+  /* The token set, derived once from whichever palette is active above.
+     Declared on :root so it recomputes when a [data-theme] block changes the
+     --r-* values underneath it. */
+  :root {
+    --t-surface:         var(--r-bg-raise);
+    --t-surface-raised:  var(--r-card);
+    --t-surface-muted:   var(--r-bg);
+    --t-surface-inset:   color-mix(in srgb, var(--r-text) 6%, var(--r-bg-raise));
+    --t-surface-strong:  color-mix(in srgb, var(--r-text) 13%, var(--r-bg-raise));
+
+    --t-content:           var(--r-text);
+    --t-content-strong:    var(--r-text);
+    --t-content-secondary: var(--r-text-2);
+    --t-content-tertiary:  var(--r-text-3);
+    --t-content-muted:     var(--r-text-3);
+    --t-content-subtle:    color-mix(in srgb, var(--r-text-3) 75%, var(--r-bg));
+    --t-content-faint:     color-mix(in srgb, var(--r-text-3) 50%, var(--r-bg));
+
+    --t-line:        var(--r-line);
+    --t-line-strong: var(--r-line-2);
+    --t-line-subtle: color-mix(in srgb, var(--r-line) 60%, transparent);
+
+    --t-accent:         var(--r-accent);
+    --t-accent-strong:  var(--r-accent-2);
+    --t-accent-surface: var(--r-accent-sf);
+    --t-accent-line:    color-mix(in srgb, var(--r-accent) 40%, transparent);
+
+    --t-danger:         var(--r-bad);
+    --t-danger-strong:  color-mix(in srgb, var(--r-bad) 78%, var(--r-text));
+    --t-danger-surface: color-mix(in srgb, var(--r-bad) 13%, transparent);
+    --t-danger-line:    color-mix(in srgb, var(--r-bad) 35%, transparent);
+
+    --t-success:         var(--r-good);
+    --t-success-strong:  color-mix(in srgb, var(--r-good) 78%, var(--r-text));
+    --t-success-surface: color-mix(in srgb, var(--r-good) 13%, transparent);
+    --t-success-line:    color-mix(in srgb, var(--r-good) 35%, transparent);
+
+    --t-warning:         var(--r-warn);
+    --t-warning-strong:  color-mix(in srgb, var(--r-warn) 78%, var(--r-text));
+    --t-warning-surface: color-mix(in srgb, var(--r-warn) 13%, transparent);
+    --t-warning-line:    color-mix(in srgb, var(--r-warn) 35%, transparent);
+  }
+
+  /* Aliases for the ported reference CSS, which names its colours --bg and
+     --text-2. They point at the same palette the tokens are built from, so the
+     ported components and the app's own utilities cannot disagree.
 
      --gold and --warn are one token: the reference gives them separate hexes
      but they sit within a few degrees of each other in every theme, and one
      token that is right beats two that drift apart. */
   :root {
-    --bg:        var(--color-surface-muted);
-    --bg-raise:  var(--color-surface);
-    --card:      var(--color-surface-raised);
-    --text:      var(--color-content);
-    --text-2:    var(--color-content-secondary);
-    --text-3:    var(--color-content-tertiary);
-    --line:      var(--color-line);
-    --line-2:    var(--color-line-strong);
-    --accent:    var(--color-accent);
-    --accent-2:  var(--color-accent-strong);
-    --accent-sf: var(--color-accent-surface);
-    --good:      var(--color-success);
-    --warn:      var(--color-warning);
-    --gold:      var(--color-warning);
-    --bad:       var(--color-danger);
-    --shadow:    rgb(0 0 0 / 0.5);
+    --bg:        var(--r-bg);
+    --bg-raise:  var(--r-bg-raise);
+    --card:      var(--r-card);
+    --text:      var(--r-text);
+    --text-2:    var(--r-text-2);
+    --text-3:    var(--r-text-3);
+    --line:      var(--r-line);
+    --line-2:    var(--r-line-2);
+    --accent:    var(--r-accent);
+    --accent-2:  var(--r-accent-2);
+    --accent-sf: var(--r-accent-sf);
+    --good:      var(--r-good);
+    --warn:      var(--r-warn);
+    --gold:      var(--r-warn);
+    --bad:       var(--r-bad);
+    --shadow:    var(--r-shadow);
   }
 
-  /* Paper is the light theme and the default, holding exactly the colours the
-     client shipped before tokens existed. :root carries it so a document with
-     no data-theme still renders correctly. */
-  :root,
-  [data-theme="paper"] {
-    color-scheme: light;
-
-    --t-surface:         var(--color-white);
-    --t-surface-raised:  var(--color-white);
-    --t-surface-muted:   var(--color-gray-50);
-    --t-surface-inset:   var(--color-gray-100);
-    --t-surface-strong:  var(--color-gray-200);
-
-    --t-content:           var(--color-gray-900);
-    --t-content-strong:    var(--color-gray-800);
-    --t-content-secondary: var(--color-gray-700);
-    --t-content-tertiary:  var(--color-gray-600);
-    --t-content-muted:     var(--color-gray-500);
-    --t-content-subtle:    var(--color-gray-400);
-    --t-content-faint:     var(--color-gray-300);
-
-    --t-line:        var(--color-gray-200);
-    --t-line-strong: var(--color-gray-300);
-    --t-line-subtle: var(--color-gray-100);
-
-    --t-accent:         var(--color-blue-600);
-    --t-accent-strong:  var(--color-blue-700);
-    --t-accent-surface: var(--color-blue-50);
-    --t-accent-line:    var(--color-blue-300);
-
-    --t-danger:         var(--color-red-600);
-    --t-danger-strong:  var(--color-red-700);
-    --t-danger-surface: var(--color-red-50);
-    --t-danger-line:    var(--color-red-200);
-
-    --t-success:         var(--color-green-600);
-    --t-success-strong:  var(--color-green-700);
-    --t-success-surface: var(--color-green-50);
-    --t-success-line:    var(--color-green-200);
-
-    --t-warning:         var(--color-amber-600);
-    --t-warning-strong:  var(--color-amber-700);
-    --t-warning-surface: var(--color-amber-50);
-    --t-warning-line:    var(--color-amber-200);
-  }
-
-  /* Ink is the dark theme, again exactly the colours that shipped before.
-     `.dark` is listed alongside the attribute because roughly 980 `dark:`
-     utilities have not been converted yet and still key off the class. When
-     that count reaches zero the `.dark` selector here can go.
-
-     Note surface and surface-raised diverge here: both are white in light mode,
-     which is why the pairing could not be inferred from the light value alone. */
-  [data-theme="ink"],
-  .dark {
-    color-scheme: dark;
-
-    --t-surface:         var(--color-gray-900);
-    --t-surface-raised:  var(--color-gray-800);
-    --t-surface-muted:   var(--color-gray-800);
-    --t-surface-inset:   var(--color-gray-800);
-    --t-surface-strong:  var(--color-gray-700);
-
-    --t-content:           var(--color-white);
-    --t-content-strong:    var(--color-gray-200);
-    --t-content-secondary: var(--color-gray-300);
-    --t-content-tertiary:  var(--color-gray-400);
-    --t-content-muted:     var(--color-gray-400);
-    --t-content-subtle:    var(--color-gray-500);
-    --t-content-faint:     var(--color-gray-600);
-
-    --t-line:        var(--color-gray-700);
-    --t-line-strong: var(--color-gray-600);
-    --t-line-subtle: var(--color-gray-800);
-
-    --t-accent:         var(--color-blue-400);
-    --t-accent-strong:  var(--color-blue-300);
-    --t-accent-surface: --alpha(var(--color-blue-900) / 30%);
-    --t-accent-line:    var(--color-blue-700);
-
-    --t-danger:         var(--color-red-400);
-    --t-danger-strong:  var(--color-red-400);
-    --t-danger-surface: --alpha(var(--color-red-950) / 50%);
-    --t-danger-line:    var(--color-red-800);
-
-    --t-success:         var(--color-green-400);
-    --t-success-strong:  var(--color-green-400);
-    --t-success-surface: --alpha(var(--color-green-950) / 50%);
-    --t-success-line:    var(--color-green-800);
-
-    --t-warning:         var(--color-amber-400);
-    --t-warning-strong:  var(--color-amber-300);
-    --t-warning-surface: --alpha(var(--color-amber-950) / 50%);
-    --t-warning-line:    var(--color-amber-800);
-  }
-
-  /* ---------------------------------------------------------------------
-     Sepia. Warm dark, tuned for reading under a lamp. New in the token
-     layer, so nothing here existed as `dark:` utilities and no component
-     had to change to gain it.
-     --------------------------------------------------------------------- */
-  [data-theme="sepia"] {
-    color-scheme: dark;
-
-    --t-surface:         oklch(21% 0.017 55);
-    --t-surface-raised:  oklch(25% 0.019 55);
-    --t-surface-muted:   oklch(25% 0.019 55);
-    --t-surface-inset:   oklch(28% 0.021 55);
-    --t-surface-strong:  oklch(33% 0.024 55);
-
-    --t-content:           oklch(92% 0.026 75);
-    --t-content-strong:    oklch(86% 0.030 75);
-    --t-content-secondary: oklch(78% 0.032 72);
-    --t-content-tertiary:  oklch(69% 0.033 70);
-    --t-content-muted:     oklch(69% 0.033 70);
-    --t-content-subtle:    oklch(58% 0.031 68);
-    --t-content-faint:     oklch(46% 0.027 65);
-
-    --t-line:        oklch(31% 0.022 55);
-    --t-line-strong: oklch(38% 0.025 55);
-    --t-line-subtle: oklch(26% 0.019 55);
-
-    --t-accent:         oklch(78% 0.128 78);
-    --t-accent-strong:  oklch(85% 0.115 82);
-    --t-accent-surface: --alpha(oklch(55% 0.110 75) / 26%);
-    --t-accent-line:    oklch(52% 0.098 75);
-
-    --t-danger:         oklch(72% 0.125 32);
-    --t-danger-strong:  oklch(78% 0.115 32);
-    --t-danger-surface: --alpha(oklch(45% 0.130 30) / 34%);
-    --t-danger-line:    oklch(48% 0.120 30);
-
-    --t-success:         oklch(78% 0.105 140);
-    --t-success-strong:  oklch(84% 0.095 140);
-    --t-success-surface: --alpha(oklch(46% 0.095 142) / 32%);
-    --t-success-line:    oklch(50% 0.090 142);
-
-    --t-warning:         oklch(80% 0.125 70);
-    --t-warning-strong:  oklch(86% 0.115 72);
-    --t-warning-surface: --alpha(oklch(50% 0.115 68) / 32%);
-    --t-warning-line:    oklch(54% 0.105 68);
-  }
-
-  /* ---------------------------------------------------------------------
-     Nocturne. Cool dark with a blue-biased neutral, for low-light use where
-     the warm greys of Ink read as muddy.
-     --------------------------------------------------------------------- */
-  [data-theme="nocturne"] {
-    color-scheme: dark;
-
-    --t-surface:         oklch(19% 0.024 250);
-    --t-surface-raised:  oklch(23% 0.028 248);
-    --t-surface-muted:   oklch(23% 0.028 248);
-    --t-surface-inset:   oklch(26% 0.030 248);
-    --t-surface-strong:  oklch(32% 0.034 246);
-
-    --t-content:           oklch(94% 0.014 240);
-    --t-content-strong:    oklch(88% 0.018 240);
-    --t-content-secondary: oklch(80% 0.024 238);
-    --t-content-tertiary:  oklch(71% 0.029 236);
-    --t-content-muted:     oklch(71% 0.029 236);
-    --t-content-subtle:    oklch(60% 0.031 234);
-    --t-content-faint:     oklch(47% 0.029 232);
-
-    --t-line:        oklch(30% 0.030 248);
-    --t-line-strong: oklch(37% 0.033 246);
-    --t-line-subtle: oklch(25% 0.028 248);
-
-    --t-accent:         oklch(78% 0.098 218);
-    --t-accent-strong:  oklch(85% 0.084 216);
-    --t-accent-surface: --alpha(oklch(52% 0.098 220) / 28%);
-    --t-accent-line:    oklch(50% 0.090 220);
-
-    --t-danger:         oklch(72% 0.130 20);
-    --t-danger-strong:  oklch(79% 0.118 20);
-    --t-danger-surface: --alpha(oklch(44% 0.135 22) / 34%);
-    --t-danger-line:    oklch(48% 0.125 22);
-
-    --t-success:         oklch(79% 0.110 160);
-    --t-success-strong:  oklch(85% 0.098 160);
-    --t-success-surface: --alpha(oklch(46% 0.098 162) / 32%);
-    --t-success-line:    oklch(50% 0.092 162);
-
-    --t-warning:         oklch(82% 0.115 82);
-    --t-warning-strong:  oklch(88% 0.100 84);
-    --t-warning-surface: --alpha(oklch(50% 0.105 80) / 32%);
-    --t-warning-line:    oklch(54% 0.098 80);
+  /* The reference sets 14px as its base, and the density of every screen in it
+     follows from that. Applied to body rather than html so Tailwind's rem-based
+     utilities keep their own scale; only text that carries no explicit size
+     picks this up. */
+  body {
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
   }
 }
+
 
 /* ---------------------------------------------------------------------------
    Shell layout
@@ -346,59 +309,14 @@
     container-name: shell;
   }
 
-  /* Cover art, and the placeholder standing in for the many books that have
-     none. A catalogue is mostly covers, so the placeholder has to carry the
-     page on its own rather than read as a missing image: it sets the title in
-     the display face on a tinted ground, which is legible at 30px in a row and
-     at 112px in the grid.
-
-     The label is absolutely positioned so a long title can never push the box
-     past its 2:3 ratio. Without that, covers in a row come out at different
-     heights and the grid loses its baseline. */
-  .cover {
-    position: relative;
-    aspect-ratio: 2 / 3;
-    border-radius: 0.25rem;
-    overflow: hidden;
-    box-shadow: 0 8px 18px -10px rgb(0 0 0 / 0.55);
-  }
-
-  .cover-label {
-    position: absolute;
-    inset: 0.4375rem;
-    display: grid;
-    place-items: center;
-    overflow: hidden;
-    text-align: center;
-    line-height: 1.15;
-    color: var(--color-white);
-    font-family: var(--font-display);
-    font-weight: 600;
-    font-size: 0.75rem;
-  }
-
-  /* Four tints drawn from the theme's own accents, so a shelf of placeholders
-     stays inside the palette instead of introducing ten unrelated hues. Mixing
-     toward the surface keeps the darker end of each gradient sitting on the
-     page rather than floating off it, in every theme. */
+  /* Placeholder tints for the many books with no cover art. The shape of the
+     cover itself comes from the ported .lb-cover; only the four grounds live
+     here, because they are drawn from our accent tokens rather than the fixed
+     hexes the reference uses inline. */
   .cover-a { background: linear-gradient(160deg, var(--color-accent),  color-mix(in srgb, var(--color-accent) 42%,  var(--color-surface-raised))); }
   .cover-g { background: linear-gradient(160deg, var(--color-warning), color-mix(in srgb, var(--color-warning) 40%, var(--color-surface-raised))); }
   .cover-s { background: linear-gradient(160deg, var(--color-success), color-mix(in srgb, var(--color-success) 40%, var(--color-surface-raised))); }
   .cover-r { background: linear-gradient(160deg, var(--color-danger),  color-mix(in srgb, var(--color-danger) 40%,  var(--color-surface-raised))); }
-
-  /* A folded corner rather than a badge: it reads at thumbnail size, where a
-     pill would be unreadable, and costs no room in the layout. */
-  .cover-flag {
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 0;
-    height: 0;
-    border-left: 1.1875rem solid transparent;
-    border-top: 1.1875rem solid var(--color-success);
-  }
-  .cover-flag-reading { border-top-color: var(--color-accent); }
-  .cover-flag-dnf     { border-top-color: var(--color-warning); }
 
   /* Narrow is the default, so a container query is never needed to reach it. */
   .app-shell-body { display: flex; flex-direction: column; min-height: 0; flex: 1 1 0%; }

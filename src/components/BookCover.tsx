@@ -32,10 +32,15 @@ function tintFor(seed: string): string {
   return TINTS[Math.abs(h) % TINTS.length]
 }
 
+/**
+ * Classes come from the ported reference stylesheet. The corner flag is only
+ * defined there for read and reading, which is deliberate: did-not-finish is
+ * not progress worth flagging at thumbnail size, and the chip on the row
+ * already says so.
+ */
 function flagClass(readStatus: string | undefined): string | null {
-  if (readStatus === 'read') return 'cover-flag'
-  if (readStatus === 'reading') return 'cover-flag cover-flag-reading'
-  if (readStatus === 'did_not_finish') return 'cover-flag cover-flag-dnf'
+  if (readStatus === 'read') return 'flag'
+  if (readStatus === 'reading') return 'flag reading'
   return null
 }
 
@@ -76,7 +81,7 @@ export default function BookCover({
 
   return (
     <div className={`${className} flex-shrink-0`}>
-      <div className={`cover ${showImage ? '' : tintFor(seed || title)} ${innerClassName}`}>
+      <div className={`lb-cover ${hideLabel ? 'mini' : ''} ${showImage ? '' : tintFor(seed || title)} ${innerClassName}`}>
         {showImage ? (
           <img
             src={src}
@@ -85,7 +90,7 @@ export default function BookCover({
             onError={() => setImgError(true)}
           />
         ) : (
-          !hideLabel && <span className="cover-label">{title}</span>
+          !hideLabel && <span className="lbl">{title}</span>
         )}
         {flag && <span className={flag} aria-hidden="true" />}
       </div>
