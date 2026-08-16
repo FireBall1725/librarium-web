@@ -2209,7 +2209,7 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
         body: JSON.stringify({ book_ids: bookIds, force, use_ai_cleanup: useAICleanup }),
       })
       showToast(`Metadata refresh queued for ${bookIds.length} book${bookIds.length !== 1 ? 's' : ''}.`, {
-        action: { label: 'View jobs', to: '/admin/settings/jobs' },
+        action: { label: 'View jobs', to: '/settings/jobs' },
       })
     } catch { /* ignore */ }
     setIsBulkJobEnqueueing(false)
@@ -2228,7 +2228,7 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
         body: JSON.stringify({ book_ids: bookIds }),
       })
       showToast(`Cover refresh queued for ${bookIds.length} book${bookIds.length !== 1 ? 's' : ''}.`, {
-        action: { label: 'View jobs', to: '/admin/settings/jobs' },
+        action: { label: 'View jobs', to: '/settings/jobs' },
       })
     } catch { /* ignore */ }
     setIsBulkApplying(false)

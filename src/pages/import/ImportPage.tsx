@@ -1020,7 +1020,7 @@ export default function ImportPage() {
  Import another file
  </button>
  <button
- onClick={() => navigate('/admin/settings/jobs')}
+ onClick={() => navigate('/settings/jobs')}
  className="rounded-lg border border-line-strong px-4 py-2.5 text-sm font-semibold text-content-secondary hover:bg-surface-muted transition-colors"
  >
  View all jobs

@@ -110,11 +110,11 @@ export default function JobsPage() {
       <PageHeader
         title="Jobs"
         description="Scheduled background tasks."
-        breadcrumbs={[{ label: 'Settings', to: '/admin/settings' }, { label: 'Jobs' }]}
+        breadcrumbs={[{ label: 'Settings', to: '/settings' }, { label: 'Jobs' }]}
         actions={
           <Link
             to="/admin/settings/jobs/history"
-            className="rounded-lg border border-line-strong px-3 py-2 text-sm font-medium text-content-tertiary hover:border-gray-400 dark:hover:border-gray-500 transition-colors"
+            className="lb-btn ghost"
           >
             History
           </Link>
@@ -176,7 +176,7 @@ export default function JobsPage() {
                           checked={s.enabled}
                           onChange={e => toggleEnabled(s, e.target.checked)}
                         />
-                        <div className="w-9 h-5 bg-surface-strong rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full" />
+                        <div className="w-9 h-5 bg-surface-strong rounded-full peer peer-checked:bg-accent after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full" />
                       </label>
                     </td>
                     <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
@@ -185,14 +185,14 @@ export default function JobsPage() {
                           type="button"
                           onClick={() => runNow(s)}
                           title="Run now"
-                          className="p-1.5 rounded-md text-gray-400 hover:text-accent hover:bg-surface-inset transition-colors"
+                          className="p-1.5 rounded-md text-content-muted hover:text-accent hover:bg-surface-inset transition-colors"
                         >
                           <RunIcon />
                         </button>
                         <Link
                           to={`/admin/settings/jobs/${encodeURIComponent(s.kind)}`}
                           title="Edit"
-                          className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-surface-inset transition-colors"
+                          className="p-1.5 rounded-md text-content-muted hover:text-content hover:bg-surface-inset transition-colors"
                         >
                           <EditIcon />
                         </Link>

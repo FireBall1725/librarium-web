@@ -88,7 +88,7 @@ export default function JobKindPage() {
   if (error) {
     return (
       <>
-        <PageHeader title="Job" breadcrumbs={[{ label: 'Settings', to: '/admin/settings' }, { label: 'Jobs', to: '/admin/settings/jobs' }]} />
+        <PageHeader title="Job" breadcrumbs={[{ label: 'Settings', to: '/settings' }, { label: 'Jobs', to: '/settings/jobs' }]} />
         <div className="max-w-3xl px-8 py-8">
           <div className="rounded-lg bg-danger-surface border border-danger-line px-4 py-3 text-sm text-danger-strong">
             {error}
@@ -106,8 +106,8 @@ export default function JobKindPage() {
         title={title}
         description={schedule?.description}
         breadcrumbs={[
-          { label: 'Settings', to: '/admin/settings' },
-          { label: 'Jobs', to: '/admin/settings/jobs' },
+          { label: 'Settings', to: '/settings' },
+          { label: 'Jobs', to: '/settings/jobs' },
           { label: title },
         ]}
         actions={runNowAvailable ? (

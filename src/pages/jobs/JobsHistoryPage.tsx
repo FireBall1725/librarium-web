@@ -192,16 +192,16 @@ function formatDurationSec(startIso: string, endIso?: string): string | null {
 
 function StatusBadge({ status }: { status: JobStatus }) {
   const cfg: Record<JobStatus, { label: string; cls: string; spin?: boolean }> = {
-    pending:    { label: 'Queued',     cls: 'bg-amber-100 dark:bg-amber-900/40 text-warning-strong ' },
-    processing: { label: 'Processing', cls: 'bg-blue-100 dark:bg-blue-900/40 text-accent-strong ', spin: true },
-    done:       { label: 'Done',       cls: 'bg-green-100 dark:bg-green-900/40 text-success-strong ' },
-    failed:     { label: 'Failed',     cls: 'bg-red-100 dark:bg-red-900/40 text-danger-strong ' },
+    pending:    { label: 'Queued',     cls: 'bg-warning-surface text-warning ' },
+    processing: { label: 'Processing', cls: 'bg-accent-surface text-accent ', spin: true },
+    done:       { label: 'Done',       cls: 'bg-success-surface text-success ' },
+    failed:     { label: 'Failed',     cls: 'bg-danger-surface text-danger ' },
     cancelled:  { label: 'Cancelled',  cls: 'bg-surface-inset text-content-muted ' },
   }
   const { label, cls, spin } = cfg[status] ?? cfg.failed
   return (
     <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${cls}`}>
-      {spin && <span className="w-2 h-2 rounded-full border border-blue-500 border-t-transparent animate-spin" />}
+      {spin && <span className="w-2 h-2 rounded-full border border-accent border-t-transparent animate-spin" />}
       {label}
     </span>
   )
@@ -209,10 +209,10 @@ function StatusBadge({ status }: { status: JobStatus }) {
 
 function ItemStatusDot({ status }: { status: ImportItem['status'] }) {
   const cls: Record<ImportItem['status'], string> = {
-    pending: 'bg-gray-300 dark:bg-gray-600',
-    done:    'bg-green-500',
-    skipped: 'bg-amber-400',
-    failed:  'bg-red-500',
+    pending: 'bg-line-strong',
+    done:    'bg-success',
+    skipped: 'bg-warning',
+    failed:  'bg-danger',
   }
   return <span className={`inline-block w-2 h-2 rounded-full flex-shrink-0 ${cls[status]}`} />
 }
@@ -280,7 +280,7 @@ function AICallsPanel({ jobID }: { jobID: string }) {
               <span className="text-xs text-content-subtle flex-1 truncate">{r.target_type} {r.target_id.slice(0, 8)}</span>
               <span className="text-xs text-content-subtle">{r.tokens_in + r.tokens_out} tok</span>
               <span className="text-xs text-content-subtle">${r.estimated_cost_usd.toFixed(4)}</span>
-              <svg className={`w-3.5 h-3.5 text-gray-400 transition-transform ${expanded === r.id ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className={`w-3.5 h-3.5 text-content-muted transition-transform ${expanded === r.id ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </button>
@@ -440,7 +440,7 @@ function JobRow({
         className="hover:bg-surface-muted transition-colors cursor-pointer"
       >
         <td className="pl-4 pr-1 py-3 w-8">
-          <svg className={`w-4 h-4 text-gray-400 transition-transform ${expanded ? 'rotate-90' : ''}`}
+          <svg className={`w-4 h-4 text-content-muted transition-transform ${expanded ? 'rotate-90' : ''}`}
             fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
@@ -471,10 +471,10 @@ function JobRow({
           ) : (isAISuggestions || isAIMetadata) ? (
             isActive ? (
               <div className="flex items-center gap-2 text-xs text-content-muted">
-                <span className="inline-block w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                <span className="inline-block w-2 h-2 rounded-full bg-accent animate-pulse" />
                 <span>Running…</span>
                 {job.provider_type && (
-                  <span className="text-gray-400">{job.provider_type}{job.model_id ? ` (${job.model_id})` : ''}</span>
+                  <span className="text-content-muted">{job.provider_type}{job.model_id ? ` (${job.model_id})` : ''}</span>
                 )}
               </div>
             ) : (
@@ -509,10 +509,10 @@ function JobRow({
               return (
                 <div className="flex items-center gap-2">
                   <div className="flex-1 h-1.5 rounded-full bg-surface-inset overflow-hidden max-w-xs">
-                    <div className="h-full rounded-full bg-blue-500 transition-all duration-500"
+                    <div className="h-full rounded-full bg-accent transition-all duration-500"
                       style={{ width: `${pct}%` }} />
                   </div>
-                  <span className="text-xs text-gray-400 tabular-nums whitespace-nowrap">
+                  <span className="text-xs text-content-muted tabular-nums whitespace-nowrap">
                     {handled}/{job.total_rows}
                   </span>
                 </div>
@@ -598,7 +598,7 @@ function JobRow({
             </div>
           ) : loadingItems ? (
             <div className="flex items-center justify-center py-8 text-sm text-content-subtle">
-              <div className="w-4 h-4 rounded-full border-2 border-blue-500 border-t-transparent animate-spin mr-2" />
+              <div className="w-4 h-4 rounded-full border-2 border-accent border-t-transparent animate-spin mr-2" />
               Loading…
             </div>
           ) : isEnrichment ? (
@@ -610,13 +610,13 @@ function JobRow({
                       <ItemStatusDot status={item.status} />
                       <div className="flex-1 min-w-0">
                         <span className="text-content-strong font-medium">
-                          {item.book_title || <span className="text-gray-400 italic font-mono text-xs">{item.book_id?.slice(0, 8) ?? 'Unknown'}</span>}
+                          {item.book_title || <span className="text-content-muted italic font-mono text-xs">{item.book_id?.slice(0, 8) ?? 'Unknown'}</span>}
                         </span>
                         {item.message && (
                           <p className={`text-xs mt-0.5 ${
-                            item.status === 'failed' ? 'text-red-600 dark:text-red-400'
-                              : item.status === 'skipped' ? 'text-amber-600 dark:text-amber-400'
-                              : 'text-gray-400 dark:text-gray-500'
+                            item.status === 'failed' ? 'text-danger'
+                              : item.status === 'skipped' ? 'text-warning'
+                              : 'text-content-muted'
                           }`}>
                             {item.message}
                           </p>
@@ -651,14 +651,14 @@ function JobRow({
                   <ItemStatusDot status={item.status} />
                   <div className="flex-1 min-w-0">
                     <span className="text-content-strong font-medium">
-                      {item.title || <span className="text-gray-400 italic">Untitled</span>}
+                      {item.title || <span className="text-content-muted italic">Untitled</span>}
                     </span>
-                    {item.isbn && <span className="ml-2 text-xs text-gray-400 font-mono">{item.isbn}</span>}
+                    {item.isbn && <span className="ml-2 text-xs text-content-muted font-mono">{item.isbn}</span>}
                     {item.message && (
                       <p className={`text-xs mt-0.5 ${
-                        item.status === 'failed' ? 'text-red-600 dark:text-red-400'
-                          : item.status === 'skipped' ? 'text-amber-600 dark:text-amber-400'
-                          : 'text-gray-400 dark:text-gray-500'
+                        item.status === 'failed' ? 'text-danger'
+                          : item.status === 'skipped' ? 'text-warning'
+                          : 'text-content-muted'
                       }`}>
                         {item.message}
                       </p>
@@ -791,7 +791,7 @@ export default function JobsHistoryPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20 text-content-subtle">
-        <div className="w-5 h-5 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+        <div className="w-5 h-5 rounded-full border-2 border-accent border-t-transparent animate-spin" />
       </div>
     )
   }
@@ -802,15 +802,15 @@ export default function JobsHistoryPage() {
         title="Job history"
         description="Every job run across every kind, newest first."
         breadcrumbs={[
-          { label: 'Settings', to: '/admin/settings' },
-          { label: 'Jobs', to: '/admin/settings/jobs' },
+          { label: 'Settings', to: '/settings' },
+          { label: 'Jobs', to: '/settings/jobs' },
           { label: 'History' },
         ]}
         actions={hasFinished ? (
           <button
             onClick={handleClearFinished}
             disabled={clearingAll}
-            className="rounded-lg border border-line-strong px-3 py-2 text-sm font-medium text-content-tertiary hover:border-red-400 hover:text-danger dark:hover:border-red-500 disabled:opacity-50 transition-colors"
+            className="rounded-lg border border-line-strong px-3 py-2 text-sm font-medium text-content-tertiary hover:border-danger-line hover:text-danger dark:hover:border-danger disabled:opacity-50 transition-colors"
           >
             {clearingAll ? 'Clearing…' : 'Clear finished'}
           </button>
@@ -834,7 +834,7 @@ export default function JobsHistoryPage() {
         <label className="flex items-center gap-2 text-sm">
           <span className="text-xs uppercase tracking-wide text-content-muted">Type</span>
           <select value={kindFilter} onChange={e => setKindFilter(e.target.value)}
-            className="rounded-lg border border-line-strong dark:bg-gray-800 dark:text-white px-2 py-1 text-sm">
+            className="lb-field">
             <option value="">All</option>
             <option value="import">Import</option>
             <option value="metadata">Metadata</option>
@@ -848,7 +848,7 @@ export default function JobsHistoryPage() {
         <label className="flex items-center gap-2 text-sm">
           <span className="text-xs uppercase tracking-wide text-content-muted">Status</span>
           <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
-            className="rounded-lg border border-line-strong dark:bg-gray-800 dark:text-white px-2 py-1 text-sm">
+            className="lb-field">
             <option value="">All</option>
             <option value="pending">Pending</option>
             <option value="running">Running</option>
