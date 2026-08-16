@@ -104,7 +104,9 @@
     "active": "{{count}} filters"
   },
   "common": {
-    "loading": "Loading…"
+    "loading": "Loading…",
+    "cancel": "Cancel",
+    "save": "Save"
   },
   "read_status": {
     "read": "Read",
@@ -124,7 +126,11 @@
     "name_prompt": "Name this view",
     "layout_rows": "Rows",
     "layout_grid": "Grid",
-    "new": "New view"
+    "new": "New view",
+    "new_description": "Saves the filter you have on Books right now. You can change it later.",
+    "name_label": "Name",
+    "name_placeholder": "Signed first editions",
+    "save_as_view": "Save as a view"
   },
   "index": {
     "all": "All"

@@ -104,7 +104,9 @@
     "active": "{{count}} filtres"
   },
   "common": {
-    "loading": "Chargement…"
+    "loading": "Chargement…",
+    "cancel": "Annuler",
+    "save": "Enregistrer"
   },
   "read_status": {
     "read": "Lu",
@@ -124,7 +126,11 @@
     "name_prompt": "Nommer cette vue",
     "layout_rows": "Lignes",
     "layout_grid": "Grille",
-    "new": "Nouvelle vue"
+    "new": "Nouvelle vue",
+    "new_description": "Enregistre le filtre actuellement appliqué. Vous pourrez le modifier plus tard.",
+    "name_label": "Nom",
+    "name_placeholder": "Premières éditions signées",
+    "save_as_view": "Enregistrer comme vue"
   },
   "index": {
     "all": "Tous"

@@ -12,6 +12,7 @@ import { sectionForPath } from '../lib/settingsTree'
 import type { BookFacets } from '../lib/bookBrowse'
 import { Icon, type IconName } from '../lib/icons'
 import AuthorAvatar from './AuthorAvatar'
+import { PromptDialog } from './Dialog'
 
 interface CollectionCounts {
   books: number
@@ -174,6 +175,7 @@ export default function Layout() {
   // storage. A memo keyed on it would list dependencies its callback never
   // touches, which is the thing the exhaustive-deps rule exists to catch.
   const [, setViewsTick] = useState(0)
+  const [namingView, setNamingView] = useState(false)
   const views: SavedView[] = loadViews()
 
   useEffect(() => {
@@ -196,14 +198,17 @@ export default function Layout() {
 
   /** Save the filter on screen as a new view, or go to Books to build one. */
   const newView = () => {
-    const params = normaliseParams(location.search)
-    if (location.pathname !== '/books' || !params) {
+    if (location.pathname !== '/books' || !normaliseParams(location.search)) {
       navigate('/books')
       return
     }
-    const name = window.prompt(t('views.name_prompt', { defaultValue: 'Name this view' }))
-    if (!name?.trim()) return
-    saveView({ id: newViewId(), name: name.trim(), params, layout: 'rows' })
+    setNamingView(true)
+  }
+
+  const saveNewView = (name: string) => {
+    setNamingView(false)
+    const params = normaliseParams(location.search)
+    saveView({ id: newViewId(), name, params, layout: 'rows' })
     // Views are read from storage on every render rather than held in state, so
     // the rail needs a reason to render again. A counter, not setRailQuery with
     // its own value: React bails out when the value is unchanged.
@@ -559,6 +564,18 @@ export default function Layout() {
         <Outlet />
       </main>
      </div>
+
+      <PromptDialog
+        open={namingView}
+        title={t('views.new', { defaultValue: 'New view' })}
+        description={t('views.new_description', {
+          defaultValue: 'Saves the filter you have on Books right now. You can change it later.',
+        })}
+        label={t('views.name_label', { defaultValue: 'Name' })}
+        placeholder={t('views.name_placeholder', { defaultValue: 'Signed first editions' })}
+        onCancel={() => setNamingView(false)}
+        onSubmit={saveNewView}
+      />
 
       {/* Footer */}
       <footer className="flex-shrink-0 border-t border-line bg-surface px-4 py-2.5 text-xs text-content-muted">

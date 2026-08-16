@@ -13,6 +13,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import PageHeader from '../components/PageHeader'
+import { PromptDialog } from '../components/Dialog'
 import FacetRail from '../components/FacetRail'
 import BookCover, { BookCoverThumb } from '../components/BookCover'
 import { usePageTitle } from '../hooks/usePageTitle'
@@ -127,6 +128,7 @@ export default function BooksPage() {
   // toggle you flipped on one view would follow you onto the next one.
   const [views, setViews] = useState<SavedView[]>(() => loadViews())
   const [activeViewId, setActiveViewId] = useState<string | null>(null)
+  const [naming, setNaming] = useState(false)
   const [layoutOverride, setLayoutOverride] = useState<{ viewId: string | null; layout: ViewLayout } | null>(null)
 
   const [books, setBooks] = useState<Book[]>([])
@@ -223,6 +225,7 @@ export default function BooksPage() {
   }
 
   const saveCurrentAs = (name: string) => {
+    setNaming(false)
     const v: SavedView = { id: newViewId(), name, params: paramsNow, layout }
     setViews(saveView(v))
     setActiveViewId(v.id)
@@ -313,7 +316,7 @@ export default function BooksPage() {
                       {t('views.revert', { defaultValue: 'Revert' })}
                     </button>
                     <button type="button"
-                      onClick={() => { const n = window.prompt(t('views.name_prompt', { defaultValue: 'Name this view' })); if (n?.trim()) saveCurrentAs(n.trim()) }}
+                      onClick={() => setNaming(true)}
                       className="rounded-md border border-line-strong px-2.5 py-1 text-xs text-content-secondary hover:bg-surface-inset">
                       {t('views.save_as_new', { defaultValue: 'Save as new' })}
                     </button>
@@ -353,7 +356,7 @@ export default function BooksPage() {
               {/* Offered only when there is something worth naming. */}
               {!activeView && (activeFilters > 0 || state.query) && (
                 <button type="button"
-                  onClick={() => { const n = window.prompt(t('views.name_prompt', { defaultValue: 'Name this view' })); if (n?.trim()) saveCurrentAs(n.trim()) }}
+                  onClick={() => setNaming(true)}
                   className="rounded-md bg-accent px-2.5 py-1 text-xs font-medium text-white hover:brightness-110">
                   {t('views.save', { defaultValue: 'Save as a view' })}
                 </button>
@@ -522,6 +525,18 @@ export default function BooksPage() {
           </div>
         </div>
       </div>
+
+      <PromptDialog
+        open={naming}
+        title={t('views.save_as_view', { defaultValue: 'Save as a view' })}
+        description={t('views.new_description', {
+          defaultValue: 'Saves the filter you have on Books right now. You can change it later.',
+        })}
+        label={t('views.name_label', { defaultValue: 'Name' })}
+        placeholder={t('views.name_placeholder', { defaultValue: 'Signed first editions' })}
+        onCancel={() => setNaming(false)}
+        onSubmit={saveCurrentAs}
+      />
     </>
   )
 }
