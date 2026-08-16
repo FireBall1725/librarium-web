@@ -27,7 +27,7 @@ function ContributorAvatar({ photoUrl, name, size }: { photoUrl: string | null; 
     )
   }
   return (
-    <div className={`rounded-full flex-shrink-0 flex items-center justify-center bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-semibold ${lg ? 'w-16 h-16 text-xl' : 'w-8 h-8 text-xs'}`}>
+    <div className={`rounded-full flex-shrink-0 flex items-center justify-center bg-blue-100 dark:bg-blue-900/40 text-accent-strong font-semibold ${lg ? 'w-16 h-16 text-xl' : 'w-8 h-8 text-xs'}`}>
       {initials || '?'}
     </div>
   )
@@ -99,27 +99,27 @@ function ContributorModal({
     }
   }
 
-  const inputCls = 'w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
-  const labelCls = 'block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1'
+  const inputCls = 'w-full rounded-lg border border-line-strong bg-surface-raised text-content px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
+  const labelCls = 'block text-xs font-medium text-content-muted mb-1'
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 overflow-y-auto py-16 p-4" onClick={onClose}>
-      <div className="w-full max-w-md rounded-xl bg-white dark:bg-gray-900 shadow-xl" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-base font-semibold text-gray-900 dark:text-white">
+      <div className="w-full max-w-md rounded-xl bg-surface shadow-xl" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-line ">
+          <h2 className="text-base font-semibold text-content ">
             {initial ? 'Edit contributor' : 'Add contributor'}
           </h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xl leading-none">×</button>
+          <button onClick={onClose} className="text-gray-400 hover:text-content-tertiary text-xl leading-none">×</button>
         </div>
         <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
           {initial && (
             <div className="flex items-center gap-3">
               <ContributorAvatar photoUrl={initial.photo_url} name={initial.name} size="lg" />
-              <div className="flex-1 text-xs text-gray-500 dark:text-gray-400">
+              <div className="flex-1 text-xs text-content-muted ">
                 {libraryId ? (
                   <Link
                     to={`/libraries/${libraryId}/contributors/${initial.id}`}
-                    className="text-blue-600 dark:text-blue-400 hover:underline"
+                    className="text-accent hover:underline"
                     onClick={onClose}
                   >
                     Open full profile to manage photo &amp; bio →
@@ -148,14 +148,14 @@ function ContributorModal({
               <div className="flex items-center gap-2">
                 <input id="list-is-corporate" type="checkbox" checked={isCorporate}
                   onChange={e => setIsCorporate(e.target.checked)}
-                  className="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500" />
-                <label htmlFor="list-is-corporate" className="text-sm text-gray-700 dark:text-gray-300">
+                  className="h-4 w-4 rounded border-line-strong text-blue-600 focus:ring-blue-500" />
+                <label htmlFor="list-is-corporate" className="text-sm text-content-secondary ">
                   Corporate entity (publisher, studio, etc.)
                 </label>
               </div>
             </>
           )}
-          {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+          {error && <p className="text-sm text-danger ">{error}</p>}
           <div className="flex gap-2 pt-1">
             <button
               type="submit"
@@ -167,7 +167,7 @@ function ContributorModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 rounded-lg border border-gray-300 dark:border-gray-600 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              className="px-4 rounded-lg border border-line-strong text-sm text-content-tertiary hover:bg-surface-muted transition-colors"
             >
               Cancel
             </button>
@@ -184,13 +184,13 @@ function Pagination({ page, perPage, total, onPage }: { page: number; perPage: n
   const totalPages = Math.ceil(total / perPage)
   if (totalPages <= 1) return null
   return (
-    <div className="flex items-center justify-between mt-4 text-sm text-gray-600 dark:text-gray-400">
+    <div className="flex items-center justify-between mt-4 text-sm text-content-tertiary ">
       <span>{((page - 1) * perPage) + 1}–{Math.min(page * perPage, total)} of {total}</span>
       <div className="flex gap-1">
         <button
           onClick={() => onPage(page - 1)}
           disabled={page <= 1}
-          className="px-2.5 py-1 rounded border border-gray-300 dark:border-gray-600 disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+          className="px-2.5 py-1 rounded border border-line-strong disabled:opacity-40 hover:bg-surface-muted transition-colors"
         >
           ‹
         </button>
@@ -209,7 +209,7 @@ function Pagination({ page, perPage, total, onPage }: { page: number; perPage: n
         <button
           onClick={() => onPage(page + 1)}
           disabled={page >= totalPages}
-          className="px-2.5 py-1 rounded border border-gray-300 dark:border-gray-600 disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+          className="px-2.5 py-1 rounded border border-line-strong disabled:opacity-40 hover:bg-surface-muted transition-colors"
         >
           ›
         </button>
@@ -390,19 +390,19 @@ export default function ContributorsPage() {
               value={query}
               onChange={e => setQuery(e.target.value)}
               placeholder="Search contributors…"
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-lg border border-line-strong dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </div>
           <button
             type="submit"
-            className="rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex-shrink-0"
+            className="rounded-lg border border-line-strong px-3 py-2 text-sm text-content-tertiary hover:bg-surface-muted transition-colors flex-shrink-0"
           >
             Search
           </button>
         </form>
 
         {/* View toggle */}
-        <div className="flex items-center rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden flex-shrink-0">
+        <div className="flex items-center rounded-lg border border-line-strong overflow-hidden flex-shrink-0">
           <button
             onClick={() => setViewModeAndSave('table')}
             className={`px-2.5 py-2 transition-colors ${viewMode === 'table' ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200' : 'text-gray-400 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
@@ -428,7 +428,7 @@ export default function ContributorsPage() {
           <div className="relative flex-shrink-0" ref={colPickerRef}>
             <button
               onClick={() => setColPickerOpen(o => !o)}
-              className="rounded-lg border border-gray-300 dark:border-gray-600 px-2.5 py-2 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              className="rounded-lg border border-line-strong px-2.5 py-2 text-content-muted hover:bg-surface-muted transition-colors"
               title="Choose columns"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -436,17 +436,17 @@ export default function ContributorsPage() {
               </svg>
             </button>
             {colPickerOpen && (
-              <div className="absolute right-0 top-full mt-1 z-30 w-44 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg py-1">
+              <div className="absolute right-0 top-full mt-1 z-30 w-44 rounded-lg border border-line bg-surface shadow-lg py-1">
                 {ALL_COLS.map(col => (
                   <label
                     key={col}
-                    className="flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
+                    className="flex items-center gap-2.5 px-3 py-2 text-sm text-content-secondary hover:bg-surface-muted cursor-pointer"
                   >
                     <input
                       type="checkbox"
                       checked={visibleCols.has(col)}
                       onChange={() => toggleCol(col)}
-                      className="rounded border-gray-300 dark:border-gray-600 text-blue-600"
+                      className="rounded border-line-strong text-blue-600"
                     />
                     {COL_LABELS[col]}
                   </label>
@@ -482,7 +482,7 @@ export default function ContributorsPage() {
 
       {/* ── Result count ── */}
       {!loading && data && (
-        <p className="text-xs text-gray-500 dark:text-gray-400 tabular-nums">
+        <p className="text-xs text-content-muted tabular-nums">
           {total} contributor{total !== 1 ? 's' : ''}
           {selectedIds.size > 0 && ` · ${selectedIds.size} selected`}
         </p>
@@ -497,16 +497,16 @@ export default function ContributorsPage() {
 
       {/* ── Empty ── */}
       {!loading && items.length === 0 && (
-        <div className="text-center py-16 text-gray-500 dark:text-gray-400">
+        <div className="text-center py-16 text-content-muted ">
           {search || activeLetter ? 'No contributors match your filter.' : 'No contributors yet — add some books to get started.'}
         </div>
       )}
 
       {/* ── Table view ── */}
       {!loading && items.length > 0 && viewMode === 'table' && (
-        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-x-auto">
+        <div className="rounded-xl border border-line bg-surface overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+            <thead className="bg-surface-muted border-b border-line ">
               <tr>
                 <th className="w-8 px-3 py-3">
                   <input
@@ -517,31 +517,31 @@ export default function ContributorsPage() {
                       if (e.target.checked) setSelectedIds(new Set(pageIds))
                       else setSelectedIds(new Set())
                     }}
-                    className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                    className="rounded border-line-strong text-blue-600 focus:ring-blue-500 cursor-pointer"
                   />
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                  <button type="button" onClick={() => handleSort('sort_name')} className="flex items-center gap-1 hover:text-gray-700 dark:hover:text-gray-200 transition-colors">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-content-muted ">
+                  <button type="button" onClick={() => handleSort('sort_name')} className="flex items-center gap-1 hover:text-content-secondary transition-colors">
                     Name {sortIcon('sort_name') ?? <span className="opacity-0">↑</span>}
                   </button>
                 </th>
                 {visibleCols.has('nationality') && (
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Nationality</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-content-muted ">Nationality</th>
                 )}
                 {visibleCols.has('born') && (
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Born</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-content-muted ">Born</th>
                 )}
-                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                  <button type="button" onClick={() => handleSort('book_count')} className="flex items-center gap-1 ml-auto hover:text-gray-700 dark:hover:text-gray-200 transition-colors">
+                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-content-muted ">
+                  <button type="button" onClick={() => handleSort('book_count')} className="flex items-center gap-1 ml-auto hover:text-content-secondary transition-colors">
                     Books {sortIcon('book_count') ?? <span className="opacity-0">↑</span>}
                   </button>
                 </th>
-                <th className="sticky right-0 px-4 py-3 bg-gray-50 dark:bg-gray-800 w-16" />
+                <th className="sticky right-0 px-4 py-3 bg-surface-muted w-16" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+            <tbody className="divide-y divide-line-subtle ">
               {items.map(c => (
-                <tr key={c.id} className="group hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                <tr key={c.id} className="group hover:bg-surface-muted transition-colors">
                   <td className="w-8 px-3 py-2" onClick={e => e.stopPropagation()}>
                     <input
                       type="checkbox"
@@ -551,36 +551,36 @@ export default function ContributorsPage() {
                         if (e.target.checked) next.add(c.id); else next.delete(c.id)
                         return next
                       })}
-                      className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                      className="rounded border-line-strong text-blue-600 focus:ring-blue-500 cursor-pointer"
                     />
                   </td>
                   <td className="px-4 py-2">
                     <Link
                       to={`/libraries/${libraryId}/contributors/${c.id}`}
-                      className="flex items-center gap-2.5 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                      className="flex items-center gap-2.5 hover:text-accent transition-colors"
                     >
                       <ContributorAvatar photoUrl={c.photo_url} name={c.name} />
-                      <span className="font-medium text-gray-900 dark:text-white">{c.name}</span>
+                      <span className="font-medium text-content ">{c.name}</span>
                     </Link>
                   </td>
                   {visibleCols.has('nationality') && (
-                    <td className="px-4 py-2 text-gray-500 dark:text-gray-400">
-                      {c.nationality || <span className="text-gray-300 dark:text-gray-600">—</span>}
+                    <td className="px-4 py-2 text-content-muted ">
+                      {c.nationality || <span className="text-content-faint ">—</span>}
                     </td>
                   )}
                   {visibleCols.has('born') && (
-                    <td className="px-4 py-2 text-gray-500 dark:text-gray-400">
-                      {c.born_date ? new Date(c.born_date).getFullYear() : <span className="text-gray-300 dark:text-gray-600">—</span>}
+                    <td className="px-4 py-2 text-content-muted ">
+                      {c.born_date ? new Date(c.born_date).getFullYear() : <span className="text-content-faint ">—</span>}
                     </td>
                   )}
-                  <td className="px-4 py-2 text-right text-gray-500 dark:text-gray-400 tabular-nums">
+                  <td className="px-4 py-2 text-right text-content-muted tabular-nums">
                     {c.book_count}
                   </td>
-                  <td className="sticky right-0 px-4 py-2 bg-white dark:bg-gray-900 group-hover:bg-gray-50 dark:group-hover:bg-gray-800 transition-colors">
+                  <td className="sticky right-0 px-4 py-2 bg-surface group-hover:bg-surface-muted transition-colors">
                     <div className="flex items-center gap-1 justify-end">
                       <button
                         onClick={() => setEditContributor(c)}
-                        className="p-1.5 rounded text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                        className="p-1.5 rounded text-content-subtle hover:text-accent hover:bg-accent-surface transition-colors"
                         title="Rename"
                       >
                         <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
@@ -590,7 +590,7 @@ export default function ContributorsPage() {
                       <button
                         onClick={() => deleteContributor(c)}
                         disabled={c.book_count > 0}
-                        className="p-1.5 rounded text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-gray-400 dark:disabled:hover:text-gray-500"
+                        className="p-1.5 rounded text-content-subtle hover:text-danger hover:bg-danger-surface transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-content-subtle "
                         title={c.book_count > 0 ? 'Cannot delete: has books' : 'Delete'}
                       >
                         <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
@@ -610,7 +610,7 @@ export default function ContributorsPage() {
       {!loading && items.length > 0 && viewMode === 'grid' && (
         <div className="grid grid-cols-[repeat(auto-fill,minmax(120px,1fr))] gap-4">
           {items.map(c => (
-            <div key={c.id} className="group relative flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-center">
+            <div key={c.id} className="group relative flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-surface-inset transition-colors text-center">
               <div className="relative">
                 <Link to={`/libraries/${libraryId}/contributors/${c.id}`}>
                   <ContributorAvatar photoUrl={c.photo_url} name={c.name} size="lg" />
@@ -619,7 +619,7 @@ export default function ContributorsPage() {
                 <div className="absolute -top-1 -right-1 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
                     onClick={() => setEditContributor(c)}
-                    className="p-1 rounded bg-white/90 dark:bg-gray-900/90 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 shadow-sm transition-colors"
+                    className="p-1 rounded bg-white/90 dark:bg-gray-900/90 text-content-tertiary hover:text-accent shadow-sm transition-colors"
                     title="Rename"
                   >
                     <svg className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
@@ -629,7 +629,7 @@ export default function ContributorsPage() {
                   <button
                     onClick={() => deleteContributor(c)}
                     disabled={c.book_count > 0}
-                    className="p-1 rounded bg-white/90 dark:bg-gray-900/90 text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 shadow-sm transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="p-1 rounded bg-white/90 dark:bg-gray-900/90 text-content-tertiary hover:text-danger shadow-sm transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                     title={c.book_count > 0 ? 'Cannot delete: has books' : 'Delete'}
                   >
                     <svg className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
@@ -641,11 +641,11 @@ export default function ContributorsPage() {
               <div className="min-w-0 w-full">
                 <Link
                   to={`/libraries/${libraryId}/contributors/${c.id}`}
-                  className="text-sm font-medium text-gray-900 dark:text-white line-clamp-2 leading-snug hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                  className="text-sm font-medium text-content line-clamp-2 leading-snug hover:text-accent transition-colors"
                 >
                   {c.name}
                 </Link>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                <p className="text-xs text-content-muted mt-0.5">
                   {c.book_count} {c.book_count === 1 ? 'book' : 'books'}
                 </p>
               </div>

@@ -30,7 +30,7 @@ export default function SettingsLayout() {
   return (
     <div>
       {/* Tab bar */}
-      <div className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-8 sticky top-0 z-10">
+      <div className="border-b border-line bg-surface px-8 sticky top-0 z-10">
         <nav className="flex gap-1 -mb-px" aria-label="Settings sections">
           {TABS.map(tab => (
             <NavLink

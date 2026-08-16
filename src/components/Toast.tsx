@@ -86,7 +86,7 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: number)
     >
       {/* Icon */}
       {isError ? (
-        <span className="text-red-500 dark:text-red-400 flex-shrink-0">
+        <span className="text-danger flex-shrink-0">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
@@ -104,7 +104,7 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: number)
       {toast.action && (
         <Link
           to={toast.action.to}
-          className="flex-shrink-0 font-medium text-blue-600 dark:text-blue-400 hover:underline"
+          className="flex-shrink-0 font-medium text-accent hover:underline"
         >
           {toast.action.label}
         </Link>
@@ -112,7 +112,7 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: number)
 
       <button
         onClick={() => onDismiss(toast.id)}
-        className="flex-shrink-0 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors ml-1"
+        className="flex-shrink-0 text-content-subtle hover:text-content-tertiary transition-colors ml-1"
         aria-label="Dismiss"
       >
         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

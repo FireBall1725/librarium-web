@@ -112,11 +112,11 @@ function AddMemberModal({ libraryId, onClose, onAdded }: AddMemberModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="w-full max-w-sm rounded-xl bg-white dark:bg-gray-900 shadow-xl p-6">
+      <div className="w-full max-w-sm rounded-xl bg-surface shadow-xl p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Add member</h2>
+          <h2 className="text-lg font-semibold text-content ">Add member</h2>
           <button type="button" onClick={onClose}
-            className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-surface-inset transition-colors"
             aria-label="Close">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -125,56 +125,56 @@ function AddMemberModal({ libraryId, onClose, onAdded }: AddMemberModalProps) {
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div ref={searchRef} className="relative">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">User</label>
+            <label className="block text-sm font-medium text-content-secondary mb-1">User</label>
             {selected ? (
-              <div className="flex items-center gap-2 rounded-lg border border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-950/30 px-3 py-2">
-                <span className="flex-1 text-sm text-gray-900 dark:text-white">
+              <div className="flex items-center gap-2 rounded-lg border border-accent-line bg-accent-surface px-3 py-2">
+                <span className="flex-1 text-sm text-content ">
                   <span className="font-medium">{selected.display_name}</span>
-                  <span className="text-gray-500 dark:text-gray-400 ml-1">@{selected.username}</span>
+                  <span className="text-content-muted ml-1">@{selected.username}</span>
                 </span>
                 <button type="button" onClick={() => { setSelected(null); setQuery('') }}
-                  className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 text-lg leading-none">×</button>
+                  className="text-content-subtle hover:text-content-tertiary text-lg leading-none">×</button>
               </div>
             ) : (
               <input type="text" autoFocus value={query}
                 onChange={e => setQuery(e.target.value)}
                 onFocus={() => results.length > 0 && setShowDropdown(true)}
-                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full rounded-lg border border-line-strong dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 placeholder="Search by name, username, or email…" />
             )}
             {showDropdown && results.length > 0 && (
-              <ul className="absolute z-10 mt-1 w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg overflow-hidden">
+              <ul className="absolute z-10 mt-1 w-full rounded-lg border border-line bg-surface-raised shadow-lg overflow-hidden">
                 {results.map(u => (
                   <li key={u.id}>
                     <button type="button" onMouseDown={e => e.preventDefault()}
                       onClick={() => { setSelected(u); setQuery(''); setShowDropdown(false) }}
-                      className="w-full text-left px-3 py-2 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">{u.display_name}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">@{u.username} · {u.email}</p>
+                      className="w-full text-left px-3 py-2 hover:bg-accent-surface transition-colors">
+                      <p className="text-sm font-medium text-content ">{u.display_name}</p>
+                      <p className="text-xs text-content-muted ">@{u.username} · {u.email}</p>
                     </button>
                   </li>
                 ))}
               </ul>
             )}
             {showDropdown && results.length === 0 && query.length >= 2 && !selected && (
-              <div className="absolute z-10 mt-1 w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg px-3 py-2 text-sm text-gray-400 dark:text-gray-500">
+              <div className="absolute z-10 mt-1 w-full rounded-lg border border-line bg-surface-raised shadow-lg px-3 py-2 text-sm text-content-subtle ">
                 No users found
               </div>
             )}
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Role</label>
+            <label className="block text-sm font-medium text-content-secondary mb-1">Role</label>
             <select value={role} onChange={e => setRole(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
+              className="w-full rounded-lg border border-line-strong dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
               <option value="library_owner">Owner</option>
               <option value="library_editor">Editor</option>
               <option value="library_viewer">Viewer</option>
             </select>
           </div>
-          {error && <div className="rounded-lg bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 px-3 py-2 text-sm text-red-700 dark:text-red-400">{error}</div>}
+          {error && <div className="rounded-lg bg-danger-surface border border-danger-line px-3 py-2 text-sm text-danger-strong ">{error}</div>}
           <div className="flex gap-3 pt-1">
             <button type="button" onClick={onClose}
-              className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Cancel</button>
+              className="flex-1 rounded-lg border border-line-strong px-4 py-2 text-sm font-medium text-content-secondary hover:bg-surface-muted transition-colors">Cancel</button>
             <button type="submit" disabled={isLoading || !selected}
               className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
               {isLoading ? 'Adding…' : 'Add'}
@@ -611,8 +611,8 @@ function AddBookModal({ libraryId, mediaTypes, onClose, onSaved, onDuplicate, in
     } finally { setIsLoading(false) }
   }
 
-  const inputCls = 'w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
-  const labelCls = 'block text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5'
+  const inputCls = 'w-full rounded-lg border border-line-strong dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
+  const labelCls = 'block text-xs font-semibold uppercase tracking-wider text-content-muted mb-1.5'
 
   const filteredTags = libraryTags.filter(t =>
     !selectedTags.some(s => s.id === t.id) &&
@@ -626,21 +626,21 @@ function AddBookModal({ libraryId, mediaTypes, onClose, onSaved, onDuplicate, in
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="w-full max-w-2xl rounded-2xl bg-white dark:bg-gray-900 shadow-2xl flex flex-col max-h-[92vh]">
+      <div className="w-full max-w-2xl rounded-2xl bg-surface shadow-2xl flex flex-col max-h-[92vh]">
 
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+        <div className="px-6 py-4 border-b border-line flex-shrink-0">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-semibold text-gray-900 dark:text-white">Add book</h2>
+            <h2 className="text-base font-semibold text-content ">Add book</h2>
             <button type="button" onClick={onClose}
-              className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-surface-inset transition-colors"
               aria-label="Close">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
-          <div className="mt-3 flex gap-1 rounded-lg bg-gray-100 dark:bg-gray-800 p-1">
+          <div className="mt-3 flex gap-1 rounded-lg bg-surface-inset p-1">
             <button type="button" onClick={() => setMode('isbn')}
               className={`flex-1 rounded-md py-1.5 text-sm font-medium transition-colors ${mode === 'isbn' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}>
               By ISBN
@@ -662,10 +662,10 @@ function AddBookModal({ libraryId, mediaTypes, onClose, onSaved, onDuplicate, in
             <div className="space-y-4">
               {scanning ? (
                 <div className="space-y-3">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Point your camera at a barcode…</p>
+                  <p className="text-sm text-content-tertiary ">Point your camera at a barcode…</p>
                   <video ref={videoRef} className="w-full rounded-lg bg-black aspect-video object-cover" playsInline />
                   <button type="button" onClick={stopScan}
-                    className="w-full rounded-lg border border-gray-300 dark:border-gray-600 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                    className="w-full rounded-lg border border-line-strong py-2 text-sm font-medium text-content-secondary hover:bg-surface-muted transition-colors">
                     Cancel scan
                   </button>
                 </div>
@@ -683,18 +683,18 @@ function AddBookModal({ libraryId, mediaTypes, onClose, onSaved, onDuplicate, in
                       {isbnLoading ? '…' : 'Search'}
                     </button>
                     <button type="button" onClick={startScan}
-                      className="rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                      className="rounded-lg border border-line-strong px-3 py-2 text-sm text-content-tertiary hover:bg-surface-muted transition-colors"
                       title="Scan barcode">📷</button>
                   </div>
-                  {isbnError && <p className="text-sm text-red-600 dark:text-red-400">{isbnError}</p>}
-                  {isbnLoading && <p className="text-sm text-gray-500 dark:text-gray-400">Searching providers…</p>}
+                  {isbnError && <p className="text-sm text-danger ">{isbnError}</p>}
+                  {isbnLoading && <p className="text-sm text-content-muted ">Searching providers…</p>}
                   {isbnDuplicate && (
-                    <div className="rounded-xl border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 px-4 py-3 text-sm">
-                      <p className="font-medium text-amber-800 dark:text-amber-300">Already in your library</p>
-                      <p className="mt-0.5 text-amber-700 dark:text-amber-400 truncate">{isbnDuplicate.title}</p>
+                    <div className="rounded-xl border border-amber-300 dark:border-amber-700 bg-warning-surface px-4 py-3 text-sm">
+                      <p className="font-medium text-warning-strong ">Already in your library</p>
+                      <p className="mt-0.5 text-warning-strong truncate">{isbnDuplicate.title}</p>
                       <div className="mt-2 flex gap-3">
                         <Link to={`/libraries/${libraryId}/books/${isbnDuplicate.id}`}
-                          className="text-amber-800 dark:text-amber-300 font-medium underline hover:no-underline" onClick={onClose}>
+                          className="text-warning-strong font-medium underline hover:no-underline" onClick={onClose}>
                           View existing →
                         </Link>
                         <span className="text-amber-600 dark:text-amber-500">or import to add an edition</span>
@@ -703,24 +703,24 @@ function AddBookModal({ libraryId, mediaTypes, onClose, onSaved, onDuplicate, in
                   )}
                   {isbnResults.length > 0 && (
                     <div className="space-y-3">
-                      <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-content-subtle ">
                         {isbnResults.length} result{isbnResults.length !== 1 ? 's' : ''}
                       </p>
                       {[...isbnResults].sort((a, b) => countISBNFields(b) - countISBNFields(a)).map((r, i) => {
                         const fieldCount = countISBNFields(r)
                         return (
-                          <div key={i} className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-4">
+                          <div key={i} className="rounded-xl border border-line bg-surface-muted p-4">
                             <div className="flex gap-4">
                               {r.cover_url && (
-                                <img src={r.cover_url} alt="" referrerPolicy="no-referrer" className="w-14 h-20 object-cover rounded-lg flex-shrink-0 bg-gray-200 dark:bg-gray-700 shadow-sm" />
+                                <img src={r.cover_url} alt="" referrerPolicy="no-referrer" className="w-14 h-20 object-cover rounded-lg flex-shrink-0 bg-surface-strong shadow-sm" />
                               )}
                               <div className="flex-1 min-w-0">
-                                <p className="font-semibold text-gray-900 dark:text-white">{r.title}</p>
-                                {r.subtitle && <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{r.subtitle}</p>}
-                                {r.authors?.length > 0 && <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{r.authors.join(', ')}</p>}
+                                <p className="font-semibold text-content ">{r.title}</p>
+                                {r.subtitle && <p className="text-sm text-content-muted mt-0.5">{r.subtitle}</p>}
+                                {r.authors?.length > 0 && <p className="text-sm text-content-tertiary mt-1">{r.authors.join(', ')}</p>}
                                 <div className="flex items-center gap-2 mt-2">
-                                  <span className="text-xs text-gray-400 dark:text-gray-500">via {r.provider_display}</span>
-                                  <span className="text-gray-300 dark:text-gray-600">·</span>
+                                  <span className="text-xs text-content-subtle ">via {r.provider_display}</span>
+                                  <span className="text-content-faint ">·</span>
                                   <span className={`text-xs font-medium ${fieldCount >= 8 ? 'text-green-600 dark:text-green-400' : fieldCount >= 5 ? 'text-amber-500' : 'text-gray-400'}`}>
                                     {fieldCount}/{TOTAL_ISBN_FIELDS} fields
                                   </span>
@@ -737,7 +737,7 @@ function AddBookModal({ libraryId, mediaTypes, onClose, onSaved, onDuplicate, in
                     </div>
                   )}
                   <button type="button" onClick={() => setMode('manual')}
-                    className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
+                    className="text-sm text-accent hover:underline">
                     Add manually instead →
                   </button>
                 </>
@@ -757,10 +757,10 @@ function AddBookModal({ libraryId, mediaTypes, onClose, onSaved, onDuplicate, in
                   {searchLoading ? '…' : 'Search'}
                 </button>
               </div>
-              {searchError && <p className="text-sm text-red-600 dark:text-red-400">{searchError}</p>}
+              {searchError && <p className="text-sm text-danger ">{searchError}</p>}
               {searchLoading && (
                 <div>
-                  <div className="h-1.5 w-full rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden">
+                  <div className="h-1.5 w-full rounded-full bg-surface-inset overflow-hidden">
                     <div
                       className="h-full rounded-full bg-blue-500"
                       style={{
@@ -769,32 +769,32 @@ function AddBookModal({ libraryId, mediaTypes, onClose, onSaved, onDuplicate, in
                       }}
                     />
                   </div>
-                  <p className="mt-1.5 text-xs text-gray-400 dark:text-gray-500">Searching providers…</p>
+                  <p className="mt-1.5 text-xs text-content-subtle ">Searching providers…</p>
                 </div>
               )}
               {searchResults.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-content-subtle ">
                     {searchResults.length} result{searchResults.length !== 1 ? 's' : ''}
                   </p>
                   {searchResults.map((r, i) => (
                     <button key={i} type="button"
                       onClick={async () => { await importResult(r); setMode('manual') }}
-                      className="w-full text-left rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-3 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
+                      className="w-full text-left rounded-xl border border-line bg-surface-muted p-3 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-accent-surface transition-colors">
                       <div className="flex gap-3">
                         {r.cover_url ? (
-                          <img src={r.cover_url} alt="" referrerPolicy="no-referrer" className="w-10 h-14 object-cover rounded flex-shrink-0 bg-gray-200 dark:bg-gray-700" />
+                          <img src={r.cover_url} alt="" referrerPolicy="no-referrer" className="w-10 h-14 object-cover rounded flex-shrink-0 bg-surface-strong " />
                         ) : (
-                          <div className="w-10 h-14 rounded flex-shrink-0 bg-gray-200 dark:bg-gray-700" />
+                          <div className="w-10 h-14 rounded flex-shrink-0 bg-surface-strong " />
                         )}
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm text-gray-900 dark:text-white truncate">{r.title}</p>
-                          {r.subtitle && <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{r.subtitle}</p>}
-                          {r.authors?.length > 0 && <p className="text-xs text-gray-600 dark:text-gray-300 mt-0.5 truncate">{r.authors.join(', ')}</p>}
+                          <p className="font-medium text-sm text-content truncate">{r.title}</p>
+                          {r.subtitle && <p className="text-xs text-content-muted truncate">{r.subtitle}</p>}
+                          {r.authors?.length > 0 && <p className="text-xs text-content-tertiary mt-0.5 truncate">{r.authors.join(', ')}</p>}
                           <div className="flex items-center gap-2 mt-1">
-                            {r.publish_date && <span className="text-xs text-gray-400 dark:text-gray-500">{r.publish_date.slice(0, 4)}</span>}
-                            {r.publish_date && <span className="text-gray-300 dark:text-gray-600">·</span>}
-                            <span className="text-xs text-gray-400 dark:text-gray-500">{r.provider_display}</span>
+                            {r.publish_date && <span className="text-xs text-content-subtle ">{r.publish_date.slice(0, 4)}</span>}
+                            {r.publish_date && <span className="text-content-faint ">·</span>}
+                            <span className="text-xs text-content-subtle ">{r.provider_display}</span>
                           </div>
                         </div>
                       </div>
@@ -803,7 +803,7 @@ function AddBookModal({ libraryId, mediaTypes, onClose, onSaved, onDuplicate, in
                 </div>
               )}
               <button type="button" onClick={() => setMode('manual')}
-                className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
+                className="text-sm text-accent hover:underline">
                 Add manually instead →
               </button>
             </div>
@@ -847,7 +847,7 @@ function AddBookModal({ libraryId, mediaTypes, onClose, onSaved, onDuplicate, in
                 <label className={labelCls}>Contributors</label>
                 <button type="button"
                   onClick={() => setContributors(cs => [...cs, { contributor: null, role: 'author' }])}
-                  className="text-xs text-blue-600 dark:text-blue-400 hover:underline">+ Add</button>
+                  className="text-xs text-accent hover:underline">+ Add</button>
               </div>
               <div className="space-y-2">
                 {contributors.map((c, i) => (
@@ -858,7 +858,7 @@ function AddBookModal({ libraryId, mediaTypes, onClose, onSaved, onDuplicate, in
                     onRemove={() => setContributors(cs => cs.filter((_, j) => j !== i))} />
                 ))}
                 {contributors.length === 0 && (
-                  <p className="text-xs text-gray-400 dark:text-gray-500">No contributors added.</p>
+                  <p className="text-xs text-content-subtle ">No contributors added.</p>
                 )}
               </div>
             </div>
@@ -895,34 +895,34 @@ function AddBookModal({ libraryId, mediaTypes, onClose, onSaved, onDuplicate, in
                     className={inputCls}
                   />
                   {tagDropdownOpen && (tagQuery || filteredTags.length > 0) && (
-                    <div className="absolute z-10 mt-1 w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg max-h-48 overflow-y-auto">
+                    <div className="absolute z-10 mt-1 w-full rounded-lg border border-line bg-surface-raised shadow-lg max-h-48 overflow-y-auto">
                       {filteredTags.map(tag => (
                         <button key={tag.id} type="button"
                           onMouseDown={e => { e.preventDefault(); setSelectedTags(ts => [...ts, tag]); setTagQuery(''); tagInputRef.current?.focus() }}
                           className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                           <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: tag.color || '#6b7280' }} />
-                          <span className="text-gray-800 dark:text-gray-200">{tag.name}</span>
+                          <span className="text-content-strong ">{tag.name}</span>
                         </button>
                       ))}
                       {tagQuery.trim() && !tagQueryMatchesExisting && (
                         <button type="button"
                           onMouseDown={e => { e.preventDefault(); createTag(tagQuery.trim()) }}
                           disabled={isCreatingTag}
-                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
+                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-accent hover:bg-accent-surface transition-colors">
                           <span className="flex-shrink-0">+</span>
                           <span>Create "{tagQuery.trim()}"</span>
                           <div className="ml-auto">
                             <select value={newTagColor} onChange={e => { e.stopPropagation(); setNewTagColor(e.target.value) }}
                               onMouseDown={e => e.stopPropagation()}
                               onClick={e => e.stopPropagation()}
-                              className="text-xs border border-gray-200 dark:border-gray-600 rounded px-1 py-0.5 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300">
+                              className="text-xs border border-line rounded px-1 py-0.5 bg-surface-raised text-content-tertiary ">
                               {TAG_COLORS.filter(c => c.value).map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
                             </select>
                           </div>
                         </button>
                       )}
                       {filteredTags.length === 0 && !tagQuery.trim() && (
-                        <p className="px-3 py-2 text-xs text-gray-400 dark:text-gray-500">No more tags available</p>
+                        <p className="px-3 py-2 text-xs text-content-subtle ">No more tags available</p>
                       )}
                     </div>
                   )}
@@ -956,19 +956,19 @@ function AddBookModal({ libraryId, mediaTypes, onClose, onSaved, onDuplicate, in
                     className={inputCls}
                   />
                   {genreDropdownOpen && filteredGenres.length > 0 && (
-                    <div className="absolute z-10 mt-1 w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg max-h-48 overflow-y-auto">
+                    <div className="absolute z-10 mt-1 w-full rounded-lg border border-line bg-surface-raised shadow-lg max-h-48 overflow-y-auto">
                       {filteredGenres.map(g => (
                         <button key={g.id} type="button"
                           onMouseDown={e => { e.preventDefault(); setSelectedGenres(gs => [...gs, g]); setGenreQuery(''); genreInputRef.current?.focus() }}
-                          className="w-full text-left px-3 py-2 text-sm text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                          className="w-full text-left px-3 py-2 text-sm text-content-strong hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                           {g.name}
                         </button>
                       ))}
                     </div>
                   )}
                   {genreDropdownOpen && filteredGenres.length === 0 && genreQuery && (
-                    <div className="absolute z-10 mt-1 w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg px-3 py-2">
-                      <p className="text-xs text-gray-400 dark:text-gray-500">No matching genres</p>
+                    <div className="absolute z-10 mt-1 w-full rounded-lg border border-line bg-surface-raised shadow-lg px-3 py-2">
+                      <p className="text-xs text-content-subtle ">No matching genres</p>
                     </div>
                   )}
                 </div>
@@ -1004,19 +1004,19 @@ function AddBookModal({ libraryId, mediaTypes, onClose, onSaved, onDuplicate, in
             )}
 
             {/* Edition details */}
-            <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="rounded-xl border border-line overflow-hidden">
                 <button type="button"
                   onClick={() => setShowEdition(v => !v)}
-                  className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-colors">
+                  className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-content-secondary hover:bg-surface-muted transition-colors">
                   <span className="flex items-center gap-2">
                     <svg className={`w-3.5 h-3.5 transition-transform ${showEdition ? 'rotate-90' : ''}`} fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M7.293 4.293a1 1 0 011.414 0L14 9.586l-5.293 5.293a1 1 0 01-1.414-1.414L11.586 9.586 6.293 4.293a1 1 0 010-1.414z" clipRule="evenodd" />
                     </svg>
                     <span>Edition details</span>
-                    {!showEdition && <span className="text-xs font-normal text-gray-400 dark:text-gray-500">— no edition will be created</span>}
+                    {!showEdition && <span className="text-xs font-normal text-content-subtle ">— no edition will be created</span>}
                   </span>
                   {isbnEntered && !showEdition && (
-                    <span className="text-xs text-blue-600 dark:text-blue-400">ISBN entered</span>
+                    <span className="text-xs text-accent ">ISBN entered</span>
                   )}
                 </button>
                 {showEdition && (() => {
@@ -1024,7 +1024,7 @@ function AddBookModal({ libraryId, mediaTypes, onClose, onSaved, onDuplicate, in
                   const isEbook = edition.format === 'ebook' || edition.format === 'digital'
                   const isPhysical = !isAudio && !isEbook
                   return (
-                  <div className="px-4 pb-4 pt-3 space-y-3 border-t border-gray-100 dark:border-gray-700/60 bg-gray-50/50 dark:bg-gray-800/30">
+                  <div className="px-4 pb-4 pt-3 space-y-3 border-t border-line-subtle bg-gray-50/50 dark:bg-gray-800/30">
                     {/* Format buttons */}
                     <div className="grid grid-cols-4 gap-2">
                       {([
@@ -1152,15 +1152,15 @@ function AddBookModal({ libraryId, mediaTypes, onClose, onSaved, onDuplicate, in
                 })()}
               </div>
 
-            {error && <div className="rounded-xl bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 px-4 py-2.5 text-sm text-red-700 dark:text-red-400">{error}</div>}
+            {error && <div className="rounded-xl bg-danger-surface border border-danger-line px-4 py-2.5 text-sm text-danger-strong ">{error}</div>}
           </form>
           )}
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3 flex-shrink-0">
+        <div className="px-6 py-4 border-t border-line flex justify-end gap-3 flex-shrink-0">
           <button type="button" onClick={onClose}
-            className="rounded-lg border border-gray-300 dark:border-gray-600 px-5 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+            className="rounded-lg border border-line-strong px-5 py-2 text-sm font-medium text-content-secondary hover:bg-surface-muted transition-colors">
             Cancel
           </button>
           {mode === 'manual' && (
@@ -1259,11 +1259,11 @@ function ShelfFormModal({ libraryId, shelf, onClose, onSaved }: ShelfFormModalPr
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-sm rounded-xl bg-white dark:bg-gray-900 shadow-xl p-6">
+      <div className="w-full max-w-sm rounded-xl bg-surface shadow-xl p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-semibold text-gray-900 dark:text-white">{shelf ? 'Edit shelf' : 'New shelf'}</h3>
+          <h3 className="text-base font-semibold text-content ">{shelf ? 'Edit shelf' : 'New shelf'}</h3>
           <button type="button" onClick={onClose}
-            className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-surface-inset transition-colors"
             aria-label="Close">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1272,32 +1272,32 @@ function ShelfFormModal({ libraryId, shelf, onClose, onSaved }: ShelfFormModalPr
         </div>
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name *</label>
+            <label className="block text-sm font-medium text-content-secondary mb-1">Name *</label>
             <input type="text" autoFocus value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
               placeholder="e.g. Favourites"
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+              className="w-full rounded-lg border border-line-strong dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+            <label className="block text-sm font-medium text-content-secondary mb-1">Description</label>
             <input type="text" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+              className="w-full rounded-lg border border-line-strong dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Color</label>
+              <label className="block text-sm font-medium text-content-secondary mb-1">Color</label>
               <select value={form.color} onChange={e => setForm(f => ({ ...f, color: e.target.value }))}
-                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                className="w-full rounded-lg border border-line-strong dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
                 {SHELF_COLORS.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Icon</label>
+              <label className="block text-sm font-medium text-content-secondary mb-1">Icon</label>
               <EmojiPicker value={form.icon} onChange={emoji => setForm(f => ({ ...f, icon: emoji }))} />
             </div>
           </div>
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Tags</label>
+              <label className="text-sm font-medium text-content-secondary ">Tags</label>
               <button type="button" onClick={() => setShowNewTag(v => !v)}
                 className="text-xs text-blue-600 hover:underline">+ New tag</button>
             </div>
@@ -1316,16 +1316,16 @@ function ShelfFormModal({ libraryId, shelf, onClose, onSaved }: ShelfFormModalPr
                 )
               })}
               {libraryTags.length === 0 && !showNewTag && (
-                <p className="text-xs text-gray-400 dark:text-gray-500">No tags in this library yet.</p>
+                <p className="text-xs text-content-subtle ">No tags in this library yet.</p>
               )}
             </div>
             {showNewTag && (
               <div className="mt-2 flex items-center gap-2">
                 <input type="text" value={newTagName} onChange={e => setNewTagName(e.target.value)}
                   placeholder="Tag name"
-                  className="flex-1 h-8 rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-2 text-xs focus:border-blue-500 focus:outline-none" />
+                  className="flex-1 h-8 rounded border border-line-strong dark:bg-gray-800 dark:text-white px-2 text-xs focus:border-blue-500 focus:outline-none" />
                 <select value={newTagColor} onChange={e => setNewTagColor(e.target.value)}
-                  className="h-8 rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-2 text-xs focus:border-blue-500 focus:outline-none">
+                  className="h-8 rounded border border-line-strong dark:bg-gray-800 dark:text-white px-2 text-xs focus:border-blue-500 focus:outline-none">
                   {TAG_COLORS.filter(c => c.value).map(c => (
                     <option key={c.value} value={c.value}>{c.label}</option>
                   ))}
@@ -1334,14 +1334,14 @@ function ShelfFormModal({ libraryId, shelf, onClose, onSaved }: ShelfFormModalPr
                   onClick={createTag}
                   className="h-8 px-3 rounded bg-blue-600 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50">Add</button>
                 <button type="button" onClick={() => setShowNewTag(false)}
-                  className="h-8 px-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 text-lg leading-none">×</button>
+                  className="h-8 px-2 text-content-subtle hover:text-content-tertiary text-lg leading-none">×</button>
               </div>
             )}
           </div>
-          {error && <div className="rounded-lg bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 px-3 py-2 text-sm text-red-700 dark:text-red-400">{error}</div>}
+          {error && <div className="rounded-lg bg-danger-surface border border-danger-line px-3 py-2 text-sm text-danger-strong ">{error}</div>}
           <div className="flex gap-3 pt-1">
             <button type="button" onClick={onClose}
-              className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Cancel</button>
+              className="flex-1 rounded-lg border border-line-strong px-4 py-2 text-sm font-medium text-content-secondary hover:bg-surface-muted transition-colors">Cancel</button>
             <button type="submit" disabled={isLoading || !form.name.trim()}
               className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
               {isLoading ? 'Saving…' : shelf ? 'Save changes' : 'Create shelf'}
@@ -1393,11 +1393,11 @@ function AddBookToShelfModal({ libraryId, shelfId, existingBookIds, onClose, onA
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-md rounded-xl bg-white dark:bg-gray-900 shadow-xl p-6">
+      <div className="w-full max-w-md rounded-xl bg-surface shadow-xl p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-semibold text-gray-900 dark:text-white">Add book to shelf</h3>
+          <h3 className="text-base font-semibold text-content ">Add book to shelf</h3>
           <button type="button" onClick={onClose}
-            className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-surface-inset transition-colors"
             aria-label="Close">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1407,22 +1407,22 @@ function AddBookToShelfModal({ libraryId, shelfId, existingBookIds, onClose, onA
         <form onSubmit={e => { e.preventDefault(); setSearch(query) }} className="flex gap-2 mb-4">
           <input type="text" autoFocus value={query} onChange={e => setQuery(e.target.value)}
             placeholder="Search books…"
-            className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+            className="flex-1 rounded-lg border border-line-strong dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
           <button type="submit"
-            className="rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Search</button>
+            className="rounded-lg border border-line-strong px-3 py-2 text-sm text-content-tertiary hover:bg-surface-muted transition-colors">Search</button>
         </form>
-        {isSearching && <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-4">Searching…</p>}
+        {isSearching && <p className="text-sm text-content-subtle text-center py-4">Searching…</p>}
         {!isSearching && search && results.length === 0 && (
-          <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-4">No books found.</p>
+          <p className="text-sm text-content-subtle text-center py-4">No books found.</p>
         )}
         {results.length > 0 && (
-          <ul className="divide-y divide-gray-100 dark:divide-gray-800 max-h-64 overflow-y-auto">
+          <ul className="divide-y divide-line-subtle max-h-64 overflow-y-auto">
             {results.map(book => (
               <li key={book.id} className="flex items-center justify-between py-2.5 gap-3">
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{book.title}</p>
+                  <p className="text-sm font-medium text-content truncate">{book.title}</p>
                   {book.contributors.length > 0 && (
-                    <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{book.contributors.map(c => c.name).join(', ')}</p>
+                    <p className="text-xs text-content-subtle truncate">{book.contributors.map(c => c.name).join(', ')}</p>
                   )}
                 </div>
                 <button onClick={() => addBook(book.id)}
@@ -1435,7 +1435,7 @@ function AddBookToShelfModal({ libraryId, shelfId, existingBookIds, onClose, onA
         )}
         <div className="mt-4 flex justify-end">
           <button onClick={onClose}
-            className="rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Close</button>
+            className="rounded-lg border border-line-strong px-4 py-2 text-sm font-medium text-content-secondary hover:bg-surface-muted transition-colors">Close</button>
         </div>
       </div>
     </div>
@@ -1474,7 +1474,7 @@ function ShelfDetailView({ shelf, libraryId, onBack }: ShelfDetailViewProps) {
   return (
     <div>
       <div className="flex items-center gap-3 mb-4">
-        <button onClick={onBack} className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors">← Back</button>
+        <button onClick={onBack} className="text-sm text-content-muted hover:text-content-secondary transition-colors">← Back</button>
         <div className="flex-1" />
         <button onClick={() => setShowAddBook(true)}
           className="rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors">
@@ -1482,38 +1482,38 @@ function ShelfDetailView({ shelf, libraryId, onBack }: ShelfDetailViewProps) {
         </button>
       </div>
 
-      {shelf.description && <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{shelf.description}</p>}
+      {shelf.description && <p className="text-sm text-content-muted mb-4">{shelf.description}</p>}
 
-      {isLoading && <div className="text-sm text-gray-400 dark:text-gray-500 text-center py-16">Loading…</div>}
+      {isLoading && <div className="text-sm text-content-subtle text-center py-16">Loading…</div>}
 
       {!isLoading && books.length === 0 && (
-        <div className="rounded-xl border border-dashed border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 p-12 text-center">
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">No books on this shelf</p>
+        <div className="rounded-xl border border-dashed border-line-strong bg-surface p-12 text-center">
+          <p className="text-sm text-content-muted mb-3">No books on this shelf</p>
           <button onClick={() => setShowAddBook(true)} className="text-sm text-blue-600 hover:underline">Add the first book</button>
         </div>
       )}
 
       {!isLoading && books.length > 0 && (
-        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
+        <div className="rounded-xl border border-line bg-surface overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+            <thead className="bg-surface-muted border-b border-line ">
               <tr>
                 {['Title', 'Type', 'Tags', 'Contributors', ''].map(h => (
-                  <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{h}</th>
+                  <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-content-muted ">{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+            <tbody className="divide-y divide-line-subtle ">
               {books.map(book => (
-                <tr key={book.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                <tr key={book.id} className="hover:bg-surface-muted transition-colors">
                   <td className="px-4 py-3">
-                    <p className="font-medium text-gray-900 dark:text-white">{book.title}</p>
-                    {book.subtitle && <p className="text-xs text-gray-400 dark:text-gray-500 truncate max-w-xs">{book.subtitle}</p>}
+                    <p className="font-medium text-content ">{book.title}</p>
+                    {book.subtitle && <p className="text-xs text-content-subtle truncate max-w-xs">{book.subtitle}</p>}
                     {book.genres?.length > 0 && (
                       <div className="flex flex-wrap gap-1 mt-1">
                         {book.genres.map(genre => (
                           <span key={genre.id}
-                            className="inline-flex items-center rounded-full border border-gray-200 dark:border-gray-600 px-1.5 py-0.5 text-xs font-medium text-gray-600 dark:text-gray-400">
+                            className="inline-flex items-center rounded-full border border-line px-1.5 py-0.5 text-xs font-medium text-content-tertiary ">
                             {genre.name}
                           </span>
                         ))}
@@ -1521,7 +1521,7 @@ function ShelfDetailView({ shelf, libraryId, onBack }: ShelfDetailViewProps) {
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    <span className="inline-flex items-center rounded-full bg-gray-100 dark:bg-gray-700 px-2 py-0.5 text-xs font-medium text-gray-600 dark:text-gray-300 whitespace-nowrap">
+                    <span className="inline-flex items-center rounded-full bg-surface-inset px-2 py-0.5 text-xs font-medium text-content-tertiary whitespace-nowrap">
                       {book.media_type}
                     </span>
                   </td>
@@ -1534,17 +1534,17 @@ function ShelfDetailView({ shelf, libraryId, onBack }: ShelfDetailViewProps) {
                           {tag.name}
                         </span>
                       ))}
-                      {!book.tags.length && <span className="text-gray-300 dark:text-gray-600">—</span>}
+                      {!book.tags.length && <span className="text-content-faint ">—</span>}
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-gray-600 dark:text-gray-400 text-xs">
+                  <td className="px-4 py-3 text-content-tertiary text-xs">
                     {book.contributors.length > 0
                       ? book.contributors.map(c => c.name).join(', ')
-                      : <span className="text-gray-300 dark:text-gray-600">—</span>}
+                      : <span className="text-content-faint ">—</span>}
                   </td>
                   <td className="px-4 py-3 text-right">
                     <button onClick={() => removeBook(book.id)}
-                      className="text-xs text-gray-500 dark:text-gray-400 hover:text-red-600 transition-colors">Remove</button>
+                      className="text-xs text-content-muted hover:text-red-600 transition-colors">Remove</button>
                   </td>
                 </tr>
               ))}
@@ -1633,7 +1633,7 @@ function ShelvesTab({ libraryId, setExtraCrumbs }: ShelvesTabProps) {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search shelves…"
-            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white pl-9 pr-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded-lg border border-line-strong dark:bg-gray-800 dark:text-white pl-9 pr-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
           <svg className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -1663,11 +1663,11 @@ function ShelvesTab({ libraryId, setExtraCrumbs }: ShelvesTabProps) {
         </div>
       )}
 
-      {isLoading && <div className="text-sm text-gray-400 dark:text-gray-500 text-center py-16">Loading…</div>}
+      {isLoading && <div className="text-sm text-content-subtle text-center py-16">Loading…</div>}
 
       {!isLoading && shelves.length === 0 && (
-        <div className="rounded-xl border border-dashed border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 p-12 text-center">
-          <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">
+        <div className="rounded-xl border border-dashed border-line-strong bg-surface p-12 text-center">
+          <p className="text-sm font-medium text-content-muted mb-3">
             {search || tagFilter ? 'No shelves match your search.' : 'No shelves yet'}
           </p>
           {!search && !tagFilter && (
@@ -1680,18 +1680,18 @@ function ShelvesTab({ libraryId, setExtraCrumbs }: ShelvesTabProps) {
       )}
 
       {!isLoading && shelves.length > 0 && (
-        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
+        <div className="rounded-xl border border-line bg-surface overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+            <thead className="bg-surface-muted border-b border-line ">
               <tr>
                 {['Name', 'Tags', 'Books', ''].map(h => (
-                  <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{h}</th>
+                  <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-content-muted ">{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+            <tbody className="divide-y divide-line-subtle ">
               {shelves.map(shelf => (
-                <tr key={shelf.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                <tr key={shelf.id} className="hover:bg-surface-muted transition-colors">
                   <td className="px-4 py-3">
                     <button onClick={() => setViewShelf(shelf)} className="text-left group flex items-center gap-2">
                       {shelf.icon
@@ -1700,8 +1700,8 @@ function ShelvesTab({ libraryId, setExtraCrumbs }: ShelvesTabProps) {
                           ? <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: shelf.color }} />
                           : null}
                       <div className="min-w-0">
-                        <p className="font-medium text-gray-900 dark:text-white group-hover:text-blue-600 transition-colors">{shelf.name}</p>
-                        {shelf.description && <p className="text-xs text-gray-400 dark:text-gray-500 truncate max-w-xs">{shelf.description}</p>}
+                        <p className="font-medium text-content group-hover:text-blue-600 transition-colors">{shelf.name}</p>
+                        {shelf.description && <p className="text-xs text-content-subtle truncate max-w-xs">{shelf.description}</p>}
                       </div>
                     </button>
                   </td>
@@ -1716,17 +1716,17 @@ function ShelvesTab({ libraryId, setExtraCrumbs }: ShelvesTabProps) {
                           </span>
                         ))}
                       </div>
-                    ) : <span className="text-gray-300 dark:text-gray-600">—</span>}
+                    ) : <span className="text-content-faint ">—</span>}
                   </td>
-                  <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs whitespace-nowrap">
+                  <td className="px-4 py-3 text-content-muted text-xs whitespace-nowrap">
                     {shelf.book_count} book{shelf.book_count !== 1 ? 's' : ''}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3 justify-end">
                       <button onClick={() => setEditShelf(shelf)}
-                        className="text-xs text-gray-500 dark:text-gray-400 hover:text-blue-600 transition-colors">Edit</button>
+                        className="text-xs text-content-muted hover:text-blue-600 transition-colors">Edit</button>
                       <button onClick={() => deleteShelf(shelf)}
-                        className="text-xs text-gray-500 dark:text-gray-400 hover:text-red-600 transition-colors">Delete</button>
+                        className="text-xs text-content-muted hover:text-red-600 transition-colors">Delete</button>
                     </div>
                   </td>
                 </tr>
@@ -2281,10 +2281,10 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
                 else if (e.key === 'Tab') { e.preventDefault(); applySuggestion(suggestions[Math.max(dropdownIdx, 0)].insert) }
               }}
               placeholder='Search… type:Manga, tag:read, contributor:endo, NOT, OR, "phrase"'
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-lg border border-line-strong dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
             {showDropdown && dropdownSuggestions.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-1 z-50 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg overflow-hidden">
+              <div className="absolute top-full left-0 right-0 mt-1 z-50 rounded-lg border border-line bg-surface shadow-lg overflow-hidden">
                 {dropdownSuggestions.map((s, i) => (
                   <button
                     key={s.label}
@@ -2292,18 +2292,18 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
                     onMouseDown={e => { e.preventDefault(); applySuggestion(s.insert) }}
                     className={`w-full flex items-center gap-3 px-3 py-2 text-left text-sm transition-colors ${i === dropdownIdx ? 'bg-blue-50 dark:bg-blue-950/50' : 'hover:bg-gray-50 dark:hover:bg-gray-800'}`}
                   >
-                    <span className="font-mono font-medium text-blue-600 dark:text-blue-400 min-w-[7rem]">{s.label}</span>
-                    {s.description && <span className="text-xs text-gray-400 dark:text-gray-500">{s.description}</span>}
+                    <span className="font-mono font-medium text-accent min-w-[7rem]">{s.label}</span>
+                    {s.description && <span className="text-xs text-content-subtle ">{s.description}</span>}
                   </button>
                 ))}
               </div>
             )}
           </div>
           <button type="submit"
-            className="rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Search</button>
+            className="rounded-lg border border-line-strong px-3 py-2 text-sm text-content-tertiary hover:bg-surface-muted transition-colors">Search</button>
         </form>
         {/* View mode toggle */}
-        <div className="flex items-center rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden flex-shrink-0">
+        <div className="flex items-center rounded-lg border border-line-strong overflow-hidden flex-shrink-0">
           <button
             onClick={() => setViewModeAndSave('table')}
             className={`px-2.5 py-2 transition-colors ${viewMode === 'table' ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200' : 'text-gray-400 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
@@ -2326,19 +2326,19 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
         <div className="relative flex-shrink-0" ref={colPickerRef}>
           <button
             onClick={() => setColPickerOpen(o => !o)}
-            className="rounded-lg border border-gray-300 dark:border-gray-600 px-2.5 py-2 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+            className="rounded-lg border border-line-strong px-2.5 py-2 text-content-muted hover:bg-surface-muted transition-colors"
             title="Choose columns">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
             </svg>
           </button>
           {colPickerOpen && (
-            <div className="absolute right-0 top-full mt-1 z-30 w-48 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg py-1">
+            <div className="absolute right-0 top-full mt-1 z-30 w-48 rounded-lg border border-line bg-surface shadow-lg py-1">
               {ALL_COLS.map(col => (
-                <label key={col} className="flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer">
+                <label key={col} className="flex items-center gap-2.5 px-3 py-2 text-sm text-content-secondary hover:bg-surface-muted cursor-pointer">
                   <input type="checkbox" checked={visibleCols.has(col)}
                     onChange={() => toggleCol(col)}
-                    className="rounded border-gray-300 dark:border-gray-600 text-blue-600" />
+                    className="rounded border-line-strong text-blue-600" />
                   {COL_LABELS[col]}
                 </label>
               ))}
@@ -2347,7 +2347,7 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
         </div>
         )}
         <Link to={`/import?library=${libraryId}`}
-          className="rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex-shrink-0">
+          className="rounded-lg border border-line-strong px-4 py-2 text-sm font-semibold text-content-secondary hover:bg-surface-muted transition-colors flex-shrink-0">
           Import CSV
         </Link>
         <button onClick={() => setShowAdd(true)}
@@ -2368,21 +2368,21 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
               group.conditions.map((c, ci) => {
                 const isNeg = c.op.startsWith('not_')
                 const chipColor = c.field === 'letter'
-                  ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 ring-blue-200 dark:ring-blue-700'
+                  ? 'bg-blue-100 dark:bg-blue-900/40 text-accent-strong ring-blue-200 dark:ring-blue-700'
                   : c.field === 'type'
                     ? 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-400 ring-indigo-200 dark:ring-indigo-800'
                     : c.field === 'tag'
                       ? 'bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-400 ring-purple-200 dark:ring-purple-800'
                       : c.field === 'genre'
-                        ? 'bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-400 ring-green-200 dark:ring-green-800'
+                        ? 'bg-green-50 dark:bg-green-950/40 text-success-strong ring-success-line '
                         : c.field === 'has'
                           ? 'bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-400 ring-teal-200 dark:ring-teal-800'
                           : isNeg
-                        ? 'bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 ring-red-200 dark:ring-red-800'
-                        : 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 ring-blue-200 dark:ring-blue-800'
+                        ? 'bg-red-50 dark:bg-red-950/40 text-danger-strong ring-red-200 dark:ring-red-800'
+                        : 'bg-accent-surface text-accent-strong ring-blue-200 dark:ring-blue-800'
                 return (
                   <Fragment key={`${gi}-${ci}`}>
-                    {gi > 0 && ci === 0 && <span className="text-xs text-gray-400 dark:text-gray-500 font-medium">AND</span>}
+                    {gi > 0 && ci === 0 && <span className="text-xs text-content-subtle font-medium">AND</span>}
                     {ci > 0 && group.mode === 'OR' && <span className="text-xs text-orange-500 dark:text-orange-400 font-medium">OR</span>}
                     <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ${chipColor}`}>
                       {isNeg && <span className="font-bold">NOT</span>}
@@ -2419,13 +2419,13 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
         )
       })()}
 
-      {error && <div className="mb-4 rounded-lg bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-400">{error}</div>}
+      {error && <div className="mb-4 rounded-lg bg-danger-surface border border-danger-line px-4 py-3 text-sm text-danger-strong ">{error}</div>}
 
-      {!data && <div className="text-sm text-gray-400 dark:text-gray-500 text-center py-16">Loading…</div>}
+      {!data && <div className="text-sm text-content-subtle text-center py-16">Loading…</div>}
 
       {data?.items.length === 0 && (
-        <div className="rounded-xl border border-dashed border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 p-12 text-center">
-          <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{search ? 'No books match your search.' : 'No books yet'}</p>
+        <div className="rounded-xl border border-dashed border-line-strong bg-surface p-12 text-center">
+          <p className="text-sm font-medium text-content-muted ">{search ? 'No books match your search.' : 'No books yet'}</p>
           {!search && <button onClick={() => setShowAdd(true)}
             className="mt-3 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors">
             Add your first book
@@ -2435,15 +2435,15 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
 
       {selectedIds.size > 0 && (
         <>
-          <div className="mb-3 flex flex-wrap items-center gap-3 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/40 px-4 py-2.5 text-sm">
-            <span className="font-medium text-blue-700 dark:text-blue-300">
+          <div className="mb-3 flex flex-wrap items-center gap-3 rounded-lg border border-accent-line bg-accent-surface px-4 py-2.5 text-sm">
+            <span className="font-medium text-accent-strong ">
               {selectedIds.size} selected
             </span>
             <div className="h-4 w-px bg-blue-200 dark:bg-blue-700" />
 
             {/* Type */}
             <div className="flex items-center gap-1.5">
-              <span className="text-xs text-gray-600 dark:text-gray-400">Type:</span>
+              <span className="text-xs text-content-tertiary ">Type:</span>
               <select
                 disabled={isBulkApplying}
                 defaultValue=""
@@ -2453,7 +2453,7 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
                   e.target.value = ''
                   await bulkChangeType(id)
                 }}
-                className="rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 dark:text-white px-2 py-0.5 text-xs focus:border-blue-500 focus:outline-none"
+                className="rounded border border-line-strong bg-surface-raised dark:text-white px-2 py-0.5 text-xs focus:border-blue-500 focus:outline-none"
               >
                 <option value="">Change type…</option>
                 {mediaTypes.map(mt => <option key={mt.id} value={mt.id}>{mt.display_name}</option>)}
@@ -2464,7 +2464,7 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
             {allTags.length > 0 && (
               <>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xs text-gray-600 dark:text-gray-400">Add tag:</span>
+                  <span className="text-xs text-content-tertiary ">Add tag:</span>
                   <select
                     disabled={isBulkApplying}
                     defaultValue=""
@@ -2474,14 +2474,14 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
                       e.target.value = ''
                       await bulkAddTag(id)
                     }}
-                    className="rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 dark:text-white px-2 py-0.5 text-xs focus:border-blue-500 focus:outline-none"
+                    className="rounded border border-line-strong bg-surface-raised dark:text-white px-2 py-0.5 text-xs focus:border-blue-500 focus:outline-none"
                   >
                     <option value="">Pick tag…</option>
                     {allTags.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                   </select>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xs text-gray-600 dark:text-gray-400">Remove tag:</span>
+                  <span className="text-xs text-content-tertiary ">Remove tag:</span>
                   <select
                     disabled={isBulkApplying}
                     defaultValue=""
@@ -2491,7 +2491,7 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
                       e.target.value = ''
                       await bulkRemoveTag(id)
                     }}
-                    className="rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 dark:text-white px-2 py-0.5 text-xs focus:border-blue-500 focus:outline-none"
+                    className="rounded border border-line-strong bg-surface-raised dark:text-white px-2 py-0.5 text-xs focus:border-blue-500 focus:outline-none"
                   >
                     <option value="">Pick tag…</option>
                     {allTags.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
@@ -2504,7 +2504,7 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
             {allGenres.length > 0 && (
               <>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xs text-gray-600 dark:text-gray-400">Add genre:</span>
+                  <span className="text-xs text-content-tertiary ">Add genre:</span>
                   <select
                     disabled={isBulkApplying}
                     defaultValue=""
@@ -2514,14 +2514,14 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
                       e.target.value = ''
                       await bulkAddGenre(id)
                     }}
-                    className="rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 dark:text-white px-2 py-0.5 text-xs focus:border-blue-500 focus:outline-none"
+                    className="rounded border border-line-strong bg-surface-raised dark:text-white px-2 py-0.5 text-xs focus:border-blue-500 focus:outline-none"
                   >
                     <option value="">Pick genre…</option>
                     {allGenres.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
                   </select>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xs text-gray-600 dark:text-gray-400">Remove genre:</span>
+                  <span className="text-xs text-content-tertiary ">Remove genre:</span>
                   <select
                     disabled={isBulkApplying}
                     defaultValue=""
@@ -2531,7 +2531,7 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
                       e.target.value = ''
                       await bulkRemoveGenre(id)
                     }}
-                    className="rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 dark:text-white px-2 py-0.5 text-xs focus:border-blue-500 focus:outline-none"
+                    className="rounded border border-line-strong bg-surface-raised dark:text-white px-2 py-0.5 text-xs focus:border-blue-500 focus:outline-none"
                   >
                     <option value="">Pick genre…</option>
                     {allGenres.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
@@ -2547,7 +2547,7 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
               type="button"
               disabled={isBulkApplying || isBulkJobEnqueueing}
               onClick={() => setShowBulkMetaModal(true)}
-              className="text-xs text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-100 disabled:opacity-50 transition-colors"
+              className="text-xs text-accent-strong hover:text-blue-900 dark:hover:text-blue-100 disabled:opacity-50 transition-colors"
             >
               Refresh metadata
             </button>
@@ -2555,7 +2555,7 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
               type="button"
               disabled={isBulkApplying || isBulkJobEnqueueing}
               onClick={bulkRefreshCovers}
-              className="text-xs text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-100 disabled:opacity-50 transition-colors"
+              className="text-xs text-accent-strong hover:text-blue-900 dark:hover:text-blue-100 disabled:opacity-50 transition-colors"
             >
               Refresh covers
             </button>
@@ -2566,7 +2566,7 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
               type="button"
               disabled={isBulkApplying || isBulkJobEnqueueing}
               onClick={bulkDelete}
-              className="text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 disabled:opacity-50 transition-colors"
+              className="text-xs text-danger hover:text-danger-strong disabled:opacity-50 transition-colors"
             >
               Delete
             </button>
@@ -2574,13 +2574,13 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
             <button
               type="button"
               onClick={() => setSelectedIds(new Set())}
-              className="ml-auto text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+              className="ml-auto text-xs text-content-muted hover:text-content-secondary transition-colors"
             >
               Clear ×
             </button>
 
             {(isBulkApplying || isBulkJobEnqueueing) && (
-              <span className="text-xs text-blue-600 dark:text-blue-400 animate-pulse">
+              <span className="text-xs text-accent animate-pulse">
                 {isBulkJobEnqueueing ? 'Queuing…' : 'Applying…'}
               </span>
             )}
@@ -2589,11 +2589,11 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
           {/* Refresh metadata confirmation modal */}
           {showBulkMetaModal && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-              <div className="w-full max-w-sm rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6 shadow-xl">
-                <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-2">
+              <div className="w-full max-w-sm rounded-xl border border-line bg-surface p-6 shadow-xl">
+                <h3 className="text-base font-semibold text-content mb-2">
                   Refresh metadata
                 </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                <p className="text-sm text-content-tertiary mb-4">
                   Queue metadata enrichment for {selectedIds.size} book{selectedIds.size !== 1 ? 's' : ''}?
                   Books without an ISBN will be skipped.
                 </p>
@@ -2602,11 +2602,11 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
                     type="checkbox"
                     checked={bulkMetaForce}
                     onChange={e => setBulkMetaForce(e.target.checked)}
-                    className="mt-0.5 h-4 w-4 rounded border-gray-300 dark:border-gray-600"
+                    className="mt-0.5 h-4 w-4 rounded border-line-strong "
                   />
-                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                  <span className="text-sm text-content-secondary ">
                     Override existing fields
-                    <span className="block text-xs text-gray-500 dark:text-gray-500 mt-0.5">
+                    <span className="block text-xs text-content-muted mt-0.5">
                       When unchecked, only empty fields are filled in. When checked, provider data replaces existing values.
                     </span>
                   </span>
@@ -2616,30 +2616,30 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
                     type="checkbox"
                     checked={bulkMetaUseAI}
                     onChange={e => setBulkMetaUseAI(e.target.checked)}
-                    className="mt-0.5 h-4 w-4 rounded border-gray-300 dark:border-gray-600"
+                    className="mt-0.5 h-4 w-4 rounded border-line-strong "
                   />
-                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                  <span className="text-sm text-content-secondary ">
                     Clean descriptions with AI
-                    <span className="block text-xs text-gray-500 dark:text-gray-500 mt-0.5">
+                    <span className="block text-xs text-content-muted mt-0.5">
                       Strip marketing fluff and retailer boilerplate from each book's description after enrichment. Uses AI tokens.
-                    </span>
-                  </span>
-                </label>
-                <div className="flex gap-2 justify-end">
-                  <button
-                    type="button"
-                    onClick={() => { setShowBulkMetaModal(false); setBulkMetaForce(false); setBulkMetaUseAI(false) }}
-                    className="rounded-lg px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    disabled={isBulkJobEnqueueing}
-                    onClick={() => bulkEnrichMetadata(bulkMetaForce, bulkMetaUseAI)}
-                    className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 transition-colors"
-                  >
-                    {isBulkJobEnqueueing ? 'Queuing…' : 'Queue jobs'}
+ </span>
+ </span>
+ </label>
+ <div className="flex gap-2 justify-end">
+ <button
+ type="button"
+ onClick={() => { setShowBulkMetaModal(false); setBulkMetaForce(false); setBulkMetaUseAI(false) }}
+ className="rounded-lg px-4 py-2 text-sm text-content-tertiary hover:bg-surface-inset transition-colors"
+ >
+ Cancel
+ </button>
+ <button
+ type="button"
+ disabled={isBulkJobEnqueueing}
+ onClick={() => bulkEnrichMetadata(bulkMetaForce, bulkMetaUseAI)}
+ className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 transition-colors"
+ >
+ {isBulkJobEnqueueing ? 'Queuing…' : 'Queue jobs'}
                   </button>
                 </div>
               </div>
@@ -2651,73 +2651,73 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
       {data && data.items.length > 0 && (
         <>
           {viewMode === 'grid' ? (
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(130px,1fr))] gap-4">
-              {data.items.map(book => (
-                <div key={book.id} className="group relative flex flex-col gap-2">
-                  <div className="relative">
-                    <Link to={`/libraries/${libraryId}/books/${book.id}`} className="block">
-                      <BookCover title={book.title} coverUrl={book.cover_url} className="w-full"
-                        readStatus={showReadBadges ? book.user_read_status : undefined} />
-                    </Link>
-                    {canEdit && (
-                      <div className="absolute top-1.5 right-1.5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onClick={() => setEditBook(book)}
-                          className="p-1 rounded bg-white/90 dark:bg-gray-900/90 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 shadow-sm transition-colors"
-                          title="Edit book">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                          </svg>
-                        </button>
-                        <button onClick={() => deleteBook(book)}
-                          className="p-1 rounded bg-white/90 dark:bg-gray-900/90 text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 shadow-sm transition-colors"
-                          title="Delete book">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                          </svg>
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                  <div className="min-w-0 px-0.5">
-                    <Link to={`/libraries/${libraryId}/books/${book.id}`}
-                      className="block text-xs font-medium text-gray-900 dark:text-white line-clamp-2 leading-snug hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                      {book.title}
-                    </Link>
-                    {book.contributors.length > 0 && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">{book.contributors[0].name}</p>
-                    )}
-                    {(book.active_loan_count ?? 0) > 0 && (
-                      <span className="mt-1 inline-flex items-center rounded-full bg-amber-50 dark:bg-amber-950/50 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-400 ring-1 ring-amber-200 dark:ring-amber-800">
-                        Lent
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-          <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-                <tr>
-                  <th className="w-8 px-3 py-3">
-                    <input
-                      type="checkbox"
-                      checked={allOnPageSelected}
-                      ref={el => { if (el) el.indeterminate = someOnPageSelected }}
-                      onChange={e => {
-                        if (e.target.checked) setSelectedIds(new Set(pageIds))
-                        else setSelectedIds(new Set())
-                      }}
-                      className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                    />
-                  </th>
-                  {([{ label: 'Title', col: 'title' }, ...(visibleCols.has('type') ? [{ label: 'Type', col: 'media_type' }] : [])]).map(({ label, col }) => (
-                    <th key={col} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                      <button type="button" onClick={() => handleSort(col)}
-                        className="flex items-center gap-1 uppercase tracking-wide hover:text-gray-700 dark:hover:text-gray-200 transition-colors">
-                        {label}
-                        {sort === col ? (sortDir === 'asc' ? ' ↑' : ' ↓') : <span className="opacity-0"> ↑</span>}
+ <div className="grid grid-cols-[repeat(auto-fill,minmax(130px,1fr))] gap-4">
+ {data.items.map(book => (
+ <div key={book.id} className="group relative flex flex-col gap-2">
+ <div className="relative">
+ <Link to={`/libraries/${libraryId}/books/${book.id}`} className="block">
+ <BookCover title={book.title} coverUrl={book.cover_url} className="w-full"
+ readStatus={showReadBadges ? book.user_read_status : undefined} />
+ </Link>
+ {canEdit && (
+ <div className="absolute top-1.5 right-1.5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+ <button onClick={() => setEditBook(book)}
+ className="p-1 rounded bg-white/90 dark:bg-gray-900/90 text-content-tertiary hover:text-accent shadow-sm transition-colors"
+ title="Edit book">
+ <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+ <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+ </svg>
+ </button>
+ <button onClick={() => deleteBook(book)}
+ className="p-1 rounded bg-white/90 dark:bg-gray-900/90 text-content-tertiary hover:text-danger shadow-sm transition-colors"
+ title="Delete book">
+ <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+ <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+ </svg>
+ </button>
+ </div>
+ )}
+ </div>
+ <div className="min-w-0 px-0.5">
+ <Link to={`/libraries/${libraryId}/books/${book.id}`}
+ className="block text-xs font-medium text-content line-clamp-2 leading-snug hover:text-accent transition-colors">
+ {book.title}
+ </Link>
+ {book.contributors.length > 0 && (
+ <p className="text-xs text-gray-500 truncate mt-0.5">{book.contributors[0].name}</p>
+ )}
+ {(book.active_loan_count ?? 0) > 0 && (
+ <span className="mt-1 inline-flex items-center rounded-full bg-warning-surface px-2 py-0.5 text-[10px] font-medium text-warning-strong ring-1 ring-amber-200 dark:ring-amber-800">
+ Lent
+ </span>
+ )}
+ </div>
+ </div>
+ ))}
+ </div>
+ ) : (
+ <div className="rounded-xl border border-line bg-surface overflow-x-auto">
+ <table className="w-full text-sm">
+ <thead className="bg-gray-50 dark:bg-gray-800 border-b border-line dark:border-gray-700">
+ <tr>
+ <th className="w-8 px-3 py-3">
+ <input
+ type="checkbox"
+ checked={allOnPageSelected}
+ ref={el => { if (el) el.indeterminate = someOnPageSelected }}
+ onChange={e => {
+ if (e.target.checked) setSelectedIds(new Set(pageIds))
+ else setSelectedIds(new Set())
+ }}
+ className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+ />
+ </th>
+ {([{ label: 'Title', col: 'title' }, ...(visibleCols.has('type') ? [{ label: 'Type', col: 'media_type' }] : [])]).map(({ label, col }) => (
+ <th key={col} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+ <button type="button" onClick={() => handleSort(col)}
+ className="flex items-center gap-1 uppercase tracking-wide hover:text-content-secondary transition-colors">
+ {label}
+ {sort === col ? (sortDir === 'asc' ? ' ↑' : ' ↓') : <span className="opacity-0"> ↑</span>}
                       </button>
                     </th>
                   ))}
@@ -2728,77 +2728,77 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
                   {visibleCols.has('date_added') && <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Date Added</th>}
                   {visibleCols.has('publisher') && <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Publisher</th>}
                   {visibleCols.has('published') && <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Published</th>}
-                  {visibleCols.has('language') && <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Language</th>}
-                  <th className="sticky right-0 px-4 py-3 bg-gray-50 dark:bg-gray-800" />
-                </tr>
-              </thead>
+                  {visibleCols.has('language') && <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-content-muted dark:text-gray-400">Language</th>}
+ <th className="sticky right-0 px-4 py-3 bg-gray-50 dark:bg-gray-800" />
+ </tr>
+ </thead>
 
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                {data.items.map(book => (
-                  <tr key={book.id} className="group hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                    <td className="w-8 px-3 py-2" onClick={e => e.stopPropagation()}>
-                      <input
-                        type="checkbox"
-                        checked={selectedIds.has(book.id)}
-                        onChange={e => setSelectedIds(prev => {
-                          const next = new Set(prev)
-                          if (e.target.checked) next.add(book.id); else next.delete(book.id)
-                          return next
-                        })}
-                        className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                      />
-                    </td>
-                    <td className="px-4 py-2">
-                      <div className="flex items-center gap-2.5">
-                        <BookCoverThumb title={book.title} coverUrl={book.cover_url}
-                          readStatus={showReadBadges ? book.user_read_status : undefined} />
-                        <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <Link to={`/libraries/${libraryId}/books/${book.id}`}
-                          className="font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                          {book.title}
-                        </Link>
-                        {(book.active_loan_count ?? 0) > 0 && (
-                          <span className="inline-flex items-center rounded-full bg-amber-50 dark:bg-amber-950/50 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-400 ring-1 ring-amber-200 dark:ring-amber-800">
-                            Lent
-                          </span>
-                        )}
-                      </div>
-                      {book.subtitle && <p className="text-xs text-gray-400 dark:text-gray-500 truncate max-w-xs">{book.subtitle}</p>}
-                      {book.genres?.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {book.genres.map(genre => (
-                            <button key={genre.id} type="button"
-                              onClick={() => {
-                                const genreToken = genre.name.includes(' ') ? `genre:"${genre.name}"` : `genre:${genre.name}`
-                                const next = upsertQueryToken(query, genreToken, /\bgenre:(?:"[^"]*"|\S+)/gi)
-                                setQuery(next); setSearch(next); setPage(1)
-                              }}
-                              className="rounded-full border border-gray-200 dark:border-gray-600 px-1.5 py-0.5 text-xs font-medium text-gray-600 dark:text-gray-400 hover:border-blue-400 dark:hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                              title={`Filter by genre: ${genre.name}`}>
-                              {genre.name}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                        </div>{/* min-w-0 */}
-                      </div>{/* flex items-center */}
-                    </td>
-                    {visibleCols.has('type') && (
+ <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+ {data.items.map(book => (
+ <tr key={book.id} className="group hover:bg-surface-muted transition-colors">
+ <td className="w-8 px-3 py-2" onClick={e => e.stopPropagation()}>
+ <input
+ type="checkbox"
+ checked={selectedIds.has(book.id)}
+ onChange={e => setSelectedIds(prev => {
+ const next = new Set(prev)
+ if (e.target.checked) next.add(book.id); else next.delete(book.id)
+ return next
+ })}
+ className="rounded border-line-strong text-blue-600 focus:ring-blue-500 cursor-pointer"
+ />
+ </td>
+ <td className="px-4 py-2">
+ <div className="flex items-center gap-2.5">
+ <BookCoverThumb title={book.title} coverUrl={book.cover_url}
+ readStatus={showReadBadges ? book.user_read_status : undefined} />
+ <div className="min-w-0">
+ <div className="flex items-center gap-2">
+ <Link to={`/libraries/${libraryId}/books/${book.id}`}
+ className="font-medium text-content hover:text-accent transition-colors">
+ {book.title}
+ </Link>
+ {(book.active_loan_count ?? 0) > 0 && (
+ <span className="inline-flex items-center rounded-full bg-warning-surface px-2 py-0.5 text-[10px] font-medium text-warning-strong ring-1 ring-amber-200 dark:ring-amber-800">
+ Lent
+ </span>
+ )}
+ </div>
+ {book.subtitle && <p className="text-xs text-gray-400 truncate max-w-xs">{book.subtitle}</p>}
+ {book.genres?.length > 0 && (
+ <div className="flex flex-wrap gap-1 mt-1">
+ {book.genres.map(genre => (
+ <button key={genre.id} type="button"
+ onClick={() => {
+ const genreToken = genre.name.includes(' ') ? `genre:"${genre.name}"` : `genre:${genre.name}`
+ const next = upsertQueryToken(query, genreToken, /\bgenre:(?:"[^"]*"|\S+)/gi)
+ setQuery(next); setSearch(next); setPage(1)
+ }}
+ className="rounded-full border border-line px-1.5 py-0.5 text-xs font-medium text-content-tertiary hover:border-blue-400 dark:hover:border-blue-500 hover:text-accent transition-colors"
+ title={`Filter by genre: ${genre.name}`}>
+ {genre.name}
+ </button>
+ ))}
+ </div>
+ )}
+ </div>{/* min-w-0 */}
+ </div>{/* flex items-center */}
+ </td>
+ {visibleCols.has('type') && (
                       <td className="px-4 py-2">
                         <button type="button"
                           onClick={() => {
                             const typeToken = book.media_type.includes(' ') ? `type:"${book.media_type}"` : `type:${book.media_type}`
-                            const next = upsertQueryToken(query, typeToken, /\btype:(?:"[^"]*"|\S+)/gi)
-                            setQuery(next); setSearch(next); setPage(1)
-                          }}
-                          className="inline-flex items-center rounded-full border border-gray-200 dark:border-gray-600 px-2 py-0.5 text-xs font-medium text-gray-600 dark:text-gray-300 whitespace-nowrap hover:border-blue-400 dark:hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                          title={`Filter by type: ${book.media_type}`}>
-                          {book.media_type}
-                        </button>
-                      </td>
-                    )}
-                    {visibleCols.has('tags') && (
+ const next = upsertQueryToken(query, typeToken, /\btype:(?:"[^"]*"|\S+)/gi)
+ setQuery(next); setSearch(next); setPage(1)
+ }}
+ className="inline-flex items-center rounded-full border border-line px-2 py-0.5 text-xs font-medium text-content-tertiary whitespace-nowrap hover:border-blue-400 dark:hover:border-blue-500 hover:text-accent transition-colors"
+ title={`Filter by type: ${book.media_type}`}>
+ {book.media_type}
+ </button>
+ </td>
+ )}
+ {visibleCols.has('tags') && (
                       <td className="px-4 py-2">
                         <div className="flex flex-wrap gap-1">
                           {book.tags.map(tag => (
@@ -2819,23 +2819,23 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
                       </td>
                     )}
                     {visibleCols.has('contributors') && (
-                      <td className="px-4 py-2 text-gray-600 dark:text-gray-400 text-xs">
-                        {book.contributors.length > 0
-                          ? (
-                            <div className="flex flex-col gap-0.5">
-                              {book.contributors.map((c, ci) => (
-                                <span key={ci}>
-                                  <button type="button"
-                                    onClick={() => {
-                                      const token = c.name.includes(' ') ? `contributor:"${c.name}"` : `contributor:${c.name}`
-                                      const next = upsertQueryToken(query, token, /\bcontributor:(?:"[^"]*"|\S+)/gi)
-                                      setQuery(next); setSearch(next); setPage(1)
-                                    }}
-                                    className="hover:underline hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                                    title={`Filter by contributor: ${c.name}`}>
-                                    {c.name}
-                                  </button>
-                                  {' '}<span className="text-gray-400 dark:text-gray-500">({c.role.charAt(0).toUpperCase() + c.role.slice(1)})</span>
+ <td className="px-4 py-2 text-content-tertiary text-xs">
+ {book.contributors.length > 0
+ ? (
+ <div className="flex flex-col gap-0.5">
+ {book.contributors.map((c, ci) => (
+ <span key={ci}>
+ <button type="button"
+ onClick={() => {
+ const token = c.name.includes(' ') ? `contributor:"${c.name}"` : `contributor:${c.name}`
+ const next = upsertQueryToken(query, token, /\bcontributor:(?:"[^"]*"|\S+)/gi)
+ setQuery(next); setSearch(next); setPage(1)
+ }}
+ className="hover:underline hover:text-accent transition-colors"
+ title={`Filter by contributor: ${c.name}`}>
+ {c.name}
+ </button>
+ {' '}<span className="text-gray-400 dark:text-gray-500">({c.role.charAt(0).toUpperCase() + c.role.slice(1)})</span>
                                 </span>
                               ))}
                             </div>
@@ -2852,21 +2852,21 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
                                   <button type="button"
                                     onClick={() => {
                                       const token = s.series_name.includes(' ') ? `series:"${s.series_name}"` : `series:${s.series_name}`
-                                      const next = upsertQueryToken(query, token, /\bseries:(?:"[^"]*"|\S+)/gi)
-                                      setQuery(next); setSearch(next); setPage(1)
-                                    }}
-                                    className="hover:underline hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                                    title={`Filter by series: ${s.series_name}`}>
-                                    {s.series_name}
-                                  </button>
-                                  <span className="text-gray-400 dark:text-gray-500"> #{s.position}</span>
-                                </span>
-                              ))}
-                            </div>
-                          : <span className="text-gray-300 dark:text-gray-600">—</span>}
-                      </td>
-                    )}
-                    {visibleCols.has('shelves') && (
+ const next = upsertQueryToken(query, token, /\bseries:(?:"[^"]*"|\S+)/gi)
+ setQuery(next); setSearch(next); setPage(1)
+ }}
+ className="hover:underline hover:text-accent transition-colors"
+ title={`Filter by series: ${s.series_name}`}>
+ {s.series_name}
+ </button>
+ <span className="text-gray-400 dark:text-gray-500"> #{s.position}</span>
+ </span>
+ ))}
+ </div>
+ : <span className="text-gray-300 dark:text-gray-600">—</span>}
+ </td>
+ )}
+ {visibleCols.has('shelves') && (
                       <td className="px-4 py-2">
                         {book.shelves?.length > 0
                           ? <div className="flex flex-wrap gap-1">
@@ -2874,183 +2874,183 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
                                 <button key={s.id} type="button"
                                   onClick={() => {
                                     const token = s.name.includes(' ') ? `shelf:"${s.name}"` : `shelf:${s.name}`
-                                    const next = upsertQueryToken(query, token, /\bshelf:(?:"[^"]*"|\S+)/gi)
-                                    setQuery(next); setSearch(next); setPage(1)
-                                  }}
-                                  className="rounded-full border border-gray-200 dark:border-gray-700 px-1.5 py-0.5 text-xs text-gray-600 dark:text-gray-400 hover:border-blue-400 dark:hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                                  title={`Filter by shelf: ${s.name}`}>
-                                  {s.name}
-                                </button>
-                              ))}
-                            </div>
-                          : <span className="text-xs text-gray-300 dark:text-gray-600">—</span>}
-                      </td>
-                    )}
-                    {visibleCols.has('date_added') && (
-                      <td className="px-4 py-2 text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                        {new Date(book.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+ const next = upsertQueryToken(query, token, /\bshelf:(?:"[^"]*"|\S+)/gi)
+ setQuery(next); setSearch(next); setPage(1)
+ }}
+ className="rounded-full border border-line px-1.5 py-0.5 text-xs text-content-tertiary hover:border-blue-400 dark:hover:border-blue-500 hover:text-accent transition-colors"
+ title={`Filter by shelf: ${s.name}`}>
+ {s.name}
+ </button>
+ ))}
+ </div>
+ : <span className="text-xs text-gray-300 dark:text-gray-600">—</span>}
+ </td>
+ )}
+ {visibleCols.has('date_added') && (
+ <td className="px-4 py-2 text-xs text-content-muted whitespace-nowrap">
+ {new Date(book.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </td>
                     )}
                     {visibleCols.has('publisher') && (
-                      <td className="px-4 py-2 text-xs text-gray-600 dark:text-gray-400 max-w-[10rem]">
-                        {book.publisher
-                          ? <button type="button"
-                              onClick={() => {
-                                const token = book.publisher.includes(' ') ? `publisher:"${book.publisher}"` : `publisher:${book.publisher}`
-                                const next = upsertQueryToken(query, token, /\bpublisher:(?:"[^"]*"|\S+)/gi)
-                                setQuery(next); setSearch(next); setPage(1)
-                              }}
-                              className="truncate max-w-full block hover:underline hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-left"
-                              title={`Filter by publisher: ${book.publisher}`}>
-                              {book.publisher}
-                            </button>
-                          : <span className="text-gray-300 dark:text-gray-600">—</span>}
-                      </td>
-                    )}
-                    {visibleCols.has('published') && (
-                      <td className="px-4 py-2 text-xs text-gray-600 dark:text-gray-400 tabular-nums">
-                        {book.publish_year ?? <span className="text-gray-300 dark:text-gray-600">—</span>}
-                      </td>
-                    )}
-                    {visibleCols.has('language') && (
-                      <td className="px-4 py-2 text-xs text-gray-600 dark:text-gray-400">
-                        {book.language
-                          ? <button type="button"
-                              onClick={() => {
-                                const next = upsertQueryToken(query, `language:${book.language}`, /\blanguage:(?:"[^"]*"|\S+)/gi)
-                                setQuery(next); setSearch(next); setPage(1)
-                              }}
-                              className="hover:underline hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                              title={`Filter by language: ${displayLanguage(book.language)}`}>
-                              {displayLanguage(book.language)}
-                            </button>
-                          : <span className="text-gray-300 dark:text-gray-600">—</span>}
-                      </td>
-                    )}
-                    <td className="sticky right-0 px-4 py-2 bg-white dark:bg-gray-900 group-hover:bg-gray-50 dark:group-hover:bg-gray-800 transition-colors">
-                      <div className="flex items-center gap-1 justify-end">
-                        {canEdit && (
-                          <>
-                            <button onClick={() => setEditBook(book)}
-                              className="p-1.5 rounded text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
-                              title="Edit book">
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                              </svg>
-                            </button>
-                            <button onClick={() => deleteBook(book)}
-                              className="p-1.5 rounded text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                              title="Delete book">
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                              </svg>
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          )}
+ <td className="px-4 py-2 text-xs text-content-tertiary max-w-[10rem]">
+ {book.publisher
+ ? <button type="button"
+ onClick={() => {
+ const token = book.publisher.includes(' ') ? `publisher:"${book.publisher}"` : `publisher:${book.publisher}`
+ const next = upsertQueryToken(query, token, /\bpublisher:(?:"[^"]*"|\S+)/gi)
+ setQuery(next); setSearch(next); setPage(1)
+ }}
+ className="truncate max-w-full block hover:underline hover:text-accent transition-colors text-left"
+ title={`Filter by publisher: ${book.publisher}`}>
+ {book.publisher}
+ </button>
+ : <span className="text-gray-300 dark:text-gray-600">—</span>}
+ </td>
+ )}
+ {visibleCols.has('published') && (
+ <td className="px-4 py-2 text-xs text-content-tertiary tabular-nums">
+ {book.publish_year ?? <span className="text-gray-300 dark:text-gray-600">—</span>}
+ </td>
+ )}
+ {visibleCols.has('language') && (
+ <td className="px-4 py-2 text-xs text-gray-600 dark:text-gray-400">
+ {book.language
+ ? <button type="button"
+ onClick={() => {
+ const next = upsertQueryToken(query, `language:${book.language}`, /\blanguage:(?:"[^"]*"|\S+)/gi)
+ setQuery(next); setSearch(next); setPage(1)
+ }}
+ className="hover:underline hover:text-accent transition-colors"
+ title={`Filter by language: ${displayLanguage(book.language)}`}>
+ {displayLanguage(book.language)}
+ </button>
+ : <span className="text-gray-300 dark:text-gray-600">—</span>}
+ </td>
+ )}
+ <td className="sticky right-0 px-4 py-2 bg-surface group-hover:bg-surface-muted transition-colors">
+ <div className="flex items-center gap-1 justify-end">
+ {canEdit && (
+ <>
+ <button onClick={() => setEditBook(book)}
+ className="p-1.5 rounded text-content-subtle hover:text-accent hover:bg-accent-surface transition-colors"
+ title="Edit book">
+ <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+ <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+ </svg>
+ </button>
+ <button onClick={() => deleteBook(book)}
+ className="p-1.5 rounded text-content-subtle hover:text-danger hover:bg-danger-surface transition-colors"
+ title="Delete book">
+ <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+ <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+ </svg>
+ </button>
+ </>
+ )}
+ </div>
+ </td>
+ </tr>
+ ))}
+ </tbody>
+ </table>
+ </div>
+ )}
 
-          {data && data.total > 0 && (
-            <div className="mt-3 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-              <span>{data.total} book{data.total !== 1 ? 's' : ''} · Page {page} of {totalPages}</span>
+ {data && data.total > 0 && (
+ <div className="mt-3 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+ <span>{data.total} book{data.total !== 1 ? 's' : ''} · Page {page} of {totalPages}</span>
               <div className="flex items-center gap-2">
                 <select
                   value={perPage}
                   onChange={e => {
                     const n = Number(e.target.value)
                     localStorage.setItem('librarium:books:perPage', String(n))
-                    setPerPage(n)
-                    setPage(1)
-                    if (prefsReadyRef.current) patchPreference(`library:${libraryId}:books_per_page`, n)
-                  }}
-                  className="rounded border border-gray-300 dark:border-gray-600 bg-transparent px-1.5 py-1 text-xs text-gray-600 dark:text-gray-300 focus:outline-none"
-                >
-                  {[25, 50, 100, 200].map(n => <option key={n} value={n}>{n} / page</option>)}
-                </select>
-              <div className="flex items-center gap-1">
-                <button onClick={() => setPage(1)} disabled={page === 1}
-                  className="rounded px-2 py-1 border border-gray-300 dark:border-gray-600 hover:bg-white dark:hover:bg-gray-800 disabled:opacity-40 transition-colors">«</button>
-                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-                  className="rounded px-2 py-1 border border-gray-300 dark:border-gray-600 hover:bg-white dark:hover:bg-gray-800 disabled:opacity-40 transition-colors">‹</button>
-                {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
-                  // show pages around current page
-                  let p: number
-                  if (totalPages <= 7) p = i + 1
-                  else if (page <= 4) p = i + 1
-                  else if (page >= totalPages - 3) p = totalPages - 6 + i
-                  else p = page - 3 + i
-                  return (
-                    <button key={p} onClick={() => setPage(p)} disabled={p === page}
-                      className={`rounded px-2.5 py-1 border transition-colors ${p === page ? 'bg-blue-600 text-white border-blue-600' : 'border-gray-300 dark:border-gray-600 hover:bg-white dark:hover:bg-gray-800 disabled:opacity-40'}`}>
-                      {p}
-                    </button>
-                  )
-                })}
-                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-                  className="rounded px-2 py-1 border border-gray-300 dark:border-gray-600 hover:bg-white dark:hover:bg-gray-800 disabled:opacity-40 transition-colors">›</button>
-                <button onClick={() => setPage(totalPages)} disabled={page === totalPages}
-                  className="rounded px-2 py-1 border border-gray-300 dark:border-gray-600 hover:bg-white dark:hover:bg-gray-800 disabled:opacity-40 transition-colors">»</button>
-              </div>
-              </div>
-            </div>
-          )}
-        </>
-      )}
+ setPerPage(n)
+ setPage(1)
+ if (prefsReadyRef.current) patchPreference(`library:${libraryId}:books_per_page`, n)
+ }}
+ className="rounded border border-line-strong bg-transparent px-1.5 py-1 text-xs text-content-tertiary focus:outline-none"
+ >
+ {[25, 50, 100, 200].map(n => <option key={n} value={n}>{n} / page</option>)}
+ </select>
+ <div className="flex items-center gap-1">
+ <button onClick={() => setPage(1)} disabled={page === 1}
+ className="rounded px-2 py-1 border border-line-strong hover:bg-surface-raised disabled:opacity-40 transition-colors">«</button>
+ <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+ className="rounded px-2 py-1 border border-line-strong hover:bg-surface-raised disabled:opacity-40 transition-colors">‹</button>
+ {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+ // show pages around current page
+ let p: number
+ if (totalPages <= 7) p = i + 1
+ else if (page <= 4) p = i + 1
+ else if (page >= totalPages - 3) p = totalPages - 6 + i
+ else p = page - 3 + i
+ return (
+ <button key={p} onClick={() => setPage(p)} disabled={p === page}
+ className={`rounded px-2.5 py-1 border transition-colors ${p === page ? 'bg-blue-600 text-white border-blue-600' : 'border-gray-300 dark:border-gray-600 hover:bg-white dark:hover:bg-gray-800 disabled:opacity-40'}`}>
+ {p}
+ </button>
+ )
+ })}
+ <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
+ className="rounded px-2 py-1 border border-line-strong hover:bg-surface-raised disabled:opacity-40 transition-colors">›</button>
+ <button onClick={() => setPage(totalPages)} disabled={page === totalPages}
+ className="rounded px-2 py-1 border border-line-strong hover:bg-surface-raised disabled:opacity-40 transition-colors">»</button>
+ </div>
+ </div>
+ </div>
+ )}
+ </>
+ )}
 
-      {showAdd && (
-        <AddBookModal
-          libraryId={libraryId}
-          mediaTypes={mediaTypes}
-          onClose={() => setShowAdd(false)}
-          onSaved={handleBookSaved}
-          onDuplicate={suggestSeriesForBook}
-          initialIsbn={addInitialIsbn || undefined}
-          initialTitle={addInitialTitle || undefined}
-        />
-      )}
-      {editBook && (
-        <EditBookModal
-          libraryId={libraryId}
-          book={editBook}
-          onClose={() => setEditBook(null)}
-          onSaved={book => { setEditBook(null); handleBookSaved(book) }}
-        />
-      )}
+ {showAdd && (
+ <AddBookModal
+ libraryId={libraryId}
+ mediaTypes={mediaTypes}
+ onClose={() => setShowAdd(false)}
+ onSaved={handleBookSaved}
+ onDuplicate={suggestSeriesForBook}
+ initialIsbn={addInitialIsbn || undefined}
+ initialTitle={addInitialTitle || undefined}
+ />
+ )}
+ {editBook && (
+ <EditBookModal
+ libraryId={libraryId}
+ book={editBook}
+ onClose={() => setEditBook(null)}
+ onSaved={book => { setEditBook(null); handleBookSaved(book) }}
+ />
+ )}
 
-      {seriesSuggestion && !showAdd && !editBook && (
-        <SeriesLinkSuggestionModal
-          libraryId={libraryId}
-          book={seriesSuggestion.book}
-          series={seriesSuggestion.series}
-          suggestedPosition={seriesSuggestion.position}
-          onClose={() => setSeriesSuggestion(null)}
-        />
-      )}
+ {seriesSuggestion && !showAdd && !editBook && (
+ <SeriesLinkSuggestionModal
+ libraryId={libraryId}
+ book={seriesSuggestion.book}
+ series={seriesSuggestion.series}
+ suggestedPosition={seriesSuggestion.position}
+ onClose={() => setSeriesSuggestion(null)}
+ />
+ )}
 
-    </div>
-  )
+ </div>
+ )
 }
 
 // ─── Series link suggestion modal ────────────────────────────────────────────
 
 interface SeriesLinkSuggestionModalProps {
-  libraryId: string
-  book: Book
-  series: Series
-  suggestedPosition: number | null
-  onClose: () => void
+ libraryId: string
+ book: Book
+ series: Series
+ suggestedPosition: number | null
+ onClose: () => void
 }
 
 function SeriesLinkSuggestionModal({ libraryId, book, series, suggestedPosition, onClose }: SeriesLinkSuggestionModalProps) {
-  const { callApi } = useAuth()
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+ const { callApi } = useAuth()
+ useEffect(() => {
+ const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
     document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
   }, [onClose])
@@ -3062,45 +3062,45 @@ function SeriesLinkSuggestionModal({ libraryId, book, series, suggestedPosition,
     try {
       await callApi(`/api/v1/libraries/${libraryId}/series/${series.id}/books`, {
         method: 'POST',
-        body: JSON.stringify({ book_id: book.id, position: Number(position) || 1 }),
-      })
-      onClose()
-    } catch { /* ignore */ } finally {
-      setIsSaving(false)
-    }
-  }
+ body: JSON.stringify({ book_id: book.id, position: Number(position) || 1 }),
+ })
+ onClose()
+ } catch { /* ignore */ } finally {
+ setIsSaving(false)
+ }
+ }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-sm rounded-xl bg-white dark:bg-gray-900 shadow-xl p-6">
-        <div className="flex items-center justify-between mb-1">
-          <h3 className="text-base font-semibold text-gray-900 dark:text-white">Add to series?</h3>
-          <button type="button" onClick={onClose}
-            className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-            aria-label="Close">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-          <span className="font-medium text-gray-900 dark:text-white">{book.title}</span> looks like it belongs to{' '}
-          <span className="font-medium text-gray-900 dark:text-white">{series.name}</span>.
-        </p>
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Volume position</label>
-          <input type="number" min="0" step="0.5" value={position} onChange={e => setPosition(e.target.value)}
-            placeholder="e.g. 1, 2, 1.5"
-            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
-        </div>
-        <div className="flex gap-3">
-          <button type="button" onClick={onClose}
-            className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-            Not now
-          </button>
-          <button type="button" onClick={handleAdd} disabled={!position || isSaving}
-            className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
-            {isSaving ? 'Adding…' : 'Add to series'}
+ return (
+ <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+ <div className="w-full max-w-sm rounded-xl bg-surface shadow-xl p-6">
+ <div className="flex items-center justify-between mb-1">
+ <h3 className="text-base font-semibold text-gray-900 dark:text-white">Add to series?</h3>
+ <button type="button" onClick={onClose}
+ className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-surface-inset transition-colors"
+ aria-label="Close">
+ <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+ <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+ </svg>
+ </button>
+ </div>
+ <p className="text-sm text-content-tertiary mb-4">
+ <span className="font-medium text-gray-900 dark:text-white">{book.title}</span> looks like it belongs to{' '}
+ <span className="font-medium text-content dark:text-white">{series.name}</span>.
+ </p>
+ <div className="mb-4">
+ <label className="block text-sm font-medium text-content-secondary mb-1">Volume position</label>
+ <input type="number" min="0" step="0.5" value={position} onChange={e => setPosition(e.target.value)}
+ placeholder="e.g. 1, 2, 1.5"
+ className="w-full rounded-lg border border-line-strong dark:bg-gray-800 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+ </div>
+ <div className="flex gap-3">
+ <button type="button" onClick={onClose}
+ className="flex-1 rounded-lg border border-line-strong px-4 py-2 text-sm font-medium text-content-secondary hover:bg-surface-muted transition-colors">
+ Not now
+ </button>
+ <button type="button" onClick={handleAdd} disabled={!position || isSaving}
+ className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
+ {isSaving ? 'Adding…' : 'Add to series'}
           </button>
         </div>
       </div>
@@ -3360,40 +3360,40 @@ function SeriesFormModal({ libraryId, series, onClose, onSaved }: SeriesFormModa
 
   const inputCls = 'w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 overflow-y-auto py-16 px-4">
-      <div className="w-full max-w-md rounded-xl bg-white dark:bg-gray-900 shadow-xl">
-        {/* Header with tab switcher (new series only) */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-          <h3 className="text-base font-semibold text-gray-900 dark:text-white">
-            {series ? 'Edit series' : 'New series'}
-          </h3>
-          <div className="flex items-center gap-2">
-            {!series && (
-              <div className="flex rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden text-sm">
-                <button type="button" onClick={() => setMode('search')}
+ return (
+ <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 overflow-y-auto py-16 px-4">
+ <div className="w-full max-w-md rounded-xl bg-surface shadow-xl">
+ {/* Header with tab switcher (new series only) */}
+ <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+ <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+ {series ? 'Edit series' : 'New series'}
+ </h3>
+ <div className="flex items-center gap-2">
+ {!series && (
+ <div className="flex rounded-lg border border-line overflow-hidden text-sm">
+ <button type="button" onClick={() => setMode('search')}
                   className={`px-3 py-1 transition-colors ${mode === 'search' ? 'bg-blue-600 text-white' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'}`}>
                   Search
                 </button>
                 <button type="button" onClick={() => setMode('manual')}
                   className={`px-3 py-1 transition-colors ${mode === 'manual' ? 'bg-blue-600 text-white' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'}`}>
-                  Manual
-                </button>
-              </div>
-            )}
-            <button type="button" onClick={onClose}
-              className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              aria-label="Close">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        </div>
+ Manual
+ </button>
+ </div>
+ )}
+ <button type="button" onClick={onClose}
+ className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-surface-inset transition-colors"
+ aria-label="Close">
+ <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+ <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+ </svg>
+ </button>
+ </div>
+ </div>
 
-        <div className="px-6 py-5">
-          {/* ── Search mode ── */}
-          {mode === 'search' && (
+ <div className="px-6 py-5">
+ {/* ── Search mode ── */}
+ {mode === 'search' && (
             <div className="space-y-4">
               <div className="flex gap-2">
                 <input
@@ -3418,186 +3418,186 @@ function SeriesFormModal({ libraryId, series, onClose, onSaved }: SeriesFormModa
                 <div className="space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                     {searchResults.length} result{searchResults.length !== 1 ? 's' : ''}
-                  </p>
-                  {searchResults.map((r, i) => (
-                    <button key={i} type="button" onClick={() => importResult(r)}
-                      className="w-full text-left rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3 hover:border-blue-400 dark:hover:border-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/30 transition-colors">
-                      <div className="flex gap-3 items-start">
-                        {r.cover_url && (
-                          <img src={r.cover_url} alt="" referrerPolicy="no-referrer" className="w-10 h-14 object-cover rounded flex-shrink-0 bg-gray-200 dark:bg-gray-700" />
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm text-gray-900 dark:text-white truncate">{r.name}</p>
-                          {r.description && (
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">{r.description}</p>
-                          )}
-                          <div className="flex items-center gap-2 mt-1 flex-wrap">
-                            {r.total_count != null && (
-                              <span className="text-xs text-gray-400 dark:text-gray-500">{r.total_count} vols</span>
-                            )}
-                            {r.status && (
-                              <span className={`text-xs rounded-full px-1.5 py-0.5 ${r.status === 'completed' ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400' : r.status === 'hiatus' ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400' : r.status === 'cancelled' ? 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400' : 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400'}`}>
-                                {r.status.charAt(0).toUpperCase() + r.status.slice(1)}
-                              </span>
-                            )}
-                            {r.demographic && (
-                              <span className="text-xs text-gray-400 dark:text-gray-500">{r.demographic}</span>
-                            )}
-                            {r.original_language && (
-                              <span className="text-xs text-gray-400 dark:text-gray-500">{r.original_language}</span>
-                            )}
-                            <span className="text-xs text-gray-400 dark:text-gray-500">via {r.provider_display}</span>
-                          </div>
-                          {r.genres && r.genres.length > 0 && (
-                            <div className="flex flex-wrap gap-1 mt-1">
-                              {r.genres.slice(0, 5).map(g => (
-                                <span key={g} className="text-xs rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-1.5 py-0.5">{g}</span>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
+ </p>
+ {searchResults.map((r, i) => (
+ <button key={i} type="button" onClick={() => importResult(r)}
+ className="w-full text-left rounded-xl border border-line bg-surface-muted p-3 hover:border-blue-400 dark:hover:border-blue-600 hover:bg-accent-surface transition-colors">
+ <div className="flex gap-3 items-start">
+ {r.cover_url && (
+ <img src={r.cover_url} alt="" referrerPolicy="no-referrer" className="w-10 h-14 object-cover rounded flex-shrink-0 bg-gray-200 dark:bg-gray-700" />
+ )}
+ <div className="flex-1 min-w-0">
+ <p className="font-medium text-sm text-content truncate">{r.name}</p>
+ {r.description && (
+ <p className="text-xs text-content-muted mt-0.5 line-clamp-2">{r.description}</p>
+ )}
+ <div className="flex items-center gap-2 mt-1 flex-wrap">
+ {r.total_count != null && (
+ <span className="text-xs text-gray-400 dark:text-gray-500">{r.total_count} vols</span>
+ )}
+ {r.status && (
+ <span className={`text-xs rounded-full px-1.5 py-0.5 ${r.status === 'completed' ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400' : r.status === 'hiatus' ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400' : r.status === 'cancelled' ? 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400' : 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400'}`}>
+ {r.status.charAt(0).toUpperCase() + r.status.slice(1)}
+ </span>
+ )}
+ {r.demographic && (
+ <span className="text-xs text-gray-400 dark:text-gray-500">{r.demographic}</span>
+ )}
+ {r.original_language && (
+ <span className="text-xs text-gray-400 dark:text-gray-500">{r.original_language}</span>
+ )}
+ <span className="text-xs text-gray-400 dark:text-gray-500">via {r.provider_display}</span>
+ </div>
+ {r.genres && r.genres.length > 0 && (
+ <div className="flex flex-wrap gap-1 mt-1">
+ {r.genres.slice(0, 5).map(g => (
+ <span key={g} className="text-xs rounded bg-surface-inset text-content-tertiary px-1.5 py-0.5">{g}</span>
+ ))}
+ </div>
+ )}
+ </div>
+ </div>
+ </button>
+ ))}
+ </div>
+ )}
 
-              <button type="button" onClick={() => setMode('manual')}
-                className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
-                Add manually instead →
-              </button>
-            </div>
-          )}
+ <button type="button" onClick={() => setMode('manual')}
+ className="text-sm text-accent hover:underline">
+ Add manually instead →
+ </button>
+ </div>
+ )}
 
-          {/* ── Manual mode ── */}
-          {mode === 'manual' && (
-            <form onSubmit={handleSubmit} className="space-y-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name *</label>
-                <input type="text" autoFocus value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                  placeholder="e.g. Attack on Titan" className={inputCls} />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
-                <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-                  rows={3} placeholder="Optional"
-                  className={`${inputCls} resize-none`} />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Total volumes</label>
-                  <input type="number" min="1" value={form.total_count}
-                    onChange={e => setForm(f => ({ ...f, total_count: e.target.value }))}
-                    placeholder="e.g. 34" className={inputCls} />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
-                  <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))}
-                    className={inputCls}>
-                    <option value="ongoing">Ongoing</option>
-                    <option value="completed">Completed</option>
-                    <option value="hiatus">Hiatus</option>
-                    <option value="cancelled">Cancelled</option>
-                  </select>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Original language</label>
-                  <input type="text" list="series-language-list" value={form.original_language}
-                    onChange={e => setForm(f => ({ ...f, original_language: e.target.value.toLowerCase() }))}
-                    placeholder="e.g. ja" className={inputCls} />
-                  <datalist id="series-language-list">
-                    {LANGUAGE_OPTIONS.map(l => <option key={l.code} value={l.code}>{l.name}</option>)}
-                  </datalist>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Publication year</label>
-                  <input type="number" min="1900" max="2100" value={form.publication_year}
-                    onChange={e => setForm(f => ({ ...f, publication_year: e.target.value }))}
-                    placeholder="e.g. 2019" className={inputCls} />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Demographic</label>
-                <select value={form.demographic} onChange={e => setForm(f => ({ ...f, demographic: e.target.value }))}
-                  className={inputCls}>
-                  <option value="">—</option>
-                  <option value="shounen">Shounen</option>
-                  <option value="shoujo">Shoujo</option>
-                  <option value="josei">Josei</option>
-                  <option value="seinen">Seinen</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-              {form.genres.length > 0 && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Genres</label>
-                  <div className="flex flex-wrap gap-1.5">
-                    {form.genres.map(g => (
-                      <span key={g} className="inline-flex items-center rounded-full bg-gray-100 dark:bg-gray-700 px-2.5 py-1 text-xs font-medium text-gray-600 dark:text-gray-300">{g}</span>
-                    ))}
-                  </div>
-                </div>
-              )}
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Tags</label>
-                  <button type="button" onClick={() => setShowNewTag(v => !v)}
-                    className="text-xs text-blue-600 hover:underline">+ New tag</button>
-                </div>
-                <div className="flex flex-wrap gap-1.5 min-h-[28px]">
-                  {libraryTags.map(tag => {
-                    const selected = selectedTags.some(t => t.id === tag.id)
-                    return (
-                      <button key={tag.id} type="button"
-                        onClick={() => setSelectedTags(ts => selected ? ts.filter(t => t.id !== tag.id) : [...ts, tag])}
-                        className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ring-1 transition-all ${
-                          selected ? 'ring-transparent text-white' : 'bg-white dark:bg-gray-800 ring-gray-300 dark:ring-gray-600 text-gray-600 dark:text-gray-300 hover:ring-gray-400'
+ {/* ── Manual mode ── */}
+ {mode === 'manual' && (
+ <form onSubmit={handleSubmit} className="space-y-3">
+ <div>
+ <label className="block text-sm font-medium text-content-secondary mb-1">Name *</label>
+ <input type="text" autoFocus value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+ placeholder="e.g. Attack on Titan" className={inputCls} />
+ </div>
+ <div>
+ <label className="block text-sm font-medium text-content-secondary mb-1">Description</label>
+ <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+ rows={3} placeholder="Optional"
+ className={`${inputCls} resize-none`} />
+ </div>
+ <div className="grid grid-cols-2 gap-3">
+ <div>
+ <label className="block text-sm font-medium text-content-secondary mb-1">Total volumes</label>
+ <input type="number" min="1" value={form.total_count}
+ onChange={e => setForm(f => ({ ...f, total_count: e.target.value }))}
+ placeholder="e.g. 34" className={inputCls} />
+ </div>
+ <div>
+ <label className="block text-sm font-medium text-content-secondary mb-1">Status</label>
+ <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))}
+ className={inputCls}>
+ <option value="ongoing">Ongoing</option>
+ <option value="completed">Completed</option>
+ <option value="hiatus">Hiatus</option>
+ <option value="cancelled">Cancelled</option>
+ </select>
+ </div>
+ </div>
+ <div className="grid grid-cols-2 gap-3">
+ <div>
+ <label className="block text-sm font-medium text-content-secondary mb-1">Original language</label>
+ <input type="text" list="series-language-list" value={form.original_language}
+ onChange={e => setForm(f => ({ ...f, original_language: e.target.value.toLowerCase() }))}
+ placeholder="e.g. ja" className={inputCls} />
+ <datalist id="series-language-list">
+ {LANGUAGE_OPTIONS.map(l => <option key={l.code} value={l.code}>{l.name}</option>)}
+ </datalist>
+ </div>
+ <div>
+ <label className="block text-sm font-medium text-content-secondary mb-1">Publication year</label>
+ <input type="number" min="1900" max="2100" value={form.publication_year}
+ onChange={e => setForm(f => ({ ...f, publication_year: e.target.value }))}
+ placeholder="e.g. 2019" className={inputCls} />
+ </div>
+ </div>
+ <div>
+ <label className="block text-sm font-medium text-content-secondary mb-1">Demographic</label>
+ <select value={form.demographic} onChange={e => setForm(f => ({ ...f, demographic: e.target.value }))}
+ className={inputCls}>
+ <option value="">—</option>
+ <option value="shounen">Shounen</option>
+ <option value="shoujo">Shoujo</option>
+ <option value="josei">Josei</option>
+ <option value="seinen">Seinen</option>
+ <option value="other">Other</option>
+ </select>
+ </div>
+ {form.genres.length > 0 && (
+ <div>
+ <label className="block text-sm font-medium text-content-secondary mb-1">Genres</label>
+ <div className="flex flex-wrap gap-1.5">
+ {form.genres.map(g => (
+ <span key={g} className="inline-flex items-center rounded-full bg-surface-inset px-2.5 py-1 text-xs font-medium text-gray-600 dark:text-gray-300">{g}</span>
+ ))}
+ </div>
+ </div>
+ )}
+ <div>
+ <div className="flex items-center justify-between mb-1.5">
+ <label className="text-sm font-medium text-content-secondary dark:text-gray-300">Tags</label>
+ <button type="button" onClick={() => setShowNewTag(v => !v)}
+ className="text-xs text-blue-600 hover:underline">+ New tag</button>
+ </div>
+ <div className="flex flex-wrap gap-1.5 min-h-[28px]">
+ {libraryTags.map(tag => {
+ const selected = selectedTags.some(t => t.id === tag.id)
+ return (
+ <button key={tag.id} type="button"
+ onClick={() => setSelectedTags(ts => selected ? ts.filter(t => t.id !== tag.id) : [...ts, tag])}
+ className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ring-1 transition-all ${
+ selected ? 'ring-transparent text-white' : 'bg-white dark:bg-gray-800 ring-gray-300 dark:ring-gray-600 text-gray-600 dark:text-gray-300 hover:ring-gray-400'
                         }`}
                         style={selected ? { backgroundColor: tag.color || '#6b7280' } : tag.color ? { color: tag.color } : undefined}>
-                        {tag.name}
-                      </button>
-                    )
-                  })}
-                  {libraryTags.length === 0 && !showNewTag && (
-                    <p className="text-xs text-gray-400 dark:text-gray-500">No tags in this library yet.</p>
-                  )}
-                </div>
-                {showNewTag && (
-                  <div className="mt-2 flex items-center gap-2">
-                    <input type="text" value={newTagName} onChange={e => setNewTagName(e.target.value)}
-                      placeholder="Tag name"
-                      className="flex-1 h-8 rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-2 text-xs focus:border-blue-500 focus:outline-none" />
-                    <select value={newTagColor} onChange={e => setNewTagColor(e.target.value)}
-                      className="h-8 rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-2 text-xs focus:border-blue-500 focus:outline-none">
-                      {TAG_COLORS.filter(c => c.value).map(c => (
-                        <option key={c.value} value={c.value}>{c.label}</option>
-                      ))}
-                    </select>
-                    <button type="button" disabled={isCreatingTag || !newTagName.trim()}
-                      onClick={createTag}
-                      className="h-8 px-3 rounded bg-blue-600 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50">Add</button>
-                    <button type="button" onClick={() => setShowNewTag(false)}
-                      className="h-8 px-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 text-lg leading-none">×</button>
-                  </div>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Website URL</label>
-                <input type="url" value={form.url}
-                  onChange={e => setForm(f => ({ ...f, url: e.target.value }))}
-                  placeholder="e.g. https://www.viz.com/one-piece" className={inputCls} />
-              </div>
-              {error && <div className="rounded-lg bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 px-3 py-2 text-sm text-red-700 dark:text-red-400">{error}</div>}
-              <div className="flex gap-3 pt-1">
-                <button type="button" onClick={onClose}
-                  className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                  Cancel
-                </button>
-                <button type="submit" disabled={isLoading || !form.name.trim()}
-                  className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
-                  {isLoading ? 'Saving…' : series ? 'Save changes' : 'Create'}
+ {tag.name}
+ </button>
+ )
+ })}
+ {libraryTags.length === 0 && !showNewTag && (
+ <p className="text-xs text-content-subtle dark:text-gray-500">No tags in this library yet.</p>
+ )}
+ </div>
+ {showNewTag && (
+ <div className="mt-2 flex items-center gap-2">
+ <input type="text" value={newTagName} onChange={e => setNewTagName(e.target.value)}
+ placeholder="Tag name"
+ className="flex-1 h-8 rounded border border-line-strong dark:bg-gray-800 dark:text-white px-2 text-xs focus:border-blue-500 focus:outline-none" />
+ <select value={newTagColor} onChange={e => setNewTagColor(e.target.value)}
+ className="h-8 rounded border border-line-strong dark:bg-gray-800 dark:text-white px-2 text-xs focus:border-blue-500 focus:outline-none">
+ {TAG_COLORS.filter(c => c.value).map(c => (
+ <option key={c.value} value={c.value}>{c.label}</option>
+ ))}
+ </select>
+ <button type="button" disabled={isCreatingTag || !newTagName.trim()}
+ onClick={createTag}
+ className="h-8 px-3 rounded bg-blue-600 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50">Add</button>
+ <button type="button" onClick={() => setShowNewTag(false)}
+ className="h-8 px-2 text-content-subtle hover:text-content-tertiary text-lg leading-none">×</button>
+ </div>
+ )}
+ </div>
+ <div>
+ <label className="block text-sm font-medium text-content-secondary mb-1">Website URL</label>
+ <input type="url" value={form.url}
+ onChange={e => setForm(f => ({ ...f, url: e.target.value }))}
+ placeholder="e.g. https://www.viz.com/one-piece" className={inputCls} />
+ </div>
+ {error && <div className="rounded-lg bg-danger-surface border border-danger-line px-3 py-2 text-sm text-red-700 dark:text-red-400">{error}</div>}
+ <div className="flex gap-3 pt-1">
+ <button type="button" onClick={onClose}
+ className="flex-1 rounded-lg border border-line-strong px-4 py-2 text-sm font-medium text-content-secondary hover:bg-surface-muted transition-colors">
+ Cancel
+ </button>
+ <button type="submit" disabled={isLoading || !form.name.trim()}
+ className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
+ {isLoading ? 'Saving…' : series ? 'Save changes' : 'Create'}
                 </button>
               </div>
             </form>
@@ -3660,74 +3660,74 @@ function AddToSeriesModal({ libraryId, seriesId, existingBookIds, editEntry, ini
     if (!selected) return
     await callApi(`/api/v1/libraries/${libraryId}/series/${seriesId}/books`, {
       method: 'POST',
-      body: JSON.stringify({ book_id: selected.id, position: Number(position) || 1 }),
-    }).catch(() => {})
-    onSaved()
-  }
+ body: JSON.stringify({ book_id: selected.id, position: Number(position) || 1 }),
+ }).catch(() => {})
+ onSaved()
+ }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-sm rounded-xl bg-white dark:bg-gray-900 shadow-xl p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-semibold text-gray-900 dark:text-white">
-            {editEntry ? 'Edit position' : 'Add book to series'}
-          </h3>
-          <button type="button" onClick={onClose}
-            className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-            aria-label="Close">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        <form onSubmit={handleSubmit} className="space-y-3">
-          {!editEntry && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Book *</label>
-              {selected ? (
-                <div className="flex items-center gap-2 rounded-lg border border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-950/30 px-3 py-2">
-                  <span className="flex-1 text-sm text-gray-900 dark:text-white truncate">{selected.title}</span>
-                  <button type="button" onClick={() => { setSelected(null); setQuery('') }}
-                    className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 text-lg leading-none">×</button>
-                </div>
-              ) : (
-                <input type="text" autoFocus value={query} onChange={e => setQuery(e.target.value)}
-                  placeholder="Search books…"
-                  className="w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
-              )}
-              {isSearching && <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Searching…</p>}
-              {!isSearching && results.length > 0 && !selected && (
-                <ul className="mt-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow max-h-52 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-700">
-                  {results.map(b => (
-                    <li key={b.id}>
-                      <button type="button" onClick={() => { setSelected({ id: b.id, title: b.title }); setResults([]) }}
-                        className="w-full text-left px-3 py-2.5 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors">
-                        <p className="text-sm font-medium text-gray-900 dark:text-white leading-snug">{b.title}</p>
-                        {b.contributors.length > 0 && (
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                            {b.contributors.filter(c => c.role === 'author').map(c => c.name).join(', ') || b.contributors.map(c => c.name).join(', ')}
-                          </p>
-                        )}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          )}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Position *</label>
-            <input type="number" autoFocus={!!editEntry} min="0" step="0.5" value={position}
-              onChange={e => setPosition(e.target.value)}
-              placeholder="e.g. 1, 2, 1.5"
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
-          </div>
-          <div className="flex gap-3 pt-1">
-            <button type="button" onClick={onClose}
-              className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Cancel</button>
-            <button type="submit" disabled={!selected || !position}
-              className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
-              {editEntry ? 'Save' : 'Add'}
+ return (
+ <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+ <div className="w-full max-w-sm rounded-xl bg-surface shadow-xl p-6">
+ <div className="flex items-center justify-between mb-4">
+ <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+ {editEntry ? 'Edit position' : 'Add book to series'}
+ </h3>
+ <button type="button" onClick={onClose}
+ className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-surface-inset transition-colors"
+ aria-label="Close">
+ <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+ <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+ </svg>
+ </button>
+ </div>
+ <form onSubmit={handleSubmit} className="space-y-3">
+ {!editEntry && (
+ <div>
+ <label className="block text-sm font-medium text-content-secondary mb-1">Book *</label>
+ {selected ? (
+ <div className="flex items-center gap-2 rounded-lg border border-accent-line bg-accent-surface px-3 py-2">
+ <span className="flex-1 text-sm text-content truncate">{selected.title}</span>
+ <button type="button" onClick={() => { setSelected(null); setQuery('') }}
+ className="text-gray-400 hover:text-content-tertiary text-lg leading-none">×</button>
+ </div>
+ ) : (
+ <input type="text" autoFocus value={query} onChange={e => setQuery(e.target.value)}
+ placeholder="Search books…"
+ className="w-full rounded-lg border border-line-strong px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+ )}
+ {isSearching && <p className="text-xs text-content-subtle mt-1">Searching…</p>}
+ {!isSearching && results.length > 0 && !selected && (
+ <ul className="mt-1 rounded-lg border border-line bg-surface-raised shadow max-h-52 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-700">
+ {results.map(b => (
+ <li key={b.id}>
+ <button type="button" onClick={() => { setSelected({ id: b.id, title: b.title }); setResults([]) }}
+ className="w-full text-left px-3 py-2.5 hover:bg-accent-surface transition-colors">
+ <p className="text-sm font-medium text-content leading-snug">{b.title}</p>
+ {b.contributors.length > 0 && (
+ <p className="text-xs text-content-muted mt-0.5">
+ {b.contributors.filter(c => c.role === 'author').map(c => c.name).join(', ') || b.contributors.map(c => c.name).join(', ')}
+ </p>
+ )}
+ </button>
+ </li>
+ ))}
+ </ul>
+ )}
+ </div>
+ )}
+ <div>
+ <label className="block text-sm font-medium text-content-secondary mb-1">Position *</label>
+ <input type="number" autoFocus={!!editEntry} min="0" step="0.5" value={position}
+ onChange={e => setPosition(e.target.value)}
+ placeholder="e.g. 1, 2, 1.5"
+ className="w-full rounded-lg border border-line-strong dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+ </div>
+ <div className="flex gap-3 pt-1">
+ <button type="button" onClick={onClose}
+ className="flex-1 rounded-lg border border-line-strong px-4 py-2 text-sm font-medium text-content-secondary hover:bg-surface-muted transition-colors">Cancel</button>
+ <button type="submit" disabled={!selected || !position}
+ className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
+ {editEntry ? 'Save' : 'Add'}
             </button>
           </div>
         </form>
@@ -3796,99 +3796,99 @@ function AutoMatchModal({ series, libraryId, onClose, onApplied }: AutoMatchModa
       onApplied()
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Failed to apply matches')
-    } finally {
-      setIsSaving(false)
-    }
-  }
+ } finally {
+ setIsSaving(false)
+ }
+ }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 overflow-y-auto py-16 px-4">
-      <div className="w-full max-w-2xl rounded-xl bg-white dark:bg-gray-900 shadow-xl">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-          <div>
-            <h3 className="text-base font-semibold text-gray-900 dark:text-white">Auto-match books to series</h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-              Library books whose title starts with "{series.name}" followed by a number.
-            </p>
-          </div>
-          <button type="button" onClick={onClose}
-            className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-            aria-label="Close">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+ return (
+ <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 overflow-y-auto py-16 px-4">
+ <div className="w-full max-w-2xl rounded-xl bg-surface shadow-xl">
+ <div className="flex items-center justify-between px-6 py-4 border-b border-line dark:border-gray-700">
+ <div>
+ <h3 className="text-base font-semibold text-gray-900 dark:text-white">Auto-match books to series</h3>
+ <p className="text-xs text-content-muted mt-0.5">
+ Library books whose title starts with "{series.name}" followed by a number.
+ </p>
+ </div>
+ <button type="button" onClick={onClose}
+ className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-surface-inset transition-colors"
+ aria-label="Close">
+ <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+ <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+ </svg>
+ </button>
+ </div>
 
-        <div className="px-6 py-4">
-          {isLoading && <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-8">Scanning library…</p>}
-          {!isLoading && error && <p className="text-sm text-red-600 dark:text-red-400 mb-3">{error}</p>}
-          {!isLoading && !error && rows.length === 0 && (
-            <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-8">
-              No matching books found. Book titles need to start with "{series.name}" followed by a volume number (e.g. "{series.name} #1" or "{series.name}, Vol. 3").
-            </p>
-          )}
-          {!isLoading && rows.length > 0 && (
-            <>
-              <div className="flex items-center justify-between mb-3">
-                <label className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 cursor-pointer">
-                  <input type="checkbox" checked={allSelected}
-                    onChange={e => toggleAll(e.target.checked)}
-                    className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500" />
-                  Select all
-                </label>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {selectedCount} of {rows.length} selected
-                </p>
-              </div>
-              <div className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden max-h-96 overflow-y-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0">
-                    <tr>
-                      <th className="px-3 py-2 w-8" />
-                      <th className="px-3 py-2 w-20 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Vol #</th>
-                      <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Title</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                    {rows.map((r, i) => (
-                      <tr key={r.book_id} className={r.selected ? 'bg-white dark:bg-gray-900' : 'bg-gray-50 dark:bg-gray-950 opacity-60'}>
-                        <td className="px-3 py-2">
-                          <input type="checkbox" checked={r.selected}
-                            onChange={() => toggle(i)}
-                            className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500" />
-                        </td>
-                        <td className="px-3 py-2">
-                          <input type="number" min="0" step="0.5" value={r.positionStr}
-                            onChange={e => setPos(i, e.target.value)}
-                            disabled={!r.selected}
-                            className="w-16 rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-2 py-1 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50" />
-                        </td>
-                        <td className="px-3 py-2">
-                          <p className="text-gray-900 dark:text-white">{r.title}</p>
-                          {r.other_series.length > 0 && (
-                            <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">
-                              Already in: {r.other_series.map(o => o.series_name).join(', ')}
-                            </p>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </>
-          )}
-        </div>
+ <div className="px-6 py-4">
+ {isLoading && <p className="text-sm text-content-muted text-center py-8">Scanning library…</p>}
+ {!isLoading && error && <p className="text-sm text-danger mb-3">{error}</p>}
+ {!isLoading && !error && rows.length === 0 && (
+ <p className="text-sm text-content-muted text-center py-8">
+ No matching books found. Book titles need to start with "{series.name}" followed by a volume number (e.g. "{series.name} #1" or "{series.name}, Vol. 3").
+ </p>
+ )}
+ {!isLoading && rows.length > 0 && (
+ <>
+ <div className="flex items-center justify-between mb-3">
+ <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
+ <input type="checkbox" checked={allSelected}
+ onChange={e => toggleAll(e.target.checked)}
+ className="rounded border-line-strong text-blue-600 focus:ring-blue-500" />
+ Select all
+ </label>
+ <p className="text-xs text-content-muted dark:text-gray-400">
+ {selectedCount} of {rows.length} selected
+ </p>
+ </div>
+ <div className="rounded-lg border border-line overflow-hidden max-h-96 overflow-y-auto">
+ <table className="w-full text-sm">
+ <thead className="bg-gray-50 dark:bg-gray-800 border-b border-line sticky top-0">
+ <tr>
+ <th className="px-3 py-2 w-8" />
+ <th className="px-3 py-2 w-20 text-left text-xs font-semibold uppercase tracking-wide text-content-muted dark:text-gray-400">Vol #</th>
+ <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-content-muted dark:text-gray-400">Title</th>
+ </tr>
+ </thead>
+ <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+ {rows.map((r, i) => (
+ <tr key={r.book_id} className={r.selected ? 'bg-white dark:bg-gray-900' : 'bg-gray-50 dark:bg-gray-950 opacity-60'}>
+ <td className="px-3 py-2">
+ <input type="checkbox" checked={r.selected}
+ onChange={() => toggle(i)}
+ className="rounded border-line-strong text-blue-600 focus:ring-blue-500" />
+ </td>
+ <td className="px-3 py-2">
+ <input type="number" min="0" step="0.5" value={r.positionStr}
+ onChange={e => setPos(i, e.target.value)}
+ disabled={!r.selected}
+ className="w-16 rounded border border-line-strong dark:bg-gray-800 dark:text-white px-2 py-1 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50" />
+ </td>
+ <td className="px-3 py-2">
+ <p className="text-gray-900 dark:text-white">{r.title}</p>
+ {r.other_series.length > 0 && (
+ <p className="text-xs text-warning mt-0.5">
+ Already in: {r.other_series.map(o => o.series_name).join(', ')}
+ </p>
+ )}
+ </td>
+ </tr>
+ ))}
+ </tbody>
+ </table>
+ </div>
+ </>
+ )}
+ </div>
 
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-          <button type="button" onClick={onClose}
-            className="rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-            Cancel
-          </button>
-          <button type="button" onClick={apply} disabled={selectedCount === 0 || isSaving}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
-            {isSaving ? 'Applying…' : `Apply ${selectedCount} match${selectedCount === 1 ? '' : 'es'}`}
+ <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-line dark:border-gray-700">
+ <button type="button" onClick={onClose}
+ className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-content-secondary hover:bg-surface-muted transition-colors">
+ Cancel
+ </button>
+ <button type="button" onClick={apply} disabled={selectedCount === 0 || isSaving}
+ className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
+ {isSaving ? 'Applying…' : `Apply ${selectedCount} match${selectedCount === 1 ? '' : 'es'}`}
           </button>
         </div>
       </div>
@@ -3995,96 +3995,96 @@ function SuggestSeriesModal({ libraryId, onClose, onCreated }: SuggestSeriesModa
       onCreated(resp?.created ?? 0)
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Failed to create series')
-    } finally {
-      setIsSaving(false)
-    }
-  }
+ } finally {
+ setIsSaving(false)
+ }
+ }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 overflow-y-auto py-16 px-4">
-      <div className="w-full max-w-3xl rounded-xl bg-white dark:bg-gray-900 shadow-xl">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-          <div>
-            <h3 className="text-base font-semibold text-gray-900 dark:text-white">Suggest series</h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-              Groups of un-grouped books whose titles share a base name plus a volume number. Defaults to manga-ish formats.
-            </p>
-          </div>
-          <button type="button" onClick={onClose}
-            className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-            aria-label="Close">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+ return (
+ <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 overflow-y-auto py-16 px-4">
+ <div className="w-full max-w-3xl rounded-xl bg-surface shadow-xl">
+ <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+ <div>
+ <h3 className="text-base font-semibold text-gray-900 dark:text-white">Suggest series</h3>
+ <p className="text-xs text-content-muted mt-0.5">
+ Groups of un-grouped books whose titles share a base name plus a volume number. Defaults to manga-ish formats.
+ </p>
+ </div>
+ <button type="button" onClick={onClose}
+ className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-surface-inset transition-colors"
+ aria-label="Close">
+ <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+ <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+ </svg>
+ </button>
+ </div>
 
-        <div className="px-6 py-4">
-          {isLoading && <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-8">Scanning library…</p>}
-          {!isLoading && error && <p className="text-sm text-red-600 dark:text-red-400 mb-3">{error}</p>}
-          {!isLoading && !error && rows.length === 0 && (
-            <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-8">
-              Nothing to suggest. Either every book is already in a series, or no groups of 2+ with volume numbers were found.
-            </p>
-          )}
-          {!isLoading && rows.length > 0 && (
-            <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
-              {rows.map((r, i) => (
-                <div key={r.normalized}
-                  className={`rounded-lg border ${r.include ? 'border-gray-200 dark:border-gray-700' : 'border-gray-100 dark:border-gray-800 opacity-60'} bg-white dark:bg-gray-900`}>
-                  <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 dark:border-gray-800">
-                    <input type="checkbox" checked={r.include} onChange={() => toggleSeries(i)}
-                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-                    <input type="text" value={r.proposedName} onChange={e => setName(i, e.target.value)}
-                      className="flex-1 rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-2 py-1 text-sm font-semibold focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
-                    <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                      {r.books.filter(b => b.selected).length}/{r.books.length} books
-                    </span>
-                  </div>
-                  {r.include && (
-                    <ul className="divide-y divide-gray-100 dark:divide-gray-800">
-                      {r.books.map((b, j) => (
-                        <li key={b.book_id} className="flex items-center gap-3 px-4 py-2">
-                          <input type="checkbox" checked={b.selected} onChange={() => toggleBook(i, j)}
-                            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-                          {b.cover_url ? (
-                            <img src={b.cover_url} alt=""
-                              className="h-10 w-7 flex-shrink-0 rounded object-cover bg-gray-100 dark:bg-gray-800" />
-                          ) : (
-                            <div className="h-10 w-7 flex-shrink-0 rounded bg-gray-100 dark:bg-gray-800" />
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm text-gray-900 dark:text-white truncate">{b.title}</p>
-                            {b.subtitle && <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{b.subtitle}</p>}
-                          </div>
-                          <label className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
-                            #
-                            <input type="number" step="0.5" min="0" value={b.positionStr}
-                              onChange={e => setBookPos(i, j, e.target.value)}
-                              className="w-16 rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-2 py-1 text-xs text-right focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
-                          </label>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+ <div className="px-6 py-4">
+ {isLoading && <p className="text-sm text-content-muted text-center py-8">Scanning library…</p>}
+ {!isLoading && error && <p className="text-sm text-danger mb-3">{error}</p>}
+ {!isLoading && !error && rows.length === 0 && (
+ <p className="text-sm text-content-muted text-center py-8">
+ Nothing to suggest. Either every book is already in a series, or no groups of 2+ with volume numbers were found.
+ </p>
+ )}
+ {!isLoading && rows.length > 0 && (
+ <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
+ {rows.map((r, i) => (
+ <div key={r.normalized}
+ className={`rounded-lg border ${r.include ? 'border-gray-200 dark:border-gray-700' : 'border-gray-100 dark:border-gray-800 opacity-60'} bg-surface-raised dark:bg-gray-900`}>
+ <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 dark:border-gray-800">
+ <input type="checkbox" checked={r.include} onChange={() => toggleSeries(i)}
+ className="h-4 w-4 rounded border-line-strong text-blue-600 focus:ring-blue-500" />
+ <input type="text" value={r.proposedName} onChange={e => setName(i, e.target.value)}
+ className="flex-1 rounded-md border border-line-strong px-2 py-1 text-sm font-semibold focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+ <span className="text-xs text-content-muted whitespace-nowrap">
+ {r.books.filter(b => b.selected).length}/{r.books.length} books
+ </span>
+ </div>
+ {r.include && (
+ <ul className="divide-y divide-gray-100 dark:divide-gray-800">
+ {r.books.map((b, j) => (
+ <li key={b.book_id} className="flex items-center gap-3 px-4 py-2">
+ <input type="checkbox" checked={b.selected} onChange={() => toggleBook(i, j)}
+ className="h-4 w-4 rounded border-line-strong text-blue-600 focus:ring-blue-500" />
+ {b.cover_url ? (
+ <img src={b.cover_url} alt=""
+ className="h-10 w-7 flex-shrink-0 rounded object-cover bg-gray-100 dark:bg-gray-800" />
+ ) : (
+ <div className="h-10 w-7 flex-shrink-0 rounded bg-gray-100 dark:bg-gray-800" />
+ )}
+ <div className="flex-1 min-w-0">
+ <p className="text-sm text-content truncate">{b.title}</p>
+ {b.subtitle && <p className="text-xs text-content-subtle truncate">{b.subtitle}</p>}
+ </div>
+ <label className="flex items-center gap-1 text-xs text-content-muted dark:text-gray-400">
+ #
+ <input type="number" step="0.5" min="0" value={b.positionStr}
+ onChange={e => setBookPos(i, j, e.target.value)}
+ className="w-16 rounded-md border border-line-strong px-2 py-1 text-xs text-right focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+ </label>
+ </li>
+ ))}
+ </ul>
+ )}
+ </div>
+ ))}
+ </div>
+ )}
+ </div>
 
-        <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            {includedCount > 0 ? `${includedCount} series, ${totalBookCount} books` : 'Nothing selected'}
-          </p>
-          <div className="flex gap-3">
-            <button type="button" onClick={onClose}
-              className="rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-              Cancel
-            </button>
-            <button type="button" onClick={apply} disabled={includedCount === 0 || isSaving}
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
-              {isSaving ? 'Creating…' : `Create ${includedCount} series`}
+ <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+ <p className="text-xs text-content-muted dark:text-gray-400">
+ {includedCount > 0 ? `${includedCount} series, ${totalBookCount} books` : 'Nothing selected'}
+ </p>
+ <div className="flex gap-3">
+ <button type="button" onClick={onClose}
+ className="rounded-lg border border-line-strong px-4 py-2 text-sm font-medium text-content-secondary hover:bg-surface-muted transition-colors">
+ Cancel
+ </button>
+ <button type="button" onClick={apply} disabled={includedCount === 0 || isSaving}
+ className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
+ {isSaving ? 'Creating…' : `Create ${includedCount} series`}
             </button>
           </div>
         </div>
@@ -4138,110 +4138,110 @@ function SeriesMetadataSearchModal({ series, libraryId, onClose, onSaved }: Seri
     : n >= 4 ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400'
     : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
 
-  if (picked) {
-    const matching = results.filter(r => normalizeSeriesName(r.name) === normalizeSeriesName(picked.name))
-    return (
-      <SeriesMergeView
-        series={series}
-        libraryId={libraryId}
-        primary={picked}
-        matching={matching}
-        onBack={() => setPicked(null)}
-        onClose={onClose}
-        onSaved={onSaved}
-      />
-    )
-  }
+ if (picked) {
+ const matching = results.filter(r => normalizeSeriesName(r.name) === normalizeSeriesName(picked.name))
+ return (
+ <SeriesMergeView
+ series={series}
+ libraryId={libraryId}
+ primary={picked}
+ matching={matching}
+ onBack={() => setPicked(null)}
+ onClose={onClose}
+ onSaved={onSaved}
+ />
+ )
+ }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 overflow-y-auto py-16 px-4">
-      <div className="w-full max-w-lg rounded-xl bg-white dark:bg-gray-900 shadow-xl">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-          <div>
-            <h3 className="text-base font-semibold text-gray-900 dark:text-white">Search metadata providers</h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-              Pick the best match for "{series.name}" — then review fields.
-            </p>
-          </div>
-          <button type="button" onClick={onClose}
-            className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-            aria-label="Close">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+ return (
+ <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 overflow-y-auto py-16 px-4">
+ <div className="w-full max-w-lg rounded-xl bg-surface shadow-xl">
+ <div className="flex items-center justify-between px-6 py-4 border-b border-line dark:border-gray-700">
+ <div>
+ <h3 className="text-base font-semibold text-gray-900 dark:text-white">Search metadata providers</h3>
+ <p className="text-xs text-content-muted mt-0.5">
+ Pick the best match for "{series.name}" — then review fields.
+ </p>
+ </div>
+ <button type="button" onClick={onClose}
+ className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-surface-inset transition-colors"
+ aria-label="Close">
+ <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+ <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+ </svg>
+ </button>
+ </div>
 
-        <div className="px-6 py-5 space-y-3">
-          {isLoading && <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-8">Searching providers…</p>}
-          {!isLoading && error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+ <div className="px-6 py-5 space-y-3">
+ {isLoading && <p className="text-sm text-content-muted text-center py-8">Searching providers…</p>}
+ {!isLoading && error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
-          {!isLoading && results.length > 0 && results.map((r, i) => {
-            const fieldCount = countSeriesLookupFields(r)
-            return (
-              <button
-                key={i}
-                type="button"
-                onClick={() => setPicked(r)}
-                className="w-full text-left rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3 hover:border-blue-400 dark:hover:border-blue-600 hover:bg-white dark:hover:bg-gray-700/50 transition-colors"
-              >
-                <div className="flex gap-3 items-start">
-                  {r.cover_url && (
-                    <img src={r.cover_url} alt="" referrerPolicy="no-referrer" className="w-10 h-14 object-cover rounded flex-shrink-0 bg-gray-200 dark:bg-gray-700" />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-medium text-sm text-gray-900 dark:text-white">{r.name}</p>
-                      <span className={`text-xs rounded-full px-2 py-0.5 font-medium ${fieldBadgeCls(fieldCount)}`}>
-                        {fieldCount}/{TOTAL_SERIES_FIELDS} fields
-                      </span>
-                    </div>
-                    {r.description && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">{r.description}</p>
-                    )}
-                    <div className="flex items-center gap-2 mt-1 flex-wrap">
-                      {r.total_count != null && <span className="text-xs text-gray-400 dark:text-gray-500">{r.total_count} vols</span>}
-                      {r.status && (
-                        <span className={`text-xs rounded-full px-1.5 py-0.5 ${r.status === 'completed' ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400' : r.status === 'hiatus' ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400' : r.status === 'cancelled' ? 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400' : 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400'}`}>
-                          {r.status.charAt(0).toUpperCase() + r.status.slice(1)}
-                        </span>
-                      )}
-                      {r.demographic && <span className="text-xs text-gray-400 dark:text-gray-500">{r.demographic}</span>}
-                      {r.original_language && <span className="text-xs text-gray-400 dark:text-gray-500">{r.original_language}</span>}
-                      <span className="text-xs text-gray-400 dark:text-gray-500">via {r.provider_display}</span>
-                    </div>
-                    {r.genres && r.genres.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {r.genres.slice(0, 5).map(g => (
-                          <span key={g} className="text-xs rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-1.5 py-0.5">{g}</span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </button>
-            )
-          })}
-        </div>
-      </div>
-    </div>
-  )
+ {!isLoading && results.length > 0 && results.map((r, i) => {
+ const fieldCount = countSeriesLookupFields(r)
+ return (
+ <button
+ key={i}
+ type="button"
+ onClick={() => setPicked(r)}
+ className="w-full text-left rounded-xl border border-line bg-surface-muted p-3 hover:border-blue-400 dark:hover:border-blue-600 hover:bg-white dark:hover:bg-gray-700/50 transition-colors"
+ >
+ <div className="flex gap-3 items-start">
+ {r.cover_url && (
+ <img src={r.cover_url} alt="" referrerPolicy="no-referrer" className="w-10 h-14 object-cover rounded flex-shrink-0 bg-gray-200 dark:bg-gray-700" />
+ )}
+ <div className="flex-1 min-w-0">
+ <div className="flex items-center gap-2 flex-wrap">
+ <p className="font-medium text-sm text-gray-900 dark:text-white">{r.name}</p>
+ <span className={`text-xs rounded-full px-2 py-0.5 font-medium ${fieldBadgeCls(fieldCount)}`}>
+ {fieldCount}/{TOTAL_SERIES_FIELDS} fields
+ </span>
+ </div>
+ {r.description && (
+ <p className="text-xs text-content-muted mt-0.5 line-clamp-2">{r.description}</p>
+ )}
+ <div className="flex items-center gap-2 mt-1 flex-wrap">
+ {r.total_count != null && <span className="text-xs text-gray-400 dark:text-gray-500">{r.total_count} vols</span>}
+ {r.status && (
+ <span className={`text-xs rounded-full px-1.5 py-0.5 ${r.status === 'completed' ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400' : r.status === 'hiatus' ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400' : r.status === 'cancelled' ? 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400' : 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400'}`}>
+ {r.status.charAt(0).toUpperCase() + r.status.slice(1)}
+ </span>
+ )}
+ {r.demographic && <span className="text-xs text-gray-400 dark:text-gray-500">{r.demographic}</span>}
+ {r.original_language && <span className="text-xs text-gray-400 dark:text-gray-500">{r.original_language}</span>}
+ <span className="text-xs text-gray-400 dark:text-gray-500">via {r.provider_display}</span>
+ </div>
+ {r.genres && r.genres.length > 0 && (
+ <div className="flex flex-wrap gap-1 mt-1">
+ {r.genres.slice(0, 5).map(g => (
+ <span key={g} className="text-xs rounded bg-surface-inset text-content-tertiary px-1.5 py-0.5">{g}</span>
+ ))}
+ </div>
+ )}
+ </div>
+ </div>
+ </button>
+ )
+ })}
+ </div>
+ </div>
+ </div>
+ )
 }
 
 // ─── Series merge view (step 2 of metadata update) ────────────────────────────
 
 interface SeriesMergeViewProps {
-  series: Series
-  libraryId: string
-  primary: SeriesLookupResult
-  matching: SeriesLookupResult[]
-  onBack: () => void
-  onClose: () => void
-  onSaved: (updated: Series) => void
+ series: Series
+ libraryId: string
+ primary: SeriesLookupResult
+ matching: SeriesLookupResult[]
+ onBack: () => void
+ onClose: () => void
+ onSaved: (updated: Series) => void
 }
 
 const STATUS_OPTIONS: Array<{ value: string; label: string }> = [
-  { value: 'ongoing', label: 'Ongoing' },
+ { value: 'ongoing', label: 'Ongoing' },
   { value: 'completed', label: 'Completed' },
   { value: 'hiatus', label: 'Hiatus' },
   { value: 'cancelled', label: 'Cancelled' },
@@ -4296,128 +4296,128 @@ function SeriesMergeView({ series, libraryId, primary, matching, onBack, onClose
       if (updated) onSaved(updated)
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Failed to save')
-    } finally {
-      setIsSaving(false)
-    }
-  }
+ } finally {
+ setIsSaving(false)
+ }
+ }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 overflow-y-auto py-16 px-4">
-      <div className="w-full max-w-2xl rounded-xl bg-white dark:bg-gray-900 shadow-xl">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-          <div className="min-w-0">
-            <button type="button" onClick={onBack}
-              className="text-xs text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 mb-1">
-              ← Back to results
-            </button>
-            <h3 className="text-base font-semibold text-gray-900 dark:text-white truncate">Update metadata: {primary.name}</h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-              Merging {matching.length} provider{matching.length === 1 ? '' : 's'}: {matching.map(m => m.provider_display).join(', ')}.
-            </p>
-          </div>
-          <button type="button" onClick={onClose}
-            className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-            aria-label="Close">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+ return (
+ <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 overflow-y-auto py-16 px-4">
+ <div className="w-full max-w-2xl rounded-xl bg-surface shadow-xl">
+ <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+ <div className="min-w-0">
+ <button type="button" onClick={onBack}
+ className="text-xs text-content-muted hover:text-accent mb-1">
+ ← Back to results
+ </button>
+ <h3 className="text-base font-semibold text-content truncate">Update metadata: {primary.name}</h3>
+ <p className="text-xs text-content-muted mt-0.5">
+ Merging {matching.length} provider{matching.length === 1 ? '' : 's'}: {matching.map(m => m.provider_display).join(', ')}.
+ </p>
+ </div>
+ <button type="button" onClick={onClose}
+ className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-surface-inset transition-colors"
+ aria-label="Close">
+ <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+ <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+ </svg>
+ </button>
+ </div>
 
-        <div className="px-6 py-5 space-y-5 max-h-[70vh] overflow-y-auto">
-          <FieldPicker label="Description" options={descOpts} selected={desc}
-            equals={(a, b) => a === b} onPick={v => setDesc(v)}
-            render={v => <p className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap">{v || <em className="text-gray-400">empty</em>}</p>} />
+ <div className="px-6 py-5 space-y-5 max-h-[70vh] overflow-y-auto">
+ <FieldPicker label="Description" options={descOpts} selected={desc}
+ equals={(a, b) => a === b} onPick={v => setDesc(v)}
+ render={v => <p className="text-sm text-content-strong whitespace-pre-wrap">{v || <em className="text-gray-400">empty</em>}</p>} />
 
-          <FieldPicker label="Total volumes" options={totalOpts} selected={total}
-            equals={(a, b) => a === b} onPick={v => setTotal(v)}
-            render={v => <span className="text-sm text-gray-800 dark:text-gray-200">{v == null ? <em className="text-gray-400">unset</em> : v}</span>} />
+ <FieldPicker label="Total volumes" options={totalOpts} selected={total}
+ equals={(a, b) => a === b} onPick={v => setTotal(v)}
+ render={v => <span className="text-sm text-content-strong dark:text-gray-200">{v == null ? <em className="text-gray-400">unset</em> : v}</span>} />
 
-          <FieldPicker label="Status" options={statusOpts} selected={status}
-            equals={(a, b) => a.toLowerCase() === b.toLowerCase()} onPick={v => setStatus(v)}
-            render={v => <span className="text-sm capitalize text-gray-800 dark:text-gray-200">{v || <em className="text-gray-400">unset</em>}</span>}
-            extraControl={
-              <select value={status} onChange={e => setStatus(e.target.value)}
-                className="mt-2 rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-2 py-1 text-xs focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
-                {STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-              </select>
-            } />
+ <FieldPicker label="Status" options={statusOpts} selected={status}
+ equals={(a, b) => a.toLowerCase() === b.toLowerCase()} onPick={v => setStatus(v)}
+ render={v => <span className="text-sm capitalize text-content-strong dark:text-gray-200">{v || <em className="text-gray-400">unset</em>}</span>}
+ extraControl={
+ <select value={status} onChange={e => setStatus(e.target.value)}
+ className="mt-2 rounded-md border border-line-strong dark:text-white px-2 py-1 text-xs focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
+ {STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+ </select>
+ } />
 
-          <FieldPicker label="Original language" options={langOpts} selected={lang}
-            equals={(a, b) => a.toLowerCase() === b.toLowerCase()} onPick={v => setLang(v)}
-            render={v => <span className="text-sm text-gray-800 dark:text-gray-200">{v || <em className="text-gray-400">unset</em>}</span>} />
+ <FieldPicker label="Original language" options={langOpts} selected={lang}
+ equals={(a, b) => a.toLowerCase() === b.toLowerCase()} onPick={v => setLang(v)}
+ render={v => <span className="text-sm text-content-strong dark:text-gray-200">{v || <em className="text-gray-400">unset</em>}</span>} />
 
-          <FieldPicker label="Publication year" options={yearOpts} selected={year}
-            equals={(a, b) => a === b} onPick={v => setYear(v)}
-            render={v => <span className="text-sm text-gray-800 dark:text-gray-200">{v == null ? <em className="text-gray-400">unset</em> : v}</span>} />
+ <FieldPicker label="Publication year" options={yearOpts} selected={year}
+ equals={(a, b) => a === b} onPick={v => setYear(v)}
+ render={v => <span className="text-sm text-content-strong dark:text-gray-200">{v == null ? <em className="text-gray-400">unset</em> : v}</span>} />
 
-          <FieldPicker label="Demographic" options={demoOpts} selected={demo}
-            equals={(a, b) => a.toLowerCase() === b.toLowerCase()} onPick={v => setDemo(v)}
-            render={v => <span className="text-sm text-gray-800 dark:text-gray-200">{v || <em className="text-gray-400">unset</em>}</span>} />
+ <FieldPicker label="Demographic" options={demoOpts} selected={demo}
+ equals={(a, b) => a.toLowerCase() === b.toLowerCase()} onPick={v => setDemo(v)}
+ render={v => <span className="text-sm text-content-strong dark:text-gray-200">{v || <em className="text-gray-400">unset</em>}</span>} />
 
-          <FieldPicker label="Genres" options={genresOpts} selected={genres}
-            equals={(a, b) => a.length === b.length && a.every((x, i) => x.toLowerCase() === b[i].toLowerCase())}
-            onPick={v => setGenres(v)}
-            render={v => v.length === 0
-              ? <em className="text-sm text-gray-400">none</em>
-              : (
-                <div className="flex flex-wrap gap-1">
-                  {v.map(g => <span key={g} className="text-xs rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-1.5 py-0.5">{g}</span>)}
-                </div>
-              )} />
+ <FieldPicker label="Genres" options={genresOpts} selected={genres}
+ equals={(a, b) => a.length === b.length && a.every((x, i) => x.toLowerCase() === b[i].toLowerCase())}
+ onPick={v => setGenres(v)}
+ render={v => v.length === 0
+ ? <em className="text-sm text-gray-400">none</em>
+ : (
+ <div className="flex flex-wrap gap-1">
+ {v.map(g => <span key={g} className="text-xs rounded bg-surface-inset dark:bg-gray-700 text-content-tertiary px-1.5 py-0.5">{g}</span>)}
+ </div>
+ )} />
 
-          <div className="rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs text-gray-500 dark:text-gray-400">
-            Source link &amp; URL: <span className="font-medium text-gray-700 dark:text-gray-300">{primary.provider_display}</span>
-            {primary.url && <> — <a href={primary.url} target="_blank" rel="noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline break-all">{primary.url}</a></>}
-          </div>
-        </div>
+ <div className="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-500 dark:text-gray-400">
+ Source link &amp; URL: <span className="font-medium text-gray-700 dark:text-gray-300">{primary.provider_display}</span>
+ {primary.url && <> — <a href={primary.url} target="_blank" rel="noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline break-all">{primary.url}</a></>}
+ </div>
+ </div>
 
-        <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-          {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
-          <div className="ml-auto flex gap-3">
-            <button type="button" onClick={onClose}
-              className="rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-              Cancel
-            </button>
-            <button type="button" onClick={save} disabled={isSaving}
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
-              {isSaving ? 'Saving…' : 'Save'}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
+ <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+ {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
+ <div className="ml-auto flex gap-3">
+ <button type="button" onClick={onClose}
+ className="rounded-lg border border-line-strong px-4 py-2 text-sm font-medium text-gray-700 hover:bg-surface-muted transition-colors">
+ Cancel
+ </button>
+ <button type="button" onClick={save} disabled={isSaving}
+ className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
+ {isSaving ? 'Saving…' : 'Save'}
+ </button>
+ </div>
+ </div>
+ </div>
+ </div>
+ )
 }
 
 interface FieldPickerProps<T> {
-  label: string
-  options: SeriesFieldOption<T>[]
-  selected: T
-  equals: (a: T, b: T) => boolean
-  onPick: (v: T) => void
-  render: (v: T) => React.ReactNode
-  extraControl?: React.ReactNode
+ label: string
+ options: SeriesFieldOption<T>[]
+ selected: T
+ equals: (a: T, b: T) => boolean
+ onPick: (v: T) => void
+ render: (v: T) => React.ReactNode
+ extraControl?: React.ReactNode
 }
 
 function FieldPicker<T>({ label, options, selected, equals, onPick, render, extraControl }: FieldPickerProps<T>) {
-  return (
-    <div>
-      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1.5">{label}</p>
-      {options.length === 0 && (
-        <p className="text-sm italic text-gray-400 dark:text-gray-500">No values from providers or current record.</p>
-      )}
-      <div className="space-y-1.5">
-        {options.map((opt, i) => {
-          const isSelected = equals(selected, opt.value)
-          return (
-            <button
-              key={i}
-              type="button"
-              onClick={() => onPick(opt.value)}
-              className={`w-full text-left rounded-lg border px-3 py-2 transition-colors ${
-                isSelected
-                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/40'
+ return (
+ <div>
+ <p className="text-xs font-semibold uppercase tracking-wide text-content-muted mb-1.5">{label}</p>
+ {options.length === 0 && (
+ <p className="text-sm italic text-gray-400 dark:text-gray-500">No values from providers or current record.</p>
+ )}
+ <div className="space-y-1.5">
+ {options.map((opt, i) => {
+ const isSelected = equals(selected, opt.value)
+ return (
+ <button
+ key={i}
+ type="button"
+ onClick={() => onPick(opt.value)}
+ className={`w-full text-left rounded-lg border px-3 py-2 transition-colors ${
+ isSelected
+ ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/40'
                   : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-600'
               }`}
             >
@@ -4557,63 +4557,63 @@ function SeriesMetadataProposalCard({ proposal, onAccept, onReject }: { proposal
 
   if (fields.length === 0) {
     return (
-      <div className="rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 p-4 text-sm">
+      <div className="rounded-xl border border-warning-line bg-warning-surface p-4 text-sm">
         <div className="flex items-center justify-between">
-          <p className="text-amber-800 dark:text-amber-300">AI didn't have evidence for any series-level fields.</p>
-          <button onClick={() => onReject(proposal.id)} className="text-xs text-amber-700 dark:text-amber-400 hover:underline">Dismiss</button>
-        </div>
-      </div>
-    )
-  }
+          <p className="text-warning-strong ">AI didn't have evidence for any series-level fields.</p>
+ <button onClick={() => onReject(proposal.id)} className="text-xs text-warning-strong hover:underline">Dismiss</button>
+ </div>
+ </div>
+ )
+ }
 
-  return (
-    <div className="rounded-xl border border-purple-200 dark:border-purple-800 bg-purple-50/40 dark:bg-purple-950/30 p-4">
-      <div className="flex items-center justify-between mb-3">
-        <div>
-          <p className="text-sm font-semibold text-purple-900 dark:text-purple-200">AI suggestion: series fields</p>
-          <p className="text-xs text-purple-700/80 dark:text-purple-300/70">Review and pick which fields to apply.</p>
-        </div>
-        <button onClick={() => onReject(proposal.id)} className="text-xs text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400">Dismiss</button>
-      </div>
-      <ul className="space-y-1.5 mb-3">
-        {fields.map(f => (
-          <li key={f.key}>
-            <label className="flex items-start gap-2.5 cursor-pointer select-none">
-              <input type="checkbox" checked={selected.has(f.key)} onChange={() => toggle(f.key)}
-                className="mt-0.5 h-4 w-4 rounded border-gray-300 dark:border-gray-600" />
-              <span className="text-sm text-gray-800 dark:text-gray-200 flex-1">
-                <span className="font-medium">{f.label}:</span>{' '}
-                <span className="text-gray-600 dark:text-gray-400">{f.value}</span>
-              </span>
-            </label>
-          </li>
-        ))}
-      </ul>
-      <div className="flex gap-2 justify-end">
-        <button onClick={() => onReject(proposal.id)}
-          className="rounded-md px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
-          Reject all
-        </button>
-        <button onClick={apply} disabled={selected.size === 0}
-          className="rounded-md bg-purple-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-purple-700 disabled:opacity-50">
-          Apply selected
-        </button>
-      </div>
-    </div>
-  )
+ return (
+ <div className="rounded-xl border border-purple-200 dark:border-purple-800 bg-purple-50/40 dark:bg-purple-950/30 p-4">
+ <div className="flex items-center justify-between mb-3">
+ <div>
+ <p className="text-sm font-semibold text-purple-900 dark:text-purple-200">AI suggestion: series fields</p>
+ <p className="text-xs text-purple-700/80 dark:text-purple-300/70">Review and pick which fields to apply.</p>
+ </div>
+ <button onClick={() => onReject(proposal.id)} className="text-xs text-content-muted hover:text-red-600 dark:hover:text-red-400">Dismiss</button>
+ </div>
+ <ul className="space-y-1.5 mb-3">
+ {fields.map(f => (
+ <li key={f.key}>
+ <label className="flex items-start gap-2.5 cursor-pointer select-none">
+ <input type="checkbox" checked={selected.has(f.key)} onChange={() => toggle(f.key)}
+ className="mt-0.5 h-4 w-4 rounded border-gray-300 dark:border-gray-600" />
+ <span className="text-sm text-content-strong flex-1">
+ <span className="font-medium">{f.label}:</span>{' '}
+ <span className="text-gray-600 dark:text-gray-400">{f.value}</span>
+ </span>
+ </label>
+ </li>
+ ))}
+ </ul>
+ <div className="flex gap-2 justify-end">
+ <button onClick={() => onReject(proposal.id)}
+ className="rounded-md px-3 py-1.5 text-xs font-medium text-content-secondary hover:bg-gray-100 dark:hover:bg-gray-800">
+ Reject all
+ </button>
+ <button onClick={apply} disabled={selected.size === 0}
+ className="rounded-md bg-purple-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-purple-700 disabled:opacity-50">
+ Apply selected
+ </button>
+ </div>
+ </div>
+ )
 }
 
 function SeriesArcsProposalCard({ proposal, existingArcCount, onAccept, onReject }: { proposal: AIMetadataProposal; existingArcCount: number; onAccept: (id: string, body?: Record<string, unknown>) => void; onReject: (id: string) => void }) {
-  const payload = proposal.payload as SeriesArcsPayload
-  const [selected, setSelected] = useState<Set<number>>(new Set(payload.arcs?.map((_, i) => i) ?? []))
-  const [assignBooks, setAssignBooks] = useState(true)
+ const payload = proposal.payload as SeriesArcsPayload
+ const [selected, setSelected] = useState<Set<number>>(new Set(payload.arcs?.map((_, i) => i) ?? []))
+ const [assignBooks, setAssignBooks] = useState(true)
 
-  if (!payload.arcs || payload.arcs.length === 0) {
-    return (
-      <div className="rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 p-4 text-sm">
-        <div className="flex items-center justify-between">
-          <p className="text-amber-800 dark:text-amber-300">AI didn't propose any canonical arcs for this series.</p>
-          <button onClick={() => onReject(proposal.id)} className="text-xs text-amber-700 dark:text-amber-400 hover:underline">Dismiss</button>
+ if (!payload.arcs || payload.arcs.length === 0) {
+ return (
+ <div className="rounded-xl border border-warning-line bg-warning-surface p-4 text-sm">
+ <div className="flex items-center justify-between">
+ <p className="text-amber-800 dark:text-amber-300">AI didn't propose any canonical arcs for this series.</p>
+          <button onClick={() => onReject(proposal.id)} className="text-xs text-warning-strong hover:underline">Dismiss</button>
         </div>
       </div>
     )
@@ -4646,7 +4646,7 @@ function SeriesArcsProposalCard({ proposal, existingArcCount, onAccept, onReject
               : 'Pick which arcs to create.'}
           </p>
         </div>
-        <button onClick={() => onReject(proposal.id)} className="text-xs text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400">Dismiss</button>
+        <button onClick={() => onReject(proposal.id)} className="text-xs text-content-muted hover:text-danger ">Dismiss</button>
       </div>
       <ul className="space-y-1.5 mb-3">
         {payload.arcs.map((arc, i) => {
@@ -4655,10 +4655,10 @@ function SeriesArcsProposalCard({ proposal, existingArcCount, onAccept, onReject
             <li key={i}>
               <label className="flex items-start gap-2.5 cursor-pointer select-none">
                 <input type="checkbox" checked={selected.has(i)} onChange={() => toggle(i)}
-                  className="mt-0.5 h-4 w-4 rounded border-gray-300 dark:border-gray-600" />
-                <span className="text-sm text-gray-800 dark:text-gray-200 flex-1">
+                  className="mt-0.5 h-4 w-4 rounded border-line-strong " />
+                <span className="text-sm text-content-strong flex-1">
                   <span className="font-medium">{arc.name}</span>
-                  <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">{range}</span>
+                  <span className="ml-2 text-xs text-content-muted ">{range}</span>
                 </span>
               </label>
             </li>
@@ -4667,12 +4667,12 @@ function SeriesArcsProposalCard({ proposal, existingArcCount, onAccept, onReject
       </ul>
       <label className="flex items-center gap-2.5 mb-3 cursor-pointer select-none">
         <input type="checkbox" checked={assignBooks} onChange={e => setAssignBooks(e.target.checked)}
-          className="h-4 w-4 rounded border-gray-300 dark:border-gray-600" />
-        <span className="text-xs text-gray-700 dark:text-gray-300">Auto-assign books in suggested ranges to their arcs</span>
+          className="h-4 w-4 rounded border-line-strong " />
+        <span className="text-xs text-content-secondary ">Auto-assign books in suggested ranges to their arcs</span>
       </label>
       <div className="flex gap-2 justify-end">
         <button onClick={() => onReject(proposal.id)}
-          className="rounded-md px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
+          className="rounded-md px-3 py-1.5 text-xs font-medium text-content-secondary hover:bg-surface-inset ">
           Reject all
         </button>
         <button onClick={apply} disabled={selected.size === 0}
@@ -4705,20 +4705,20 @@ function ArcManagerPanel({ libraryId, seriesId, arcs, open, onToggle, onChanged,
   const sorted = [...arcs].sort((a, b) => a.position - b.position || a.name.localeCompare(b.name))
 
   return (
-    <div className="mb-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+    <div className="mb-4 rounded-xl border border-line bg-surface ">
       <button onClick={onToggle}
-        className="w-full flex items-center justify-between px-4 py-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-t-xl">
+        className="w-full flex items-center justify-between px-4 py-2.5 text-left hover:bg-surface-muted transition-colors rounded-t-xl">
         <div className="flex items-center gap-2">
           <svg className={`w-4 h-4 text-gray-400 transition-transform ${open ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
-          <span className="font-medium text-sm text-gray-900 dark:text-white">Arcs</span>
-          <span className="text-xs text-gray-500 dark:text-gray-400">{arcs.length === 0 ? 'none yet' : `${arcs.length} arc${arcs.length !== 1 ? 's' : ''}`}</span>
+          <span className="font-medium text-sm text-content ">Arcs</span>
+          <span className="text-xs text-content-muted ">{arcs.length === 0 ? 'none yet' : `${arcs.length} arc${arcs.length !== 1 ? 's' : ''}`}</span>
         </div>
       </button>
 
       {open && (
-        <div className="border-t border-gray-100 dark:border-gray-800 p-4 space-y-3">
+        <div className="border-t border-line-subtle p-4 space-y-3">
           {sorted.length > 0 && (
             <ul className="space-y-1.5">
               {sorted.map(arc => editingArc?.id === arc.id ? (
@@ -4732,18 +4732,18 @@ function ArcManagerPanel({ libraryId, seriesId, arcs, open, onToggle, onChanged,
                 />
               ) : (
                 <li key={arc.id} className="flex items-center gap-3 text-sm">
-                  <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 dark:bg-gray-700 text-xs font-semibold text-gray-600 dark:text-gray-300 flex-shrink-0">
+                  <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-surface-inset text-xs font-semibold text-content-tertiary flex-shrink-0">
                     {formatPosition(arc.position)}
                   </span>
-                  <span className="flex-1 font-medium text-gray-900 dark:text-white">{arc.name}</span>
+                  <span className="flex-1 font-medium text-content ">{arc.name}</span>
                   {arc.vol_start != null && arc.vol_end != null && (
-                    <span className="text-xs text-gray-400 dark:text-gray-500">
+                    <span className="text-xs text-content-subtle ">
                       vols {formatPosition(arc.vol_start)}–{formatPosition(arc.vol_end)}
                     </span>
                   )}
-                  <span className="text-xs text-gray-400 dark:text-gray-500">{arc.book_count} book{arc.book_count !== 1 ? 's' : ''}</span>
+                  <span className="text-xs text-content-subtle ">{arc.book_count} book{arc.book_count !== 1 ? 's' : ''}</span>
                   <button onClick={() => setEditingArc(arc)}
-                    className="p-1 rounded text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    className="p-1 rounded text-content-muted hover:text-accent hover:bg-surface-inset transition-colors"
                     title="Edit arc">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
                       <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
@@ -4754,7 +4754,7 @@ function ArcManagerPanel({ libraryId, seriesId, arcs, open, onToggle, onChanged,
                       await callApi(`/api/v1/libraries/${libraryId}/series/${seriesId}/arcs/${arc.id}`, { method: 'DELETE' }).catch(() => {})
                       onChanged()
                     }}
-                    className="p-1 rounded text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    className="p-1 rounded text-content-muted hover:text-danger hover:bg-surface-inset transition-colors"
                     title="Delete arc">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
@@ -4777,10 +4777,10 @@ function ArcManagerPanel({ libraryId, seriesId, arcs, open, onToggle, onChanged,
           ) : (
             <div className="flex items-center gap-3">
               <button onClick={() => setShowAddForm(true)}
-                className="text-sm text-blue-600 dark:text-blue-400 hover:underline">+ Add arc</button>
+                className="text-sm text-accent hover:underline">+ Add arc</button>
               {onSuggestArcs && (
                 <button onClick={onSuggestArcs} disabled={isSuggesting}
-                  className="text-sm text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 disabled:opacity-50">
+                  className="text-sm text-content-muted hover:text-accent disabled:opacity-50">
                   {isSuggesting ? 'Asking AI…' : (sorted.length > 0 ? 'Re-suggest with AI' : 'Suggest with AI')}
                 </button>
               )}
@@ -4841,33 +4841,33 @@ function ArcEditRow({ libraryId, seriesId, arc, defaultPosition, onCancel, onSav
   }
 
   return (
-    <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3 space-y-2">
+    <div className="rounded-lg border border-line bg-surface-muted p-3 space-y-2">
       <div className="flex items-center gap-2">
         <input type="number" step="any" value={position} onChange={e => setPosition(e.target.value)}
-          className="w-16 rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-white px-2 py-1 text-sm"
+          className="w-16 rounded border border-line-strong dark:bg-gray-900 dark:text-white px-2 py-1 text-sm"
           placeholder="Pos" />
         <input type="text" value={name} onChange={e => setName(e.target.value)} autoFocus
-          className="flex-1 rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-white px-2 py-1 text-sm"
+          className="flex-1 rounded border border-line-strong dark:bg-gray-900 dark:text-white px-2 py-1 text-sm"
           placeholder="Arc name" />
       </div>
       <input type="text" value={description} onChange={e => setDescription(e.target.value)}
-        className="w-full rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-white px-2 py-1 text-sm"
+        className="w-full rounded border border-line-strong dark:bg-gray-900 dark:text-white px-2 py-1 text-sm"
         placeholder="Description (optional)" />
       <div className="flex items-center gap-2">
-        <span className="text-xs text-gray-500 dark:text-gray-400 w-20">Vol range</span>
+        <span className="text-xs text-content-muted w-20">Vol range</span>
         <input type="number" step="any" value={volStart} onChange={e => setVolStart(e.target.value)}
-          className="w-20 rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-white px-2 py-1 text-sm"
+          className="w-20 rounded border border-line-strong dark:bg-gray-900 dark:text-white px-2 py-1 text-sm"
           placeholder="Start" />
         <span className="text-xs text-gray-400">–</span>
         <input type="number" step="any" value={volEnd} onChange={e => setVolEnd(e.target.value)}
-          className="w-20 rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-white px-2 py-1 text-sm"
+          className="w-20 rounded border border-line-strong dark:bg-gray-900 dark:text-white px-2 py-1 text-sm"
           placeholder="End" />
-        <span className="text-xs text-gray-400 dark:text-gray-500 ml-1">
+        <span className="text-xs text-content-subtle ml-1">
           Optional. Slots missing volumes into this arc when set.
         </span>
       </div>
       <div className="flex items-center gap-2 justify-end">
-        <button onClick={onCancel} className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">Cancel</button>
+        <button onClick={onCancel} className="text-xs text-content-muted hover:text-content-secondary ">Cancel</button>
         <button onClick={save} disabled={saving || !name.trim()}
           className="rounded bg-blue-600 px-3 py-1 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
           {saving ? 'Saving…' : (arc ? 'Save' : 'Add')}
@@ -4903,16 +4903,16 @@ function BookArcAssigner({ entry, arcs, isOpen, onOpen, onClose, onAssign }: Boo
   return (
     <div ref={ref} className="relative">
       <button onClick={isOpen ? onClose : onOpen}
-        className="text-xs text-gray-500 dark:text-gray-400 hover:text-blue-600 transition-colors">
+        className="text-xs text-content-muted hover:text-blue-600 transition-colors">
         {currentArc ? `Arc: ${currentArc.name}` : 'Set arc'}
       </button>
       {isOpen && (
-        <div className="absolute right-0 top-full mt-1 z-30 w-56 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg py-1">
+        <div className="absolute right-0 top-full mt-1 z-30 w-56 rounded-lg border border-line bg-surface shadow-lg py-1">
           <button onClick={() => onAssign(null)}
             className={`w-full text-left px-3 py-1.5 text-xs transition-colors ${!entry.arc_id ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'}`}>
             Unsorted
           </button>
-          <div className="my-1 border-t border-gray-100 dark:border-gray-800" />
+          <div className="my-1 border-t border-line-subtle " />
           {sorted.map(arc => (
             <button key={arc.id} onClick={() => onAssign(arc.id)}
               className={`w-full text-left px-3 py-1.5 text-xs transition-colors ${entry.arc_id === arc.id ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'}`}>
@@ -5073,7 +5073,7 @@ function SeriesDetailView({ seriesId, libraryId, setExtraCrumbs, onBack }: Serie
   // Show a loading state until the series is fetched. The rest of the body
   // can safely assume series is non-null.
   if (!series) {
-    return <div className="text-sm text-gray-400 dark:text-gray-500 text-center py-16">Loading…</div>
+    return <div className="text-sm text-content-subtle text-center py-16">Loading…</div>
   }
 
   // Build merged list: real entries + ghost rows for missing integer positions.
@@ -5210,37 +5210,37 @@ function SeriesDetailView({ seriesId, libraryId, setExtraCrumbs, onBack }: Serie
   return (
     <div>
       <div className="flex items-center gap-3 mb-4 flex-wrap">
-        <button onClick={onBack} className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors">← Back</button>
-        <span className="text-xs text-gray-500 dark:text-gray-400">
+        <button onClick={onBack} className="text-sm text-content-muted hover:text-content-secondary transition-colors">← Back</button>
+        <span className="text-xs text-content-muted ">
           {seriesStatusLabel(series.status)}
           {series.total_count != null && ` · ${series.book_count} / ${series.total_count} volumes`}
         </span>
         <div className="flex-1" />
         {series.external_id && (
           <button onClick={syncVolumes} disabled={isSyncing}
-            className="rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 transition-colors">
+            className="rounded-lg border border-line-strong px-3 py-1.5 text-sm font-medium text-content-secondary hover:bg-surface-muted disabled:opacity-50 transition-colors">
             {isSyncing ? 'Syncing…' : 'Sync volumes'}
           </button>
         )}
         <button onClick={() => setShowAutoMatch(true)}
-          className="rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+          className="rounded-lg border border-line-strong px-3 py-1.5 text-sm font-medium text-content-secondary hover:bg-surface-muted transition-colors">
           Auto-match
         </button>
         <button onClick={() => setShowMetaSearch(true)}
-          className="rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+          className="rounded-lg border border-line-strong px-3 py-1.5 text-sm font-medium text-content-secondary hover:bg-surface-muted transition-colors">
           Search metadata
         </button>
         <button onClick={suggestSeriesMetadata} disabled={isSuggestingMetadata}
-          className="rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 transition-colors"
+          className="rounded-lg border border-line-strong px-3 py-1.5 text-sm font-medium text-content-secondary hover:bg-surface-muted disabled:opacity-50 transition-colors"
           title="Ask AI to suggest series fields (status, total volumes, demographic, genres, description)">
           {isSuggestingMetadata ? 'Asking AI…' : 'Suggest with AI'}
         </button>
         <button onClick={() => setShowEdit(true)}
-          className="rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+          className="rounded-lg border border-line-strong px-3 py-1.5 text-sm font-medium text-content-secondary hover:bg-surface-muted transition-colors">
           Edit series
         </button>
         <button onClick={deleteSeries}
-          className="rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-950/50 hover:text-red-700 dark:hover:text-red-400 hover:border-red-300 dark:hover:border-red-800 transition-colors">
+          className="rounded-lg border border-line-strong px-3 py-1.5 text-sm font-medium text-content-secondary hover:bg-danger-surface hover:text-danger-strong hover:border-red-300 dark:hover:border-red-800 transition-colors">
           Delete series
         </button>
         <button onClick={() => setShowAdd(true)}
@@ -5251,21 +5251,21 @@ function SeriesDetailView({ seriesId, libraryId, setExtraCrumbs, onBack }: Serie
 
       {(series.description || series.url) && (
         <div className="mb-4 space-y-1">
-          {series.description && <p className="text-sm text-gray-500 dark:text-gray-400">{series.description}</p>}
+          {series.description && <p className="text-sm text-content-muted ">{series.description}</p>}
           {series.url && (
             <a href={series.url} target="_blank" rel="noopener noreferrer"
-              className="text-sm text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1">
+              className="text-sm text-accent hover:underline inline-flex items-center gap-1">
               {series.url}
             </a>
           )}
         </div>
       )}
 
-      {isLoading && <div className="text-sm text-gray-400 dark:text-gray-500 text-center py-16">Loading…</div>}
+      {isLoading && <div className="text-sm text-content-subtle text-center py-16">Loading…</div>}
 
       {!isLoading && !hasAnyRows && (
-        <div className="rounded-xl border border-dashed border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 p-12 text-center">
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">No books in this series yet</p>
+        <div className="rounded-xl border border-dashed border-line-strong bg-surface p-12 text-center">
+          <p className="text-sm text-content-muted mb-3">No books in this series yet</p>
           <button onClick={() => setShowAdd(true)} className="text-sm text-blue-600 hover:underline">Add the first book</button>
         </div>
       )}
@@ -5288,30 +5288,30 @@ function SeriesDetailView({ seriesId, libraryId, setExtraCrumbs, onBack }: Serie
       />
 
       {!isLoading && hasAnyRows && (
-        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
+        <div className="rounded-xl border border-line bg-surface overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+            <thead className="bg-surface-muted border-b border-line ">
               <tr>
                 {['', 'Title', 'Type', 'Contributors', ''].map((h, i) => (
-                  <th key={i} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{h}</th>
+                  <th key={i} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-content-muted ">{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+            <tbody className="divide-y divide-line-subtle ">
               {groups.map(group => (
                 <Fragment key={group.key}>
                   {arcs.length > 0 && group.label && (
                     <tr className="bg-gray-50/60 dark:bg-gray-800/40">
                       <td colSpan={COL_COUNT} className="px-4 py-2">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{group.label}</span>
-                          <span className="text-xs text-gray-400 dark:text-gray-500">· {group.rows.filter(r => r.type === 'entry').length} book{group.rows.filter(r => r.type === 'entry').length !== 1 ? 's' : ''}</span>
+                          <span className="text-xs font-semibold uppercase tracking-wide text-content-muted ">{group.label}</span>
+                          <span className="text-xs text-content-subtle ">· {group.rows.filter(r => r.type === 'entry').length} book{group.rows.filter(r => r.type === 'entry').length !== 1 ? 's' : ''}</span>
                         </div>
                       </td>
                     </tr>
                   )}
                   {group.rows.map((row, idx) => row.type === 'entry' ? (
-                    <tr key={row.entry.book_id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                    <tr key={row.entry.book_id} className="hover:bg-surface-muted transition-colors">
                       <td className="pl-4 pr-2 py-3 w-16">
                         <SeriesVolumeCover
                           title={row.entry.title}
@@ -5322,20 +5322,20 @@ function SeriesDetailView({ seriesId, libraryId, setExtraCrumbs, onBack }: Serie
                       </td>
                       <td className="px-4 py-3">
                         <Link to={`/libraries/${libraryId}/books/${row.entry.book_id}`}
-                          className="font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                          className="font-medium text-content hover:text-accent transition-colors">
                           {row.entry.title}
                         </Link>
-                        {row.entry.subtitle && <p className="text-xs text-gray-400 dark:text-gray-500">{row.entry.subtitle}</p>}
+                        {row.entry.subtitle && <p className="text-xs text-content-subtle ">{row.entry.subtitle}</p>}
                       </td>
                       <td className="px-4 py-3">
-                        <span className="inline-flex items-center rounded-full bg-gray-100 dark:bg-gray-700 px-2 py-0.5 text-xs font-medium text-gray-600 dark:text-gray-300 whitespace-nowrap">
+                        <span className="inline-flex items-center rounded-full bg-surface-inset px-2 py-0.5 text-xs font-medium text-content-tertiary whitespace-nowrap">
                           {row.entry.media_type}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-gray-600 dark:text-gray-400 text-xs">
+                      <td className="px-4 py-3 text-content-tertiary text-xs">
                         {row.entry.contributors.length > 0
                           ? row.entry.contributors.map(c => c.name).join(', ')
-                          : <span className="text-gray-300 dark:text-gray-600">—</span>}
+                          : <span className="text-content-faint ">—</span>}
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3 justify-end">
@@ -5350,14 +5350,14 @@ function SeriesDetailView({ seriesId, libraryId, setExtraCrumbs, onBack }: Serie
                             />
                           )}
                           <button onClick={() => setEditEntry(row.entry)}
-                            className="p-1 rounded text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                            className="p-1 rounded text-content-muted hover:text-accent hover:bg-surface-inset transition-colors"
                             title="Edit volume position">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
                               <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
                             </svg>
                           </button>
                           <button onClick={() => removeEntry(row.entry.book_id)}
-                            className="p-1 rounded text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                            className="p-1 rounded text-content-muted hover:text-danger hover:bg-surface-inset transition-colors"
                             title="Remove from series">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
                               <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
@@ -5377,11 +5377,11 @@ function SeriesDetailView({ seriesId, libraryId, setExtraCrumbs, onBack }: Serie
                         />
                       </td>
                       <td className="px-4 py-3">
-                        <p className="italic text-gray-400 dark:text-gray-500">
+                        <p className="italic text-content-subtle ">
                           {row.volume?.title || `Vol. ${row.position}`}
                         </p>
                         {row.volume?.release_date && (
-                          <p className="text-xs text-gray-400 dark:text-gray-500">
+                          <p className="text-xs text-content-subtle ">
                             {new Date(row.volume.release_date + 'T00:00:00').toLocaleDateString(undefined, { year: 'numeric', month: 'short' })}
                           </p>
                         )}
@@ -5394,7 +5394,7 @@ function SeriesDetailView({ seriesId, libraryId, setExtraCrumbs, onBack }: Serie
                               setAddHint({ position: row.position, query: series.name })
                               setShowAdd(true)
                             }}
-                            className="text-xs text-gray-400 dark:text-gray-500 hover:text-blue-600 transition-colors">Add</button>
+                            className="text-xs text-content-subtle hover:text-blue-600 transition-colors">Add</button>
                         </div>
                       </td>
                     </tr>
@@ -5478,9 +5478,9 @@ function SeriesMosaic({ series, size = 'md' }: { series: Series; size?: 'sm' | '
   const padded = [...tiles, ...Array(Math.max(0, 4 - tiles.length)).fill(null)] as (typeof tiles[0] | null)[]
   const containerCls = size === 'sm' ? 'w-16' : size === 'lg' ? 'w-40' : 'w-28'
   return (
-    <div className={`${containerCls} aspect-square rounded-lg overflow-hidden grid grid-cols-2 grid-rows-2 gap-0.5 bg-gray-200 dark:bg-gray-800 shadow-md`}>
+    <div className={`${containerCls} aspect-square rounded-lg overflow-hidden grid grid-cols-2 grid-rows-2 gap-0.5 bg-surface-strong shadow-md`}>
       {padded.map((p, i) => (
-        <div key={i} className="relative overflow-hidden bg-gray-100 dark:bg-gray-900">
+        <div key={i} className="relative overflow-hidden bg-surface-inset ">
           {p ? <SeriesMosaicTile p={p} fallbackTitle={series.name} /> : <SeriesMosaicGradient title={series.name} idx={i} />}
         </div>
       ))}
@@ -5523,8 +5523,8 @@ function readingState(s: Series): ReadingState {
 }
 
 function ReadingStatePill({ state }: { state: ReadingState }) {
-  if (state === 'read_all') return <span className="inline-flex items-center rounded-full bg-green-50 dark:bg-green-950/50 px-2 py-0.5 text-xs font-medium text-green-700 dark:text-green-400 ring-1 ring-green-200 dark:ring-green-800">Read</span>
-  if (state === 'reading') return <span className="inline-flex items-center rounded-full bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 text-xs font-medium text-blue-700 dark:text-blue-400 ring-1 ring-blue-200 dark:ring-blue-800">Reading</span>
+  if (state === 'read_all') return <span className="inline-flex items-center rounded-full bg-success-surface px-2 py-0.5 text-xs font-medium text-success-strong ring-1 ring-success-line ">Read</span>
+  if (state === 'reading') return <span className="inline-flex items-center rounded-full bg-accent-surface px-2 py-0.5 text-xs font-medium text-accent-strong ring-1 ring-blue-200 dark:ring-blue-800">Reading</span>
   return null
 }
 
@@ -5623,14 +5623,14 @@ function SeriesTab({ libraryId, setExtraCrumbs }: SeriesTabProps) {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search series…"
-            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white pl-9 pr-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded-lg border border-line-strong dark:bg-gray-800 dark:text-white pl-9 pr-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
           <svg className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
         </div>
         {/* View mode toggle — same as BooksTab; table-then-grid order */}
-        <div className="flex items-center rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden flex-shrink-0">
+        <div className="flex items-center rounded-lg border border-line-strong overflow-hidden flex-shrink-0">
           <button
             onClick={() => setViewModeAndSave('table')}
             className={`px-2.5 py-2 transition-colors ${viewMode === 'table' ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200' : 'text-gray-400 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
@@ -5649,7 +5649,7 @@ function SeriesTab({ libraryId, setExtraCrumbs }: SeriesTabProps) {
           </button>
         </div>
         <button onClick={() => setShowSuggest(true)}
-          className="rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors whitespace-nowrap">
+          className="rounded-lg border border-line-strong px-4 py-2 text-sm font-semibold text-content-secondary hover:bg-surface-muted transition-colors whitespace-nowrap">
           Suggest series
         </button>
         <button onClick={() => setShowCreate(true)}
@@ -5661,7 +5661,7 @@ function SeriesTab({ libraryId, setExtraCrumbs }: SeriesTabProps) {
       {/* Filter row: status / arcs / completion */}
       <div className="flex flex-wrap items-center gap-3 mb-3">
         <div className="flex items-center gap-1.5">
-          <span className="text-xs uppercase tracking-wide text-gray-400 dark:text-gray-500 mr-1">Status</span>
+          <span className="text-xs uppercase tracking-wide text-content-subtle mr-1">Status</span>
           {(['all', 'ongoing', 'completed', 'hiatus', 'cancelled'] as StatusFilter[]).map(s => (
             <button key={s} onClick={() => setStatusFilter(s)} className={filterPill(statusFilter === s)}>
               {s === 'all' ? 'All' : s[0].toUpperCase() + s.slice(1)}
@@ -5669,7 +5669,7 @@ function SeriesTab({ libraryId, setExtraCrumbs }: SeriesTabProps) {
           ))}
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="text-xs uppercase tracking-wide text-gray-400 dark:text-gray-500 mr-1">Arcs</span>
+          <span className="text-xs uppercase tracking-wide text-content-subtle mr-1">Arcs</span>
           {(['all', 'with', 'without'] as ArcsFilter[]).map(a => (
             <button key={a} onClick={() => setArcsFilter(a)} className={filterPill(arcsFilter === a)}>
               {a === 'all' ? 'All' : a === 'with' ? 'With arcs' : 'No arcs'}
@@ -5678,7 +5678,7 @@ function SeriesTab({ libraryId, setExtraCrumbs }: SeriesTabProps) {
         </div>
         {showReadBadges && (
           <div className="flex items-center gap-1.5">
-            <span className="text-xs uppercase tracking-wide text-gray-400 dark:text-gray-500 mr-1">Reading</span>
+            <span className="text-xs uppercase tracking-wide text-content-subtle mr-1">Reading</span>
             {([
               ['all', 'All'],
               ['unread', 'Unread'],
@@ -5710,11 +5710,11 @@ function SeriesTab({ libraryId, setExtraCrumbs }: SeriesTabProps) {
         </div>
       )}
 
-      {isLoading && <div className="text-sm text-gray-400 dark:text-gray-500 text-center py-16">Loading…</div>}
+      {isLoading && <div className="text-sm text-content-subtle text-center py-16">Loading…</div>}
 
       {!isLoading && visibleSeries.length === 0 && (
-        <div className="rounded-xl border border-dashed border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 p-12 text-center">
-          <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">
+        <div className="rounded-xl border border-dashed border-line-strong bg-surface p-12 text-center">
+          <p className="text-sm font-medium text-content-muted mb-3">
             {(search || tagFilter || statusFilter !== 'all' || arcsFilter !== 'all' || readingFilter !== 'all')
               ? 'No series match your filters.'
               : 'No series yet'}
@@ -5735,23 +5735,23 @@ function SeriesTab({ libraryId, setExtraCrumbs }: SeriesTabProps) {
             const rs = readingState(s)
             return (
               <div key={s.id}
-                className="group relative flex flex-col rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:border-blue-400 dark:hover:border-blue-500 transition-colors">
+                className="group relative flex flex-col rounded-xl border border-line bg-surface hover:border-blue-400 dark:hover:border-blue-500 transition-colors">
                 <Link to={`/libraries/${libraryId}/series/${s.id}`}
                   className="flex flex-col flex-1 p-3 text-left">
                   <div className="self-center mb-3">
                     <SeriesMosaic series={s} />
                   </div>
-                  <p className="font-medium text-sm text-gray-900 dark:text-white line-clamp-2 group-hover:text-blue-600 transition-colors">{s.name}</p>
+                  <p className="font-medium text-sm text-content line-clamp-2 group-hover:text-blue-600 transition-colors">{s.name}</p>
                   {/* Metadata block pinned to the bottom so it lines up across cards
                       regardless of how many lines the title takes. */}
                   <div className="mt-auto pt-2 flex flex-col gap-1.5">
                     <div className="flex items-center flex-wrap gap-1 min-h-[1.5rem]">
                       {showReadBadges && <ReadingStatePill state={rs} />}
                       {s.arc_count > 0 && (
-                        <span className="text-xs text-gray-500 dark:text-gray-400 ml-auto">{s.arc_count} arc{s.arc_count !== 1 ? 's' : ''}</span>
+                        <span className="text-xs text-content-muted ml-auto">{s.arc_count} arc{s.arc_count !== 1 ? 's' : ''}</span>
                       )}
                     </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                    <div className="text-xs text-content-muted ">
                       {seriesStatusLabel(s.status)} · {s.book_count}{total > 0 ? ` / ${total}` : ''} owned
                       {showReadBadges && s.read_count > 0 && rs !== 'read_all' && (
                         <span> · {s.read_count} read</span>
@@ -5761,14 +5761,14 @@ function SeriesTab({ libraryId, setExtraCrumbs }: SeriesTabProps) {
                 </Link>
                 <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button onClick={() => setEditSeries(s)}
-                    className="p-1 rounded bg-white/90 dark:bg-gray-900/90 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 shadow-sm transition-colors"
+                    className="p-1 rounded bg-white/90 dark:bg-gray-900/90 text-content-tertiary hover:text-accent shadow-sm transition-colors"
                     title="Edit series">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
                       <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
                     </svg>
                   </button>
                   <button onClick={() => deleteSeries(s)}
-                    className="p-1 rounded bg-white/90 dark:bg-gray-900/90 text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 shadow-sm transition-colors"
+                    className="p-1 rounded bg-white/90 dark:bg-gray-900/90 text-content-tertiary hover:text-danger shadow-sm transition-colors"
                     title="Delete series">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
@@ -5782,29 +5782,29 @@ function SeriesTab({ libraryId, setExtraCrumbs }: SeriesTabProps) {
       )}
 
       {!isLoading && visibleSeries.length > 0 && viewMode === 'table' && (
-        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
+        <div className="rounded-xl border border-line bg-surface overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+            <thead className="bg-surface-muted border-b border-line ">
               <tr>
                 {['', 'Name', 'Status', 'Tags', 'Volumes', 'Arcs', ''].map((h, i) => (
-                  <th key={i} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{h}</th>
+                  <th key={i} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-content-muted ">{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+            <tbody className="divide-y divide-line-subtle ">
               {visibleSeries.map(s => (
-                <tr key={s.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                <tr key={s.id} className="hover:bg-surface-muted transition-colors">
                   <td className="pl-4 pr-2 py-2"><SeriesMosaic series={s} size="sm" /></td>
                   <td className="px-4 py-3">
                     <button onClick={() => navigate(`/libraries/${libraryId}/series/${s.id}`)} className="text-left group">
-                      <p className="font-medium text-gray-900 dark:text-white group-hover:text-blue-600 transition-colors">{s.name}</p>
-                      {s.description && <p className="text-xs text-gray-400 dark:text-gray-500 truncate max-w-xs">{s.description}</p>}
-                      {s.demographic && <p className="text-xs text-gray-400 dark:text-gray-500">{s.demographic}</p>}
+                      <p className="font-medium text-content group-hover:text-blue-600 transition-colors">{s.name}</p>
+                      {s.description && <p className="text-xs text-content-subtle truncate max-w-xs">{s.description}</p>}
+                      {s.demographic && <p className="text-xs text-content-subtle ">{s.demographic}</p>}
                     </button>
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-500 dark:text-gray-400">{seriesStatusLabel(s.status)}</span>
+                      <span className="text-xs text-content-muted ">{seriesStatusLabel(s.status)}</span>
                       {showReadBadges && <ReadingStatePill state={readingState(s)} />}
                     </div>
                   </td>
@@ -5819,25 +5819,25 @@ function SeriesTab({ libraryId, setExtraCrumbs }: SeriesTabProps) {
                           </span>
                         ))}
                       </div>
-                    ) : <span className="text-gray-300 dark:text-gray-600">—</span>}
+                    ) : <span className="text-content-faint ">—</span>}
                   </td>
-                  <td className="px-4 py-3 text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                  <td className="px-4 py-3 text-xs text-content-muted whitespace-nowrap">
                     {s.book_count}{s.total_count != null ? ` / ${s.total_count}` : ''}
                     {s.next_release_date && (
-                      <p className="text-gray-400 dark:text-gray-500">
+                      <p className="text-content-subtle ">
                         Next: {new Date(s.next_release_date + 'T00:00:00').toLocaleDateString(undefined, { year: 'numeric', month: 'short' })}
                       </p>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                    {s.arc_count > 0 ? `${s.arc_count} arc${s.arc_count !== 1 ? 's' : ''}` : <span className="text-gray-300 dark:text-gray-600">—</span>}
+                  <td className="px-4 py-3 text-xs text-content-muted whitespace-nowrap">
+                    {s.arc_count > 0 ? `${s.arc_count} arc${s.arc_count !== 1 ? 's' : ''}` : <span className="text-content-faint ">—</span>}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3 justify-end">
                       <button onClick={() => setEditSeries(s)}
-                        className="text-xs text-gray-500 dark:text-gray-400 hover:text-blue-600 transition-colors">Edit</button>
+                        className="text-xs text-content-muted hover:text-blue-600 transition-colors">Edit</button>
                       <button onClick={() => deleteSeries(s)}
-                        className="text-xs text-gray-500 dark:text-gray-400 hover:text-red-600 transition-colors">Delete</button>
+                        className="text-xs text-content-muted hover:text-red-600 transition-colors">Delete</button>
                     </div>
                   </td>
                 </tr>
@@ -5950,7 +5950,7 @@ function LoansTab({ libraryId }: LoansTabProps) {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search loans…"
-            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white pl-9 pr-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded-lg border border-line-strong dark:bg-gray-800 dark:text-white pl-9 pr-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
           <svg className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -5965,7 +5965,7 @@ function LoansTab({ libraryId }: LoansTabProps) {
       {/* Filter row: status / overdue */}
       <div className="flex flex-wrap items-center gap-3 mb-3">
         <div className="flex items-center gap-1.5">
-          <span className="text-xs uppercase tracking-wide text-gray-400 dark:text-gray-500 mr-1">Status</span>
+          <span className="text-xs uppercase tracking-wide text-content-subtle mr-1">Status</span>
           {([
             ['active', 'Active'],
             ['returned', 'Returned'],
@@ -5975,7 +5975,7 @@ function LoansTab({ libraryId }: LoansTabProps) {
           ))}
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="text-xs uppercase tracking-wide text-gray-400 dark:text-gray-500 mr-1">Overdue</span>
+          <span className="text-xs uppercase tracking-wide text-content-subtle mr-1">Overdue</span>
           {([
             ['all', 'All'],
             ['overdue', 'Overdue only'],
@@ -5985,11 +5985,11 @@ function LoansTab({ libraryId }: LoansTabProps) {
         </div>
       </div>
 
-      {isLoading && <div className="text-sm text-gray-400 dark:text-gray-500 text-center py-16">Loading…</div>}
+      {isLoading && <div className="text-sm text-content-subtle text-center py-16">Loading…</div>}
 
       {!isLoading && visibleLoans.length === 0 && (
-        <div className="rounded-xl border border-dashed border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 p-12 text-center">
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+        <div className="rounded-xl border border-dashed border-line-strong bg-surface p-12 text-center">
+          <p className="text-sm text-content-muted mb-3">
             {search || overdueFilter !== 'all'
               ? 'No loans match your filters.'
               : statusFilter === 'returned' ? 'No returned loans yet.'
@@ -6004,44 +6004,44 @@ function LoansTab({ libraryId }: LoansTabProps) {
       )}
 
       {!isLoading && visibleLoans.length > 0 && (
-        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
+        <div className="rounded-xl border border-line bg-surface overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+            <thead className="bg-surface-muted border-b border-line ">
               <tr>
                 {['Book', 'Loaned to', 'Loaned', 'Due', showReturnedColumn ? 'Returned' : '', ''].map((h, i) => (
-                  h ? <th key={i} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{h}</th>
+                  h ? <th key={i} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-content-muted ">{h}</th>
                     : <th key={i} />
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+            <tbody className="divide-y divide-line-subtle ">
               {visibleLoans.map(loan => (
-                <tr key={loan.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                <tr key={loan.id} className="hover:bg-surface-muted transition-colors">
                   <td className="px-4 py-3 font-medium">
                     <Link to={`/libraries/${loan.library_id}/books/${loan.book_id}`}
-                      className="text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                      className="text-content hover:text-accent transition-colors">
                       {loan.book_title}
                     </Link>
                   </td>
-                  <td className="px-4 py-3 text-gray-700 dark:text-gray-300">{loan.loaned_to}</td>
-                  <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs">{loan.loaned_at}</td>
+                  <td className="px-4 py-3 text-content-secondary ">{loan.loaned_to}</td>
+                  <td className="px-4 py-3 text-content-muted text-xs">{loan.loaned_at}</td>
                   <td className="px-4 py-3 text-xs">
                     {loan.due_date ? (
-                      <span className={isOverdue(loan) ? 'text-red-600 dark:text-red-400 font-medium' : 'text-gray-500 dark:text-gray-400'}>
+                      <span className={isOverdue(loan) ? 'text-danger font-medium' : 'text-content-muted '}>
                         {loan.due_date}{isOverdue(loan) && ' ⚠'}
                       </span>
-                    ) : <span className="text-gray-300 dark:text-gray-600">—</span>}
+                    ) : <span className="text-content-faint ">—</span>}
                   </td>
                   {showReturnedColumn && (
-                    <td className="px-4 py-3 text-xs text-gray-500 dark:text-gray-400">
-                      {loan.returned_at ?? <span className="text-gray-300 dark:text-gray-600">—</span>}
+                    <td className="px-4 py-3 text-xs text-content-muted ">
+                      {loan.returned_at ?? <span className="text-content-faint ">—</span>}
                     </td>
                   )}
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1 justify-end">
                       {!loan.returned_at && (
                         <button onClick={() => markReturned(loan)}
-                          className="p-1 rounded text-gray-500 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                          className="p-1 rounded text-content-muted hover:text-success hover:bg-surface-inset transition-colors"
                           title="Mark returned">
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
                             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
@@ -6049,14 +6049,14 @@ function LoansTab({ libraryId }: LoansTabProps) {
                         </button>
                       )}
                       <button onClick={() => setEditLoan(loan)}
-                        className="p-1 rounded text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                        className="p-1 rounded text-content-muted hover:text-accent hover:bg-surface-inset transition-colors"
                         title="Edit loan">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
                           <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
                         </svg>
                       </button>
                       <button onClick={() => deleteLoan(loan)}
-                        className="p-1 rounded text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                        className="p-1 rounded text-content-muted hover:text-danger hover:bg-surface-inset transition-colors"
                         title="Delete loan">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
@@ -6163,7 +6163,7 @@ export default function LibraryPage({ section }: { section: 'books' | 'shelves' 
       {section === 'members' && (
         <>
           {actionError && (
-            <div className="mb-4 rounded-lg bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-400">{actionError}</div>
+            <div className="mb-4 rounded-lg bg-danger-surface border border-danger-line px-4 py-3 text-sm text-danger-strong ">{actionError}</div>
           )}
           <div className="mb-4 relative">
             <input
@@ -6171,28 +6171,28 @@ export default function LibraryPage({ section }: { section: 'books' | 'shelves' 
               value={memberSearch}
               onChange={e => setMemberSearch(e.target.value)}
               placeholder="Search members…"
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white pl-9 pr-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-lg border border-line-strong dark:bg-gray-800 dark:text-white pl-9 pr-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
             <svg className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
-          <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
+          <div className="rounded-xl border border-line bg-surface overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+              <thead className="bg-surface-muted border-b border-line ">
                 <tr>
                   {['User', 'Email', 'Tags', 'Role', 'Joined', ''].map(h => (
-                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{h}</th>
+                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-content-muted ">{h}</th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                {!members && <tr><td colSpan={6} className="px-4 py-8 text-center text-sm text-gray-400 dark:text-gray-500">Loading…</td></tr>}
-                {members?.length === 0 && <tr><td colSpan={6} className="px-4 py-8 text-center text-sm text-gray-400 dark:text-gray-500">{memberSearch ? 'No members match your search.' : 'No members yet.'}</td></tr>}
+              <tbody className="divide-y divide-line-subtle ">
+                {!members && <tr><td colSpan={6} className="px-4 py-8 text-center text-sm text-content-subtle ">Loading…</td></tr>}
+                {members?.length === 0 && <tr><td colSpan={6} className="px-4 py-8 text-center text-sm text-content-subtle ">{memberSearch ? 'No members match your search.' : 'No members yet.'}</td></tr>}
                 {members?.map(m => (
-                  <tr key={m.user_id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                    <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">{m.display_name}</td>
-                    <td className="px-4 py-3 text-gray-600 dark:text-gray-400">{m.email}</td>
+                  <tr key={m.user_id} className="hover:bg-surface-muted transition-colors">
+                    <td className="px-4 py-3 font-medium text-content ">{m.display_name}</td>
+                    <td className="px-4 py-3 text-content-tertiary ">{m.email}</td>
                     <td className="px-4 py-3">
                       {m.tags && m.tags.length > 0 ? (
                         <div className="flex flex-wrap gap-1">
@@ -6204,18 +6204,18 @@ export default function LibraryPage({ section }: { section: 'books' | 'shelves' 
                             </span>
                           ))}
                         </div>
-                      ) : <span className="text-gray-300 dark:text-gray-600">—</span>}
+                      ) : <span className="text-content-faint ">—</span>}
                     </td>
                     <td className="px-4 py-3">
-                      <span className="inline-flex items-center rounded-full bg-gray-100 dark:bg-gray-700 px-2 py-0.5 text-xs font-medium text-gray-600 dark:text-gray-300">
+                      <span className="inline-flex items-center rounded-full bg-surface-inset px-2 py-0.5 text-xs font-medium text-content-tertiary ">
                         {roleLabel[m.role] ?? m.role}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-gray-500 dark:text-gray-400">{new Date(m.joined_at).toLocaleDateString()}</td>
+                    <td className="px-4 py-3 text-content-muted ">{new Date(m.joined_at).toLocaleDateString()}</td>
                     <td className="px-4 py-3 text-right">
                       {m.role !== 'library_owner' && (
                         <button onClick={() => removeMember(m.user_id)}
-                          className="text-xs text-gray-500 dark:text-gray-400 hover:text-red-600 transition-colors">Remove</button>
+                          className="text-xs text-content-muted hover:text-red-600 transition-colors">Remove</button>
                       )}
                     </td>
                   </tr>

@@ -83,50 +83,50 @@ function InteractionForm({ libraryId, bookId, editionId, onStatusChange }: {
     finally { setIsLoading(false) }
   }
 
-  const inputCls = 'w-full rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-2 py-1.5 text-xs focus:border-blue-500 focus:outline-none'
+  const inputCls = 'w-full rounded border border-line-strong dark:bg-gray-800 dark:text-white px-2 py-1.5 text-xs focus:border-blue-500 focus:outline-none'
 
   return (
     <div>
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Status</label>
+          <label className="block text-xs text-content-tertiary mb-1">Status</label>
           <select value={form.read_status} onChange={e => setForm(f => ({ ...f, read_status: e.target.value }))} className={inputCls}>
             {READ_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
           </select>
         </div>
         <div>
-          <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Rating (1–10)</label>
+          <label className="block text-xs text-content-tertiary mb-1">Rating (1–10)</label>
           <input type="number" min="1" max="10" value={form.rating}
             onChange={e => setForm(f => ({ ...f, rating: e.target.value }))}
             placeholder="—" className={inputCls} />
         </div>
         <div>
-          <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Date started</label>
+          <label className="block text-xs text-content-tertiary mb-1">Date started</label>
           <input type="date" value={form.date_started} onChange={e => setForm(f => ({ ...f, date_started: e.target.value }))} className={inputCls} />
         </div>
         <div>
-          <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Date finished</label>
+          <label className="block text-xs text-content-tertiary mb-1">Date finished</label>
           <input type="date" value={form.date_finished} onChange={e => setForm(f => ({ ...f, date_finished: e.target.value }))} className={inputCls} />
         </div>
       </div>
       <div className="mt-2">
-        <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Notes <span className="text-gray-400 dark:text-gray-500">(private)</span></label>
+        <label className="block text-xs text-content-tertiary mb-1">Notes <span className="text-content-subtle ">(private)</span></label>
         <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
           rows={2} placeholder="Personal notes…" className={`${inputCls} resize-none`} />
       </div>
       <div className="mt-2">
-        <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Review <span className="text-gray-400 dark:text-gray-500">(visible to members)</span></label>
+        <label className="block text-xs text-content-tertiary mb-1">Review <span className="text-content-subtle ">(visible to members)</span></label>
         <textarea value={form.review} onChange={e => setForm(f => ({ ...f, review: e.target.value }))}
           rows={2} placeholder="Share your thoughts…" className={`${inputCls} resize-none`} />
       </div>
       <div className="mt-2 flex items-center justify-between">
-        <label className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-400">
+        <label className="flex items-center gap-1.5 text-xs text-content-tertiary ">
           <input type="checkbox" checked={form.is_favorite} onChange={e => setForm(f => ({ ...f, is_favorite: e.target.checked }))}
-            className="rounded border-gray-300 dark:border-gray-600" />
+            className="rounded border-line-strong " />
           Favourite
         </label>
         <div className="flex items-center gap-2">
-          {isSaved && <span className="text-xs text-green-600 dark:text-green-400">Saved!</span>}
+          {isSaved && <span className="text-xs text-success ">Saved!</span>}
           {interaction && (
             <button onClick={async () => {
               if (!confirm('Remove your reading record for this edition?')) return
@@ -134,7 +134,7 @@ function InteractionForm({ libraryId, bookId, editionId, onStatusChange }: {
               setInteraction(null)
               setForm({ read_status: 'unread', rating: '', notes: '', review: '', date_started: '', date_finished: '', is_favorite: false })
               onStatusChange?.('unread')
-            }} className="text-xs text-red-500 dark:text-red-400 hover:underline">Remove</button>
+            }} className="text-xs text-danger hover:underline">Remove</button>
           )}
           <button onClick={save} disabled={isLoading}
             className="rounded bg-blue-600 px-3 py-1 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
@@ -298,10 +298,10 @@ function FileBrowserModal({ libraryId, bookId, editionId, editionFormat, onLink,
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full max-w-2xl flex flex-col" style={{ maxHeight: '80vh' }}>
+      <div className="bg-surface rounded-xl shadow-xl w-full max-w-2xl flex flex-col" style={{ maxHeight: '80vh' }}>
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
-          <h2 className="text-sm font-semibold text-gray-900 dark:text-white">Browse server files</h2>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-line flex-shrink-0">
+          <h2 className="text-sm font-semibold text-content ">Browse server files</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -311,10 +311,10 @@ function FileBrowserModal({ libraryId, bookId, editionId, editionFormat, onLink,
 
         <div className="flex flex-1 min-h-0">
           {/* Sidebar */}
-          <div className="w-48 flex-shrink-0 border-r border-gray-200 dark:border-gray-700 overflow-y-auto p-3 space-y-3">
+          <div className="w-48 flex-shrink-0 border-r border-line overflow-y-auto p-3 space-y-3">
             {/* Built-in upload paths */}
             <div>
-              <p className="px-2 pb-1 text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">Upload paths</p>
+              <p className="px-2 pb-1 text-xs font-semibold uppercase tracking-wider text-content-subtle ">Upload paths</p>
               <div className="space-y-0.5">
                 {uploadTargets.map(t => (
                   <button key={t.kind === 'upload' ? t.format : ''} onClick={() => selectTarget(t)}
@@ -327,7 +327,7 @@ function FileBrowserModal({ libraryId, bookId, editionId, editionFormat, onLink,
             {/* Configured storage locations */}
             {locations.length > 0 && (
               <div>
-                <p className="px-2 pb-1 text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">Storage locations</p>
+                <p className="px-2 pb-1 text-xs font-semibold uppercase tracking-wider text-content-subtle ">Storage locations</p>
                 <div className="space-y-0.5">
                   {locations.map(loc => (
                     <button key={loc.id} onClick={() => selectTarget({ kind: 'location', location: loc })}
@@ -344,12 +344,12 @@ function FileBrowserModal({ libraryId, bookId, editionId, editionFormat, onLink,
           <div className="flex-1 min-w-0 flex flex-col">
             {/* Breadcrumb */}
             {target && (
-              <div className="flex items-center gap-1 px-4 py-2 border-b border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 min-w-0">
-                <button onClick={navigateToRoot} className="hover:text-gray-700 dark:hover:text-gray-200 transition-colors font-medium flex-shrink-0">
+              <div className="flex items-center gap-1 px-4 py-2 border-b border-line text-xs text-content-muted flex-shrink-0 min-w-0">
+                <button onClick={navigateToRoot} className="hover:text-content-secondary transition-colors font-medium flex-shrink-0">
                   {targetLabel}
                 </button>
                 {targetRootPath && (
-                  <span className="text-gray-300 dark:text-gray-600 font-mono truncate flex-shrink min-w-0 hidden sm:block">
+                  <span className="text-content-faint font-mono truncate flex-shrink min-w-0 hidden sm:block">
                     &nbsp;({targetRootPath})
                   </span>
                 )}
@@ -357,8 +357,8 @@ function FileBrowserModal({ libraryId, bookId, editionId, editionFormat, onLink,
                   const segPath = arr.slice(0, i + 1).join('/')
                   return (
                     <span key={segPath} className="flex items-center gap-1 flex-shrink-0">
-                      <span className="text-gray-300 dark:text-gray-600">/</span>
-                      <button onClick={() => navigateToSegment(segPath)} className="hover:text-gray-700 dark:hover:text-gray-200 transition-colors max-w-[100px] truncate">
+                      <span className="text-content-faint ">/</span>
+                      <button onClick={() => navigateToSegment(segPath)} className="hover:text-content-secondary transition-colors max-w-[100px] truncate">
                         {seg}
                       </button>
                     </span>
@@ -370,22 +370,22 @@ function FileBrowserModal({ libraryId, bookId, editionId, editionFormat, onLink,
             {/* Directory contents */}
             <div className="flex-1 overflow-y-auto p-3">
               {!target && (
-                <p className="text-xs text-gray-400 dark:text-gray-500 px-2 py-4 text-center">Select a location to browse.</p>
+                <p className="text-xs text-content-subtle px-2 py-4 text-center">Select a location to browse.</p>
               )}
               {loading && (
-                <p className="text-xs text-gray-400 dark:text-gray-500 px-2 py-4 text-center">Loading…</p>
+                <p className="text-xs text-content-subtle px-2 py-4 text-center">Loading…</p>
               )}
               {error && (
-                <p className="text-xs text-red-500 dark:text-red-400 px-2 py-2">{error}</p>
+                <p className="text-xs text-danger px-2 py-2">{error}</p>
               )}
               {!loading && target && entries.length === 0 && !error && (
-                <p className="text-xs text-gray-400 dark:text-gray-500 px-2 py-4 text-center">This directory is empty.</p>
+                <p className="text-xs text-content-subtle px-2 py-4 text-center">This directory is empty.</p>
               )}
               {!loading && (
                 <div className="space-y-0.5">
                   {currentPath && (
                     <button onClick={navigateUp}
-                      className="flex items-center gap-2 w-full px-2 py-1.5 rounded text-xs text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                      className="flex items-center gap-2 w-full px-2 py-1.5 rounded text-xs text-content-muted hover:bg-surface-inset transition-colors">
                       <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                       </svg>
@@ -394,7 +394,7 @@ function FileBrowserModal({ libraryId, bookId, editionId, editionFormat, onLink,
                   )}
                   {dirs.map(entry => (
                     <button key={entry.path} onClick={() => navigateInto(entry)}
-                      className="flex items-center gap-2 w-full px-2 py-1.5 rounded text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                      className="flex items-center gap-2 w-full px-2 py-1.5 rounded text-xs text-content-secondary hover:bg-surface-inset transition-colors">
                       <svg className="w-3.5 h-3.5 text-amber-400 dark:text-amber-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
                       </svg>
@@ -416,12 +416,12 @@ function FileBrowserModal({ libraryId, bookId, editionId, editionFormat, onLink,
                       </svg>
                       <span className="truncate flex-1">{entry.name}</span>
                       {entry.size != null && (
-                        <span className="text-gray-400 dark:text-gray-500 flex-shrink-0">
+                        <span className="text-content-subtle flex-shrink-0">
                           {(entry.size / (1024 * 1024)).toFixed(1)} MB
                         </span>
                       )}
                       {entry.is_bookable && (
-                        <span className="text-blue-600 dark:text-blue-400 text-xs opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">Link</span>
+                        <span className="text-accent text-xs opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">Link</span>
                       )}
                     </button>
                   ))}
@@ -448,7 +448,7 @@ interface EditionCardProps {
 const READ_STATUS_PILL: Record<string, { label: string; cls: string; icon: React.ReactNode }> = {
   read: {
     label: 'Read',
-    cls: 'bg-green-50 dark:bg-green-950/50 text-green-700 dark:text-green-400 ring-green-200 dark:ring-green-800',
+    cls: 'bg-success-surface text-success-strong ring-success-line ',
     icon: (
       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
@@ -457,7 +457,7 @@ const READ_STATUS_PILL: Record<string, { label: string; cls: string; icon: React
   },
   reading: {
     label: 'In Progress',
-    cls: 'bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-400 ring-blue-200 dark:ring-blue-800',
+    cls: 'bg-accent-surface text-accent-strong ring-blue-200 dark:ring-blue-800',
     icon: (
       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
@@ -466,7 +466,7 @@ const READ_STATUS_PILL: Record<string, { label: string; cls: string; icon: React
   },
   did_not_finish: {
     label: 'Did Not Finish',
-    cls: 'bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 ring-amber-200 dark:ring-amber-800',
+    cls: 'bg-warning-surface text-warning-strong ring-amber-200 dark:ring-amber-800',
     icon: (
       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
@@ -560,8 +560,8 @@ function EditionCard({ edition: initialEdition, libraryId, bookId, onEdit, onDel
     if (edition.format === 'ebook' || edition.format === 'digital')
       return 'bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-400 ring-purple-200 dark:ring-purple-800'
     if (edition.format === 'audiobook')
-      return 'bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 ring-amber-200 dark:ring-amber-800'
-    return 'bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-400 ring-blue-200 dark:ring-blue-800'
+      return 'bg-warning-surface text-warning-strong ring-amber-200 dark:ring-amber-800'
+    return 'bg-accent-surface text-accent-strong ring-blue-200 dark:ring-blue-800'
   }
 
   const handleDelete = async () => {
@@ -588,15 +588,15 @@ function EditionCard({ edition: initialEdition, libraryId, bookId, onEdit, onDel
   ].filter(Boolean)
 
   return (
-    <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
+    <div className="rounded-xl border border-line bg-surface overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between gap-2 px-4 py-3 bg-gray-50 dark:bg-gray-800">
+      <div className="flex items-center justify-between gap-2 px-4 py-3 bg-surface-muted ">
         <div className="flex items-center gap-2 flex-wrap">
           <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ring-1 ${formatBadgeCls()}`}>
             {edition.format}
           </span>
           {edition.is_primary && (
-            <span className="inline-flex items-center rounded-full bg-green-50 dark:bg-green-950/50 px-2 py-0.5 text-xs font-medium text-green-700 dark:text-green-400 ring-1 ring-green-200 dark:ring-green-800">
+            <span className="inline-flex items-center rounded-full bg-success-surface px-2 py-0.5 text-xs font-medium text-success-strong ring-1 ring-success-line ">
               Primary
             </span>
           )}
@@ -606,18 +606,18 @@ function EditionCard({ edition: initialEdition, libraryId, bookId, onEdit, onDel
               {READ_STATUS_PILL[readStatus].label}
             </span>
           )}
-          {edition.edition_name && <span className="text-sm font-medium text-gray-900 dark:text-white">{edition.edition_name}</span>}
+          {edition.edition_name && <span className="text-sm font-medium text-content ">{edition.edition_name}</span>}
         </div>
         <div className="flex items-center gap-1 flex-shrink-0">
           <button onClick={() => onEdit(edition)}
-            className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+            className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-surface-strong transition-colors"
             title="Edit edition">
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
             </svg>
           </button>
           <button onClick={handleDelete} disabled={deleting}
-            className="p-1.5 rounded-md text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
+            className="p-1.5 rounded-md text-gray-400 hover:text-danger hover:bg-surface-strong transition-colors disabled:opacity-50"
             title="Delete edition">
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -631,8 +631,8 @@ function EditionCard({ edition: initialEdition, libraryId, bookId, onEdit, onDel
         <dl className="px-4 py-3 grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-2.5">
           {(metaItems as Array<{ label: string; value: React.ReactNode }>).map(item => (
             <div key={item.label}>
-              <dt className="text-xs text-gray-400 dark:text-gray-500">{item.label}</dt>
-              <dd className="text-sm text-gray-700 dark:text-gray-300 mt-0.5">{item.value}</dd>
+              <dt className="text-xs text-content-subtle ">{item.label}</dt>
+              <dd className="text-sm text-content-secondary mt-0.5">{item.value}</dd>
             </div>
           ))}
         </dl>
@@ -659,13 +659,13 @@ function EditionCard({ edition: initialEdition, libraryId, bookId, onEdit, onDel
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                   </svg>
                   <div className="min-w-0">
-                    <span className="text-xs text-gray-600 dark:text-gray-400">
+                    <span className="text-xs text-content-tertiary ">
                       {ef.file_name || ef.file_format.toUpperCase()}
-                      {ef.file_size != null && <span className="ml-1 text-gray-400 dark:text-gray-500">({(ef.file_size / (1024 * 1024)).toFixed(1)} MB)</span>}
+                      {ef.file_size != null && <span className="ml-1 text-content-subtle ">({(ef.file_size / (1024 * 1024)).toFixed(1)} MB)</span>}
                     </span>
                     {ef.file_path && (
-                      <p className="text-xs text-gray-400 dark:text-gray-500 font-mono truncate">
-                        {ef.root_path ? <><span className="text-gray-300 dark:text-gray-600">{ef.root_path}/</span>{ef.file_path}</> : ef.file_path}
+                      <p className="text-xs text-content-subtle font-mono truncate">
+                        {ef.root_path ? <><span className="text-content-faint ">{ef.root_path}/</span>{ef.file_path}</> : ef.file_path}
                       </p>
                     )}
                   </div>
@@ -686,14 +686,14 @@ function EditionCard({ edition: initialEdition, libraryId, bookId, onEdit, onDel
                       a.click()
                       URL.revokeObjectURL(url)
                     }}
-                    className="px-2 py-1 rounded text-xs font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
+                    className="px-2 py-1 rounded text-xs font-medium text-accent hover:bg-accent-surface transition-colors"
                   >
                     Download
                   </button>
                   <button
                     onClick={() => handleFileRemove(ef)}
                     disabled={fileRemoving}
-                    className="px-2 py-1 rounded text-xs font-medium text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors disabled:opacity-50"
+                    className="px-2 py-1 rounded text-xs font-medium text-danger hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors disabled:opacity-50"
                   >
                     Remove
                   </button>
@@ -710,14 +710,14 @@ function EditionCard({ edition: initialEdition, libraryId, bookId, onEdit, onDel
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   disabled={fileUploading}
-                  className="px-2 py-1 rounded text-xs font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
+                  className="px-2 py-1 rounded text-xs font-medium text-content-tertiary hover:bg-surface-inset transition-colors disabled:opacity-50"
                 >
                   {fileUploading ? 'Uploading…' : 'Upload'}
                 </button>
                 <button
                   onClick={() => setShowBrowser(true)}
                   disabled={fileUploading}
-                  className="px-2 py-1 rounded text-xs font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
+                  className="px-2 py-1 rounded text-xs font-medium text-content-tertiary hover:bg-surface-inset transition-colors disabled:opacity-50"
                   title="Browse server files"
                 >
                   Browse
@@ -745,11 +745,11 @@ function EditionCard({ edition: initialEdition, libraryId, bookId, onEdit, onDel
       )}
 
       {/* Collapsible reading section */}
-      <div className="border-t border-gray-100 dark:border-gray-800">
+      <div className="border-t border-line-subtle ">
         <button
           type="button"
           onClick={() => setShowReading(v => !v)}
-          className="w-full flex items-center justify-between px-4 py-2.5 text-xs font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+          className="w-full flex items-center justify-between px-4 py-2.5 text-xs font-medium text-content-muted hover:bg-surface-muted transition-colors"
         >
           <span>My reading</span>
           <svg className={`w-4 h-4 transition-transform ${showReading ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1009,17 +1009,17 @@ function MergedMetadataModal({ book, editions, libraryId, bookId, onClose, onApp
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 overflow-y-auto py-16 px-4">
-      <div className="w-full max-w-xl rounded-xl bg-white dark:bg-gray-900 shadow-xl">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-base font-semibold text-gray-900 dark:text-white">Refresh metadata</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xl leading-none">×</button>
+      <div className="w-full max-w-xl rounded-xl bg-surface shadow-xl">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-line ">
+          <h2 className="text-base font-semibold text-content ">Refresh metadata</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-content-tertiary text-xl leading-none">×</button>
         </div>
 
         <div className="px-6 py-5 space-y-5">
           {/* ISBN vs by-title tabs — by-title exists so ambiguous/no-ISBN
               editions (the batch enrichment job only ever acts on an exact
               ISBN) can still be resolved, with a person picking the result. */}
-          <div className="flex rounded-lg bg-gray-100 dark:bg-gray-800 p-1">
+          <div className="flex rounded-lg bg-surface-inset p-1">
             <button type="button" onClick={() => switchMode('isbn')}
               className={`flex-1 rounded-md py-1.5 text-sm font-medium transition-colors ${mode === 'isbn' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}>
               By ISBN
@@ -1035,7 +1035,7 @@ function MergedMetadataModal({ book, editions, libraryId, bookId, onClose, onApp
               <input type="text" value={isbnInput} onChange={e => setIsbnInput(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && doSearch(isbnInput)}
                 placeholder="ISBN-10 or ISBN-13…"
-                className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                className="flex-1 rounded-lg border border-line-strong dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
               <button onClick={() => doSearch(isbnInput)} disabled={loading || !isbnInput.trim()}
                 className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
                 {loading ? '…' : 'Search'}
@@ -1047,39 +1047,39 @@ function MergedMetadataModal({ book, editions, libraryId, bookId, onClose, onApp
                 <input type="text" value={searchInput} onChange={e => setSearchInput(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && doBookSearch(searchInput)}
                   placeholder="Search by title, author, or keyword…"
-                  className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                  className="flex-1 rounded-lg border border-line-strong dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
                 <button onClick={() => doBookSearch(searchInput)} disabled={searchLoading || !searchInput.trim()}
                   className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
                   {searchLoading ? '…' : 'Search'}
                 </button>
               </div>
-              {searchError && <p className="text-sm text-red-600 dark:text-red-400">{searchError}</p>}
-              {searchLoading && <p className="text-sm text-gray-400 dark:text-gray-500">Searching providers…</p>}
+              {searchError && <p className="text-sm text-danger ">{searchError}</p>}
+              {searchLoading && <p className="text-sm text-content-subtle ">Searching providers…</p>}
               {!merged && searchResults.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-content-subtle ">
                     {searchResults.length} result{searchResults.length !== 1 ? 's' : ''} — pick the edition you own
                   </p>
                   <div className="max-h-72 overflow-y-auto space-y-2">
                     {searchResults.map((r, i) => (
                       <button key={i} type="button" onClick={() => selectSearchResult(r)}
-                        className="w-full text-left rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-3 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
+                        className="w-full text-left rounded-xl border border-line bg-surface-muted p-3 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-accent-surface transition-colors">
                         <div className="flex gap-3">
                           {r.cover_url ? (
-                            <img src={r.cover_url} alt="" referrerPolicy="no-referrer" className="w-10 h-14 object-cover rounded flex-shrink-0 bg-gray-200 dark:bg-gray-700" />
+                            <img src={r.cover_url} alt="" referrerPolicy="no-referrer" className="w-10 h-14 object-cover rounded flex-shrink-0 bg-surface-strong " />
                           ) : (
-                            <div className="w-10 h-14 rounded flex-shrink-0 bg-gray-200 dark:bg-gray-700" />
+                            <div className="w-10 h-14 rounded flex-shrink-0 bg-surface-strong " />
                           )}
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium text-sm text-gray-900 dark:text-white truncate">{r.title}</p>
-                            {r.subtitle && <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{r.subtitle}</p>}
-                            {r.authors?.length > 0 && <p className="text-xs text-gray-600 dark:text-gray-300 mt-0.5 truncate">{r.authors.join(', ')}</p>}
+                            <p className="font-medium text-sm text-content truncate">{r.title}</p>
+                            {r.subtitle && <p className="text-xs text-content-muted truncate">{r.subtitle}</p>}
+                            {r.authors?.length > 0 && <p className="text-xs text-content-tertiary mt-0.5 truncate">{r.authors.join(', ')}</p>}
                             <div className="flex items-center gap-2 mt-1">
-                              {r.publisher && <span className="text-xs text-gray-400 dark:text-gray-500 truncate">{r.publisher}</span>}
-                              {r.publisher && r.publish_date && <span className="text-gray-300 dark:text-gray-600">·</span>}
-                              {r.publish_date && <span className="text-xs text-gray-400 dark:text-gray-500">{r.publish_date.slice(0, 4)}</span>}
-                              <span className="text-gray-300 dark:text-gray-600">·</span>
-                              <span className="text-xs text-gray-400 dark:text-gray-500">{r.provider_display}</span>
+                              {r.publisher && <span className="text-xs text-content-subtle truncate">{r.publisher}</span>}
+                              {r.publisher && r.publish_date && <span className="text-content-faint ">·</span>}
+                              {r.publish_date && <span className="text-xs text-content-subtle ">{r.publish_date.slice(0, 4)}</span>}
+                              <span className="text-content-faint ">·</span>
+                              <span className="text-xs text-content-subtle ">{r.provider_display}</span>
                               {!r.isbn_13 && !r.isbn_10 && <span className="text-xs text-amber-600 dark:text-amber-500">no ISBN</span>}
                             </div>
                           </div>
@@ -1092,14 +1092,14 @@ function MergedMetadataModal({ book, editions, libraryId, bookId, onClose, onApp
             </div>
           )}
 
-          {mode === 'isbn' && error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
-          {mode === 'isbn' && loading && <p className="text-sm text-gray-400 dark:text-gray-500">Searching providers…</p>}
+          {mode === 'isbn' && error && <p className="text-sm text-danger ">{error}</p>}
+          {mode === 'isbn' && loading && <p className="text-sm text-content-subtle ">Searching providers…</p>}
 
           {merged && (
             <>
               {/* Field rows */}
-              <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <div className="divide-y divide-gray-100 dark:divide-gray-800">
+              <div className="rounded-xl border border-line overflow-hidden">
+                <div className="divide-y divide-line-subtle ">
                   {defs.map(fd => {
                     const effectiveValue = getEffectiveValue(fd.key, fd.field)
                     const isSame = effectiveValue === fd.currentValue
@@ -1113,19 +1113,19 @@ function MergedMetadataModal({ book, editions, libraryId, bookId, onClose, onApp
                       <div key={fd.key} className={`flex items-start gap-3 px-4 py-3 ${isSame ? 'opacity-50' : ''}`}>
                         <input type="checkbox" checked={isOn && !isSame} disabled={isSame}
                           onChange={() => { if (!isSame) setEnabled(prev => { const s = new Set(prev); if (isOn) s.delete(fd.key); else s.add(fd.key); return s }) }}
-                          className="mt-0.5 rounded border-gray-300 dark:border-gray-600 text-blue-600 flex-shrink-0" />
+                          className="mt-0.5 rounded border-line-strong text-blue-600 flex-shrink-0" />
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">{fd.label}</p>
+                          <p className="text-xs font-semibold uppercase tracking-wider text-content-subtle ">{fd.label}</p>
                           {isSame ? (
-                            <p className={`mt-0.5 text-sm text-gray-500 dark:text-gray-400 ${fd.multiline ? 'line-clamp-2' : 'truncate'}`}>
+                            <p className={`mt-0.5 text-sm text-content-muted ${fd.multiline ? 'line-clamp-2' : 'truncate'}`}>
                               {effectiveValue || '(empty)'}
                             </p>
                           ) : (
                             <>
-                              <p className={`mt-0.5 text-sm text-gray-400 dark:text-gray-500 ${fd.multiline ? 'line-clamp-1' : 'truncate'} ${fd.currentValue ? 'line-through' : 'italic'}`}>
+                              <p className={`mt-0.5 text-sm text-content-subtle ${fd.multiline ? 'line-clamp-1' : 'truncate'} ${fd.currentValue ? 'line-through' : 'italic'}`}>
                                 {fd.currentValue || '(empty)'}
                               </p>
-                              <p className={`text-sm text-blue-600 dark:text-blue-400 mt-0.5 ${fd.multiline ? 'line-clamp-2' : 'truncate'} ${fd.mono ? 'font-mono text-xs' : ''}`}>
+                              <p className={`text-sm text-accent mt-0.5 ${fd.multiline ? 'line-clamp-2' : 'truncate'} ${fd.mono ? 'font-mono text-xs' : ''}`}>
                                 {effectiveValue}
                               </p>
                             </>
@@ -1133,12 +1133,12 @@ function MergedMetadataModal({ book, editions, libraryId, bookId, onClose, onApp
                         </div>
                         <div className="flex-shrink-0 flex flex-col items-end gap-1">
                           {isSame ? (
-                            <span className="text-xs text-gray-300 dark:text-gray-600">same</span>
+                            <span className="text-xs text-content-faint ">same</span>
                           ) : hasAlts ? (
                             <select
                               value={altChoice[fd.key] ?? ''}
                               onChange={e => setAltChoice(prev => ({ ...prev, [fd.key]: e.target.value }))}
-                              className="text-xs rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 px-1.5 py-0.5 focus:outline-none focus:border-blue-400"
+                              className="text-xs rounded border border-line bg-surface-raised text-content-tertiary px-1.5 py-0.5 focus:outline-none focus:border-blue-400"
                             >
                               <option value="">{fd.field!.source_display}</option>
                               {fd.field!.alternatives.map(alt => (
@@ -1146,7 +1146,7 @@ function MergedMetadataModal({ book, editions, libraryId, bookId, onClose, onApp
                               ))}
                             </select>
                           ) : (
-                            <span className="text-xs text-gray-400 dark:text-gray-500">{sourceDisplay}</span>
+                            <span className="text-xs text-content-subtle ">{sourceDisplay}</span>
                           )}
                         </div>
                       </div>
@@ -1158,7 +1158,7 @@ function MergedMetadataModal({ book, editions, libraryId, bookId, onClose, onApp
               {/* Covers */}
               {(merged.covers?.length ?? 0) > 0 && (
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">Cover</p>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-content-subtle mb-2">Cover</p>
                   <div className="flex gap-3 flex-wrap">
                     <button
                       type="button"
@@ -1171,7 +1171,7 @@ function MergedMetadataModal({ book, editions, libraryId, bookId, onClose, onApp
                       <button key={cover.source} type="button" onClick={() => setSelectedCoverIdx(idx)}
                         className={`flex flex-col items-center gap-1 rounded-lg border-2 p-1.5 transition-colors ${selectedCoverIdx === idx ? 'border-blue-500' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'}`}>
                         <img src={cover.cover_url} alt="" referrerPolicy="no-referrer" className="h-16 w-11 object-cover rounded" />
-                        <span className="text-xs text-gray-500 dark:text-gray-400">{cover.source_display}</span>
+                        <span className="text-xs text-content-muted ">{cover.source_display}</span>
                       </button>
                     ))}
                   </div>
@@ -1179,7 +1179,7 @@ function MergedMetadataModal({ book, editions, libraryId, bookId, onClose, onApp
               )}
 
               {applyError && (
-                <p className="text-sm text-red-600 dark:text-red-400">{applyError}</p>
+                <p className="text-sm text-danger ">{applyError}</p>
               )}
 
               <div className="flex justify-end">
@@ -1202,7 +1202,7 @@ function Section({ title, action, children }: { title: string; action?: React.Re
   return (
     <div className="pt-6">
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{title}</h2>
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-content-muted ">{title}</h2>
         {action}
       </div>
       {children}
@@ -1285,7 +1285,7 @@ export default function BookPage() {
   if (error) {
     return (
       <div className="p-8">
-        <div className="rounded-lg bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-400">
+        <div className="rounded-lg bg-danger-surface border border-danger-line px-4 py-3 text-sm text-danger-strong ">
           {error}
         </div>
       </div>
@@ -1336,7 +1336,7 @@ export default function BookPage() {
   }
 
   if (!book) {
-    return <div className="p-8 text-sm text-gray-400 dark:text-gray-500">Loading…</div>
+    return <div className="p-8 text-sm text-content-subtle ">Loading…</div>
   }
 
   return (
@@ -1369,7 +1369,7 @@ export default function BookPage() {
 
           {/* Media type + tags */}
           <div className="flex flex-wrap gap-1.5">
-            <span className="inline-flex items-center rounded-full bg-gray-100 dark:bg-gray-700 px-2.5 py-0.5 text-xs font-medium text-gray-600 dark:text-gray-300">
+            <span className="inline-flex items-center rounded-full bg-surface-inset px-2.5 py-0.5 text-xs font-medium text-content-tertiary ">
               {book.media_type}
             </span>
             {book.tags.map(tag => (
@@ -1385,7 +1385,7 @@ export default function BookPage() {
             <div className="flex flex-wrap gap-1.5">
               {book.genres.map(genre => (
                 <span key={genre.id}
-                  className="inline-flex items-center rounded-full border border-gray-200 dark:border-gray-600 px-2.5 py-0.5 text-xs font-medium text-gray-600 dark:text-gray-300">
+                  className="inline-flex items-center rounded-full border border-line px-2.5 py-0.5 text-xs font-medium text-content-tertiary ">
                   {genre.name}
                 </span>
               ))}
@@ -1395,14 +1395,14 @@ export default function BookPage() {
           {/* Contributors */}
           {book.contributors.length > 0 && (
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">
+              <p className="text-xs font-semibold uppercase tracking-wider text-content-subtle mb-2">
                 {book.contributors.length === 1 && book.contributors[0].role === 'author' ? 'Author' : 'Contributors'}
               </p>
               <div className="space-y-2">
                 {book.contributors.map(c => (
                   <Link key={c.contributor_id} to={`/libraries/${libraryId}/contributors/${c.contributor_id}`} className="block group/contrib">
-                    <p className="text-sm font-medium text-gray-900 dark:text-white group-hover/contrib:text-blue-600 dark:group-hover/contrib:text-blue-400 transition-colors">{c.name}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">{c.role}</p>
+                    <p className="text-sm font-medium text-content group-hover/contrib:text-accent transition-colors">{c.name}</p>
+                    <p className="text-xs text-content-muted capitalize">{c.role}</p>
                   </Link>
                 ))}
               </div>
@@ -1428,8 +1428,8 @@ export default function BookPage() {
               <dl className="space-y-2.5">
                 {rows.map(row => (
                   <div key={row.label}>
-                    <dt className="text-xs text-gray-400 dark:text-gray-500">{row.label}</dt>
-                    <dd className={`text-sm text-gray-700 dark:text-gray-300 mt-0.5 ${row.mono ? 'font-mono text-xs' : ''}`}>
+                    <dt className="text-xs text-content-subtle ">{row.label}</dt>
+                    <dd className={`text-sm text-content-secondary mt-0.5 ${row.mono ? 'font-mono text-xs' : ''}`}>
                       {row.value}
                     </dd>
                   </div>
@@ -1445,26 +1445,26 @@ export default function BookPage() {
           {/* Title row */}
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white leading-tight">{book.title}</h1>
+              <h1 className="text-2xl font-bold text-content leading-tight">{book.title}</h1>
               {book.subtitle && (
-                <p className="mt-0.5 text-base text-gray-500 dark:text-gray-400">{book.subtitle}</p>
+                <p className="mt-0.5 text-base text-content-muted ">{book.subtitle}</p>
               )}
             </div>
             <div className="flex items-center gap-1 flex-shrink-0">
               <button onClick={() => setShowLend(true)} title="Lend this book"
-                className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-surface-inset transition-colors">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
                 </svg>
               </button>
               <button onClick={() => setShowEditBook(true)} title="Edit book"
-                className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-surface-inset transition-colors">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
               </button>
               <button onClick={() => setShowMetaSearch(true)} title="Refresh metadata"
-                className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-surface-inset transition-colors">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
@@ -1484,21 +1484,21 @@ export default function BookPage() {
                   const overdue = !!loan.due_date && loan.due_date < today
                   return (
                     <div key={loan.id}
-                      className="flex items-center justify-between rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3">
+                      className="flex items-center justify-between rounded-xl border border-line bg-surface px-4 py-3">
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-amber-50 dark:bg-amber-950/50 flex items-center justify-center">
+                        <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-warning-surface flex items-center justify-center">
                           <svg className="w-4 h-4 text-amber-500 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
                           </svg>
                         </div>
                         <div className="min-w-0">
-                          <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                          <p className="text-sm font-medium text-content truncate">
                             Lent to {loan.loaned_to}
                           </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                          <p className="text-xs text-content-muted ">
                             <span>Loaned {loan.loaned_at}</span>
                             {loan.due_date && (
-                              <span className={overdue ? 'ml-2 text-red-600 dark:text-red-400 font-medium' : 'ml-2'}>
+                              <span className={overdue ? 'ml-2 text-danger font-medium' : 'ml-2'}>
                                 · Due {loan.due_date}{overdue && ' (overdue)'}
                               </span>
                             )}
@@ -1506,7 +1506,7 @@ export default function BookPage() {
                         </div>
                       </div>
                       <button onClick={() => handleMarkReturned(loan)}
-                        className="rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0">
+                        className="rounded-lg border border-line-strong px-3 py-1.5 text-xs font-medium text-content-secondary hover:bg-surface-muted transition-colors whitespace-nowrap flex-shrink-0">
                         Mark returned
                       </button>
                     </div>
@@ -1522,32 +1522,32 @@ export default function BookPage() {
           {history && history.length > 0 && (
             <div className="pt-6">
               <button onClick={() => setHistoryOpen(o => !o)}
-                className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors">
+                className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-content-muted hover:text-content-secondary transition-colors">
                 <svg className={`w-3.5 h-3.5 transition-transform ${historyOpen ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
                 Loan history
-                <span className="text-xs font-normal normal-case tracking-normal text-gray-400 dark:text-gray-500">
+                <span className="text-xs font-normal normal-case tracking-normal text-content-subtle ">
                   ({history.length})
                 </span>
               </button>
               {historyOpen && (
-                <div className="mt-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
+                <div className="mt-3 rounded-xl border border-line bg-surface overflow-hidden">
                   <table className="w-full text-sm">
-                    <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                    <thead className="bg-surface-muted border-b border-line ">
                       <tr>
                         {['Loaned to', 'Loaned', 'Due', 'Returned'].map(h => (
-                          <th key={h} className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{h}</th>
+                          <th key={h} className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-content-muted ">{h}</th>
                         ))}
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                    <tbody className="divide-y divide-line-subtle ">
                       {history.map(loan => (
                         <tr key={loan.id}>
-                          <td className="px-4 py-2.5 text-gray-700 dark:text-gray-300">{loan.loaned_to}</td>
-                          <td className="px-4 py-2.5 text-xs text-gray-500 dark:text-gray-400">{loan.loaned_at}</td>
-                          <td className="px-4 py-2.5 text-xs text-gray-500 dark:text-gray-400">{loan.due_date ?? <span className="text-gray-300 dark:text-gray-600">—</span>}</td>
-                          <td className="px-4 py-2.5 text-xs text-gray-500 dark:text-gray-400">{loan.returned_at ?? <span className="text-amber-600 dark:text-amber-400">Active</span>}</td>
+                          <td className="px-4 py-2.5 text-content-secondary ">{loan.loaned_to}</td>
+                          <td className="px-4 py-2.5 text-xs text-content-muted ">{loan.loaned_at}</td>
+                          <td className="px-4 py-2.5 text-xs text-content-muted ">{loan.due_date ?? <span className="text-content-faint ">—</span>}</td>
+                          <td className="px-4 py-2.5 text-xs text-content-muted ">{loan.returned_at ?? <span className="text-warning ">Active</span>}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -1560,7 +1560,7 @@ export default function BookPage() {
           {/* Description */}
           {book.description && (
             <Section title="Description">
-              <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
+              <p className="text-sm text-content-secondary whitespace-pre-wrap leading-relaxed">
                 {book.description}
               </p>
             </Section>
@@ -1572,7 +1572,7 @@ export default function BookPage() {
               <div className="space-y-2">
                 {seriesRefs.map(ref => (
                   <Link key={ref.series_id} to={`/libraries/${libraryId}/series`}
-                    className="group flex items-center justify-between rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3 hover:border-blue-300 dark:hover:border-blue-700 hover:bg-blue-50/30 dark:hover:bg-blue-950/20 transition-colors">
+                    className="group flex items-center justify-between rounded-xl border border-line bg-surface px-4 py-3 hover:border-accent-line hover:bg-blue-50/30 dark:hover:bg-blue-950/20 transition-colors">
                     <div className="flex items-center gap-3">
                       <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center">
                         <svg className="w-4 h-4 text-indigo-500 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1580,11 +1580,11 @@ export default function BookPage() {
                         </svg>
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-gray-900 dark:text-white">{ref.series_name}</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Vol. {formatPosition(ref.position)}</p>
+                        <p className="text-sm font-semibold text-content ">{ref.series_name}</p>
+                        <p className="text-xs text-content-muted ">Vol. {formatPosition(ref.position)}</p>
                       </div>
                     </div>
-                    <svg className="w-4 h-4 text-gray-400 dark:text-gray-500 group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 text-content-subtle group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                   </Link>
@@ -1599,7 +1599,7 @@ export default function BookPage() {
               <div className="flex flex-wrap gap-2">
                 {shelves.map(shelf => (
                   <span key={shelf.id}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300">
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-surface px-3 py-1.5 text-sm text-content-secondary ">
                     {shelf.icon && <span>{shelf.icon}</span>}
                     {shelf.name}
                   </span>
@@ -1613,7 +1613,7 @@ export default function BookPage() {
             title={`Editions${editions.length > 0 ? ` (${editions.length})` : ''}`}
             action={
               <button onClick={() => setEditionModal('add')}
-                className="inline-flex items-center gap-1 rounded-md border border-gray-300 dark:border-gray-600 px-2.5 py-1 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                className="inline-flex items-center gap-1 rounded-md border border-line-strong px-2.5 py-1 text-xs font-medium text-content-tertiary hover:bg-surface-inset transition-colors">
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
@@ -1622,7 +1622,7 @@ export default function BookPage() {
             }
           >
             {editions.length === 0 ? (
-              <p className="text-sm text-gray-400 dark:text-gray-500">No editions recorded yet.</p>
+              <p className="text-sm text-content-subtle ">No editions recorded yet.</p>
             ) : (
               <div className="space-y-3">
                 {editions.map(e => (

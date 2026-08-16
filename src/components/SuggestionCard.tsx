@@ -98,11 +98,11 @@ export default function SuggestionCard({ suggestion, onChanged }: SuggestionCard
         </div>
       )}
       <div className="mt-1.5 flex-1">
-        <p className="text-xs font-medium text-gray-800 dark:text-gray-200 leading-snug line-clamp-2">
+        <p className="text-xs font-medium text-content-strong leading-snug line-clamp-2">
           {suggestion.title}
         </p>
         {suggestion.author && (
-          <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500 truncate">
+          <p className="mt-0.5 text-xs text-content-subtle truncate">
             {suggestion.author}
           </p>
         )}
@@ -111,7 +111,7 @@ export default function SuggestionCard({ suggestion, onChanged }: SuggestionCard
         {isReadNext && detailHref ? (
           <Link
             to={detailHref}
-            className="flex-1 text-center rounded border border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 font-medium text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
+            className="flex-1 text-center rounded border border-accent-line bg-accent-surface px-2 py-1 font-medium text-accent-strong hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
           >
             Open
           </Link>
@@ -120,7 +120,7 @@ export default function SuggestionCard({ suggestion, onChanged }: SuggestionCard
             type="button"
             onClick={() => setStatus('interested')}
             disabled={busy || suggestion.status === 'interested'}
-            className="flex-1 rounded border border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 font-medium text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/50 disabled:opacity-50 transition-colors"
+            className="flex-1 rounded border border-accent-line bg-accent-surface px-2 py-1 font-medium text-accent-strong hover:bg-blue-100 dark:hover:bg-blue-900/50 disabled:opacity-50 transition-colors"
           >
             {suggestion.status === 'interested' ? 'Saved ✓' : 'Interested'}
           </button>
@@ -130,7 +130,7 @@ export default function SuggestionCard({ suggestion, onChanged }: SuggestionCard
           onClick={() => setStatus('dismissed')}
           disabled={busy}
           title="Dismiss"
-          className="rounded border border-gray-300 dark:border-gray-600 px-2 py-1 font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors"
+          className="rounded border border-line-strong px-2 py-1 font-medium text-content-tertiary hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors"
         >
           ✕
         </button>
@@ -140,16 +140,16 @@ export default function SuggestionCard({ suggestion, onChanged }: SuggestionCard
             onClick={() => setBlockOpen(o => !o)}
             disabled={busy}
             title="Block"
-            className="rounded border border-gray-300 dark:border-gray-600 px-2 py-1 font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors"
+            className="rounded border border-line-strong px-2 py-1 font-medium text-content-tertiary hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors"
           >
             ⊘
           </button>
           {blockOpen && (
-            <div className="absolute right-0 z-20 mt-1 w-44 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg">
+            <div className="absolute right-0 z-20 mt-1 w-44 rounded-md border border-line bg-surface-raised shadow-lg">
               <button
                 type="button"
                 onClick={() => block('book')}
-                className="block w-full text-left px-3 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200"
+                className="block w-full text-left px-3 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 text-content-secondary "
               >
                 Block this book
               </button>
@@ -157,7 +157,7 @@ export default function SuggestionCard({ suggestion, onChanged }: SuggestionCard
                 <button
                   type="button"
                   onClick={() => block('author')}
-                  className="block w-full text-left px-3 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200"
+                  className="block w-full text-left px-3 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 text-content-secondary "
                 >
                   Block by {suggestion.author}
                 </button>
@@ -165,7 +165,7 @@ export default function SuggestionCard({ suggestion, onChanged }: SuggestionCard
               <button
                 type="button"
                 onClick={() => setBlockOpen(false)}
-                className="block w-full text-left px-3 py-2 text-xs text-gray-400 dark:text-gray-500 border-t border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+                className="block w-full text-left px-3 py-2 text-xs text-content-subtle border-t border-line-subtle hover:bg-gray-50 dark:hover:bg-gray-700"
               >
                 Cancel
               </button>

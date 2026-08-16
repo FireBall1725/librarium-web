@@ -122,14 +122,14 @@ export default function GenresPage() {
       <div className="max-w-3xl px-8 py-8 space-y-6">
 
       {error && (
-        <div className="rounded-lg bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 px-3 py-2 text-sm text-red-700 dark:text-red-400">
+        <div className="rounded-lg bg-danger-surface border border-danger-line px-3 py-2 text-sm text-danger-strong ">
           {error}
         </div>
       )}
 
-      <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden bg-white dark:bg-gray-900">
+      <div className="rounded-xl border border-line overflow-hidden bg-surface ">
         {/* Add row */}
-        <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 dark:bg-gray-800/60 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center gap-2 px-4 py-3 bg-surface-muted border-b border-line ">
           <input
             ref={inputRef}
             type="text"
@@ -137,7 +137,7 @@ export default function GenresPage() {
             onChange={e => setNewName(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleAdd()}
             placeholder="New genre name…"
-            className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="flex-1 rounded-lg border border-line-strong bg-surface-raised px-3 py-1.5 text-sm text-content placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
           <button
             onClick={handleAdd}
@@ -148,7 +148,7 @@ export default function GenresPage() {
           </button>
         </div>
         {addError && (
-          <p className="px-4 py-2 text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 border-b border-red-100 dark:border-red-900">
+          <p className="px-4 py-2 text-xs text-danger bg-danger-surface border-b border-red-100 dark:border-red-900">
             {addError}
           </p>
         )}
@@ -158,11 +158,11 @@ export default function GenresPage() {
             <div className="w-4 h-4 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
           </div>
         ) : genres.length === 0 ? (
-          <p className="px-4 py-6 text-sm text-center text-gray-400 dark:text-gray-500">
+          <p className="px-4 py-6 text-sm text-center text-content-subtle ">
             No genres yet.
           </p>
         ) : (
-          <div className="divide-y divide-gray-100 dark:divide-gray-800">
+          <div className="divide-y divide-line-subtle ">
             {genres.map(g => (
               <div key={g.id}>
                 {editingId === g.id ? (
@@ -173,31 +173,31 @@ export default function GenresPage() {
                       value={editName}
                       onChange={e => setEditName(e.target.value)}
                       onKeyDown={e => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') cancelEdit() }}
-                      className="flex-1 rounded-lg border border-blue-300 dark:border-blue-600 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm text-gray-900 dark:text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="flex-1 rounded-lg border border-accent-line bg-surface-raised px-3 py-1.5 text-sm text-content focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     />
                     <button onClick={handleSave} disabled={!editName.trim() || saving}
                       className="rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
                       {saving ? 'Saving…' : 'Save'}
                     </button>
                     <button onClick={cancelEdit}
-                      className="rounded-lg px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                      className="rounded-lg px-3 py-1.5 text-sm font-medium text-content-tertiary hover:bg-surface-inset transition-colors">
                       Cancel
                     </button>
                     {saveError && <span className="text-xs text-red-500">{saveError}</span>}
                   </div>
                 ) : (
                   <div className="flex items-center justify-between px-4 py-2.5 group hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
-                    <span className="text-sm text-gray-800 dark:text-gray-200">{g.name}</span>
+                    <span className="text-sm text-content-strong ">{g.name}</span>
                     <div className="flex items-center gap-0.5">
                       <button onClick={() => startEdit(g)}
-                        className="p-1 rounded text-gray-300 dark:text-gray-600 group-hover:text-gray-400 dark:group-hover:text-gray-500 hover:!text-blue-500 dark:hover:!text-blue-400 hover:!bg-blue-50 dark:hover:!bg-blue-900/20 transition-colors"
+                        className="p-1 rounded text-content-faint group-hover:text-content-subtle hover:!text-blue-500 dark:hover:!text-blue-400 hover:!bg-blue-50 dark:hover:!bg-blue-900/20 transition-colors"
                         title="Edit genre">
                         <PencilIcon />
                       </button>
                       <button
                         onClick={() => handleDelete(g.id)}
                         disabled={deleting.has(g.id)}
-                        className="p-1 rounded text-gray-300 dark:text-gray-600 group-hover:text-gray-400 dark:group-hover:text-gray-500 hover:!text-red-500 dark:hover:!text-red-400 hover:!bg-red-50 dark:hover:!bg-red-900/20 disabled:opacity-50 transition-colors"
+                        className="p-1 rounded text-content-faint group-hover:text-content-subtle hover:!text-red-500 dark:hover:!text-red-400 hover:!bg-red-50 dark:hover:!bg-red-900/20 disabled:opacity-50 transition-colors"
                         title="Delete genre"
                       >
                         {deleting.has(g.id) ? <span className="text-xs px-1">…</span> : <TrashIcon />}

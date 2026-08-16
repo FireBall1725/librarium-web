@@ -139,14 +139,14 @@ export default function MediaTypesPage() {
       <div className="max-w-3xl px-8 py-8 space-y-6">
 
         {error && (
-          <div className="rounded-lg bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 px-3 py-2 text-sm text-red-700 dark:text-red-400">
+          <div className="rounded-lg bg-danger-surface border border-danger-line px-3 py-2 text-sm text-danger-strong ">
             {error}
           </div>
         )}
 
-        <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden bg-white dark:bg-gray-900">
+        <div className="rounded-xl border border-line overflow-hidden bg-surface ">
           {/* Add form */}
-          <div className="px-4 py-3 bg-gray-50 dark:bg-gray-800/60 border-b border-gray-200 dark:border-gray-700 space-y-2">
+          <div className="px-4 py-3 bg-surface-muted border-b border-line space-y-2">
             <div className="flex items-center gap-2">
               <div className="flex-1 relative">
                 <input
@@ -156,10 +156,10 @@ export default function MediaTypesPage() {
                   onChange={e => setNewDisplayName(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && handleAdd()}
                   placeholder="Display name…"
-                  className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full rounded-lg border border-line-strong bg-surface-raised px-3 py-1.5 text-sm text-content placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
                 {newDisplayName.trim() && (
-                  <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-mono text-gray-300 dark:text-gray-600 pointer-events-none select-none">
+                  <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-mono text-content-faint pointer-events-none select-none">
                     {toInternalName(newDisplayName)}
                   </span>
                 )}
@@ -177,11 +177,11 @@ export default function MediaTypesPage() {
               value={newDescription}
               onChange={e => setNewDescription(e.target.value)}
               placeholder="Description (optional)…"
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-lg border border-line-strong bg-surface-raised px-3 py-1.5 text-sm text-content placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </div>
           {addError && (
-            <p className="px-4 py-2 text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 border-b border-red-100 dark:border-red-900">
+            <p className="px-4 py-2 text-xs text-danger bg-danger-surface border-b border-red-100 dark:border-red-900">
               {addError}
             </p>
           )}
@@ -191,18 +191,18 @@ export default function MediaTypesPage() {
               <div className="w-4 h-4 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
             </div>
           ) : mediaTypes.length === 0 ? (
-            <p className="px-4 py-6 text-sm text-center text-gray-400 dark:text-gray-500">
+            <p className="px-4 py-6 text-sm text-center text-content-subtle ">
               No media types yet.
             </p>
           ) : (
-            <div className="divide-y divide-gray-100 dark:divide-gray-800">
+            <div className="divide-y divide-line-subtle ">
               {mediaTypes.map(mt => (
                 <div key={mt.id}>
                   {editingId === mt.id ? (
                     <div className="px-4 py-3 bg-blue-50 dark:bg-blue-950/20 space-y-2">
                       <div className="flex items-center gap-2">
                         {/* Internal name is read-only in edit mode */}
-                        <span className="text-xs font-mono text-gray-400 dark:text-gray-500 px-2 py-1.5 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 whitespace-nowrap select-none">
+                        <span className="text-xs font-mono text-content-subtle px-2 py-1.5 bg-surface-inset rounded-lg border border-line whitespace-nowrap select-none">
                           {mt.name}
                         </span>
                         <input
@@ -212,14 +212,14 @@ export default function MediaTypesPage() {
                           onChange={e => setEditDisplayName(e.target.value)}
                           onKeyDown={e => { if (e.key === 'Escape') cancelEdit() }}
                           placeholder="Display name…"
-                          className="flex-1 rounded-lg border border-blue-300 dark:border-blue-600 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm text-gray-900 dark:text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          className="flex-1 rounded-lg border border-accent-line bg-surface-raised px-3 py-1.5 text-sm text-content focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                         />
                         <button onClick={handleSave} disabled={!editDisplayName.trim() || saving}
                           className="rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 transition-colors whitespace-nowrap">
                           {saving ? 'Saving…' : 'Save'}
                         </button>
                         <button onClick={cancelEdit}
-                          className="rounded-lg px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                          className="rounded-lg px-3 py-1.5 text-sm font-medium text-content-tertiary hover:bg-surface-inset transition-colors">
                           Cancel
                         </button>
                       </div>
@@ -229,7 +229,7 @@ export default function MediaTypesPage() {
                         onChange={e => setEditDescription(e.target.value)}
                         onKeyDown={e => { if (e.key === 'Escape') cancelEdit() }}
                         placeholder="Description (optional)…"
-                        className="w-full rounded-lg border border-blue-300 dark:border-blue-600 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm text-gray-900 dark:text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        className="w-full rounded-lg border border-accent-line bg-surface-raised px-3 py-1.5 text-sm text-content focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                       />
                       {saveError && <p className="text-xs text-red-500">{saveError}</p>}
                     </div>
@@ -238,20 +238,20 @@ export default function MediaTypesPage() {
                       <div className="flex items-start justify-between px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
                         <div className="min-w-0">
                           <div className="flex items-baseline gap-2">
-                            <span className="text-sm font-medium text-gray-800 dark:text-gray-200">{mt.display_name}</span>
+                            <span className="text-sm font-medium text-content-strong ">{mt.display_name}</span>
                             {mt.book_count > 0 && (
-                              <span className="text-xs text-gray-400 dark:text-gray-500">
+                              <span className="text-xs text-content-subtle ">
                                 {mt.book_count} {mt.book_count === 1 ? 'book' : 'books'}
                               </span>
                             )}
                           </div>
                           {mt.description && (
-                            <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">{mt.description}</p>
+                            <p className="mt-0.5 text-xs text-content-muted ">{mt.description}</p>
                           )}
                         </div>
                         <div className="ml-4 flex-shrink-0 flex items-center gap-0.5">
                           <button onClick={() => startEdit(mt)}
-                            className="p-1 rounded text-gray-300 dark:text-gray-600 group-hover:text-gray-400 dark:group-hover:text-gray-500 hover:!text-blue-500 dark:hover:!text-blue-400 hover:!bg-blue-50 dark:hover:!bg-blue-900/20 transition-colors"
+                            className="p-1 rounded text-content-faint group-hover:text-content-subtle hover:!text-blue-500 dark:hover:!text-blue-400 hover:!bg-blue-50 dark:hover:!bg-blue-900/20 transition-colors"
                             title="Edit media type">
                             <PencilIcon />
                           </button>
@@ -266,7 +266,7 @@ export default function MediaTypesPage() {
                             <button
                               onClick={() => handleDelete(mt.id)}
                               disabled={deleting.has(mt.id)}
-                              className="p-1 rounded text-gray-300 dark:text-gray-600 group-hover:text-gray-400 dark:group-hover:text-gray-500 hover:!text-red-500 dark:hover:!text-red-400 hover:!bg-red-50 dark:hover:!bg-red-900/20 disabled:opacity-50 transition-colors"
+                              className="p-1 rounded text-content-faint group-hover:text-content-subtle hover:!text-red-500 dark:hover:!text-red-400 hover:!bg-red-50 dark:hover:!bg-red-900/20 disabled:opacity-50 transition-colors"
                               title="Delete media type"
                             >
                               {deleting.has(mt.id) ? <span className="text-xs px-1">…</span> : <TrashIcon />}
@@ -275,7 +275,7 @@ export default function MediaTypesPage() {
                         </div>
                       </div>
                       {deleteErrors[mt.id] && (
-                        <p className="px-4 pb-2 text-xs text-red-600 dark:text-red-400">
+                        <p className="px-4 pb-2 text-xs text-danger ">
                           {deleteErrors[mt.id]}
                         </p>
                       )}

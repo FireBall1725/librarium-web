@@ -17,7 +17,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:ui": "vitest --ui"
+    "test:ui": "vitest --ui",
+    "verify:tokens": "node scripts/verify-colour-tokens.mjs"
   },
   "dependencies": {
     "emoji-picker-react": "^4.19.1",

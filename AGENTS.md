@@ -105,16 +105,25 @@ silence them wholesale, and do not add new ones.
   partial object clears the fields you left out. Read the current value, change
   one field, send it all back.
 - **Tailwind v4 has no config file.** Everything lives in `src/index.css`,
-  which imports Tailwind and declares the dark variant. There is no
-  `tailwind.config.js` to add to.
+  which imports Tailwind, declares the dark variant, and defines the semantic
+  colour tokens. There is no `tailwind.config.js` to add to.
 - **Dark mode is class-based, not media-query-based.** The variant is
   `@custom-variant dark (&:where(.dark, .dark *))`, so it follows a `.dark`
   class on an ancestor rather than the OS setting.
+- **Colour comes from semantic tokens, not palette shades.** Write
+  `bg-surface`, `text-content-muted`, `border-line`; do not write `bg-white
+  dark:bg-gray-900`. The token resolves per theme, so one class covers both and
+  a third theme costs no component changes. `src/index.css` is the only file
+  that names a raw shade. Run `node scripts/verify-colour-tokens.mjs` after a
+  build to confirm the tokens still resolve to the intended colours.
+- Around 980 `dark:` utilities remain from before the token layer, mostly
+  unpaired or in colour families with no token yet. Convert the ones you touch
+  rather than adding more.
 - **Every string a user reads goes through i18next.** New copy needs keys in
   both `en-CA` and `fr-FR`; an English string in the French bundle is worse than
   a missing one, so leave a real translation or flag it in the PR.
-- Every colour needs its `dark:` variant. A component that only looks right in
-  light mode is not finished.
+- A component that only looks right in one theme is not finished. Using a
+  semantic token gets you both for free; a raw palette shade does not.
 
 ## Conventions
 

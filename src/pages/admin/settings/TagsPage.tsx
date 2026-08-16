@@ -60,13 +60,13 @@ function ColorPicker({ value, onChange }: { value: string; onChange: (c: string)
             type="color"
             value={value && !isPreset ? value : '#6b7280'}
             onChange={e => onChange(e.target.value)}
-            className="w-5 h-5 rounded cursor-pointer border border-gray-300 dark:border-gray-600 p-0 bg-transparent flex-shrink-0"
+            className="w-5 h-5 rounded cursor-pointer border border-line-strong p-0 bg-transparent flex-shrink-0"
             title="Custom colour"
           />
           <button
             type="button"
             onClick={() => { setShowCustom(false); if (hasCustom) onChange('') }}
-            className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 leading-none"
+            className="text-xs text-gray-400 hover:text-content-tertiary leading-none"
             title="Close custom"
           >×</button>
         </div>
@@ -227,7 +227,7 @@ export default function TagsPage() {
 
       {/* Library selector */}
       <div className="flex items-center gap-3">
-        <label className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
+        <label className="text-sm font-medium text-content-secondary whitespace-nowrap">
           Library
         </label>
         {libsLoading ? (
@@ -236,7 +236,7 @@ export default function TagsPage() {
           <select
             value={selectedLibId}
             onChange={e => setSelectedLibId(e.target.value)}
-            className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm text-gray-900 dark:text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="rounded-lg border border-line-strong bg-surface-raised px-3 py-1.5 text-sm text-content focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
             {libraries.length === 0 && <option value="">No libraries</option>}
             {libraries.map(l => (
@@ -247,15 +247,15 @@ export default function TagsPage() {
       </div>
 
       {tagsError && (
-        <div className="rounded-lg bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 px-3 py-2 text-sm text-red-700 dark:text-red-400">
+        <div className="rounded-lg bg-danger-surface border border-danger-line px-3 py-2 text-sm text-danger-strong ">
           {tagsError}
         </div>
       )}
 
       {selectedLibId && (
-        <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden bg-white dark:bg-gray-900">
+        <div className="rounded-xl border border-line overflow-hidden bg-surface ">
           {/* Add form */}
-          <div className="px-4 py-3 bg-gray-50 dark:bg-gray-800/60 border-b border-gray-200 dark:border-gray-700 space-y-2">
+          <div className="px-4 py-3 bg-surface-muted border-b border-line space-y-2">
             <div className="flex items-center gap-2">
               <input
                 ref={nameInputRef}
@@ -264,7 +264,7 @@ export default function TagsPage() {
                 onChange={e => setNewName(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleAdd()}
                 placeholder="New tag name…"
-                className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="flex-1 rounded-lg border border-line-strong bg-surface-raised px-3 py-1.5 text-sm text-content placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
               <button
                 onClick={handleAdd}
@@ -277,7 +277,7 @@ export default function TagsPage() {
             <ColorPicker value={newColor} onChange={setNewColor} />
           </div>
           {addError && (
-            <p className="px-4 py-2 text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 border-b border-red-100 dark:border-red-900">
+            <p className="px-4 py-2 text-xs text-danger bg-danger-surface border-b border-red-100 dark:border-red-900">
               {addError}
             </p>
           )}
@@ -287,11 +287,11 @@ export default function TagsPage() {
               <div className="w-4 h-4 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
             </div>
           ) : tags.length === 0 ? (
-            <p className="px-4 py-6 text-sm text-center text-gray-400 dark:text-gray-500">
+            <p className="px-4 py-6 text-sm text-center text-content-subtle ">
               No tags in this library yet.
             </p>
           ) : (
-            <div className="divide-y divide-gray-100 dark:divide-gray-800">
+            <div className="divide-y divide-line-subtle ">
               {tags.map(t => (
                 <div key={t.id}>
                   {editingId === t.id ? (
@@ -303,14 +303,14 @@ export default function TagsPage() {
                           value={editName}
                           onChange={e => setEditName(e.target.value)}
                           onKeyDown={e => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') cancelEdit() }}
-                          className="flex-1 rounded-lg border border-blue-300 dark:border-blue-600 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm text-gray-900 dark:text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          className="flex-1 rounded-lg border border-accent-line bg-surface-raised px-3 py-1.5 text-sm text-content focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                         />
                         <button onClick={handleSave} disabled={!editName.trim() || saving}
                           className="rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
                           {saving ? 'Saving…' : 'Save'}
                         </button>
                         <button onClick={cancelEdit}
-                          className="rounded-lg px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                          className="rounded-lg px-3 py-1.5 text-sm font-medium text-content-tertiary hover:bg-surface-inset transition-colors">
                           Cancel
                         </button>
                         {saveError && <span className="text-xs text-red-500">{saveError}</span>}
@@ -323,17 +323,17 @@ export default function TagsPage() {
                         className="w-2.5 h-2.5 rounded-full flex-shrink-0"
                         style={{ background: t.color || '#9ca3af' }}
                       />
-                      <span className="flex-1 text-sm text-gray-800 dark:text-gray-200">{t.name}</span>
+                      <span className="flex-1 text-sm text-content-strong ">{t.name}</span>
                       <div className="flex items-center gap-0.5">
                         <button onClick={() => startEdit(t)}
-                          className="p-1 rounded text-gray-300 dark:text-gray-600 group-hover:text-gray-400 dark:group-hover:text-gray-500 hover:!text-blue-500 dark:hover:!text-blue-400 hover:!bg-blue-50 dark:hover:!bg-blue-900/20 transition-colors"
+                          className="p-1 rounded text-content-faint group-hover:text-content-subtle hover:!text-blue-500 dark:hover:!text-blue-400 hover:!bg-blue-50 dark:hover:!bg-blue-900/20 transition-colors"
                           title="Edit tag">
                           <PencilIcon />
                         </button>
                         <button
                           onClick={() => handleDelete(t.id)}
                           disabled={deleting.has(t.id)}
-                          className="p-1 rounded text-gray-300 dark:text-gray-600 group-hover:text-gray-400 dark:group-hover:text-gray-500 hover:!text-red-500 dark:hover:!text-red-400 hover:!bg-red-50 dark:hover:!bg-red-900/20 disabled:opacity-50 transition-colors"
+                          className="p-1 rounded text-content-faint group-hover:text-content-subtle hover:!text-red-500 dark:hover:!text-red-400 hover:!bg-red-50 dark:hover:!bg-red-900/20 disabled:opacity-50 transition-colors"
                           title="Delete tag"
                         >
                           {deleting.has(t.id) ? <span className="text-xs px-1">…</span> : <TrashIcon />}

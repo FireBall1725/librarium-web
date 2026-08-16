@@ -35,9 +35,9 @@ export default function MediaTypeSelect({ value, mediaTypes, onChange }: Props) 
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm text-left focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
+        className="w-full flex items-center justify-between rounded-lg border border-line-strong dark:bg-gray-800 dark:text-white px-3 py-2 text-sm text-left focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
       >
-        <span className={selected ? 'text-gray-900 dark:text-white' : 'text-gray-400'}>
+        <span className={selected ? 'text-content ' : 'text-gray-400'}>
           {selected?.display_name ?? 'Select type…'}
         </span>
         <svg
@@ -48,7 +48,7 @@ export default function MediaTypeSelect({ value, mediaTypes, onChange }: Props) 
         </svg>
       </button>
       {open && (
-        <ul className="absolute z-30 mt-1 w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-xl overflow-hidden max-h-72 overflow-y-auto">
+        <ul className="absolute z-30 mt-1 w-full rounded-lg border border-line bg-surface-raised shadow-xl overflow-hidden max-h-72 overflow-y-auto">
           {mediaTypes.map(mt => {
             const isSelected = mt.id === value
             return (
@@ -63,7 +63,7 @@ export default function MediaTypeSelect({ value, mediaTypes, onChange }: Props) 
                       : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
                   }`}
                 >
-                  <span className="mt-0.5 w-4 flex-shrink-0 text-blue-600 dark:text-blue-400">
+                  <span className="mt-0.5 w-4 flex-shrink-0 text-accent ">
                     {isSelected && (
                       <svg viewBox="0 0 16 16" fill="currentColor" className="w-4 h-4">
                         <path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.75.75 0 0 1 1.06-1.06L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0z" />
@@ -71,9 +71,9 @@ export default function MediaTypeSelect({ value, mediaTypes, onChange }: Props) 
                     )}
                   </span>
                   <span className="min-w-0">
-                    <span className="block text-sm font-medium text-gray-900 dark:text-white">{mt.display_name}</span>
+                    <span className="block text-sm font-medium text-content ">{mt.display_name}</span>
                     {mt.description && (
-                      <span className="block text-xs text-gray-500 dark:text-gray-400 mt-0.5 leading-snug">{mt.description}</span>
+                      <span className="block text-xs text-content-muted mt-0.5 leading-snug">{mt.description}</span>
                     )}
                   </span>
                 </button>

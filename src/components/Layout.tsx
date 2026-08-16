@@ -121,22 +121,22 @@ export default function Layout() {
     }`
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-950">
+    <div className="h-screen flex flex-col bg-surface-muted ">
      <div className="flex-1 min-h-0 flex flex-col lg:flex-row">
       {/* Mobile top bar */}
-      <div className="lg:hidden flex-shrink-0 flex items-center gap-3 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 h-14">
+      <div className="lg:hidden flex-shrink-0 flex items-center gap-3 border-b border-line bg-surface px-4 h-14">
         <button
           type="button"
           onClick={() => setSidebarOpen(true)}
           aria-label={t('nav.open_menu')}
-          className="p-1.5 -ml-1.5 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          className="p-1.5 -ml-1.5 rounded-md text-content-secondary hover:bg-surface-inset transition-colors"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </button>
         <img src="/logo.png" alt="" className="w-6 h-6 flex-shrink-0" />
-        <span className="text-base font-semibold text-gray-900 dark:text-white">{t('app.name')}</span>
+        <span className="text-base font-semibold text-content ">{t('app.name')}</span>
       </div>
 
       {/* Backdrop */}
@@ -150,20 +150,20 @@ export default function Layout() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-64 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex flex-col transform transition-transform duration-200 ease-out lg:static lg:w-56 lg:translate-x-0 lg:transition-none ${
+        className={`fixed inset-y-0 left-0 z-40 w-64 border-r border-line bg-surface flex flex-col transform transition-transform duration-200 ease-out lg:static lg:w-56 lg:translate-x-0 lg:transition-none ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="px-4 py-5 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2.5">
+        <div className="px-4 py-5 border-b border-line flex items-center gap-2.5">
           <img src="/logo.png" alt="" className="w-7 h-7 flex-shrink-0" />
           <div className="min-w-0 flex-1">
-            <div className="text-lg font-semibold text-gray-900 dark:text-white">{t('app.name')}</div>
+            <div className="text-lg font-semibold text-content ">{t('app.name')}</div>
           </div>
           <button
             type="button"
             onClick={() => setSidebarOpen(false)}
             aria-label={t('nav.close_menu')}
-            className="lg:hidden p-1 rounded-md text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            className="lg:hidden p-1 rounded-md text-content-muted hover:bg-surface-inset transition-colors"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -187,7 +187,7 @@ export default function Layout() {
             {t('nav.libraries')}
           </NavLink>
           {currentLibraryId && (
-            <div className="mt-1 ml-3 border-l border-gray-200 dark:border-gray-700 pl-3 space-y-0.5">
+            <div className="mt-1 ml-3 border-l border-line pl-3 space-y-0.5">
               {LIBRARY_SECTIONS.map(item => (
                 <NavLink
                   key={item.section}
@@ -211,7 +211,7 @@ export default function Layout() {
           )}
 
           <div className="pt-4">
-            <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+            <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wider text-content-subtle ">
               {t('nav.tools')}
             </p>
             <NavLink to="/import" className={navClass}>{t('nav.import')}</NavLink>
@@ -219,7 +219,7 @@ export default function Layout() {
 
           {user?.is_instance_admin && (
             <div className="pt-4">
-              <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+              <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wider text-content-subtle ">
                 {t('nav.admin')}
               </p>
               <NavLink to="/admin/users" className={navClass}>{t('nav.users')}</NavLink>
@@ -236,7 +236,7 @@ export default function Layout() {
                 {t('nav.connections')}
               </NavLink>
               {inConnections && (
-                <div className="mt-1 ml-3 border-l border-gray-200 dark:border-gray-700 pl-3 space-y-0.5">
+                <div className="mt-1 ml-3 border-l border-line pl-3 space-y-0.5">
                   {CONNECTIONS_ITEMS.map(item => (
                     <NavLink
                       key={item.to}
@@ -267,7 +267,7 @@ export default function Layout() {
                 {t('nav.settings')}
               </NavLink>
               {inSettings && (
-                <div className="mt-1 ml-3 border-l border-gray-200 dark:border-gray-700 pl-3 space-y-0.5">
+                <div className="mt-1 ml-3 border-l border-line pl-3 space-y-0.5">
                   {SETTINGS_ITEMS.map(item => (
                     <NavLink
                       key={item.to}
@@ -290,27 +290,27 @@ export default function Layout() {
         </nav>
 
         {/* User footer */}
-        <div className="border-t border-gray-200 dark:border-gray-700 px-4 py-3">
-          <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{user?.display_name}</p>
-          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>
+        <div className="border-t border-line px-4 py-3">
+          <p className="text-sm font-medium text-content truncate">{user?.display_name}</p>
+          <p className="text-xs text-content-muted truncate">{user?.email}</p>
           <div className="mt-2 flex items-center justify-between">
             <button
               onClick={handleLogout}
-              className="text-xs text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+              className="text-xs text-content-muted hover:text-danger transition-colors"
             >
               {t('nav.sign_out')}
             </button>
             <div className="flex items-center gap-2">
               <Link
                 to="/profile"
-                className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+                className="text-xs text-content-muted hover:text-content-secondary transition-colors"
               >
                 {t('nav.profile')}
               </Link>
               <button
                 onClick={() => setTheme(prev => NEXT_THEME[prev])}
                 title={t('theme.cycle_tooltip')}
-                className="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+                className="text-xs text-content-subtle hover:text-content-secondary transition-colors"
               >
                 {themeLabels[theme]}
               </button>
@@ -326,10 +326,10 @@ export default function Layout() {
      </div>
 
       {/* Footer */}
-      <footer className="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-2.5 text-xs text-gray-500 dark:text-gray-400">
+      <footer className="flex-shrink-0 border-t border-line bg-surface px-4 py-2.5 text-xs text-content-muted ">
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5">
-            <span className="font-medium text-gray-600 dark:text-gray-300">{t('app.name')}</span>
+            <span className="font-medium text-content-tertiary ">{t('app.name')}</span>
             <a
               href="https://github.com/FireBall1725/librarium-web/releases"
               target="_blank"

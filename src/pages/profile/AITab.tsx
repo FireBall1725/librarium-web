@@ -49,15 +49,15 @@ export default function AITab() {
         <div className={cardClass}>
           <div className="flex items-center justify-between px-6 py-4">
             <div className="min-w-0 mr-6">
-              <p className="text-sm font-medium text-gray-900 dark:text-white">Allow AI features to use my data</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+              <p className="text-sm font-medium text-content ">Allow AI features to use my data</p>
+              <p className="text-xs text-content-muted mt-0.5">
                 When on, AI-powered suggestions may read categories the admin has allowed
                 (reading history, ratings, favourites, full library, and your taste profile
                 below). Turning this off disables AI suggestions for you entirely.
               </p>
             </div>
             {aiPrefsLoading ? (
-              <div className="h-6 w-11 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse flex-shrink-0" />
+              <div className="h-6 w-11 rounded-full bg-surface-strong animate-pulse flex-shrink-0" />
             ) : (
               <button
                 type="button"
@@ -83,7 +83,7 @@ export default function AITab() {
 
       <section>
         <SectionHeading label="Taste profile" />
-        <p className="mb-3 -mt-2 text-xs text-gray-500 dark:text-gray-400">
+        <p className="mb-3 -mt-2 text-xs text-content-muted ">
           Optional. Helps the AI generate more personal suggestions. All fields are optional;
           empty categories aren't sent.
           {!aiOptIn && !aiPrefsLoading && (

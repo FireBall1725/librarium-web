@@ -180,14 +180,14 @@ export default function BookDetailPage() {
   if (error) {
     return (
       <div className="p-8">
-        <div className="rounded-lg bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-400">
+        <div className="rounded-lg bg-danger-surface border border-danger-line px-4 py-3 text-sm text-danger-strong ">
           {error}
         </div>
       </div>
     )
   }
   if (!book) {
-    return <div className="p-8 text-sm text-gray-400 dark:text-gray-500">Loading…</div>
+    return <div className="p-8 text-sm text-content-subtle ">Loading…</div>
   }
 
   const metaItems = [
@@ -203,7 +203,7 @@ export default function BookDetailPage() {
         {/* ── Left: cover ── */}
         <div className="w-48 flex-shrink-0 space-y-4">
           <BookCover title={book.title} coverUrl={book.cover_url} className="w-full" />
-          <div className="rounded-md border border-dashed border-gray-300 dark:border-gray-700 px-3 py-2 text-xs text-gray-500 dark:text-gray-400">
+          <div className="rounded-md border border-dashed border-line-strong px-3 py-2 text-xs text-content-muted ">
             Not in any library yet
           </div>
         </div>
@@ -212,12 +212,12 @@ export default function BookDetailPage() {
         <div className="flex-1 min-w-0 space-y-5">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">{book.title}</h1>
+              <h1 className="text-2xl font-semibold text-content ">{book.title}</h1>
               {book.subtitle && (
-                <p className="mt-1 text-base text-gray-600 dark:text-gray-400">{book.subtitle}</p>
+                <p className="mt-1 text-base text-content-tertiary ">{book.subtitle}</p>
               )}
               {book.contributors && book.contributors.length > 0 && (
-                <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
+                <p className="mt-2 text-sm text-content-secondary ">
                   {book.contributors.filter(c => c.role === 'author').map(c => c.name).join(', ')}
                 </p>
               )}
@@ -231,7 +231,7 @@ export default function BookDetailPage() {
                 onClick={refreshMetadata}
                 disabled={busy}
                 title="Refresh metadata"
-                className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors disabled:opacity-50"
+                className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-surface-inset transition-colors disabled:opacity-50"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -243,7 +243,7 @@ export default function BookDetailPage() {
                   onClick={removeSuggestion}
                   disabled={busy}
                   title="Delete suggestion"
-                  className="p-1.5 rounded-md text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors disabled:opacity-50"
+                  className="p-1.5 rounded-md text-gray-400 hover:text-danger hover:bg-surface-inset transition-colors disabled:opacity-50"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -254,7 +254,7 @@ export default function BookDetailPage() {
           </div>
 
           {book.description && (
-            <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
+            <p className="text-sm text-content-secondary whitespace-pre-wrap leading-relaxed">
               {book.description}
             </p>
           )}
@@ -263,8 +263,8 @@ export default function BookDetailPage() {
             <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
               {metaItems.map(m => (
                 <div key={m.label} className="flex gap-2">
-                  <dt className="text-gray-500 dark:text-gray-400">{m.label}:</dt>
-                  <dd className="text-gray-800 dark:text-gray-200">{m.value}</dd>
+                  <dt className="text-content-muted ">{m.label}:</dt>
+                  <dd className="text-content-strong ">{m.value}</dd>
                 </div>
               ))}
             </dl>
@@ -283,7 +283,7 @@ export default function BookDetailPage() {
                 href={bookFinderURL}
                 target="_blank"
                 rel="noopener noreferrer nofollow"
-                className="rounded-md border border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/30 px-3 py-1.5 text-sm font-medium text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
+                className="rounded-md border border-accent-line bg-accent-surface px-3 py-1.5 text-sm font-medium text-accent-strong hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
               >
                 Find where to buy →
               </a>
@@ -297,16 +297,16 @@ export default function BookDetailPage() {
                   type="button"
                   onClick={() => setBlockOpen(o => !o)}
                   disabled={busy}
-                  className="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors"
+                  className="rounded-md border border-line-strong bg-surface-raised px-3 py-1.5 text-sm font-medium text-content-secondary hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors"
                 >
                   Block ▾
                 </button>
                 {blockOpen && (
-                  <div className="absolute left-0 z-20 mt-1 w-56 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg py-1">
+                  <div className="absolute left-0 z-20 mt-1 w-56 rounded-md border border-line bg-surface-raised shadow-lg py-1">
                     <button
                       type="button"
                       onClick={() => blockSuggestion('book')}
-                      className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200"
+                      className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 text-content-secondary "
                     >
                       Block this book
                     </button>
@@ -314,7 +314,7 @@ export default function BookDetailPage() {
                       <button
                         type="button"
                         onClick={() => blockSuggestion('author')}
-                        className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200"
+                        className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 text-content-secondary "
                       >
                         Block by {suggestions[0].author}
                       </button>
@@ -322,7 +322,7 @@ export default function BookDetailPage() {
                     <button
                       type="button"
                       onClick={() => setBlockOpen(false)}
-                      className="block w-full text-left px-3 py-2 text-xs text-gray-400 dark:text-gray-500 border-t border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+                      className="block w-full text-left px-3 py-2 text-xs text-content-subtle border-t border-line-subtle hover:bg-gray-50 dark:hover:bg-gray-700"
                     >
                       Cancel
                     </button>
@@ -332,8 +332,8 @@ export default function BookDetailPage() {
             )}
           </div>
 
-          <div className="pt-4 text-xs text-gray-500 dark:text-gray-400">
-            <Link to="/suggestions" className="hover:text-gray-700 dark:hover:text-gray-200">
+          <div className="pt-4 text-xs text-content-muted ">
+            <Link to="/suggestions" className="hover:text-content-secondary ">
               ← Back to suggestions
             </Link>
           </div>
@@ -373,12 +373,12 @@ function AddToLibraryButton({ disabled, open, onOpenChange, onPick }: {
         type="button"
         onClick={toggle}
         disabled={disabled}
-        className="rounded-md border border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/30 px-3 py-1.5 text-sm font-medium text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/50 disabled:opacity-50 transition-colors"
+        className="rounded-md border border-accent-line bg-accent-surface px-3 py-1.5 text-sm font-medium text-accent-strong hover:bg-blue-100 dark:hover:bg-blue-900/50 disabled:opacity-50 transition-colors"
       >
         Add to library ▾
       </button>
       {open && (
-        <div className="absolute left-0 z-20 mt-1 w-56 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg py-1">
+        <div className="absolute left-0 z-20 mt-1 w-56 rounded-md border border-line bg-surface-raised shadow-lg py-1">
           {libs === null ? (
             <div className="px-3 py-2 text-xs text-gray-400">Loading…</div>
           ) : libs.length === 0 ? (
@@ -389,7 +389,7 @@ function AddToLibraryButton({ disabled, open, onOpenChange, onPick }: {
                 key={lib.id}
                 type="button"
                 onClick={() => onPick(lib.id)}
-                className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200"
+                className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 text-content-secondary "
               >
                 {lib.name}
               </button>
@@ -398,7 +398,7 @@ function AddToLibraryButton({ disabled, open, onOpenChange, onPick }: {
           <button
             type="button"
             onClick={() => onOpenChange(false)}
-            className="block w-full text-left px-3 py-2 text-xs text-gray-400 dark:text-gray-500 border-t border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+            className="block w-full text-left px-3 py-2 text-xs text-content-subtle border-t border-line-subtle hover:bg-gray-50 dark:hover:bg-gray-700"
           >
             Cancel
           </button>

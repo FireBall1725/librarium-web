@@ -2,8 +2,154 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* ---------------------------------------------------------------------------
+   Semantic colour tokens
+   ---------------------------------------------------------------------------
+   Components name a role (bg-surface, text-content-muted, border-line) and the
+   role resolves per theme. Nothing outside this file names a raw palette shade.
+
+   Why not `dark:` utilities: that variant is binary, so it can express light and
+   dark and nothing else. Themes beyond those two have nowhere to live, and the
+   pairing has to be repeated at every call site, which is how the codebase ended
+   up with eight different dark values for `bg-gray-50`.
+
+   `@theme inline` emits the utility referencing our variable rather than a fixed
+   colour, so one class picks up whatever the active theme sets.
+
+   Values below are the colours already on screen. This layer is a refactor, not
+   a redesign; new themes come later and touch only the blocks at the bottom.
+--------------------------------------------------------------------------- */
+
+@theme inline {
+  /* Surfaces, back to front */
+  --color-surface:          var(--t-surface);
+  --color-surface-raised:   var(--t-surface-raised);
+  --color-surface-muted:    var(--t-surface-muted);
+  --color-surface-inset:    var(--t-surface-inset);
+  --color-surface-strong:   var(--t-surface-strong);
+
+  /* Content, most to least prominent */
+  --color-content:           var(--t-content);
+  --color-content-strong:    var(--t-content-strong);
+  --color-content-secondary: var(--t-content-secondary);
+  --color-content-tertiary:  var(--t-content-tertiary);
+  --color-content-muted:     var(--t-content-muted);
+  --color-content-subtle:    var(--t-content-subtle);
+  --color-content-faint:     var(--t-content-faint);
+
+  /* Hairlines */
+  --color-line:         var(--t-line);
+  --color-line-strong:  var(--t-line-strong);
+  --color-line-subtle:  var(--t-line-subtle);
+
+  /* Accent, kept separate from the semantic states below */
+  --color-accent:         var(--t-accent);
+  --color-accent-strong:  var(--t-accent-strong);
+  --color-accent-surface: var(--t-accent-surface);
+  --color-accent-line:    var(--t-accent-line);
+
+  /* Semantic states */
+  --color-danger:          var(--t-danger);
+  --color-danger-strong:   var(--t-danger-strong);
+  --color-danger-surface:  var(--t-danger-surface);
+  --color-danger-line:     var(--t-danger-line);
+
+  --color-success:         var(--t-success);
+  --color-success-strong:  var(--t-success-strong);
+  --color-success-surface: var(--t-success-surface);
+  --color-success-line:    var(--t-success-line);
+
+  --color-warning:         var(--t-warning);
+  --color-warning-strong:  var(--t-warning-strong);
+  --color-warning-surface: var(--t-warning-surface);
+  --color-warning-line:    var(--t-warning-line);
+}
+
 @layer base {
   :root {
     color-scheme: light;
+
+    --t-surface:         var(--color-white);
+    --t-surface-raised:  var(--color-white);
+    --t-surface-muted:   var(--color-gray-50);
+    --t-surface-inset:   var(--color-gray-100);
+    --t-surface-strong:  var(--color-gray-200);
+
+    --t-content:           var(--color-gray-900);
+    --t-content-strong:    var(--color-gray-800);
+    --t-content-secondary: var(--color-gray-700);
+    --t-content-tertiary:  var(--color-gray-600);
+    --t-content-muted:     var(--color-gray-500);
+    --t-content-subtle:    var(--color-gray-400);
+    --t-content-faint:     var(--color-gray-300);
+
+    --t-line:        var(--color-gray-200);
+    --t-line-strong: var(--color-gray-300);
+    --t-line-subtle: var(--color-gray-100);
+
+    --t-accent:         var(--color-blue-600);
+    --t-accent-strong:  var(--color-blue-700);
+    --t-accent-surface: var(--color-blue-50);
+    --t-accent-line:    var(--color-blue-300);
+
+    --t-danger:         var(--color-red-600);
+    --t-danger-strong:  var(--color-red-700);
+    --t-danger-surface: var(--color-red-50);
+    --t-danger-line:    var(--color-red-200);
+
+    --t-success:         var(--color-green-600);
+    --t-success-strong:  var(--color-green-700);
+    --t-success-surface: var(--color-green-50);
+    --t-success-line:    var(--color-green-200);
+
+    --t-warning:         var(--color-amber-600);
+    --t-warning-strong:  var(--color-amber-700);
+    --t-warning-surface: var(--color-amber-50);
+    --t-warning-line:    var(--color-amber-200);
+  }
+
+  /* The dark theme. Note surface and surface-raised diverge here: they are both
+     white in light mode, which is why the pairing could not be inferred from the
+     light value alone. */
+  .dark {
+    color-scheme: dark;
+
+    --t-surface:         var(--color-gray-900);
+    --t-surface-raised:  var(--color-gray-800);
+    --t-surface-muted:   var(--color-gray-800);
+    --t-surface-inset:   var(--color-gray-800);
+    --t-surface-strong:  var(--color-gray-700);
+
+    --t-content:           var(--color-white);
+    --t-content-strong:    var(--color-gray-200);
+    --t-content-secondary: var(--color-gray-300);
+    --t-content-tertiary:  var(--color-gray-400);
+    --t-content-muted:     var(--color-gray-400);
+    --t-content-subtle:    var(--color-gray-500);
+    --t-content-faint:     var(--color-gray-600);
+
+    --t-line:        var(--color-gray-700);
+    --t-line-strong: var(--color-gray-600);
+    --t-line-subtle: var(--color-gray-800);
+
+    --t-accent:         var(--color-blue-400);
+    --t-accent-strong:  var(--color-blue-300);
+    --t-accent-surface: --alpha(var(--color-blue-900) / 30%);
+    --t-accent-line:    var(--color-blue-700);
+
+    --t-danger:         var(--color-red-400);
+    --t-danger-strong:  var(--color-red-400);
+    --t-danger-surface: --alpha(var(--color-red-950) / 50%);
+    --t-danger-line:    var(--color-red-800);
+
+    --t-success:         var(--color-green-400);
+    --t-success-strong:  var(--color-green-400);
+    --t-success-surface: --alpha(var(--color-green-950) / 50%);
+    --t-success-line:    var(--color-green-800);
+
+    --t-warning:         var(--color-amber-400);
+    --t-warning-strong:  var(--color-amber-300);
+    --t-warning-surface: --alpha(var(--color-amber-950) / 50%);
+    --t-warning-line:    var(--color-amber-800);
   }
 }

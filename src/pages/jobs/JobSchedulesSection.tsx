@@ -51,17 +51,17 @@ export default function JobSchedulesSection({ kind }: JobSchedulesSectionProps =
 
   if (error) {
     return (
-      <div className="rounded-lg bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-400">
+      <div className="rounded-lg bg-danger-surface border border-danger-line px-4 py-3 text-sm text-danger-strong ">
         {error}
       </div>
     )
   }
   if (schedules === null) {
-    return <div className="text-sm text-gray-400 dark:text-gray-500">Loading schedules…</div>
+    return <div className="text-sm text-content-subtle ">Loading schedules…</div>
   }
   if (schedules.length === 0) {
     return (
-      <div className="rounded-md border border-dashed border-gray-300 dark:border-gray-700 px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
+      <div className="rounded-md border border-dashed border-line-strong px-4 py-6 text-center text-sm text-content-muted ">
         No scheduled jobs registered.
       </div>
     )
@@ -119,11 +119,11 @@ function ScheduleRow({ initial, onSaved, onError, showToast }: {
   }
 
   return (
-    <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
-      <div className="flex items-center justify-between gap-3 px-4 py-3 bg-gray-50 dark:bg-gray-800">
+    <div className="rounded-lg border border-line bg-surface overflow-hidden">
+      <div className="flex items-center justify-between gap-3 px-4 py-3 bg-surface-muted ">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{initial.display_name}</h3>
+            <h3 className="text-sm font-semibold text-content ">{initial.display_name}</h3>
             <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
               enabled
                 ? 'bg-green-50 dark:bg-green-950/50 text-green-700 dark:text-green-400 ring-1 ring-green-200 dark:ring-green-800'
@@ -132,13 +132,13 @@ function ScheduleRow({ initial, onSaved, onError, showToast }: {
               {enabled ? 'Enabled' : 'Disabled'}
             </span>
             {initial.last_fired_at && (
-              <span className="text-xs text-gray-400 dark:text-gray-500">
+              <span className="text-xs text-content-subtle ">
                 Last fired: {new Date(initial.last_fired_at).toLocaleString()}
               </span>
             )}
           </div>
           {initial.description && (
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{initial.description}</p>
+            <p className="text-xs text-content-muted mt-0.5">{initial.description}</p>
           )}
         </div>
         <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
@@ -148,13 +148,13 @@ function ScheduleRow({ initial, onSaved, onError, showToast }: {
             checked={enabled}
             onChange={e => setEnabled(e.target.checked)}
           />
-          <div className="w-10 h-6 bg-gray-200 dark:bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full" />
+          <div className="w-10 h-6 bg-surface-strong peer-focus:outline-none rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full" />
         </label>
       </div>
 
       <div className="p-4 space-y-3">
         <div>
-          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-xs font-medium text-content-secondary mb-1">
             Schedule (cron)
           </label>
           <div className="cron-editor">
@@ -165,9 +165,9 @@ function ScheduleRow({ initial, onSaved, onError, showToast }: {
               clearButton={false}
             />
           </div>
-          <p className="mt-2 font-mono text-xs text-gray-600 dark:text-gray-400">{cron}</p>
+          <p className="mt-2 font-mono text-xs text-content-tertiary ">{cron}</p>
           {cronErr && (
-            <p className="mt-1 text-xs text-red-600 dark:text-red-400">{cronErr.description}</p>
+            <p className="mt-1 text-xs text-danger ">{cronErr.description}</p>
           )}
         </div>
         <div className="flex justify-end gap-2">
@@ -175,7 +175,7 @@ function ScheduleRow({ initial, onSaved, onError, showToast }: {
             type="button"
             onClick={() => { setCron(initial.cron); setEnabled(initial.enabled); setCronErr(undefined) }}
             disabled={!dirty || saving}
-            className="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors"
+            className="rounded-md border border-line-strong bg-surface-raised px-3 py-1.5 text-sm font-medium text-content-secondary hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors"
           >
             Reset
           </button>
@@ -183,7 +183,7 @@ function ScheduleRow({ initial, onSaved, onError, showToast }: {
             type="button"
             onClick={save}
             disabled={!dirty || saving || !!cronErr}
-            className="rounded-md border border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/30 px-3 py-1.5 text-sm font-medium text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/50 disabled:opacity-50 transition-colors"
+            className="rounded-md border border-accent-line bg-accent-surface px-3 py-1.5 text-sm font-medium text-accent-strong hover:bg-blue-100 dark:hover:bg-blue-900/50 disabled:opacity-50 transition-colors"
           >
             {saving ? 'Saving…' : 'Save'}
           </button>

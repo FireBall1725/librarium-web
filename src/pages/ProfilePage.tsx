@@ -22,9 +22,9 @@ export default function ProfilePage() {
   return (
     <div className="px-6 py-8">
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Profile &amp; Preferences</h1>
+        <h1 className="text-2xl font-bold text-content mb-6">Profile &amp; Preferences</h1>
 
-        <div className="border-b border-gray-200 dark:border-gray-800 mb-8">
+        <div className="border-b border-line mb-8">
           <nav className="flex gap-6 -mb-px">
             {TABS.map(t => (
               <button

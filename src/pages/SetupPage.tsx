@@ -56,18 +56,18 @@ export default function SetupPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-surface-muted px-4">
       <div className="w-full max-w-lg">
         <div className="text-center mb-8">
           <img src="/logo.png" alt="Librarium" className="mx-auto h-24 w-auto mb-4" />
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Welcome to Librarium</h1>
-          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+          <h1 className="text-3xl font-bold text-content ">Welcome to Librarium</h1>
+          <p className="mt-2 text-sm text-content-muted ">
             Let's get your instance set up.
-          </p>
-        </div>
+ </p>
+ </div>
 
-        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
-          {step === 'admin' && (
+ <div className="bg-white dark:bg-gray-900 rounded-xl border border-line shadow-sm">
+ {step === 'admin' && (
             <AdminStep
               form={form}
               update={update}
@@ -92,112 +92,112 @@ export default function SetupPage() {
 interface AdminStepProps {
   form: { display_name: string; username: string; email: string; password: string; confirm: string }
   update: (key: 'display_name' | 'username' | 'email' | 'password' | 'confirm') => (e: React.ChangeEvent<HTMLInputElement>) => void
-  error: string | null
-  isLoading: boolean
-  onSubmit: (e: React.FormEvent) => void
+ error: string | null
+ isLoading: boolean
+ onSubmit: (e: React.FormEvent) => void
 }
 
 function AdminStep({ form, update, error, isLoading, onSubmit }: AdminStepProps) {
-  return (
-    <form onSubmit={onSubmit} className="px-8 py-8 space-y-5">
-      <div>
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Create your admin account</h2>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          This account is the instance owner with full administrative rights.
-        </p>
-      </div>
+ return (
+ <form onSubmit={onSubmit} className="px-8 py-8 space-y-5">
+ <div>
+ <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Create your admin account</h2>
+ <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+ This account is the instance owner with full administrative rights.
+ </p>
+ </div>
 
-      <div>
-        <label htmlFor="display_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Display name
-        </label>
-        <input
-          id="display_name"
-          type="text"
-          autoComplete="name"
-          value={form.display_name}
-          onChange={update('display_name')}
-          className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm text-gray-900 dark:text-white dark:bg-gray-800 placeholder-gray-400 dark:placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          placeholder="Jane Doe"
-        />
-      </div>
+ <div>
+ <label htmlFor="display_name" className="block text-sm font-medium text-content-secondary mb-1">
+ Display name
+ </label>
+ <input
+ id="display_name"
+ type="text"
+ autoComplete="name"
+ value={form.display_name}
+ onChange={update('display_name')}
+ className="w-full rounded-lg border border-line-strong px-3 py-2 text-sm text-content dark:bg-gray-800 placeholder-gray-400 dark:placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+ placeholder="Jane Doe"
+ />
+ </div>
 
-      <div>
-        <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Username
-        </label>
-        <input
-          id="username"
-          type="text"
-          autoComplete="username"
-          required
-          value={form.username}
-          onChange={update('username')}
-          className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm text-gray-900 dark:text-white dark:bg-gray-800 placeholder-gray-400 dark:placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          placeholder="jane"
-        />
-      </div>
+ <div>
+ <label htmlFor="username" className="block text-sm font-medium text-content-secondary mb-1">
+ Username
+ </label>
+ <input
+ id="username"
+ type="text"
+ autoComplete="username"
+ required
+ value={form.username}
+ onChange={update('username')}
+ className="w-full rounded-lg border border-line-strong px-3 py-2 text-sm text-content dark:bg-gray-800 placeholder-gray-400 dark:placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+ placeholder="jane"
+ />
+ </div>
 
-      <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Email
-        </label>
-        <input
-          id="email"
-          type="email"
-          autoComplete="email"
-          required
-          value={form.email}
-          onChange={update('email')}
-          className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm text-gray-900 dark:text-white dark:bg-gray-800 placeholder-gray-400 dark:placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          placeholder="jane@example.com"
-        />
-      </div>
+ <div>
+ <label htmlFor="email" className="block text-sm font-medium text-content-secondary mb-1">
+ Email
+ </label>
+ <input
+ id="email"
+ type="email"
+ autoComplete="email"
+ required
+ value={form.email}
+ onChange={update('email')}
+ className="w-full rounded-lg border border-line-strong px-3 py-2 text-sm text-content dark:bg-gray-800 placeholder-gray-400 dark:placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+ placeholder="jane@example.com"
+ />
+ </div>
 
-      <div>
-        <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Password
-        </label>
-        <input
-          id="password"
-          type="password"
-          autoComplete="new-password"
-          required
-          minLength={8}
-          value={form.password}
-          onChange={update('password')}
-          className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm text-gray-900 dark:text-white dark:bg-gray-800 placeholder-gray-400 dark:placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          placeholder="at least 8 characters"
-        />
-      </div>
+ <div>
+ <label htmlFor="password" className="block text-sm font-medium text-content-secondary mb-1">
+ Password
+ </label>
+ <input
+ id="password"
+ type="password"
+ autoComplete="new-password"
+ required
+ minLength={8}
+ value={form.password}
+ onChange={update('password')}
+ className="w-full rounded-lg border border-line-strong px-3 py-2 text-sm text-content dark:bg-gray-800 placeholder-gray-400 dark:placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+ placeholder="at least 8 characters"
+ />
+ </div>
 
-      <div>
-        <label htmlFor="confirm" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Confirm password
-        </label>
-        <input
-          id="confirm"
-          type="password"
-          autoComplete="new-password"
-          required
-          value={form.confirm}
-          onChange={update('confirm')}
-          className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm text-gray-900 dark:text-white dark:bg-gray-800 placeholder-gray-400 dark:placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-        />
-      </div>
+ <div>
+ <label htmlFor="confirm" className="block text-sm font-medium text-content-secondary mb-1">
+ Confirm password
+ </label>
+ <input
+ id="confirm"
+ type="password"
+ autoComplete="new-password"
+ required
+ value={form.confirm}
+ onChange={update('confirm')}
+ className="w-full rounded-lg border border-line-strong px-3 py-2 text-sm text-content dark:bg-gray-800 placeholder-gray-400 dark:placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+ />
+ </div>
 
-      {error && (
-        <div className="rounded-lg bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 px-3 py-2 text-sm text-red-700 dark:text-red-400">
-          {error}
-        </div>
-      )}
+ {error && (
+ <div className="rounded-lg bg-danger-surface border border-danger-line px-3 py-2 text-sm text-red-700 dark:text-red-400">
+ {error}
+ </div>
+ )}
 
-      <button
-        type="submit"
-        disabled={isLoading}
-        className="w-full rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-      >
-        {isLoading ? 'Creating account…' : 'Create admin account'}
+ <button
+ type="submit"
+ disabled={isLoading}
+ className="w-full rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+ >
+ {isLoading ? 'Creating account…' : 'Create admin account'}
       </button>
     </form>
   )
@@ -208,7 +208,7 @@ function DonePlaceholder({ onContinue }: { onContinue: () => void }) {
     <div className="px-8 py-8 space-y-5">
       <div>
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white">You're in</h2>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+        <p className="mt-1 text-sm text-content-muted ">
           Your admin account is ready. More setup steps — branding, your first library,
           connecting metadata providers — will live here in the future. For now, head to
           the dashboard and configure them from the admin settings whenever you're ready.

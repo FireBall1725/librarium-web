@@ -55,11 +55,11 @@ function Module({
 }) {
   return (
     <div
-      className={`rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 ${className}`}
+      className={`rounded-xl border border-line bg-surface ${className}`}
     >
       {title && (
         <div className={`flex items-center justify-between px-5 pt-4 pb-2 ${headerClassName}`}>
-          <h2 className="text-sm font-semibold text-gray-900 dark:text-white">{title}</h2>
+          <h2 className="text-sm font-semibold text-content ">{title}</h2>
           {action}
         </div>
       )}
@@ -121,7 +121,7 @@ function ContinueReadingHero() {
   if (error) {
     return (
       <Module className="min-h-[14rem]">
-        <div className="p-5 text-sm text-red-500 dark:text-red-400">{error}</div>
+        <div className="p-5 text-sm text-danger ">{error}</div>
       </Module>
     )
   }
@@ -130,11 +130,11 @@ function ContinueReadingHero() {
     return (
       <Module className="min-h-[14rem]">
         <div className="flex flex-col sm:flex-row gap-5 p-5">
-          <div className="w-28 sm:w-36 aspect-[2/3] rounded-lg bg-gray-100 dark:bg-gray-800 animate-pulse flex-shrink-0" />
+          <div className="w-28 sm:w-36 aspect-[2/3] rounded-lg bg-surface-inset animate-pulse flex-shrink-0" />
           <div className="flex-1 space-y-3 pt-2">
-            <div className="h-3 w-24 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" />
-            <div className="h-6 w-2/3 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" />
-            <div className="h-3 w-1/3 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" />
+            <div className="h-3 w-24 rounded bg-surface-inset animate-pulse" />
+            <div className="h-6 w-2/3 rounded bg-surface-inset animate-pulse" />
+            <div className="h-3 w-1/3 rounded bg-surface-inset animate-pulse" />
           </div>
         </div>
       </Module>
@@ -145,13 +145,13 @@ function ContinueReadingHero() {
     return (
       <Module className="min-h-[14rem]">
         <div className="flex flex-col items-center justify-center text-center gap-2 h-full p-8 min-h-[14rem]">
-          <div className="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-950/50 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-full bg-accent-surface flex items-center justify-center">
             <svg className="w-6 h-6 text-blue-500 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C20.168 18.477 18.254 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
             </svg>
           </div>
-          <p className="text-sm font-semibold text-gray-900 dark:text-white">{t('no_books_in_progress.title')}</p>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-sm font-semibold text-content ">{t('no_books_in_progress.title')}</p>
+          <p className="text-sm text-content-muted ">
             {t('no_books_in_progress.hint')}
           </p>
         </div>
@@ -163,7 +163,7 @@ function ContinueReadingHero() {
   const badges = showReadBadges()
 
   return (
-    <div className="relative rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
+    <div className="relative rounded-xl border border-line bg-surface overflow-hidden">
       {/* Soft gradient backdrop */}
       <div className="absolute inset-0 bg-gradient-to-br from-blue-50/60 via-white to-white dark:from-blue-950/30 dark:via-gray-900 dark:to-gray-900 pointer-events-none" />
 
@@ -181,19 +181,19 @@ function ContinueReadingHero() {
         </Link>
 
         <div className="flex-1 min-w-0 flex flex-col">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-accent ">
             {t('continue_reading_eyebrow')}
           </p>
           <Link
             to={`/libraries/${featured.library_id}/books/${featured.book_id}`}
-            className="mt-1 block hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            className="mt-1 block hover:text-accent transition-colors"
           >
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white line-clamp-2 leading-tight">
+            <h2 className="text-xl sm:text-2xl font-bold text-content line-clamp-2 leading-tight">
               {featured.title}
             </h2>
           </Link>
           {featured.authors && (
-            <p className="mt-1.5 text-sm text-gray-600 dark:text-gray-400 line-clamp-1">
+            <p className="mt-1.5 text-sm text-content-tertiary line-clamp-1">
               {featured.authors}
             </p>
           )}
@@ -201,12 +201,12 @@ function ContinueReadingHero() {
           <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
             <Link
               to={`/libraries/${featured.library_id}`}
-              className="inline-flex items-center rounded-full bg-gray-100 dark:bg-gray-800 px-2.5 py-1 font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              className="inline-flex items-center rounded-full bg-surface-inset px-2.5 py-1 font-medium text-content-secondary hover:bg-surface-strong transition-colors"
             >
               {featured.library_name}
             </Link>
             {featured.updated_at && (
-              <span className="text-gray-500 dark:text-gray-400">
+              <span className="text-content-muted ">
                 {t('last_opened', { relative: relativeTime(featured.updated_at, t) })}
               </span>
             )}
@@ -216,8 +216,8 @@ function ContinueReadingHero() {
 
       {/* Secondary: other in-progress books */}
       {others.length > 0 && (
-        <div className="relative border-t border-gray-200 dark:border-gray-700 px-5 py-4">
-          <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+        <div className="relative border-t border-line px-5 py-4">
+          <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-content-muted ">
             {t('also_in_progress')}
           </p>
           <div className="flex gap-3 overflow-x-auto scrollbar-thin -mx-1 px-1">
@@ -225,7 +225,7 @@ function ContinueReadingHero() {
               <Link
                 key={b.book_id}
                 to={`/libraries/${b.library_id}/books/${b.book_id}`}
-                className="group flex-shrink-0 flex items-start gap-3 w-56 rounded-lg p-2 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                className="group flex-shrink-0 flex items-start gap-3 w-56 rounded-lg p-2 hover:bg-surface-inset transition-colors"
                 title={b.title}
               >
                 <BookCover
@@ -235,11 +235,11 @@ function ContinueReadingHero() {
                   readStatus={badges ? 'reading' : undefined}
                 />
                 <div className="flex-1 min-w-0 pt-0.5">
-                  <p className="text-xs font-semibold text-gray-900 dark:text-white leading-snug line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                  <p className="text-xs font-semibold text-content leading-snug line-clamp-2 group-hover:text-accent transition-colors">
                     {b.title}
                   </p>
                   {b.authors && (
-                    <p className="mt-1 text-[11px] text-gray-500 dark:text-gray-400 truncate">
+                    <p className="mt-1 text-[11px] text-content-muted truncate">
                       {b.authors}
                     </p>
                   )}
@@ -270,7 +270,7 @@ function StatsRail() {
   if (error) {
     return (
       <Module>
-        <div className="p-5 text-sm text-red-500 dark:text-red-400">{error}</div>
+        <div className="p-5 text-sm text-danger ">{error}</div>
       </Module>
     )
   }
@@ -287,33 +287,33 @@ function StatsRail() {
   return (
     <div className="flex flex-col gap-3">
       {/* Hero stat: this year's reads + sparkline */}
-      <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-5 py-4">
+      <div className="rounded-xl border border-line bg-surface px-5 py-4">
         <div className="flex items-baseline justify-between gap-2">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+            <p className="text-xs font-medium uppercase tracking-wider text-content-muted ">
               {t('stats.read_in_year', { year })}
             </p>
-            <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-white tabular-nums">
+            <p className="mt-1 text-3xl font-bold text-content tabular-nums">
               {stats === null ? (
-                <span className="inline-block w-10 h-8 rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
+                <span className="inline-block w-10 h-8 rounded bg-surface-strong animate-pulse" />
               ) : (
                 stats.books_read_this_year.toLocaleString()
               )}
             </p>
           </div>
           {hasExtraAllTime && (
-            <p className="text-xs text-gray-400 dark:text-gray-500">
+            <p className="text-xs text-content-subtle ">
               {t('stats.all_time', { count: stats!.books_read })}
             </p>
           )}
         </div>
         <div className="mt-3">
           {stats === null ? (
-            <div className="h-10 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" />
+            <div className="h-10 rounded bg-surface-inset animate-pulse" />
           ) : (
             <>
               <Sparkline data={counts} />
-              <p className="mt-1 text-[10px] text-gray-400 dark:text-gray-500 font-medium uppercase tracking-wider">
+              <p className="mt-1 text-[10px] text-content-subtle font-medium uppercase tracking-wider">
                 {t('stats.last_12_months')}
               </p>
             </>
@@ -326,7 +326,7 @@ function StatsRail() {
         <StatCard
           label={t('stats.reading')}
           value={stats?.books_reading ?? null}
-          accent="text-blue-600 dark:text-blue-400"
+          accent="text-accent "
         />
         <StatCard
           label={t('stats.favourites')}
@@ -343,22 +343,22 @@ function StatsRail() {
 function StatCard({
   label,
   value,
-  accent = 'text-gray-900 dark:text-white',
+  accent = 'text-content ',
 }: {
   label: string
   value: number | null
   accent?: string
 }) {
   return (
-    <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3">
+    <div className="rounded-xl border border-line bg-surface px-4 py-3">
       <p className={`text-2xl font-bold tabular-nums ${accent}`}>
         {value === null ? (
-          <span className="inline-block w-8 h-6 rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
+          <span className="inline-block w-8 h-6 rounded bg-surface-strong animate-pulse" />
         ) : (
           value.toLocaleString()
         )}
       </p>
-      <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">{label}</p>
+      <p className="mt-0.5 text-xs text-content-muted ">{label}</p>
     </div>
   )
 }
@@ -381,30 +381,30 @@ function ContinueSeriesModule() {
     <Module title={t('continue_series.title')} className="flex flex-col">
       <div className="px-5 pb-5 flex-1">
         {error ? (
-          <p className="text-sm text-red-500 dark:text-red-400">{error}</p>
+          <p className="text-sm text-danger ">{error}</p>
         ) : items === null ? (
           <div className="space-y-3">
             {[...Array(3)].map((_, i) => (
               <div key={i} className="flex gap-3 items-center">
-                <div className="w-10 aspect-[2/3] rounded bg-gray-100 dark:bg-gray-800 animate-pulse flex-shrink-0" />
+                <div className="w-10 aspect-[2/3] rounded bg-surface-inset animate-pulse flex-shrink-0" />
                 <div className="flex-1 space-y-1.5">
-                  <div className="h-3 w-2/3 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" />
-                  <div className="h-2 w-1/3 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" />
+                  <div className="h-3 w-2/3 rounded bg-surface-inset animate-pulse" />
+                  <div className="h-2 w-1/3 rounded bg-surface-inset animate-pulse" />
                 </div>
               </div>
             ))}
           </div>
         ) : items.length === 0 ? (
-          <p className="text-sm text-gray-500 dark:text-gray-400 py-2">
+          <p className="text-sm text-content-muted py-2">
             {t('continue_series.empty')}
           </p>
         ) : (
-          <ul className="divide-y divide-gray-100 dark:divide-gray-800 -mx-5">
+          <ul className="divide-y divide-line-subtle -mx-5">
             {items.slice(0, 6).map(item => (
               <li key={`${item.series_id}:${item.book_id}`}>
                 <Link
                   to={`/libraries/${item.library_id}/books/${item.book_id}`}
-                  className="flex items-center gap-3 px-5 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+                  className="flex items-center gap-3 px-5 py-3 hover:bg-surface-muted transition-colors"
                 >
                   <BookCover
                     title={item.title}
@@ -413,23 +413,23 @@ function ContinueSeriesModule() {
                     readStatus={showReadBadges() && item.read_status ? item.read_status : undefined}
                   />
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-blue-600 dark:text-blue-400 truncate">
+                    <p className="text-xs font-medium text-accent truncate">
                       {item.series_name}
                     </p>
-                    <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                    <p className="text-sm font-semibold text-content truncate">
                       {item.title}
                     </p>
                     {item.authors && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                      <p className="text-xs text-content-muted truncate">
                         {item.authors}
                       </p>
                     )}
                   </div>
                   <div className="flex-shrink-0 text-right">
-                    <p className="text-[11px] text-gray-400 dark:text-gray-500 font-mono tabular-nums">
+                    <p className="text-[11px] text-content-subtle font-mono tabular-nums">
                       #{formatPosition(item.last_read_position)} → #{formatPosition(item.position)}
                     </p>
-                    <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5 truncate max-w-[9rem]">
+                    <p className="text-[10px] text-content-subtle mt-0.5 truncate max-w-[9rem]">
                       {item.library_name}
                     </p>
                   </div>
@@ -467,30 +467,30 @@ function RecentlyFinishedModule() {
     <Module title={t('recently_finished.title')}>
       <div className="px-5 pb-5">
         {error ? (
-          <p className="text-sm text-red-500 dark:text-red-400">{error}</p>
+          <p className="text-sm text-danger ">{error}</p>
         ) : books === null ? (
           <div className="space-y-3">
             {[...Array(3)].map((_, i) => (
               <div key={i} className="flex gap-3">
-                <div className="w-10 aspect-[2/3] rounded bg-gray-100 dark:bg-gray-800 animate-pulse flex-shrink-0" />
+                <div className="w-10 aspect-[2/3] rounded bg-surface-inset animate-pulse flex-shrink-0" />
                 <div className="flex-1 space-y-1.5">
-                  <div className="h-3 w-2/3 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" />
-                  <div className="h-2 w-1/3 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" />
+                  <div className="h-3 w-2/3 rounded bg-surface-inset animate-pulse" />
+                  <div className="h-2 w-1/3 rounded bg-surface-inset animate-pulse" />
                 </div>
               </div>
             ))}
           </div>
         ) : books.length === 0 ? (
-          <p className="text-sm text-gray-500 dark:text-gray-400 py-2">
+          <p className="text-sm text-content-muted py-2">
             {t('recently_finished.empty')}
           </p>
         ) : (
-          <ul className="divide-y divide-gray-100 dark:divide-gray-800 -mx-5">
+          <ul className="divide-y divide-line-subtle -mx-5">
             {books.slice(0, 6).map(b => (
               <li key={b.book_id}>
                 <Link
                   to={`/libraries/${b.library_id}/books/${b.book_id}`}
-                  className="flex items-center gap-3 px-5 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+                  className="flex items-center gap-3 px-5 py-2.5 hover:bg-surface-muted transition-colors"
                 >
                   <BookCover
                     title={b.title}
@@ -499,7 +499,7 @@ function RecentlyFinishedModule() {
                     readStatus={showReadBadges() ? 'read' : undefined}
                   />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-900 dark:text-white truncate flex items-center gap-1.5">
+                    <p className="text-sm font-semibold text-content truncate flex items-center gap-1.5">
                       {b.title}
                       {b.is_favorite && (
                         <svg className="w-3.5 h-3.5 text-yellow-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" role="img" aria-label={favouriteLabel}>
@@ -509,16 +509,16 @@ function RecentlyFinishedModule() {
                       )}
                     </p>
                     {b.authors && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{b.authors}</p>
+                      <p className="text-xs text-content-muted truncate">{b.authors}</p>
                     )}
                   </div>
                   <div className="flex-shrink-0 text-right">
                     {b.rating != null && (
-                      <p className="text-xs font-semibold text-amber-600 dark:text-amber-400 tabular-nums">
+                      <p className="text-xs font-semibold text-warning tabular-nums">
                         {t('recently_finished.rating', { rating: b.rating })}
                       </p>
                     )}
-                    <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">
+                    <p className="text-[10px] text-content-subtle mt-0.5">
                       {relativeTime(b.finished_at, t)}
                     </p>
                   </div>
@@ -551,18 +551,18 @@ function RecentlyAddedModule() {
   return (
     <Module title={t('recently_added.title')}>
       {error ? (
-        <p className="px-5 pb-5 text-sm text-red-500 dark:text-red-400">{error}</p>
+        <p className="px-5 pb-5 text-sm text-danger ">{error}</p>
       ) : books === null ? (
         <div className="px-5 pb-5 flex gap-3">
           {[...Array(8)].map((_, i) => (
             <div key={i} className="w-36 sm:w-40 flex-shrink-0">
-              <div className="aspect-[2/3] rounded-lg bg-gray-100 dark:bg-gray-800 animate-pulse" />
-              <div className="mt-1.5 h-3 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" />
+              <div className="aspect-[2/3] rounded-lg bg-surface-inset animate-pulse" />
+              <div className="mt-1.5 h-3 rounded bg-surface-inset animate-pulse" />
             </div>
           ))}
         </div>
       ) : books.length === 0 ? (
-        <p className="px-5 pb-5 text-sm text-gray-500 dark:text-gray-400">
+        <p className="px-5 pb-5 text-sm text-content-muted ">
           {t('recently_added.empty')}
         </p>
       ) : (
@@ -580,11 +580,11 @@ function RecentlyAddedModule() {
                 className="w-36 sm:w-40"
                 readStatus={badges && b.read_status ? b.read_status : undefined}
               />
-              <p className="mt-1.5 text-xs font-medium text-gray-800 dark:text-gray-200 leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2">
+              <p className="mt-1.5 text-xs font-medium text-content-strong leading-snug group-hover:text-accent transition-colors line-clamp-2">
                 {b.title}
               </p>
               {b.authors && (
-                <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500 truncate">
+                <p className="mt-0.5 text-xs text-content-subtle truncate">
                   {b.authors}
                 </p>
               )}
@@ -616,24 +616,24 @@ function PicksOfTheDayModule() {
     <Module
       title={t('picks_of_the_day.title')}
       action={
-        <span className="text-[11px] text-gray-400 dark:text-gray-500 font-medium">
+        <span className="text-[11px] text-content-subtle font-medium">
           {today}
         </span>
       }
     >
       {error ? (
-        <p className="px-5 pb-5 text-sm text-red-500 dark:text-red-400">{error}</p>
+        <p className="px-5 pb-5 text-sm text-danger ">{error}</p>
       ) : books === null ? (
         <div className="px-5 pb-5 flex gap-3">
           {[...Array(8)].map((_, i) => (
             <div key={i} className="w-36 sm:w-40 flex-shrink-0">
-              <div className="aspect-[2/3] rounded-lg bg-gray-100 dark:bg-gray-800 animate-pulse" />
-              <div className="mt-1.5 h-3 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" />
+              <div className="aspect-[2/3] rounded-lg bg-surface-inset animate-pulse" />
+              <div className="mt-1.5 h-3 rounded bg-surface-inset animate-pulse" />
             </div>
           ))}
         </div>
       ) : books.length === 0 ? (
-        <p className="px-5 pb-5 text-sm text-gray-500 dark:text-gray-400">
+        <p className="px-5 pb-5 text-sm text-content-muted ">
           {t('picks_of_the_day.empty')}
         </p>
       ) : (
@@ -646,11 +646,11 @@ function PicksOfTheDayModule() {
               title={b.title}
             >
               <BookCover title={b.title} coverUrl={b.cover_url} className="w-36 sm:w-40" />
-              <p className="mt-1.5 text-xs font-medium text-gray-800 dark:text-gray-200 leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2">
+              <p className="mt-1.5 text-xs font-medium text-content-strong leading-snug group-hover:text-accent transition-colors line-clamp-2">
                 {b.title}
               </p>
               {b.authors && (
-                <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500 truncate">
+                <p className="mt-0.5 text-xs text-content-subtle truncate">
                   {b.authors}
                 </p>
               )}
@@ -678,7 +678,7 @@ function LibraryChips() {
 
   if (error) {
     return (
-      <p className="text-xs text-red-500 dark:text-red-400">{error}</p>
+      <p className="text-xs text-danger ">{error}</p>
     )
   }
 
@@ -686,7 +686,7 @@ function LibraryChips() {
     return (
       <div className="flex gap-2">
         {[...Array(3)].map((_, i) => (
-          <div key={i} className="h-7 w-32 rounded-full bg-gray-100 dark:bg-gray-800 animate-pulse" />
+          <div key={i} className="h-7 w-32 rounded-full bg-surface-inset animate-pulse" />
         ))}
       </div>
     )
@@ -696,7 +696,7 @@ function LibraryChips() {
     return (
       <Link
         to="/libraries"
-        className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-gray-300 dark:border-gray-600 px-3 py-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 hover:border-blue-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+        className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-line-strong px-3 py-1.5 text-xs font-medium text-content-muted hover:border-blue-400 hover:text-accent transition-colors"
       >
         {t('library_chips.create_first')}
       </Link>
@@ -711,7 +711,7 @@ function LibraryChips() {
         <Link
           key={lib.id}
           to={`/libraries/${lib.id}`}
-          className="group flex-shrink-0 inline-flex items-center gap-1.5 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 hover:border-blue-300 dark:hover:border-blue-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+          className="group flex-shrink-0 inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-3 py-1.5 text-xs font-medium text-content-secondary hover:border-accent-line hover:text-accent transition-colors"
         >
           <span className="truncate max-w-[12rem]">{lib.name}</span>
           {lib.is_public && (
@@ -725,7 +725,7 @@ function LibraryChips() {
       ))}
       <Link
         to="/libraries"
-        className="flex-shrink-0 text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline pl-1"
+        className="flex-shrink-0 text-xs font-medium text-accent hover:underline pl-1"
       >
         {t('library_chips.view_all')}
       </Link>

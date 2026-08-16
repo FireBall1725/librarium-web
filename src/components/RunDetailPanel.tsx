@@ -82,20 +82,20 @@ export default function RunDetailPanel({ endpoint, hideSummary }: RunDetailPanel
     // placeholder instead of a red error, since nothing actually failed.
     if (/not found/i.test(error)) {
       return (
-        <div className="rounded-md border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40 p-3 text-sm text-gray-500 dark:text-gray-400">
+        <div className="rounded-md border border-line bg-surface-muted p-3 text-sm text-content-muted ">
           This entry is a dispatcher — the per-user suggestion runs it queued each have their own row below.
         </div>
       )
     }
     return (
-      <div className="rounded-md border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/30 p-3 text-sm text-red-700 dark:text-red-300">
+      <div className="rounded-md border border-danger-line bg-danger-surface p-3 text-sm text-danger-strong ">
         {error}
       </div>
     )
   }
   if (!detail) {
     return (
-      <div className="rounded-md border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40 p-3 text-sm text-gray-500 dark:text-gray-400">
+      <div className="rounded-md border border-line bg-surface-muted p-3 text-sm text-content-muted ">
         Loading run…
       </div>
     )
@@ -104,19 +104,19 @@ export default function RunDetailPanel({ endpoint, hideSummary }: RunDetailPanel
   return (
     <div className="space-y-3">
       {!hideSummary && <RunSummary run={detail.run} />}
-      <div className="rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
-        <div className="border-b border-gray-100 dark:border-gray-800 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+      <div className="rounded-md border border-line bg-surface ">
+        <div className="border-b border-line-subtle px-3 py-2 text-xs font-semibold uppercase tracking-wide text-content-muted ">
           Timeline ({detail.events.length} events)
         </div>
         <ol
           ref={timelineRef}
-          className="max-h-96 overflow-auto divide-y divide-gray-100 dark:divide-gray-800"
+          className="max-h-96 overflow-auto divide-y divide-line-subtle "
         >
           {detail.events.map(e => (
             <EventRow key={e.seq} event={e} />
           ))}
           {detail.events.length === 0 && (
-            <li className="px-3 py-4 text-xs text-gray-500 dark:text-gray-400">
+            <li className="px-3 py-4 text-xs text-content-muted ">
               No events recorded for this run.
             </li>
           )}
@@ -131,41 +131,41 @@ export function RunSummary({ run }: { run: SuggestionRunView }) {
     ? new Date(run.finished_at).getTime() - new Date(run.started_at).getTime()
     : null
   return (
-    <div className="rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3 text-xs text-gray-700 dark:text-gray-300">
+    <div className="rounded-md border border-line bg-surface p-3 text-xs text-content-secondary ">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
         <StatusBadge status={run.status} />
         <span>
-          <span className="text-gray-500 dark:text-gray-400">Triggered by </span>
+          <span className="text-content-muted ">Triggered by </span>
           <span className="font-medium">{run.triggered_by}</span>
         </span>
         <span>
-          <span className="text-gray-500 dark:text-gray-400">Provider </span>
+          <span className="text-content-muted ">Provider </span>
           <span className="font-medium">{run.provider_type}</span>
-          {run.model_id && <span className="text-gray-500 dark:text-gray-400"> ({run.model_id})</span>}
+          {run.model_id && <span className="text-content-muted "> ({run.model_id})</span>}
         </span>
         <span>
-          <span className="text-gray-500 dark:text-gray-400">Started </span>
+          <span className="text-content-muted ">Started </span>
           <span className="font-medium">{new Date(run.started_at).toLocaleString()}</span>
         </span>
         {durationMs !== null && (
           <span>
-            <span className="text-gray-500 dark:text-gray-400">Duration </span>
+            <span className="text-content-muted ">Duration </span>
             <span className="font-medium">{formatDuration(durationMs)}</span>
           </span>
         )}
         <span>
-          <span className="text-gray-500 dark:text-gray-400">Tokens </span>
+          <span className="text-content-muted ">Tokens </span>
           <span className="font-medium">{run.tokens_in.toLocaleString()} in</span>
-          <span className="text-gray-500 dark:text-gray-400"> / </span>
+          <span className="text-content-muted "> / </span>
           <span className="font-medium">{run.tokens_out.toLocaleString()} out</span>
         </span>
         <span>
-          <span className="text-gray-500 dark:text-gray-400">Cost </span>
+          <span className="text-content-muted ">Cost </span>
           <span className="font-medium">${run.estimated_cost_usd.toFixed(4)}</span>
         </span>
       </div>
       {run.error && (
-        <div className="mt-2 rounded border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/30 p-2 text-red-700 dark:text-red-300">
+        <div className="mt-2 rounded border border-danger-line bg-danger-surface p-2 text-danger-strong ">
           <span className="font-semibold">Error:</span> {run.error}
         </div>
       )}
@@ -176,12 +176,12 @@ export function RunSummary({ run }: { run: SuggestionRunView }) {
 function StatusBadge({ status }: { status: string }) {
   const styles =
     status === 'completed'
-      ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300'
+      ? 'bg-green-100 dark:bg-green-900/40 text-success-strong '
       : status === 'failed'
-        ? 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300'
+        ? 'bg-red-100 dark:bg-red-900/40 text-danger-strong '
         : status === 'running'
-          ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300'
-          : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300'
+          ? 'bg-blue-100 dark:bg-blue-900/40 text-accent-strong '
+          : 'bg-surface-inset text-content-tertiary '
   return <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium ${styles}`}>{status}</span>
 }
 
@@ -202,10 +202,10 @@ function EventRow({ event }: { event: SuggestionRunEvent }) {
         </svg>
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
-            <span className="font-mono text-gray-400 dark:text-gray-500">#{event.seq}</span>
+            <span className="font-mono text-content-subtle ">#{event.seq}</span>
             <TypeBadge type={event.type} />
             <EventHeadline event={event} />
-            <span className="ml-auto text-[11px] text-gray-400 dark:text-gray-500">
+            <span className="ml-auto text-[11px] text-content-subtle ">
               {new Date(event.created_at).toLocaleTimeString()}
             </span>
           </div>
@@ -218,17 +218,17 @@ function EventRow({ event }: { event: SuggestionRunEvent }) {
 
 function TypeBadge({ type }: { type: string }) {
   const styles: Record<string, string> = {
-    pipeline_start: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300',
-    pipeline_end: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300',
+    pipeline_start: 'bg-blue-100 dark:bg-blue-900/40 text-accent-strong ',
+    pipeline_end: 'bg-blue-100 dark:bg-blue-900/40 text-accent-strong ',
     prompt: 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300',
     backfill_prompt: 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300',
     ai_response: 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300',
     backfill_response: 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300',
-    enrichment_decision: 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300',
+    enrichment_decision: 'bg-amber-100 dark:bg-amber-900/40 text-warning-strong ',
     read_next_match: 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300',
-    error: 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300',
+    error: 'bg-red-100 dark:bg-red-900/40 text-danger-strong ',
   }
-  const cls = styles[type] ?? 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300'
+  const cls = styles[type] ?? 'bg-surface-inset text-content-tertiary '
   return <span className={`inline-flex rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${cls}`}>{type}</span>
 }
 
@@ -242,10 +242,10 @@ function EventHeadline({ event }: { event: SuggestionRunEvent }) {
       const title = str(c.title)
       const reason = str(c.reason)
       return (
-        <span className="text-gray-700 dark:text-gray-300 truncate">
+        <span className="text-content-secondary truncate">
           {outcome === 'accepted' ? '✓' : '✗'} {title}
           {outcome === 'rejected' && reason && (
-            <span className="text-gray-400 dark:text-gray-500"> — {reason}</span>
+            <span className="text-content-subtle "> — {reason}</span>
           )}
         </span>
       )
@@ -255,10 +255,10 @@ function EventHeadline({ event }: { event: SuggestionRunEvent }) {
       const title = str(c.title)
       const reason = str(c.reason)
       return (
-        <span className="text-gray-700 dark:text-gray-300 truncate">
+        <span className="text-content-secondary truncate">
           {outcome === 'accepted' ? '✓' : '✗'} {title}
           {outcome === 'rejected' && reason && (
-            <span className="text-gray-400 dark:text-gray-500"> — {reason}</span>
+            <span className="text-content-subtle "> — {reason}</span>
           )}
         </span>
       )
@@ -267,29 +267,29 @@ function EventHeadline({ event }: { event: SuggestionRunEvent }) {
     case 'backfill_response': {
       const model = str(c.model)
       return (
-        <span className="text-gray-500 dark:text-gray-400">
+        <span className="text-content-muted ">
           {num(c.tokens_in)} in / {num(c.tokens_out)} out
-          {model && <span className="ml-2 text-gray-400 dark:text-gray-500">· {model}</span>}
+          {model && <span className="ml-2 text-content-subtle ">· {model}</span>}
         </span>
       )
     }
     case 'pipeline_start': {
       const model = str(c.model)
       return (
-        <span className="text-gray-500 dark:text-gray-400">
+        <span className="text-content-muted ">
           {num(c.library_titles)} titles, {num(c.blocks)} blocks
-          {model && <span className="ml-2 text-gray-400 dark:text-gray-500">· {model}</span>}
+          {model && <span className="ml-2 text-content-subtle ">· {model}</span>}
         </span>
       )
     }
     case 'pipeline_end':
       return (
-        <span className="text-gray-500 dark:text-gray-400">
+        <span className="text-content-muted ">
           {num(c.buy_count)} buy, {num(c.read_next_count)} read_next
         </span>
       )
     case 'error':
-      return <span className="text-red-600 dark:text-red-400 truncate">{str(c.error)}</span>
+      return <span className="text-danger truncate">{str(c.error)}</span>
     default:
       return null
   }
@@ -309,16 +309,16 @@ function EventBody({ event }: { event: SuggestionRunEvent }) {
   return (
     <div className="mt-2 ml-5 space-y-2">
       {textKey && typeof c[textKey] === 'string' && (
-        <pre className="max-h-80 overflow-auto whitespace-pre-wrap rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-950/50 p-2 text-[11px] font-mono text-gray-800 dark:text-gray-200">
+        <pre className="max-h-80 overflow-auto whitespace-pre-wrap rounded border border-line bg-surface-muted p-2 text-[11px] font-mono text-content-strong ">
           {String(c[textKey])}
         </pre>
       )}
       {event.type === 'enrichment_decision' && (
         <EnrichmentDecisionBody content={c} />
       )}
-      <details className="text-[11px] text-gray-500 dark:text-gray-400">
+      <details className="text-[11px] text-content-muted ">
         <summary className="cursor-pointer select-none">Raw JSON</summary>
-        <pre className="mt-1 max-h-64 overflow-auto rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-950/50 p-2 font-mono text-gray-700 dark:text-gray-300">
+        <pre className="mt-1 max-h-64 overflow-auto rounded border border-line bg-surface-muted p-2 font-mono text-content-secondary ">
           {JSON.stringify(c, null, 2)}
         </pre>
       </details>
@@ -345,27 +345,27 @@ function EnrichmentDecisionBody({ content }: { content: Record<string, unknown> 
         ? (metadataLookup as Record<string, unknown>)
         : null
     return (
-      <div className="rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-950/50 px-2 py-1.5 text-[11px] space-y-1">
+      <div className="rounded border border-line bg-surface-muted px-2 py-1.5 text-[11px] space-y-1">
         <div>
-          <span className="text-gray-500 dark:text-gray-400">ISBN lookup failed{primaryReject ? ` (${primaryReject})` : ''}</span>
+          <span className="text-content-muted ">ISBN lookup failed{primaryReject ? ` (${primaryReject})` : ''}</span>
           {primaryLookup && str(primaryLookup.title) !== '' && (
             <>
-              <span className="text-gray-500 dark:text-gray-400"> — returned </span>
-              <span className="font-medium text-gray-800 dark:text-gray-200">{str(primaryLookup.title)}</span>
+              <span className="text-content-muted "> — returned </span>
+              <span className="font-medium text-content-strong ">{str(primaryLookup.title)}</span>
               {typeof primaryLookup.authors === 'string' && primaryLookup.authors !== '' && (
-                <span className="text-gray-500 dark:text-gray-400"> — {primaryLookup.authors}</span>
+                <span className="text-content-muted "> — {primaryLookup.authors}</span>
               )}
             </>
           )}
         </div>
         <div>
-          <span className="text-gray-500 dark:text-gray-400">Matched via title+author: </span>
-          <span className="font-medium text-gray-800 dark:text-gray-200">{recoveredTitle}</span>
+          <span className="text-content-muted ">Matched via title+author: </span>
+          <span className="font-medium text-content-strong ">{recoveredTitle}</span>
           {recoveredAuthor && (
-            <span className="text-gray-500 dark:text-gray-400"> — {recoveredAuthor}</span>
+            <span className="text-content-muted "> — {recoveredAuthor}</span>
           )}
           {recoveredISBN && (
-            <span className="text-gray-400 dark:text-gray-500"> · ISBN {recoveredISBN}</span>
+            <span className="text-content-subtle "> · ISBN {recoveredISBN}</span>
           )}
         </div>
       </div>
@@ -382,11 +382,11 @@ function MetadataLookup({ lookup, label }: { lookup: unknown; label: string }) {
   if (!lookup || typeof lookup !== 'object') return null
   const l = lookup as Record<string, unknown>
   return (
-    <div className="rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-950/50 px-2 py-1.5 text-[11px]">
-      <span className="text-gray-500 dark:text-gray-400">{label}: </span>
-      <span className="font-medium text-gray-800 dark:text-gray-200">{str(l.title)}</span>
+    <div className="rounded border border-line bg-surface-muted px-2 py-1.5 text-[11px]">
+      <span className="text-content-muted ">{label}: </span>
+      <span className="font-medium text-content-strong ">{str(l.title)}</span>
       {typeof l.authors === 'string' && l.authors !== '' && (
-        <span className="text-gray-500 dark:text-gray-400"> — {l.authors}</span>
+        <span className="text-content-muted "> — {l.authors}</span>
       )}
     </div>
   )

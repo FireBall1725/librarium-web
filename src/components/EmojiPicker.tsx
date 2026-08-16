@@ -27,13 +27,13 @@ export default function EmojiPicker({ value, onChange }: EmojiPickerProps) {
       <button
         type="button"
         onClick={() => setOpen(v => !v)}
-        className="w-full flex items-center gap-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+        className="w-full flex items-center gap-2 rounded-lg border border-line-strong bg-surface-raised px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors"
       >
         {value
           ? <span className="text-xl leading-none">{value}</span>
-          : <span className="text-gray-400 dark:text-gray-500">☺</span>
+          : <span className="text-content-subtle ">☺</span>
         }
-        <span className="flex-1 text-left text-gray-500 dark:text-gray-400">
+        <span className="flex-1 text-left text-content-muted ">
           {value ? '' : 'None'}
         </span>
         <svg className="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">

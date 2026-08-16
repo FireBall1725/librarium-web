@@ -59,15 +59,15 @@ export default function PreferencesTab() {
         <div className={cardClass}>
           <div className="flex items-center justify-between px-6 py-4 gap-6">
             <div className="min-w-0">
-              <p className="text-sm font-medium text-gray-900 dark:text-white">Interface language</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+              <p className="text-sm font-medium text-content ">Interface language</p>
+              <p className="text-xs text-content-muted mt-0.5">
                 Switches the language used throughout the web interface.
               </p>
             </div>
             <select
               value={currentLocale}
               onChange={e => handleLocaleChange(e.target.value as SupportedLocale)}
-              className="flex-shrink-0 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-shrink-0 rounded-md border border-line-strong bg-surface-raised px-3 py-1.5 text-sm text-content focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               {SUPPORTED_LOCALES.map(locale => (
                 <option key={locale} value={locale}>
@@ -84,14 +84,14 @@ export default function PreferencesTab() {
         <div className={cardClass}>
           <div className="flex items-center justify-between px-6 py-4">
             <div className="min-w-0 mr-6">
-              <p className="text-sm font-medium text-gray-900 dark:text-white">Show read status badges</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+              <p className="text-sm font-medium text-content ">Show read status badges</p>
+              <p className="text-xs text-content-muted mt-0.5">
                 Show a coloured corner badge on book covers indicating your read status
                 (read, reading, did not finish)
               </p>
             </div>
             {prefsLoading ? (
-              <div className="h-6 w-11 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse flex-shrink-0" />
+              <div className="h-6 w-11 rounded-full bg-surface-strong animate-pulse flex-shrink-0" />
             ) : (
               <button
                 type="button"

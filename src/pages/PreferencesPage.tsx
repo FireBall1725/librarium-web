@@ -41,26 +41,26 @@ export default function PreferencesPage() {
   return (
     <div className="px-6 py-8">
       <div className="max-w-3xl mx-auto">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-8">Preferences</h1>
+        <h1 className="text-2xl font-bold text-content mb-8">Preferences</h1>
 
         {/* Display section */}
         <section>
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-3">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-content-subtle mb-3">
             Display
           </h2>
-          <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 divide-y divide-gray-100 dark:divide-gray-800">
+          <div className="rounded-xl border border-line bg-surface divide-y divide-line-subtle ">
             {/* Show read status badges */}
             <div className="flex items-center justify-between px-6 py-4">
               <div className="min-w-0 mr-6">
-                <p className="text-sm font-medium text-gray-900 dark:text-white">
+                <p className="text-sm font-medium text-content ">
                   Show read status badges
                 </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                <p className="text-xs text-content-muted mt-0.5">
                   Show a corner badge on book covers indicating your read status (read, reading, did not finish)
                 </p>
               </div>
               {loading ? (
-                <div className="h-6 w-11 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse flex-shrink-0" />
+                <div className="h-6 w-11 rounded-full bg-surface-strong animate-pulse flex-shrink-0" />
               ) : (
                 <button
                   type="button"

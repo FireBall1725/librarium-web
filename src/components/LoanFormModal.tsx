@@ -88,11 +88,11 @@ export default function LoanFormModal({ libraryId, loan, prefillBook, onClose, o
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-sm rounded-xl bg-white dark:bg-gray-900 shadow-xl p-6">
+      <div className="w-full max-w-sm rounded-xl bg-surface shadow-xl p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-semibold text-gray-900 dark:text-white">{loan ? 'Edit loan' : 'New loan'}</h3>
+          <h3 className="text-base font-semibold text-content ">{loan ? 'Edit loan' : 'New loan'}</h3>
           <button type="button" onClick={onClose}
-            className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-surface-inset transition-colors"
             aria-label="Close">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -103,37 +103,37 @@ export default function LoanFormModal({ libraryId, loan, prefillBook, onClose, o
 
           {!loan && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Book *</label>
+              <label className="block text-sm font-medium text-content-secondary mb-1">Book *</label>
               {selectedBook ? (
-                <div className="flex items-center gap-2 rounded-lg border border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-950/30 px-3 py-2">
-                  <span className="flex-1 text-sm text-gray-900 dark:text-white truncate">{selectedBook.title}</span>
+                <div className="flex items-center gap-2 rounded-lg border border-accent-line bg-accent-surface px-3 py-2">
+                  <span className="flex-1 text-sm text-content truncate">{selectedBook.title}</span>
                   <button type="button" onClick={() => { setSelectedBook(null); setBookQuery('') }}
-                    className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 text-lg leading-none">×</button>
+                    className="text-content-subtle hover:text-content-tertiary text-lg leading-none">×</button>
                 </div>
               ) : (
                 <div className="relative">
                   <input type="text" value={bookQuery} onChange={e => setBookQuery(e.target.value)}
                     placeholder="Search books…"
-                    className="w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white pl-9 pr-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                    className="w-full rounded-lg border border-line-strong dark:bg-gray-800 dark:text-white pl-9 pr-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
                   <svg className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                 </div>
               )}
-              {isSearching && <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Searching…</p>}
+              {isSearching && <p className="text-xs text-content-subtle mt-1">Searching…</p>}
               {!isSearching && bookQuery.trim() && bookResults.length === 0 && !selectedBook && (
-                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">No matches.</p>
+                <p className="text-xs text-content-subtle mt-1">No matches.</p>
               )}
               {!isSearching && bookResults.length > 0 && !selectedBook && (
-                <ul className="mt-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow max-h-40 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-800">
+                <ul className="mt-1 rounded-lg border border-line bg-surface-raised shadow max-h-40 overflow-y-auto divide-y divide-line-subtle ">
                   {bookResults.map(b => (
                     <li key={b.id}>
                       <button type="button"
                         onClick={() => { setSelectedBook({ id: b.id, title: b.title }); setBookResults([]) }}
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors">
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-accent-surface transition-colors">
                         {b.title}
                         {b.contributors.length > 0 && (
-                          <span className="text-xs text-gray-400 dark:text-gray-500 ml-1">— {b.contributors.map(c => c.name).join(', ')}</span>
+                          <span className="text-xs text-content-subtle ml-1">— {b.contributors.map(c => c.name).join(', ')}</span>
                         )}
                       </button>
                     </li>
@@ -144,41 +144,41 @@ export default function LoanFormModal({ libraryId, loan, prefillBook, onClose, o
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Loaned to *</label>
+            <label className="block text-sm font-medium text-content-secondary mb-1">Loaned to *</label>
             <input type="text" autoFocus={!!loan} value={form.loaned_to}
               onChange={e => setForm(f => ({ ...f, loaned_to: e.target.value }))}
               placeholder="Name or contact"
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+              className="w-full rounded-lg border border-line-strong dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             {!loan && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Loaned date</label>
+                <label className="block text-sm font-medium text-content-secondary mb-1">Loaned date</label>
                 <input type="date" value={form.loaned_at}
                   onChange={e => setForm(f => ({ ...f, loaned_at: e.target.value }))}
-                  className="w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                  className="w-full rounded-lg border border-line-strong dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
               </div>
             )}
             <div className={loan ? 'col-span-2' : ''}>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Due date</label>
+              <label className="block text-sm font-medium text-content-secondary mb-1">Due date</label>
               <input type="date" value={form.due_date}
                 onChange={e => setForm(f => ({ ...f, due_date: e.target.value }))}
-                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                className="w-full rounded-lg border border-line-strong dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
+            <label className="block text-sm font-medium text-content-secondary mb-1">Notes</label>
             <input type="text" value={form.notes}
               onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+              className="w-full rounded-lg border border-line-strong dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
           </div>
 
-          {error && <div className="rounded-lg bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 px-3 py-2 text-sm text-red-700 dark:text-red-400">{error}</div>}
+          {error && <div className="rounded-lg bg-danger-surface border border-danger-line px-3 py-2 text-sm text-danger-strong ">{error}</div>}
           <div className="flex gap-3 pt-1">
             <button type="button" onClick={onClose}
-              className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Cancel</button>
+              className="flex-1 rounded-lg border border-line-strong px-4 py-2 text-sm font-medium text-content-secondary hover:bg-surface-muted transition-colors">Cancel</button>
             <button type="submit" disabled={isLoading || !form.loaned_to}
               className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
               {isLoading ? 'Saving…' : loan ? 'Save changes' : 'Create loan'}

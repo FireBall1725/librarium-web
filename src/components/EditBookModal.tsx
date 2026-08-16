@@ -21,13 +21,13 @@ interface Props {
   initialTab?: 'details' | 'editions'
 }
 
-const inputCls = 'w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
-const labelCls = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1'
+const inputCls = 'w-full rounded-lg border border-line-strong dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
+const labelCls = 'block text-sm font-medium text-content-secondary mb-1'
 
 const formatBadgeClass = (fmt: string) => {
   if (fmt === 'ebook') return 'bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-400 ring-purple-200 dark:ring-purple-800'
-  if (fmt === 'audiobook') return 'bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 ring-amber-200 dark:ring-amber-800'
-  return 'bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-400 ring-blue-200 dark:ring-blue-800'
+  if (fmt === 'audiobook') return 'bg-warning-surface text-warning-strong ring-amber-200 dark:ring-amber-800'
+  return 'bg-accent-surface text-accent-strong ring-blue-200 dark:ring-blue-800'
 }
 
 export default function EditBookModal({ libraryId, book, onClose, onSaved, initialTab = 'details' }: Props) {
@@ -181,13 +181,13 @@ export default function EditBookModal({ libraryId, book, onClose, onSaved, initi
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 overflow-y-auto py-10 px-4">
-      <div className="w-full max-w-xl rounded-xl bg-white dark:bg-gray-900 shadow-xl flex flex-col">
+      <div className="w-full max-w-xl rounded-xl bg-surface shadow-xl flex flex-col">
 
         {/* Header with tabs */}
-        <div className="px-6 pt-4 pb-0 border-b border-gray-200 dark:border-gray-700">
+        <div className="px-6 pt-4 pb-0 border-b border-line ">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-sm font-medium">{book.title}</p>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xl leading-none">×</button>
+            <p className="text-xs text-content-muted truncate max-w-sm font-medium">{book.title}</p>
+            <button onClick={onClose} className="text-gray-400 hover:text-content-tertiary text-xl leading-none">×</button>
           </div>
           <div className="flex gap-0">
             {(['details', 'editions'] as const).map(t => (
@@ -244,7 +244,7 @@ export default function EditBookModal({ libraryId, book, onClose, onSaved, initi
                   />
                 ))}
                 <button type="button" onClick={() => setContributors(cs => [...cs, { contributor: null, role: 'author' }])}
-                  className="text-sm text-blue-600 dark:text-blue-400 hover:underline">+ Add contributor</button>
+                  className="text-sm text-accent hover:underline">+ Add contributor</button>
               </div>
             </div>
 
@@ -266,12 +266,12 @@ export default function EditBookModal({ libraryId, book, onClose, onSaved, initi
                   onBlur={() => setTimeout(() => setTagDropdownOpen(false), 150)}
                   className={inputCls} placeholder="Search or create tag…" />
                 {tagDropdownOpen && (filteredTags.length > 0 || tagQuery.trim()) && (
-                  <ul className="absolute z-20 mt-1 w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg overflow-hidden max-h-48 overflow-y-auto">
+                  <ul className="absolute z-20 mt-1 w-full rounded-lg border border-line bg-surface-raised shadow-lg overflow-hidden max-h-48 overflow-y-auto">
                     {filteredTags.slice(0, 8).map(t => (
                       <li key={t.id}>
                         <button type="button" onMouseDown={e => e.preventDefault()}
                           onClick={() => { setSelectedTags(ts => [...ts, t]); setTagQuery('') }}
-                          className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 dark:hover:bg-blue-900/30 flex items-center gap-2">
+                          className="w-full text-left px-3 py-2 text-sm hover:bg-accent-surface flex items-center gap-2">
                           <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: t.color }} />
                           {t.name}
                         </button>
@@ -279,11 +279,11 @@ export default function EditBookModal({ libraryId, book, onClose, onSaved, initi
                     ))}
                     {tagQuery.trim() && (
                       <li>
-                        <div className="flex items-center gap-2 px-3 py-2 border-t border-gray-100 dark:border-gray-700">
+                        <div className="flex items-center gap-2 px-3 py-2 border-t border-line-subtle ">
                           <input type="color" value={newTagColor} onChange={e => setNewTagColor(e.target.value)} className="w-6 h-6 rounded cursor-pointer border-0 p-0" />
                           <button type="button" onMouseDown={e => e.preventDefault()} onClick={() => createTag(tagQuery)}
                             disabled={isCreatingTag}
-                            className="flex-1 text-left text-sm text-blue-600 dark:text-blue-400 hover:underline disabled:opacity-50">
+                            className="flex-1 text-left text-sm text-accent hover:underline disabled:opacity-50">
                             + Create "{tagQuery.trim()}"
                           </button>
                         </div>
@@ -299,7 +299,7 @@ export default function EditBookModal({ libraryId, book, onClose, onSaved, initi
               <label className={labelCls}>Genres</label>
               <div className="flex flex-wrap gap-1.5 mb-1.5">
                 {selectedGenres.map(g => (
-                  <span key={g.id} className="inline-flex items-center gap-1 rounded-full bg-gray-100 dark:bg-gray-700 px-2 py-0.5 text-xs font-medium text-gray-700 dark:text-gray-300">
+                  <span key={g.id} className="inline-flex items-center gap-1 rounded-full bg-surface-inset px-2 py-0.5 text-xs font-medium text-content-secondary ">
                     {g.name}
                     <button type="button" onClick={() => setSelectedGenres(gs => gs.filter(x => x.id !== g.id))} className="hover:opacity-70 text-sm leading-none">×</button>
                   </span>
@@ -311,19 +311,19 @@ export default function EditBookModal({ libraryId, book, onClose, onSaved, initi
                   onBlur={() => setTimeout(() => setGenreDropdownOpen(false), 150)}
                   className={inputCls} placeholder="Search genres…" />
                 {genreDropdownOpen && filteredGenres.length > 0 && (
-                  <ul className="absolute z-20 mt-1 w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg overflow-hidden max-h-48 overflow-y-auto">
+                  <ul className="absolute z-20 mt-1 w-full rounded-lg border border-line bg-surface-raised shadow-lg overflow-hidden max-h-48 overflow-y-auto">
                     {filteredGenres.slice(0, 8).map(g => (
                       <li key={g.id}>
                         <button type="button" onMouseDown={e => e.preventDefault()}
                           onClick={() => { setSelectedGenres(gs => [...gs, g]); setGenreQuery('') }}
-                          className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 dark:hover:bg-blue-900/30">{g.name}</button>
+                          className="w-full text-left px-3 py-2 text-sm hover:bg-accent-surface ">{g.name}</button>
                       </li>
                     ))}
                   </ul>
                 )}
                 {genreDropdownOpen && filteredGenres.length === 0 && genreQuery && (
-                  <div className="absolute z-20 mt-1 w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg px-3 py-2">
-                    <p className="text-xs text-gray-400 dark:text-gray-500">No matching genres</p>
+                  <div className="absolute z-20 mt-1 w-full rounded-lg border border-line bg-surface-raised shadow-lg px-3 py-2">
+                    <p className="text-xs text-content-subtle ">No matching genres</p>
                   </div>
                 )}
               </div>
@@ -359,11 +359,11 @@ export default function EditBookModal({ libraryId, book, onClose, onSaved, initi
               </div>
             )}
 
-            {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+            {error && <p className="text-sm text-danger ">{error}</p>}
 
             <div className="flex justify-end gap-3 pt-2">
               <button type="button" onClick={onClose}
-                className="rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                className="rounded-lg border border-line-strong px-4 py-2 text-sm font-medium text-content-secondary hover:bg-surface-muted transition-colors">
                 Cancel
               </button>
               <button type="submit" disabled={saving}
@@ -377,18 +377,18 @@ export default function EditBookModal({ libraryId, book, onClose, onSaved, initi
         {/* Editions tab */}
         {tab === 'editions' && (
           <div className="flex flex-col max-h-[70vh]">
-            <div className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between flex-shrink-0">
-              <p className="text-xs text-gray-500 dark:text-gray-400">Paperback, hardcover, ebook, audiobook, etc.</p>
+            <div className="px-6 py-3 border-b border-line flex items-center justify-between flex-shrink-0">
+              <p className="text-xs text-content-muted ">Paperback, hardcover, ebook, audiobook, etc.</p>
               <button onClick={() => setShowAddEdition(true)}
                 className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 transition-colors">
                 Add edition
               </button>
             </div>
             <div className="overflow-y-auto flex-1 px-6 py-4 space-y-4">
-              {editionsLoading && <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-8">Loading…</p>}
+              {editionsLoading && <p className="text-sm text-content-subtle text-center py-8">Loading…</p>}
               {!editionsLoading && editions.length === 0 && (
                 <div className="text-center py-10">
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">No editions yet</p>
+                  <p className="text-sm text-content-muted mb-2">No editions yet</p>
                   <button onClick={() => setShowAddEdition(true)} className="text-sm text-blue-600 hover:underline">Add the first edition</button>
                 </div>
               )}
@@ -406,25 +406,25 @@ export default function EditBookModal({ libraryId, book, onClose, onSaved, initi
                 ].filter(Boolean) as Array<{ label: string; value: string }>
 
                 return (
-                  <div key={e.id} className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 overflow-hidden">
+                  <div key={e.id} className="rounded-xl border border-line bg-surface-muted overflow-hidden">
                     {/* Header */}
-                    <div className="flex items-center justify-between gap-2 px-4 py-3 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-700">
+                    <div className="flex items-center justify-between gap-2 px-4 py-3 bg-surface border-b border-line-subtle ">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ring-1 ${formatBadgeClass(e.format)}`}>
                           {e.format}
                         </span>
                         {e.is_primary && (
-                          <span className="inline-flex items-center rounded-full bg-green-50 dark:bg-green-950/50 px-2 py-0.5 text-xs font-medium text-green-700 dark:text-green-400 ring-1 ring-green-200 dark:ring-green-800">
+                          <span className="inline-flex items-center rounded-full bg-success-surface px-2 py-0.5 text-xs font-medium text-success-strong ring-1 ring-success-line ">
                             Primary
                           </span>
                         )}
-                        {e.edition_name && <span className="text-sm font-medium text-gray-900 dark:text-white">{e.edition_name}</span>}
+                        {e.edition_name && <span className="text-sm font-medium text-content ">{e.edition_name}</span>}
                       </div>
                       <div className="flex items-center gap-3 flex-shrink-0">
                         <button onClick={() => setEditEdition(e)}
-                          className="text-xs text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Edit</button>
+                          className="text-xs text-content-muted hover:text-accent transition-colors">Edit</button>
                         <button onClick={() => deleteEdition(e.id)}
-                          className="text-xs text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors">Delete</button>
+                          className="text-xs text-content-muted hover:text-danger transition-colors">Delete</button>
                       </div>
                     </div>
                     {/* Metadata grid */}
@@ -432,8 +432,8 @@ export default function EditBookModal({ libraryId, book, onClose, onSaved, initi
                       <dl className="px-4 py-3 grid grid-cols-2 gap-x-6 gap-y-2">
                         {meta.map(item => (
                           <div key={item.label}>
-                            <dt className="text-xs text-gray-400 dark:text-gray-500">{item.label}</dt>
-                            <dd className="text-xs font-medium text-gray-700 dark:text-gray-300 mt-0.5 font-mono">{item.value}</dd>
+                            <dt className="text-xs text-content-subtle ">{item.label}</dt>
+                            <dd className="text-xs font-medium text-content-secondary mt-0.5 font-mono">{item.value}</dd>
                           </div>
                         ))}
                       </dl>

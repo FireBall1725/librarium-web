@@ -90,7 +90,7 @@ export default function JobKindPage() {
       <>
         <PageHeader title="Job" breadcrumbs={[{ label: 'Settings', to: '/admin/settings' }, { label: 'Jobs', to: '/admin/settings/jobs' }]} />
         <div className="max-w-3xl px-8 py-8">
-          <div className="rounded-lg bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-400">
+          <div className="rounded-lg bg-danger-surface border border-danger-line px-4 py-3 text-sm text-danger-strong ">
             {error}
           </div>
         </div>
@@ -115,7 +115,7 @@ export default function JobKindPage() {
             type="button"
             onClick={runNow}
             disabled={running}
-            className="rounded-lg border border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/30 px-3 py-2 text-sm font-medium text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/50 disabled:opacity-50 transition-colors"
+            className="rounded-lg border border-accent-line bg-accent-surface px-3 py-2 text-sm font-medium text-accent-strong hover:bg-blue-100 dark:hover:bg-blue-900/50 disabled:opacity-50 transition-colors"
           >
             {running ? 'Running…' : 'Run now'}
           </button>
@@ -126,13 +126,13 @@ export default function JobKindPage() {
             this one kind. */}
         {schedule ? (
           <section>
-            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-content-muted ">
               Schedule
             </h2>
             <JobSchedulesSection kind={kind} />
           </section>
         ) : (
-          <div className="rounded-md border border-dashed border-gray-300 dark:border-gray-700 px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
+          <div className="rounded-md border border-dashed border-line-strong px-4 py-6 text-center text-sm text-content-muted ">
             No schedule registered for this kind.
           </div>
         )}
@@ -141,7 +141,7 @@ export default function JobKindPage() {
             caps, token budgets, per-user cooldown. Rendered inline. */}
         {kind === 'ai_suggestions' && (
           <section>
-            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-content-muted ">
               Configuration
             </h2>
             <AISuggestionsJobCard onRunKicked={() => setTimeout(load, 1500)} />
@@ -152,7 +152,7 @@ export default function JobKindPage() {
             config rather than a kind-specific endpoint. */}
         {kind === 'history_prune' && (
           <section>
-            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-content-muted ">
               Retention
             </h2>
             <HistoryPruneJobCard />
@@ -163,12 +163,12 @@ export default function JobKindPage() {
             page for a full list. */}
         <section>
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-content-muted ">
               Recent runs
             </h2>
             <Link
               to={`/admin/settings/jobs/history?kind=${encodeURIComponent(kind)}`}
-              className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+              className="text-xs text-accent hover:underline"
             >
               View all →
             </Link>
@@ -182,34 +182,34 @@ export default function JobKindPage() {
 
 function RecentRuns({ rows }: { rows: UnifiedJobRow[] | null }) {
   if (rows === null) {
-    return <div className="text-sm text-gray-400 dark:text-gray-500">Loading…</div>
+    return <div className="text-sm text-content-subtle ">Loading…</div>
   }
   if (rows.length === 0) {
     return (
-      <div className="rounded-md border border-dashed border-gray-300 dark:border-gray-700 px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
+      <div className="rounded-md border border-dashed border-line-strong px-4 py-6 text-center text-sm text-content-muted ">
         No runs yet.
       </div>
     )
   }
   return (
-    <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 divide-y divide-gray-100 dark:divide-gray-800">
+    <div className="rounded-lg border border-line bg-surface divide-y divide-line-subtle ">
       {rows.map(r => (
         <div key={r.id} className="flex items-center gap-3 px-4 py-2.5 text-sm">
           <StatusDot status={r.status} />
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-gray-800 dark:text-gray-200 font-medium capitalize">
+              <span className="text-content-strong font-medium capitalize">
                 {r.status}
               </span>
-              <span className="text-xs text-gray-400 dark:text-gray-500">
+              <span className="text-xs text-content-subtle ">
                 · {new Date(r.created_at).toLocaleString()}
               </span>
-              <span className="text-xs text-gray-400 dark:text-gray-500">
+              <span className="text-xs text-content-subtle ">
                 · {r.triggered_by}
               </span>
             </div>
             {r.error && (
-              <p className="mt-0.5 text-xs text-red-600 dark:text-red-400">{r.error}</p>
+              <p className="mt-0.5 text-xs text-danger ">{r.error}</p>
             )}
           </div>
         </div>

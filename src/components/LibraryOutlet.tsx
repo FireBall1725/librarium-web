@@ -77,36 +77,36 @@ export default function LibraryOutlet() {
   return (
     <div className="flex flex-col h-full">
       {/* Sticky breadcrumb + library title + section tabs */}
-      <div className="flex-shrink-0 sticky top-0 z-10 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-8 pt-4">
+      <div className="flex-shrink-0 sticky top-0 z-10 border-b border-line bg-surface px-8 pt-4">
         <nav className="flex items-center gap-2 text-sm flex-wrap mb-1" aria-label="Breadcrumb">
-          <Link to="/libraries" className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors">
+          <Link to="/libraries" className="text-content-muted hover:text-content-secondary transition-colors">
             {t('nav.libraries')}
           </Link>
           {library && (
             <>
-              <span className="text-gray-300 dark:text-gray-600">/</span>
-              <span className="text-gray-500 dark:text-gray-400 truncate max-w-xs">{library.name}</span>
+              <span className="text-content-faint ">/</span>
+              <span className="text-content-muted truncate max-w-xs">{library.name}</span>
             </>
           )}
           {extraCrumbs.map((crumb, i) => (
             <Fragment key={i}>
-              <span className="text-gray-300 dark:text-gray-600">/</span>
+              <span className="text-content-faint ">/</span>
               {crumb.to ? (
-                <Link to={crumb.to} className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors truncate max-w-xs">
+                <Link to={crumb.to} className="text-content-muted hover:text-content-secondary transition-colors truncate max-w-xs">
                   {crumb.label}
                 </Link>
               ) : (
-                <span className="text-gray-500 dark:text-gray-400 truncate max-w-xs">{crumb.label}</span>
+                <span className="text-content-muted truncate max-w-xs">{crumb.label}</span>
               )}
             </Fragment>
           ))}
         </nav>
         {extraCrumbs.length > 0 ? (
-          <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-xl font-bold text-content ">
             {extraCrumbs[extraCrumbs.length - 1].label}
           </h1>
         ) : (
-          library && <h1 className="text-xl font-bold text-gray-900 dark:text-white">{library.name}</h1>
+          library && <h1 className="text-xl font-bold text-content ">{library.name}</h1>
         )}
 
         {/* Library section tabs (hidden when rendering deeper views with their own crumbs) */}

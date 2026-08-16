@@ -5,7 +5,7 @@ import { Outlet } from 'react-router-dom'
 
 export default function SettingsLayout() {
   return (
-    <div className="h-full overflow-auto bg-gray-50 dark:bg-gray-950">
+    <div className="h-full overflow-auto bg-surface-muted ">
       <Outlet />
     </div>
   )

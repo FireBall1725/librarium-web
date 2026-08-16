@@ -69,28 +69,28 @@ function AddUserModal({ onClose, onCreated }: AddUserModalProps) {
 
   const field = (key: keyof typeof form, label: string, type = 'text') => (
     <div>
-      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{label}</label>
+      <label className="block text-sm font-medium text-content-secondary mb-1">{label}</label>
       <input
         type={type}
         required={key !== 'display_name'}
         value={form[key]}
         onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
-        className="w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        className="w-full rounded-lg border border-line-strong dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
       />
     </div>
   )
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="w-full max-w-md rounded-xl bg-white dark:bg-gray-900 shadow-xl p-6">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Add user</h2>
+      <div className="w-full max-w-md rounded-xl bg-surface shadow-xl p-6">
+        <h2 className="text-lg font-semibold text-content mb-4">Add user</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           {field('username', 'Username')}
           {field('email', 'Email', 'email')}
           {field('display_name', 'Display name')}
           {field('password', 'Password', 'password')}
           {error && (
-            <div className="rounded-lg bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 px-3 py-2 text-sm text-red-700 dark:text-red-400">
+            <div className="rounded-lg bg-danger-surface border border-danger-line px-3 py-2 text-sm text-danger-strong ">
               {error}
             </div>
           )}
@@ -98,7 +98,7 @@ function AddUserModal({ onClose, onCreated }: AddUserModalProps) {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              className="flex-1 rounded-lg border border-line-strong px-4 py-2 text-sm font-medium text-content-secondary hover:bg-surface-muted transition-colors"
             >
               Cancel
             </button>
@@ -154,27 +154,27 @@ function EditUserModal({ user, isSelf, onClose, onSaved }: EditUserModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="w-full max-w-md rounded-xl bg-white dark:bg-gray-900 shadow-xl p-6">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">Edit user</h2>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">{user.username}</p>
+      <div className="w-full max-w-md rounded-xl bg-surface shadow-xl p-6">
+        <h2 className="text-lg font-semibold text-content mb-1">Edit user</h2>
+        <p className="text-xs text-content-muted mb-4">{user.username}</p>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Display name</label>
+            <label className="block text-sm font-medium text-content-secondary mb-1">Display name</label>
             <input
               type="text"
               value={form.display_name}
               onChange={e => setForm(f => ({ ...f, display_name: e.target.value }))}
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-lg border border-line-strong dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
+            <label className="block text-sm font-medium text-content-secondary mb-1">Email</label>
             <input
               type="email"
               required
               value={form.email}
               onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-lg border border-line-strong dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </div>
           <div>
@@ -189,30 +189,30 @@ function EditUserModal({ user, isSelf, onClose, onSaved }: EditUserModalProps) {
               Instance admin
             </label>
             {isSelf && (
-              <p className="mt-1 ml-6 text-xs text-gray-500 dark:text-gray-400">
+              <p className="mt-1 ml-6 text-xs text-content-muted ">
                 You can't remove your own admin privileges. Have another admin do it.
-              </p>
-            )}
-          </div>
-          {error && (
-            <div className="rounded-lg bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 px-3 py-2 text-sm text-red-700 dark:text-red-400">
-              {error}
-            </div>
-          )}
-          <div className="flex gap-3 pt-1">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 transition-colors"
-            >
-              {isLoading ? 'Saving…' : 'Save changes'}
+ </p>
+ )}
+ </div>
+ {error && (
+ <div className="rounded-lg bg-danger-surface border border-danger-line px-3 py-2 text-sm text-red-700 dark:text-red-400">
+ {error}
+ </div>
+ )}
+ <div className="flex gap-3 pt-1">
+ <button
+ type="button"
+ onClick={onClose}
+ className="flex-1 rounded-lg border border-line-strong px-4 py-2 text-sm font-medium text-content-secondary hover:bg-surface-muted transition-colors"
+ >
+ Cancel
+ </button>
+ <button
+ type="submit"
+ disabled={isLoading}
+ className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 transition-colors"
+ >
+ {isLoading ? 'Saving…' : 'Save changes'}
             </button>
           </div>
         </form>
@@ -262,25 +262,25 @@ function SetPasswordModal({ user, onClose, onSaved }: SetPasswordModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="w-full max-w-md rounded-xl bg-white dark:bg-gray-900 shadow-xl p-6">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">Set password</h2>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+      <div className="w-full max-w-md rounded-xl bg-surface shadow-xl p-6">
+        <h2 className="text-lg font-semibold text-content mb-1">Set password</h2>
+        <p className="text-xs text-content-muted mb-4">
           {user.username} — share the new password with them out of band; they can change it from their profile.
         </p>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">New password</label>
+            <label className="block text-sm font-medium text-content-secondary mb-1">New password</label>
             <input
               type="password"
               required
               autoFocus
               value={password}
               onChange={e => setPassword(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-lg border border-line-strong dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Confirm</label>
+            <label className="block text-sm font-medium text-content-secondary mb-1">Confirm</label>
             <input
               type="password"
               required
@@ -293,25 +293,25 @@ function SetPasswordModal({ user, onClose, onSaved }: SetPasswordModalProps) {
               }`}
             />
             {mismatch && (
-              <p className="mt-1 text-xs text-red-600 dark:text-red-400">Passwords don't match.</p>
-            )}
-          </div>
-          {error && (
-            <div className="rounded-lg bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 px-3 py-2 text-sm text-red-700 dark:text-red-400">
-              {error}
-            </div>
-          )}
-          <div className="flex gap-3 pt-1">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isLoading || mismatch || password === ''}
+              <p className="mt-1 text-xs text-danger ">Passwords don't match.</p>
+ )}
+ </div>
+ {error && (
+ <div className="rounded-lg bg-danger-surface border border-danger-line px-3 py-2 text-sm text-red-700 dark:text-red-400">
+ {error}
+ </div>
+ )}
+ <div className="flex gap-3 pt-1">
+ <button
+ type="button"
+ onClick={onClose}
+ className="flex-1 rounded-lg border border-line-strong px-4 py-2 text-sm font-medium text-content-secondary hover:bg-surface-muted transition-colors"
+ >
+ Cancel
+ </button>
+ <button
+ type="submit"
+ disabled={isLoading || mismatch || password === ''}
               className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {isLoading ? 'Setting…' : 'Set password'}
@@ -384,193 +384,193 @@ export default function UsersPage() {
         title="Users"
         description={data ? `${data.total} total` : undefined}
         breadcrumbs={[{ label: 'Admin' }, { label: 'Users' }]}
-        actions={
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
-          >
-            Add user
-          </button>
-        }
-      />
-      <div className="p-8">
+ actions={
+ <button
+ onClick={() => setShowAddModal(true)}
+ className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+ >
+ Add user
+ </button>
+ }
+ />
+ <div className="p-8">
 
-      {error && (
-        <div className="mb-4 rounded-lg bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-400">
-          {error}
-        </div>
-      )}
-      {actionError && (
-        <div className="mb-4 rounded-lg bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-400">
-          {actionError}
-        </div>
-      )}
+ {error && (
+ <div className="mb-4 rounded-lg bg-danger-surface border border-danger-line px-4 py-3 text-sm text-red-700 dark:text-red-400">
+ {error}
+ </div>
+ )}
+ {actionError && (
+ <div className="mb-4 rounded-lg bg-danger-surface border border-danger-line px-4 py-3 text-sm text-red-700 dark:text-red-400">
+ {actionError}
+ </div>
+ )}
 
-      <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-            <tr>
-              {['Username', 'Display name', 'Email', 'Role', 'Status', 'Last login', ''].map(h => (
-                <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-            {!data && (
-              <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-sm text-gray-400 dark:text-gray-500">
-                  Loading…
-                </td>
-              </tr>
-            )}
-            {data?.items.map(u => (
-              <tr key={u.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">{u.username}</td>
-                <td className="px-4 py-3 text-gray-600 dark:text-gray-400">{u.display_name}</td>
-                <td className="px-4 py-3 text-gray-600 dark:text-gray-400">{u.email}</td>
-                <td className="px-4 py-3">
-                  {u.is_instance_admin ? (
-                    <span className="inline-flex items-center rounded-full bg-purple-50 dark:bg-purple-950/50 px-2 py-0.5 text-xs font-medium text-purple-700 dark:text-purple-400 ring-1 ring-purple-200 dark:ring-purple-800">
-                      Admin
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center rounded-full bg-gray-100 dark:bg-gray-700 px-2 py-0.5 text-xs font-medium text-gray-600 dark:text-gray-300">
-                      User
-                    </span>
-                  )}
-                </td>
-                <td className="px-4 py-3">
-                  {u.is_active ? (
-                    <span className="inline-flex items-center rounded-full bg-green-50 dark:bg-green-950/50 px-2 py-0.5 text-xs font-medium text-green-700 dark:text-green-400 ring-1 ring-green-200 dark:ring-green-800">
-                      Active
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center rounded-full bg-gray-100 dark:bg-gray-700 px-2 py-0.5 text-xs font-medium text-gray-500 dark:text-gray-400">
-                      Disabled
-                    </span>
-                  )}
-                </td>
-                <td className="px-4 py-3 text-gray-500 dark:text-gray-400">
-                  {u.last_login_at
-                    ? new Date(u.last_login_at).toLocaleDateString()
-                    : <span className="text-gray-300 dark:text-gray-600">Never</span>
-                  }
-                </td>
-                <td className="px-4 py-3">
-                  {(() => {
-                    const isSelf = currentUser?.id === u.id
-                    return (
-                  <div className="flex items-center gap-0.5 justify-end">
-                    <button
-                      onClick={() => setEditingUser(u)}
-                      className="p-1.5 rounded text-gray-400 dark:text-gray-500 hover:!text-blue-500 dark:hover:!text-blue-400 hover:!bg-blue-50 dark:hover:!bg-blue-900/20 transition-colors"
-                      title="Edit user"
-                      aria-label="Edit user"
-                    >
-                      <PencilIcon />
-                    </button>
-                    <button
-                      onClick={() => setResettingUser(u)}
-                      disabled={isSelf}
-                      className={`p-1.5 rounded text-gray-400 dark:text-gray-500 transition-colors ${
-                        isSelf
-                          ? 'opacity-30 cursor-not-allowed'
+ <div className="rounded-xl border border-line bg-surface overflow-hidden">
+ <table className="w-full text-sm">
+ <thead className="bg-gray-50 dark:bg-gray-800 border-b border-line dark:border-gray-700">
+ <tr>
+ {['Username', 'Display name', 'Email', 'Role', 'Status', 'Last login', ''].map(h => (
+ <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-content-muted dark:text-gray-400">
+ {h}
+ </th>
+ ))}
+ </tr>
+ </thead>
+ <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+ {!data && (
+ <tr>
+ <td colSpan={7} className="px-4 py-8 text-center text-sm text-gray-400 dark:text-gray-500">
+ Loading…
+ </td>
+ </tr>
+ )}
+ {data?.items.map(u => (
+ <tr key={u.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+ <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">{u.username}</td>
+ <td className="px-4 py-3 text-gray-600 dark:text-gray-400">{u.display_name}</td>
+ <td className="px-4 py-3 text-gray-600 dark:text-gray-400">{u.email}</td>
+ <td className="px-4 py-3">
+ {u.is_instance_admin ? (
+ <span className="inline-flex items-center rounded-full bg-purple-50 dark:bg-purple-950/50 px-2 py-0.5 text-xs font-medium text-purple-700 dark:text-purple-400 ring-1 ring-purple-200 dark:ring-purple-800">
+ Admin
+ </span>
+ ) : (
+ <span className="inline-flex items-center rounded-full bg-surface-inset px-2 py-0.5 text-xs font-medium text-gray-600 dark:text-gray-300">
+ User
+ </span>
+ )}
+ </td>
+ <td className="px-4 py-3">
+ {u.is_active ? (
+ <span className="inline-flex items-center rounded-full bg-success-surface px-2 py-0.5 text-xs font-medium text-success-strong ring-1 ring-green-200 dark:ring-green-800">
+ Active
+ </span>
+ ) : (
+ <span className="inline-flex items-center rounded-full bg-surface-inset px-2 py-0.5 text-xs font-medium text-content-muted dark:text-gray-400">
+ Disabled
+ </span>
+ )}
+ </td>
+ <td className="px-4 py-3 text-content-muted dark:text-gray-400">
+ {u.last_login_at
+ ? new Date(u.last_login_at).toLocaleDateString()
+ : <span className="text-gray-300 dark:text-gray-600">Never</span>
+ }
+ </td>
+ <td className="px-4 py-3">
+ {(() => {
+ const isSelf = currentUser?.id === u.id
+ return (
+ <div className="flex items-center gap-0.5 justify-end">
+ <button
+ onClick={() => setEditingUser(u)}
+ className="p-1.5 rounded text-gray-400 hover:!text-blue-500 dark:hover:!text-blue-400 hover:!bg-blue-50 dark:hover:!bg-blue-900/20 transition-colors"
+ title="Edit user"
+ aria-label="Edit user"
+ >
+ <PencilIcon />
+ </button>
+ <button
+ onClick={() => setResettingUser(u)}
+ disabled={isSelf}
+ className={`p-1.5 rounded text-gray-400 transition-colors ${
+ isSelf
+ ? 'opacity-30 cursor-not-allowed'
                           : 'hover:!text-purple-500 dark:hover:!text-purple-400 hover:!bg-purple-50 dark:hover:!bg-purple-900/20'
                       }`}
                       title={isSelf ? 'Use Profile → Change password to set your own password' : 'Set password'}
-                      aria-label="Set password"
-                    >
-                      <KeyIcon />
-                    </button>
-                    <button
-                      onClick={() => toggleActive(u)}
-                      disabled={isSelf}
-                      className={`p-1.5 rounded text-gray-400 dark:text-gray-500 transition-colors ${
-                        isSelf
-                          ? 'opacity-30 cursor-not-allowed'
+ aria-label="Set password"
+ >
+ <KeyIcon />
+ </button>
+ <button
+ onClick={() => toggleActive(u)}
+ disabled={isSelf}
+ className={`p-1.5 rounded text-content-subtle transition-colors ${
+ isSelf
+ ? 'opacity-30 cursor-not-allowed'
                           : u.is_active
                             ? 'hover:!text-amber-500 dark:hover:!text-amber-400 hover:!bg-amber-50 dark:hover:!bg-amber-900/20'
                             : 'hover:!text-green-600 dark:hover:!text-green-400 hover:!bg-green-50 dark:hover:!bg-green-900/20'
                       }`}
                       title={isSelf ? "Can't disable your own account" : (u.is_active ? 'Disable user' : 'Enable user')}
-                      aria-label={u.is_active ? 'Disable user' : 'Enable user'}
-                    >
-                      {u.is_active ? <NoSymbolIcon /> : <CheckCircleIcon />}
-                    </button>
-                    <button
-                      onClick={() => deleteUser(u)}
-                      disabled={isSelf}
-                      className={`p-1.5 rounded text-gray-400 dark:text-gray-500 transition-colors ${
-                        isSelf
-                          ? 'opacity-30 cursor-not-allowed'
-                          : 'hover:!text-red-500 dark:hover:!text-red-400 hover:!bg-red-50 dark:hover:!bg-red-900/20'
-                      }`}
-                      title={isSelf ? "Can't delete your own account" : 'Delete user'}
-                      aria-label="Delete user"
-                    >
-                      <TrashIcon />
-                    </button>
-                  </div>
-                    )
-                  })()}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+ aria-label={u.is_active ? 'Disable user' : 'Enable user'}
+ >
+ {u.is_active ? <NoSymbolIcon /> : <CheckCircleIcon />}
+ </button>
+ <button
+ onClick={() => deleteUser(u)}
+ disabled={isSelf}
+ className={`p-1.5 rounded text-content-subtle transition-colors ${
+ isSelf
+ ? 'opacity-30 cursor-not-allowed'
+ : 'hover:!text-red-500 dark:hover:!text-red-400 hover:!bg-red-50 dark:hover:!bg-red-900/20'
+ }`}
+ title={isSelf ? "Can't delete your own account" : 'Delete user'}
+ aria-label="Delete user"
+ >
+ <TrashIcon />
+ </button>
+ </div>
+ )
+ })()}
+ </td>
+ </tr>
+ ))}
+ </tbody>
+ </table>
 
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="border-t border-gray-200 dark:border-gray-700 px-4 py-3 flex items-center justify-between bg-gray-50 dark:bg-gray-800">
-            <span className="text-xs text-gray-500 dark:text-gray-400">
-              Page {page} of {totalPages}
-            </span>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setPage(p => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="rounded px-3 py-1 text-xs font-medium text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600 hover:bg-white dark:hover:bg-gray-700 disabled:opacity-40 transition-colors"
-              >
-                Previous
-              </button>
-              <button
-                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-                className="rounded px-3 py-1 text-xs font-medium text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600 hover:bg-white dark:hover:bg-gray-700 disabled:opacity-40 transition-colors"
-              >
-                Next
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
+ {/* Pagination */}
+ {totalPages > 1 && (
+ <div className="border-t border-line px-4 py-3 flex items-center justify-between bg-gray-50 dark:bg-gray-800">
+ <span className="text-xs text-content-muted dark:text-gray-400">
+ Page {page} of {totalPages}
+ </span>
+ <div className="flex gap-2">
+ <button
+ onClick={() => setPage(p => Math.max(1, p - 1))}
+ disabled={page === 1}
+ className="rounded px-3 py-1 text-xs font-medium text-gray-600 border border-line-strong hover:bg-white dark:hover:bg-gray-700 disabled:opacity-40 transition-colors"
+ >
+ Previous
+ </button>
+ <button
+ onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+ disabled={page === totalPages}
+ className="rounded px-3 py-1 text-xs font-medium text-gray-600 border border-line-strong hover:bg-white dark:hover:bg-gray-700 disabled:opacity-40 transition-colors"
+ >
+ Next
+ </button>
+ </div>
+ </div>
+ )}
+ </div>
 
-      {showAddModal && (
-        <AddUserModal
-          onClose={() => setShowAddModal(false)}
-          onCreated={() => { setShowAddModal(false); load() }}
-        />
-      )}
+ {showAddModal && (
+ <AddUserModal
+ onClose={() => setShowAddModal(false)}
+ onCreated={() => { setShowAddModal(false); load() }}
+ />
+ )}
 
-      {editingUser && (
-        <EditUserModal
-          user={editingUser}
-          isSelf={currentUser?.id === editingUser.id}
-          onClose={() => setEditingUser(null)}
-          onSaved={() => { setEditingUser(null); load() }}
-        />
-      )}
+ {editingUser && (
+ <EditUserModal
+ user={editingUser}
+ isSelf={currentUser?.id === editingUser.id}
+ onClose={() => setEditingUser(null)}
+ onSaved={() => { setEditingUser(null); load() }}
+ />
+ )}
 
-      {resettingUser && (
-        <SetPasswordModal
-          user={resettingUser}
-          onClose={() => setResettingUser(null)}
-          onSaved={() => setResettingUser(null)}
-        />
-      )}
-    </div>
-    </>
-  )
+ {resettingUser && (
+ <SetPasswordModal
+ user={resettingUser}
+ onClose={() => setResettingUser(null)}
+ onSaved={() => setResettingUser(null)}
+ />
+ )}
+ </div>
+ </>
+ )
 }
