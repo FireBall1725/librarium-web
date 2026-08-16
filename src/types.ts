@@ -273,6 +273,36 @@ export interface SeriesPreviewBook {
   cover_url: string | null
 }
 
+// ── Cross-library index surfaces ────────────────────────────────────────────
+// GET /api/v1/me/authors/index and GET /api/v1/me/series/index. Both are
+// unpaged: the A-Z bar has to know which letters have anything behind them,
+// which means the client holds the whole set anyway.
+
+export interface AuthorSpine {
+  book_id: string
+  title: string
+  cover_url: string | null
+}
+
+export interface AuthorLibraryRef {
+  id: string
+  name: string
+}
+
+export interface AuthorIndexEntry {
+  id: string
+  name: string
+  sort_name: string
+  photo_url: string | null
+  /** Letter the index files this author under, from sort_name, folded for
+   *  accents. '#' for anything that does not resolve to a letter. */
+  letter: string
+  book_count: number
+  read_count: number
+  spines: AuthorSpine[]
+  libraries: AuthorLibraryRef[]
+}
+
 export interface SeriesArc {
   id: string
   series_id: string

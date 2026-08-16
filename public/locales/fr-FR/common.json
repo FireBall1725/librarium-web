@@ -27,7 +27,9 @@
     "open_menu": "Open navigation menu",
     "close_menu": "Close navigation menu",
     "books": "Livres",
-    "views": "Vues"
+    "views": "Vues",
+    "series": "Séries",
+    "authors": "Auteurs"
   },
   "library_nav": {
     "books": "Books",
@@ -115,5 +117,36 @@
     "name_prompt": "Nommer cette vue",
     "layout_rows": "Lignes",
     "layout_grid": "Grille"
+  },
+  "index": {
+    "all": "Tous"
+  },
+  "authors": {
+    "sort_name": "A–Z",
+    "sort_count": "Plus de livres",
+    "none": "Aucun auteur",
+    "none_under": "Aucun auteur sous {{letter}}",
+    "count_one": "{{count}} sur vos étagères",
+    "count_other": "{{count}} sur vos étagères",
+    "books_count_one": "{{count}} livre",
+    "books_count_other": "{{count}} livres",
+    "read_count_one": "{{count}} lu",
+    "read_count_other": "{{count}} lus"
+  },
+  "series": {
+    "complete": "complète",
+    "own_of": "{{have}} sur {{total}}",
+    "none": "Aucune série",
+    "none_under": "Aucune série sous {{letter}}",
+    "count_one": "{{count}} dans toutes les bibliothèques",
+    "count_other": "{{count}} dans toutes les bibliothèques",
+    "missing_one": "{{count}} manquant",
+    "missing_other": "{{count}} manquants",
+    "own_one": "{{count}} volume",
+    "own_other": "{{count}} volumes",
+    "read_count_one": "{{count}} lu",
+    "read_count_other": "{{count}} lus",
+    "more_volumes_one": "+{{count}} de plus",
+    "more_volumes_other": "+{{count}} de plus"
   }
 }

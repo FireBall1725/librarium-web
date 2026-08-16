@@ -9,6 +9,28 @@ import { THEMES, applyTheme, readStoredTheme, storeTheme, type ThemeId } from '.
 // is looking at Reading now.
 import { loadViews, normaliseParams, type SavedView } from '../lib/views'
 
+interface CollectionCounts {
+  books: number
+  series: number
+  authors: number
+}
+
+/**
+ * A total beside a nav entry.
+ *
+ * Tabular figures so the column of numbers lines up, and nothing at all until
+ * the count arrives: a placeholder that later becomes a number is a layout
+ * shift under the reader's pointer.
+ */
+function NavCount({ value }: { value: number | undefined }) {
+  if (value === undefined) return null
+  return (
+    <span className="text-[11px] font-normal tabular-nums text-content-muted">
+      {value.toLocaleString()}
+    </span>
+  )
+}
+
 const SETTINGS_ITEMS: Array<{ to: string; labelKey: string }> = [
   { to: '/admin/settings/media-management', labelKey: 'settings_nav.media_management' },
   { to: '/admin/settings/metadata',         labelKey: 'settings_nav.metadata' },
@@ -61,6 +83,28 @@ export default function Layout() {
   // first render tick either way. Re-fetch when the user flips opt-in on
   // the profile page by listening to a custom event.
   const [suggestionsAvailable, setSuggestionsAvailable] = useState<boolean | undefined>(undefined)
+
+  // Collection totals for the nav. Undefined until they arrive, which renders
+  // no number rather than a zero: "Books 0" beside a full library is worse than
+  // a count that shows up a moment later.
+  const [counts, setCounts] = useState<CollectionCounts | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    const load = () => {
+      callApi<CollectionCounts>('/api/v1/me/counts')
+        .then(c => { if (!cancelled) setCounts(c) })
+        .catch(() => { /* The nav works without numbers; do not break it. */ })
+    }
+    load()
+    // Adding or importing books changes the totals, and the nav is on screen
+    // the whole time, so it listens rather than going stale until a reload.
+    window.addEventListener('librarium:collection-changed', load)
+    return () => {
+      cancelled = true
+      window.removeEventListener('librarium:collection-changed', load)
+    }
+  }, [callApi])
 
   useEffect(() => {
     let cancelled = false
@@ -170,7 +214,12 @@ export default function Layout() {
 
         <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
           <NavLink to="/dashboard" className={navClass}>{t('nav.dashboard')}</NavLink>
-          <NavLink to="/books" className={navClass}>{t('nav.books')}</NavLink>
+          <NavLink to="/books" className={navClass}>
+            <span className="flex items-center justify-between gap-2">
+              {t('nav.books')}
+              <NavCount value={counts?.books} />
+            </span>
+          </NavLink>
           {views.length > 0 && (
             <div className="mt-1 ml-3 border-l border-line pl-3 space-y-0.5">
               {views.map(v => (
@@ -190,6 +239,18 @@ export default function Layout() {
               ))}
             </div>
           )}
+          <NavLink to="/series" className={navClass}>
+            <span className="flex items-center justify-between gap-2">
+              {t('nav.series')}
+              <NavCount value={counts?.series} />
+            </span>
+          </NavLink>
+          <NavLink to="/authors" className={navClass}>
+            <span className="flex items-center justify-between gap-2">
+              {t('nav.authors')}
+              <NavCount value={counts?.authors} />
+            </span>
+          </NavLink>
           <NavLink
             to="/libraries"
             end
