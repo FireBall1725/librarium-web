@@ -37,12 +37,15 @@ import {
   type FacetKey,
 } from '../lib/bookBrowse'
 import {
+  announceViewsChanged,
   deleteView,
   isDirty as viewIsDirty,
   loadViews,
   matchView,
   newViewId,
+  readDefaultViewId,
   saveView,
+  setDefaultViewId,
   type SavedView,
   type ViewLayout,
 } from '../lib/views'
@@ -147,6 +150,9 @@ export default function BooksPage() {
   const [views, setViews] = useState<SavedView[]>(() => loadViews())
   const [activeViewId, setActiveViewId] = useState<string | null>(null)
   const [naming, setNaming] = useState(false)
+  // The stored default is read on render like the views themselves; the tick
+  // exists only to re-run that read after this page changes it.
+  const [, setDefaultTick] = useState(0)
   const [layoutOverride, setLayoutOverride] = useState<{ viewId: string | null; layout: ViewLayout } | null>(null)
 
   const [books, setBooks] = useState<Book[]>([])
@@ -253,6 +259,7 @@ export default function BooksPage() {
       ? layoutOverride.layout
       : activeView?.layout ?? 'rows'
   const dirty = activeView ? viewIsDirty(activeView, paramsNow, layout) : false
+  const isDefaultView = activeView !== null && readDefaultViewId() === activeView.id
 
   const chooseLayout = (next: ViewLayout) =>
     setLayoutOverride({ viewId: activeView?.id ?? null, layout: next })
@@ -268,18 +275,25 @@ export default function BooksPage() {
     const v: SavedView = { id: newViewId(), name, params: paramsNow, layout }
     setViews(saveView(v))
     setActiveViewId(v.id)
+    announceViewsChanged()
   }
 
   const commitView = () => {
     if (!activeView) return
     setViews(saveView({ ...activeView, params: paramsNow, layout }))
+    announceViewsChanged()
     // The layout is part of the view now, so the override has nothing left to
     // override; leaving it would keep the bar reading "modified" after a save.
     setLayoutOverride(null)
   }
 
   const removeView = (id: string) => {
+    // Clear the default alongside it. defaultViewHref already falls back when
+    // the id is dangling, but leaving it set means the next view to reuse that
+    // id inherits a default nobody asked for.
+    if (readDefaultViewId() === id) setDefaultViewId(null)
     setViews(deleteView(id))
+    announceViewsChanged()
     if (activeViewId === id) setActiveViewId(null)
     setLayoutOverride(null)
   }
@@ -362,6 +376,24 @@ export default function BooksPage() {
                   </>
                 ) : (
                   <>
+                    {/* Toggling, not just setting: a default you cannot take
+                        off is a filter you are stuck with every time you open
+                        Books. */}
+                    <button type="button"
+                      onClick={() => {
+                        setDefaultViewId(isDefaultView ? null : activeView.id)
+                        setDefaultTick(n => n + 1)
+                        announceViewsChanged()
+                      }}
+                      className={`rounded-md border px-2.5 py-1 text-xs ${
+                        isDefaultView
+                          ? 'border-accent-line bg-accent-surface text-accent'
+                          : 'border-line-strong text-content-secondary hover:bg-surface-inset'
+                      }`}>
+                      {isDefaultView
+                        ? t('views.is_default', { defaultValue: 'Opens by default' })
+                        : t('views.make_default', { defaultValue: 'Open by default' })}
+                    </button>
                     <button type="button" onClick={() => { setActiveViewId(null); setLayoutOverride(null); setParams(new URLSearchParams(), { replace: true }) }}
                       className="rounded-md border border-line-strong px-2.5 py-1 text-xs text-content-secondary hover:bg-surface-inset">
                       {t('views.leave', { defaultValue: 'Leave view' })}

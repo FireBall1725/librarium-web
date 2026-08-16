@@ -5,11 +5,14 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import {
   BUILT_IN_VIEWS,
   type ViewStore,
+  defaultViewHref,
   deleteView,
   isDirty,
   loadViews,
   matchView,
   newViewId,
+  readDefaultViewId,
+  setDefaultViewId,
   normaliseParams,
   renameView,
   saveView,
@@ -97,6 +100,44 @@ describe('dirty tracking', () => {
 
   it('notices a changed layout, since layout belongs to the view', () => {
     expect(isDirty(view(), 'status=read', 'grid')).toBe(true)
+  })
+})
+
+describe('default view', () => {
+  beforeEach(() => { store.setItem('librarium:views_seeded', '1') })
+
+  it('is nothing until one is chosen', () => {
+    expect(readDefaultViewId(store)).toBeNull()
+    expect(defaultViewHref([], store)).toBe('/books')
+  })
+
+  it('points Books at the chosen view', () => {
+    saveView(view({ id: 'v1', params: 'status=reading' }), store)
+    setDefaultViewId('v1', store)
+    expect(defaultViewHref(loadViews(store), store)).toBe('/books?status=reading')
+  })
+
+  it('follows the view when its filter is edited', () => {
+    // The id is stored, not the params. Storing the params would leave the
+    // default pointing at what the view used to be.
+    saveView(view({ id: 'v1', params: 'status=reading' }), store)
+    setDefaultViewId('v1', store)
+    saveView(view({ id: 'v1', params: 'tag=signed' }), store)
+    expect(defaultViewHref(loadViews(store), store)).toBe('/books?tag=signed')
+  })
+
+  it('falls back to the shelf when the view was deleted', () => {
+    // Otherwise Books opens on a filter with nothing on screen to remove it.
+    saveView(view({ id: 'v1' }), store)
+    setDefaultViewId('v1', store)
+    deleteView('v1', store)
+    expect(defaultViewHref(loadViews(store), store)).toBe('/books')
+  })
+
+  it('can be cleared', () => {
+    setDefaultViewId('v1', store)
+    setDefaultViewId(null, store)
+    expect(readDefaultViewId(store)).toBeNull()
   })
 })
 

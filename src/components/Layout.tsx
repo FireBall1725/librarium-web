@@ -7,7 +7,7 @@ import { applyTheme, readStoredTheme, storeTheme } from '../lib/theme'
 // Params are compared normalised, not by substring: "status=read" is a prefix
 // of "status=reading", so a substring test lights up Finished while the reader
 // is looking at Reading now.
-import { loadViews, newViewId, normaliseParams, saveView, viewCount, type SavedView } from '../lib/views'
+import { VIEWS_CHANGED, announceViewsChanged, defaultViewHref, loadViews, newViewId, normaliseParams, saveView, viewCount, type SavedView } from '../lib/views'
 import { SETTINGS_TREE } from '../lib/settingsTree'
 import { attentionRoutes, useSettingsAttention } from '../lib/settingsAttention'
 import type { BookFacets } from '../lib/bookBrowse'
@@ -184,6 +184,14 @@ export default function Layout() {
   const needsAttention = attentionRoutes(attention)
   const views: SavedView[] = loadViews()
 
+  // Views and the default live in storage and are read on render, so the rail
+  // needs a reason to render again when another page edits them.
+  useEffect(() => {
+    const bump = () => setViewsTick(n => n + 1)
+    window.addEventListener(VIEWS_CHANGED, bump)
+    return () => window.removeEventListener(VIEWS_CHANGED, bump)
+  }, [])
+
   useEffect(() => {
     let cancelled = false
     const load = () => {
@@ -215,6 +223,7 @@ export default function Layout() {
     setNamingView(false)
     const params = normaliseParams(location.search)
     saveView({ id: newViewId(), name, params, layout: 'rows' })
+    announceViewsChanged()
     // Views are read from storage on every render rather than held in state, so
     // the rail needs a reason to render again. A counter, not setRailQuery with
     // its own value: React bails out when the value is unchanged.
@@ -400,7 +409,10 @@ export default function Layout() {
           </form>
 
           <NavRow to="/dashboard" icon="home" label={t('nav.dashboard')} />
-          <NavRow to="/books" icon="books" label={t('nav.books')} count={counts?.books} end />
+          {/* Points at the default view when one is set, so Books opens on the
+              shelf the reader actually wants. `end` still matches only /books
+              itself, so the row highlights whatever the query string says. */}
+          <NavRow to={defaultViewHref(views)} icon="books" label={t('nav.books')} count={counts?.books} end />
           <NavRow to="/series" icon="series" label={t('nav.series')} count={counts?.series} />
           <NavRow to="/authors" icon="authors" label={t('nav.authors')} count={counts?.authors} />
 

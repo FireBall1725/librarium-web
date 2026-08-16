@@ -169,6 +169,53 @@ export function viewCount(view: SavedView, facets: BookFacets | null): number | 
   return facets[dimension]?.find(v => v.value === value)?.count
 }
 
+const DEFAULT_VIEW_KEY = 'librarium:default_view'
+
+/**
+ * The view Books opens on.
+ *
+ * Null means no default: Books opens on the plain shelf. Stored as an id
+ * rather than as a copy of the filter so that editing the view moves the
+ * default with it; storing the params would leave the default pointing at what
+ * the view used to be.
+ */
+export function readDefaultViewId(store: ViewStore = defaultStore()): string | null {
+  return store.getItem(DEFAULT_VIEW_KEY) || null
+}
+
+/**
+ * Broadcast that the stored views or the default changed.
+ *
+ * The rail reads both on render, and nothing else makes it render when this
+ * page is what changed them. Same shape as librarium:collection-changed.
+ */
+export const VIEWS_CHANGED = 'librarium:views-changed'
+
+export function announceViewsChanged(): void {
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event(VIEWS_CHANGED))
+}
+
+export function setDefaultViewId(id: string | null, store: ViewStore = defaultStore()): void {
+  // Empty rather than removed: ViewStore is the two methods this module needs,
+  // and adding removeItem to it for one caller is more surface than the null
+  // check below costs.
+  store.setItem(DEFAULT_VIEW_KEY, id ?? '')
+}
+
+/**
+ * Where the Books link should point.
+ *
+ * Resolves through the view list, so a default naming a view that has since
+ * been deleted falls back to the plain shelf rather than opening a filter
+ * nobody can see or remove.
+ */
+export function defaultViewHref(views: SavedView[], store: ViewStore = defaultStore()): string {
+  const id = readDefaultViewId(store)
+  if (!id) return '/books'
+  const view = views.find(v => v.id === id)
+  return view?.params ? `/books?${view.params}` : '/books'
+}
+
 /** Ids are only unique within one browser, so time plus a suffix is enough. */
 export function newViewId(): string {
   return `v${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`

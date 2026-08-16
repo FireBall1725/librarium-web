@@ -140,7 +140,9 @@
     "new_description": "Saves the filter you have on Books right now. You can change it later.",
     "name_label": "Name",
     "name_placeholder": "Signed first editions",
-    "save_as_view": "Save as a view"
+    "save_as_view": "Save as a view",
+    "make_default": "Open by default",
+    "is_default": "Opens by default"
   },
   "index": {
     "all": "All"

@@ -140,7 +140,9 @@
     "new_description": "Enregistre le filtre actuellement appliqué. Vous pourrez le modifier plus tard.",
     "name_label": "Nom",
     "name_placeholder": "Premières éditions signées",
-    "save_as_view": "Enregistrer comme vue"
+    "save_as_view": "Enregistrer comme vue",
+    "make_default": "Ouvrir par défaut",
+    "is_default": "Ouverte par défaut"
   },
   "index": {
     "all": "Tous"
