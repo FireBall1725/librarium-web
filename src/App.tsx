@@ -12,6 +12,7 @@ import BooksPage from './pages/BooksPage'
 import SeriesPage from './pages/SeriesPage'
 import SettingsIndexPage from './pages/settings/SettingsIndexPage'
 import LicencesPage from './pages/settings/LicencesPage'
+import AppearancePage from './pages/settings/AppearancePage'
 import LegacySettingsRedirect from './pages/settings/LegacySettingsRedirect'
 import AuthorsPage from './pages/AuthorsPage'
 import LibrariesPage from './pages/libraries/LibrariesPage'
@@ -64,6 +65,9 @@ function AppRoutes() {
                   everyone, and required notices are not an admin feature. */}
               <Route path="/settings/licences" element={<SettingsLayout />}>
                 <Route index element={<LicencesPage />} />
+              </Route>
+              <Route path="/settings/appearance" element={<SettingsLayout />}>
+                <Route index element={<AppearancePage />} />
               </Route>
 
               <Route element={<ProtectedRoute requireAdmin />}>

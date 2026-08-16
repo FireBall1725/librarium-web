@@ -222,5 +222,14 @@
     "registration_note": "Si n importe qui peut créer un compte sur cette instance.",
     "planned": "Prévu",
     "planned_note": "Pas encore construit. Listé pour montrer ce que cette page deviendra."
+  },
+  "settings_appearance": {
+    "description": "Ce navigateur uniquement. Rien ici ne change ce que voient les autres.",
+    "theme": "Thème",
+    "reading": "Lecture",
+    "language": "Langue de l interface",
+    "language_note": "Change la langue dans toute l interface web.",
+    "read_badges": "Afficher les badges de lecture",
+    "read_badges_note": "Un coin coloré sur les couvertures des livres lus et en cours."
   }
 }

@@ -3,7 +3,7 @@ import { Link, NavLink, Outlet, useNavigate, useLocation, useSearchParams } from
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import type { Library, SuggestionQuotaView } from '../types'
-import { THEMES, applyTheme, readStoredTheme, storeTheme, type ThemeId } from '../lib/theme'
+import { applyTheme, readStoredTheme, storeTheme } from '../lib/theme'
 // Params are compared normalised, not by substring: "status=read" is a prefix
 // of "status=reading", so a substring test lights up Finished while the reader
 // is looking at Reading now.
@@ -131,7 +131,10 @@ export default function Layout() {
   const libraryMatch = location.pathname.match(/^\/libraries\/([^/]+)(?:\/|$)/)
   const currentLibraryId = libraryMatch?.[1]
   const [apiVersion, setApiVersion] = useState<string | null>(null)
-  const [theme, setTheme] = useState<ThemeId>(readStoredTheme)
+  // Read once on mount and applied by the effect below. Appearance is what
+  // changes it; this only has to put the stored choice on screen at startup
+  // and keep the system option following the OS.
+  const [theme] = useState(readStoredTheme)
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   // Views live in the sidebar because they are how you actually get to a
@@ -509,18 +512,9 @@ export default function Layout() {
               ⏻
             </button>
           </div>
-          <select
-            value={theme}
-            onChange={e => setTheme(e.target.value as ThemeId)}
-            aria-label={t('theme.label')}
-            className="mt-1.5 w-full cursor-pointer border-0 bg-transparent px-2 text-[11px] text-content-subtle transition-colors hover:text-content-secondary focus:outline-none"
-          >
-            {THEMES.map(th => (
-              <option key={th.id} value={th.id} className="bg-surface text-content">
-                {th.label}
-              </option>
-            ))}
-          </select>
+          {/* The theme picker lives on Appearance, not here. Two controls for
+              one setting is how the rail ended up still reading "Ink" after
+              Appearance had switched to Sepia. */}
         </div>
       </aside>
 

@@ -222,5 +222,14 @@
     "registration_note": "Whether anyone can create an account on this instance.",
     "planned": "Planned",
     "planned_note": "Not built yet. Listed so it is clear what this page will grow into."
+  },
+  "settings_appearance": {
+    "description": "This browser only. Nothing here changes what anyone else sees.",
+    "theme": "Theme",
+    "reading": "Reading",
+    "language": "Interface language",
+    "language_note": "Switches the language throughout the web interface.",
+    "read_badges": "Show read status badges",
+    "read_badges_note": "A coloured corner on covers for read and in-progress books."
   }
 }
