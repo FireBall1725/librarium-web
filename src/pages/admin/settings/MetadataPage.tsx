@@ -6,12 +6,16 @@ import { useAuth, ApiError } from '../../../auth/AuthContext'
 import type { ProviderStatus } from '../../../types'
 import PageHeader from '../../../components/PageHeader'
 import { usePageTitle } from '../../../hooks/usePageTitle'
+import { Switch } from '../../../components/settings/SettingRow'
 
-const CAP_LABELS: Record<string, { label: string; cls: string }> = {
-  book_isbn:      { label: 'ISBN Lookup',    cls: 'bg-blue-100 dark:bg-blue-900/40 text-accent-strong ' },
-  book_search:    { label: 'Book Search',    cls: 'bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300' },
-  series_name:    { label: 'Series Search',  cls: 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300' },
-  series_volumes: { label: 'Series Volumes', cls: 'bg-amber-100 dark:bg-amber-900/40 text-warning-strong ' },
+// The reference gives capabilities one chip, not a hue each: four colours for
+// four capabilities is a legend the reader has to learn, and the label already
+// says which is which.
+const CAP_LABELS: Record<string, string> = {
+  book_isbn:      'ISBN lookup',
+  book_search:    'Book search',
+  series_name:    'Series search',
+  series_volumes: 'Series volumes',
 }
 
 interface ProviderCardProps {
@@ -96,21 +100,20 @@ function ProviderCard({ provider, onSaved }: ProviderCardProps) {
   const isTest = provider.name === 'test'
 
   return (
-    <div className="rounded-xl border border-line bg-surface-raised p-5">
+    <div className="lb-card">
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h3 className="font-semibold text-content">{provider.display_name}</h3>
-            {provider.capabilities.map(cap => {
-              const meta = CAP_LABELS[cap]
-              return (
-                <span key={cap} className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${meta?.cls ?? 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}`}>
-                  {meta?.label ?? cap}
-                </span>
-              )
-            })}
+            {provider.capabilities.length > 0 && (
+              <span className="lb-caps">
+                {provider.capabilities.map(cap => (
+                  <span key={cap} className="lb-cap">{CAP_LABELS[cap] ?? cap}</span>
+                ))}
+              </span>
+            )}
             {isTest && (
-              <span className="inline-flex items-center rounded-full bg-amber-100 dark:bg-amber-900/40 px-2 py-0.5 text-xs font-medium text-warning-strong">
+              <span className="lb-chip warn">
                 Built-in
               </span>
             )}
@@ -119,16 +122,12 @@ function ProviderCard({ provider, onSaved }: ProviderCardProps) {
         </div>
 
         {!isTest && (
-          <label className="relative inline-flex items-center cursor-pointer shrink-0">
-            <input
-              type="checkbox"
-              className="sr-only peer"
-              checked={enabled}
-              onChange={e => setEnabled(e.target.checked)}
-              disabled={missingRequiredField}
-            />
-            <div className="w-10 h-6 bg-surface-strong peer-focus:outline-none rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full" />
-          </label>
+          <Switch
+            checked={enabled}
+            label={`Enable ${provider.display_name}`}
+            disabled={missingRequiredField}
+            onChange={setEnabled}
+          />
         )}
       </div>
 
@@ -156,7 +155,7 @@ function ProviderCard({ provider, onSaved }: ProviderCardProps) {
                   value={fieldValues[field.key] ?? ''}
                   onChange={e => setFieldValues(prev => ({ ...prev, [field.key]: e.target.value }))}
                   placeholder={isSaved ? (field.type === 'password' ? '••••••••••••••••' : savedValue) : (field.placeholder ?? `Enter ${field.label.toLowerCase()}…`)}
-                  className="w-full rounded-lg border border-line-strong dark:bg-gray-700 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="lb-field"
                 />
                 {field.help_text && (
                   <p className="mt-1 text-xs text-content-muted">{field.help_text}</p>
@@ -186,7 +185,7 @@ function ProviderCard({ provider, onSaved }: ProviderCardProps) {
               value={apiKey}
               onChange={e => setApiKey(e.target.value)}
               placeholder={provider.has_api_key ? '••••••••••••••••' : 'Enter API key…'}
-              className="w-full rounded-lg border border-line-strong dark:bg-gray-700 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="lb-field"
             />
           </div>
         </div>
@@ -196,11 +195,11 @@ function ProviderCard({ provider, onSaved }: ProviderCardProps) {
         <div className="mt-3 space-y-2">
           <div className="flex items-center gap-3">
             <button onClick={handleSave} disabled={saving}
-              className="rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
+              className="lb-btn sm">
               {saving ? 'Saving…' : 'Save'}
             </button>
             <button onClick={handleTest} disabled={testState.status === 'testing'}
-              className="rounded-lg border border-line-strong px-3 py-1.5 text-sm font-medium text-content-secondary hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors">
+              className="lb-btn ghost sm">
               {testState.status === 'testing' ? 'Testing…' : 'Test'}
             </button>
             {success && <span className="text-sm text-success">Saved</span>}
@@ -279,9 +278,9 @@ export default function MetadataPage() {
       <PageHeader
         title="Metadata"
         description="Configure metadata providers for book and series lookups."
-        breadcrumbs={[{ label: 'Settings', to: '/admin/settings' }, { label: 'Metadata' }]}
+        breadcrumbs={[{ label: 'Settings', to: '/settings' }, { label: 'Metadata' }]}
       />
-      <div className="max-w-3xl px-8 py-8 space-y-8">
+      <div className="px-8 py-6 space-y-6">
 
         {error && (
           <div className="rounded-lg bg-danger-surface border border-danger-line p-4 text-sm text-danger-strong">
@@ -330,14 +329,14 @@ export default function MetadataPage() {
                         </span>
                         <div className="flex gap-1">
                           <button onClick={() => moveProvider(idx, -1)} disabled={idx === 0}
-                            className="p-1 rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 disabled:opacity-30 hover:bg-surface-inset transition-colors"
+                            className="rounded p-1 text-content-muted transition-colors hover:bg-surface-inset hover:text-content disabled:opacity-30"
                             title="Move up">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
                             </svg>
                           </button>
                           <button onClick={() => moveProvider(idx, 1)} disabled={idx === providerOrder.length - 1}
-                            className="p-1 rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 disabled:opacity-30 hover:bg-surface-inset transition-colors"
+                            className="rounded p-1 text-content-muted transition-colors hover:bg-surface-inset hover:text-content disabled:opacity-30"
                             title="Move down">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -350,7 +349,7 @@ export default function MetadataPage() {
                 </div>
                 <div className="mt-3 flex items-center gap-3">
                   <button onClick={saveOrder} disabled={orderSaving}
-                    className="rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
+                    className="lb-btn sm">
                     {orderSaving ? 'Saving…' : 'Save order'}
                   </button>
                   {orderSaved && <span className="text-sm text-success">Saved</span>}
