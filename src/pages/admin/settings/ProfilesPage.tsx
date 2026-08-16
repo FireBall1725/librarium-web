@@ -1,52 +1,47 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (C) 2026 fireball1725
+// Copyright (C) 2026 FireBall1725
+//
+// Profiles: nothing built yet, said plainly.
+//
+// This is the one settings page with no real facts behind it, so it stays a
+// list of what is coming. What changes is that it says so in one line and
+// then lists the three, rather than dressing the same statement up as a card
+// with a clock icon that looks like a feature until you read it.
 
+import { useTranslation } from 'react-i18next'
 import PageHeader from '../../../components/PageHeader'
+import { SettingRow, SettingsBody } from '../../../components/settings/SettingRow'
 import { usePageTitle } from '../../../hooks/usePageTitle'
 
-function PlannedItem({ label, description }: { label: string; description: string }) {
-  return (
-    <div className="flex items-start gap-3 py-3 first:pt-0 last:pb-0">
-      <div className="mt-0.5 w-5 h-5 rounded-full bg-surface-inset flex items-center justify-center flex-shrink-0">
-        <div className="w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600" />
-      </div>
-      <div>
-        <p className="text-sm font-medium text-content-secondary">{label}</p>
-        <p className="text-xs text-content-muted mt-0.5">{description}</p>
-      </div>
-    </div>
-  )
-}
+const PLANNED = [
+  ['Reading profiles', 'Preferred formats, languages and edition preferences, per library.'],
+  ['Quality profiles', 'Which media types and formats are acceptable for a collection.'],
+  ['Notification profiles', 'Per-user alerts for new releases and overdue loans.'],
+] as const
 
 export default function ProfilesPage() {
-  usePageTitle('Profiles')
+  const { t } = useTranslation()
+  usePageTitle(t('settings_nav.profiles', { defaultValue: 'Profiles' }))
+
   return (
     <>
       <PageHeader
-        title="Profiles"
-        description="Define reusable reading and quality profiles that can be applied to libraries."
-        breadcrumbs={[{ label: 'Settings', to: '/admin/settings' }, { label: 'Profiles' }]}
+        title={t('settings_nav.profiles', { defaultValue: 'Profiles' })}
+        description="Reusable reading and quality profiles that can be applied to libraries."
+        breadcrumbs={[{ label: 'Settings', to: '/settings' }, { label: 'Profiles' }]}
       />
-      <div className="max-w-3xl px-8 py-8 space-y-8">
-        <div className="rounded-xl border border-line bg-surface p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-9 h-9 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0">
-              <svg className="w-5 h-5 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v6l4 2m6-2a10 10 0 11-20 0 10 10 0 0120 0z" />
-              </svg>
-            </div>
-            <div>
-              <p className="font-semibold text-content text-sm">Coming soon</p>
-              <p className="text-xs text-content-muted">Planned for a future release</p>
-            </div>
-          </div>
-          <div className="divide-y divide-line-subtle">
-            <PlannedItem label="Reading Profiles" description="Preferred formats, languages, and edition preferences per library." />
-            <PlannedItem label="Quality Profiles" description="Define which media types and formats are acceptable for a collection." />
-            <PlannedItem label="Notification Profiles" description="Configure per-user alerts for new releases and overdue loans." />
-          </div>
-        </div>
-      </div>
+
+      <SettingsBody>
+        <p className="lb-read mb-4 text-[13.5px] text-content-tertiary">
+          None of this is built yet. It is listed so the shape of the page is
+          clear before there is anything on it.
+        </p>
+        {PLANNED.map(([label, description]) => (
+          <SettingRow key={label} label={label} description={description}>
+            <span className="lb-chip">{t('common.planned', { defaultValue: 'Planned' })}</span>
+          </SettingRow>
+        ))}
+      </SettingsBody>
     </>
   )
 }

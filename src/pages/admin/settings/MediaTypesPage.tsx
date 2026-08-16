@@ -9,18 +9,8 @@ import { useAuth, ApiError } from '../../../auth/AuthContext'
 import type { MediaType } from '../../../types'
 import PageHeader from '../../../components/PageHeader'
 import { usePageTitle } from '../../../hooks/usePageTitle'
-
-const PencilIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-  </svg>
-)
-
-const TrashIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-    <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-  </svg>
-)
+import { SettingsBody } from '../../../components/settings/SettingRow'
+import { ConfirmDialog } from '../../../components/Dialog'
 
 export default function MediaTypesPage() {
   const { callApi } = useAuth()
@@ -44,6 +34,7 @@ export default function MediaTypesPage() {
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const editDisplayNameRef = useRef<HTMLInputElement>(null)
+  const [confirmDelete, setConfirmDelete] = useState<MediaType | null>(null)
 
   useEffect(() => {
     callApi<MediaType[]>('/api/v1/media-types')
@@ -133,160 +124,130 @@ export default function MediaTypesPage() {
     <>
       <PageHeader
         title="Media Types"
-        description="Instance-wide media type catalogue. Delete is only allowed when no books are assigned."
-        breadcrumbs={[{ label: 'Settings', to: '/admin/settings' }, { label: 'Media Types' }]}
+        description="The kinds of thing a book can be. Every book has exactly one."
+        breadcrumbs={[{ label: 'Settings', to: '/settings' }, { label: 'Media Types' }]}
       />
-      <div className="max-w-3xl px-8 py-8 space-y-6">
 
+      <SettingsBody>
         {error && (
-          <div className="rounded-lg bg-danger-surface border border-danger-line px-3 py-2 text-sm text-danger-strong">
+          <p className="mb-4 rounded-lg border border-danger-line bg-danger-surface px-3 py-2 text-sm text-danger">
             {error}
-          </div>
+          </p>
         )}
 
-        <div className="rounded-xl border border-line overflow-hidden bg-surface">
-          {/* Add form */}
-          <div className="px-4 py-3 bg-surface-muted border-b border-line space-y-2">
-            <div className="flex items-center gap-2">
-              <div className="flex-1 relative">
-                <input
-                  ref={displayNameRef}
-                  type="text"
-                  value={newDisplayName}
-                  onChange={e => setNewDisplayName(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleAdd()}
-                  placeholder="Display name…"
-                  className="w-full rounded-lg border border-line-strong bg-surface-raised px-3 py-1.5 text-sm text-content placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                />
-                {newDisplayName.trim() && (
-                  <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-mono text-content-faint pointer-events-none select-none">
-                    {toInternalName(newDisplayName)}
-                  </span>
-                )}
-              </div>
-              <button
-                onClick={handleAdd}
-                disabled={!newDisplayName.trim() || adding}
-                className="rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 transition-colors whitespace-nowrap"
-              >
-                {adding ? 'Adding…' : 'Add'}
-              </button>
-            </div>
-            <input
-              type="text"
-              value={newDescription}
-              onChange={e => setNewDescription(e.target.value)}
-              placeholder="Description (optional)…"
-              className="w-full rounded-lg border border-line-strong bg-surface-raised px-3 py-1.5 text-sm text-content placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            />
-          </div>
-          {addError && (
-            <p className="px-4 py-2 text-xs text-danger bg-danger-surface border-b border-red-100 dark:border-red-900">
-              {addError}
-            </p>
-          )}
+        <form
+          className="mb-2 flex flex-wrap gap-2"
+          onSubmit={e => { e.preventDefault(); handleAdd() }}
+        >
+          <input
+            ref={displayNameRef}
+            value={newDisplayName}
+            onChange={e => setNewDisplayName(e.target.value)}
+            placeholder="New media type"
+            className="lb-field flex-1 min-w-[10rem]"
+            aria-label="New media type"
+          />
+          <input
+            value={newDescription}
+            onChange={e => setNewDescription(e.target.value)}
+            placeholder="Description (optional)"
+            className="lb-field flex-1 min-w-[10rem]"
+            aria-label="Description"
+          />
+          <button type="submit" className="lb-btn flex-none" disabled={!newDisplayName.trim() || adding}>
+            {adding ? 'Adding…' : 'Add'}
+          </button>
+        </form>
+        {/* The internal name is derived, not typed, so it is shown rather than
+            asked for: it is what the API and every filter key on. */}
+        {newDisplayName.trim() && (
+          <p className="mb-2 text-xs text-content-muted">
+            Stored as <code className="lb-lictag">{toInternalName(newDisplayName)}</code>
+          </p>
+        )}
+        {addError && <p className="mb-2 text-xs text-danger">{addError}</p>}
 
-          {loading ? (
-            <div className="flex items-center justify-center py-8 text-gray-400">
-              <div className="w-4 h-4 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
-            </div>
-          ) : mediaTypes.length === 0 ? (
-            <p className="px-4 py-6 text-sm text-center text-content-subtle">
-              No media types yet.
-            </p>
-          ) : (
-            <div className="divide-y divide-line-subtle">
-              {mediaTypes.map(mt => (
-                <div key={mt.id}>
-                  {editingId === mt.id ? (
-                    <div className="px-4 py-3 bg-blue-50 dark:bg-blue-950/20 space-y-2">
-                      <div className="flex items-center gap-2">
-                        {/* Internal name is read-only in edit mode */}
-                        <span className="text-xs font-mono text-content-subtle px-2 py-1.5 bg-surface-inset rounded-lg border border-line whitespace-nowrap select-none">
-                          {mt.name}
-                        </span>
-                        <input
-                          ref={editDisplayNameRef}
-                          type="text"
-                          value={editDisplayName}
-                          onChange={e => setEditDisplayName(e.target.value)}
-                          onKeyDown={e => { if (e.key === 'Escape') cancelEdit() }}
-                          placeholder="Display name…"
-                          className="flex-1 rounded-lg border border-accent-line bg-surface-raised px-3 py-1.5 text-sm text-content focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        />
-                        <button onClick={handleSave} disabled={!editDisplayName.trim() || saving}
-                          className="rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 transition-colors whitespace-nowrap">
-                          {saving ? 'Saving…' : 'Save'}
-                        </button>
-                        <button onClick={cancelEdit}
-                          className="rounded-lg px-3 py-1.5 text-sm font-medium text-content-tertiary hover:bg-surface-inset transition-colors">
-                          Cancel
-                        </button>
-                      </div>
-                      <input
-                        type="text"
-                        value={editDescription}
-                        onChange={e => setEditDescription(e.target.value)}
-                        onKeyDown={e => { if (e.key === 'Escape') cancelEdit() }}
-                        placeholder="Description (optional)…"
-                        className="w-full rounded-lg border border-accent-line bg-surface-raised px-3 py-1.5 text-sm text-content focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      />
-                      {saveError && <p className="text-xs text-red-500">{saveError}</p>}
-                    </div>
-                  ) : (
-                    <div className="group">
-                      <div className="flex items-start justify-between px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
-                        <div className="min-w-0">
-                          <div className="flex items-baseline gap-2">
-                            <span className="text-sm font-medium text-content-strong">{mt.display_name}</span>
-                            {mt.book_count > 0 && (
-                              <span className="text-xs text-content-subtle">
-                                {mt.book_count} {mt.book_count === 1 ? 'book' : 'books'}
-                              </span>
-                            )}
-                          </div>
-                          {mt.description && (
-                            <p className="mt-0.5 text-xs text-content-muted">{mt.description}</p>
-                          )}
-                        </div>
-                        <div className="ml-4 flex-shrink-0 flex items-center gap-0.5">
-                          <button onClick={() => startEdit(mt)}
-                            className="p-1 rounded text-content-faint group-hover:text-content-subtle hover:!text-blue-500 dark:hover:!text-blue-400 hover:!bg-blue-50 dark:hover:!bg-blue-900/20 transition-colors"
-                            title="Edit media type">
-                            <PencilIcon />
-                          </button>
-                          {mt.book_count > 0 ? (
-                            <span
-                              title={`Cannot delete — ${mt.book_count} ${mt.book_count === 1 ? 'book is' : 'books are'} assigned to this type`}
-                              className="p-1 text-gray-200 dark:text-gray-700 cursor-not-allowed"
-                            >
-                              <TrashIcon />
-                            </span>
-                          ) : (
-                            <button
-                              onClick={() => handleDelete(mt.id)}
-                              disabled={deleting.has(mt.id)}
-                              className="p-1 rounded text-content-faint group-hover:text-content-subtle hover:!text-red-500 dark:hover:!text-red-400 hover:!bg-red-50 dark:hover:!bg-red-900/20 disabled:opacity-50 transition-colors"
-                              title="Delete media type"
-                            >
-                              {deleting.has(mt.id) ? <span className="text-xs px-1">…</span> : <TrashIcon />}
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                      {deleteErrors[mt.id] && (
-                        <p className="px-4 pb-2 text-xs text-danger">
-                          {deleteErrors[mt.id]}
-                        </p>
-                      )}
-                    </div>
+        {loading && <p className="py-8 text-center text-sm text-content-muted">Loading…</p>}
+
+        {!loading && mediaTypes.length === 0 && (
+          <p className="lb-display py-12 text-center text-xl text-content-secondary">No media types yet</p>
+        )}
+
+        {mediaTypes.map(mt => (
+          <div key={mt.id} className="lb-set">
+            {editingId === mt.id ? (
+              <form
+                className="col-span-full flex flex-wrap gap-2"
+                onSubmit={e => { e.preventDefault(); handleSave() }}
+              >
+                <input
+                  ref={editDisplayNameRef}
+                  value={editDisplayName}
+                  onChange={e => setEditDisplayName(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Escape') cancelEdit() }}
+                  className="lb-field flex-1 min-w-[10rem]"
+                  aria-label="Display name"
+                />
+                <input
+                  value={editDescription}
+                  onChange={e => setEditDescription(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Escape') cancelEdit() }}
+                  className="lb-field flex-1 min-w-[10rem]"
+                  aria-label="Description"
+                  placeholder="Description (optional)"
+                />
+                <button type="submit" className="lb-btn flex-none" disabled={!editDisplayName.trim() || saving}>
+                  {saving ? 'Saving…' : 'Save'}
+                </button>
+                <button type="button" className="lb-btn ghost flex-none" onClick={cancelEdit}>
+                  Cancel
+                </button>
+                {saveError && <span className="self-center text-xs text-danger">{saveError}</span>}
+              </form>
+            ) : (
+              <>
+                <div>
+                  <div className="lbl flex items-center gap-2">
+                    {mt.display_name}
+                    <code className="lb-lictag">{mt.name}</code>
+                  </div>
+                  {mt.description && <div className="sub">{mt.description}</div>}
+                  {deleteErrors[mt.id] && (
+                    <div className="mt-1 text-xs text-danger">{deleteErrors[mt.id]}</div>
                   )}
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+                <div className="flex gap-2">
+                  <button type="button" className="lb-btn ghost sm" onClick={() => startEdit(mt)}>
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    className="lb-btn ghost sm"
+                    disabled={deleting.has(mt.id)}
+                    onClick={() => setConfirmDelete(mt)}
+                  >
+                    {deleting.has(mt.id) ? 'Deleting…' : 'Delete'}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        ))}
+      </SettingsBody>
+
+      <ConfirmDialog
+        open={confirmDelete !== null}
+        title={`Delete ${confirmDelete?.display_name ?? ''}?`}
+        description="A media type in use by any book cannot be deleted; the server will say so."
+        confirmLabel="Delete"
+        destructive
+        onCancel={() => setConfirmDelete(null)}
+        onConfirm={() => {
+          const mt = confirmDelete
+          setConfirmDelete(null)
+          if (mt) handleDelete(mt.id)
+        }}
+      />
     </>
   )
 }
