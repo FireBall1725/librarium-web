@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./styles/reference.css";
 
 /* ---------------------------------------------------------------------------
    Typefaces
@@ -106,6 +107,36 @@
 }
 
 @layer base {
+  /* Compatibility aliases for the ported reference CSS.
+     ------------------------------------------------------------------------
+     The reference implementation names its colours --bg / --text-2 / --good.
+     Rather than rewriting 22 KB of rules to our token names, which would make
+     every future re-port a translation instead of a copy, the sixteen names
+     are aliased here. They point at our tokens, so all four themes drive the
+     ported components with no further work.
+
+     --gold and --warn are one token: the reference gives them separate hexes
+     but they sit within a few degrees of each other in every theme, and one
+     token that is right beats two that drift apart. */
+  :root {
+    --bg:        var(--color-surface-muted);
+    --bg-raise:  var(--color-surface);
+    --card:      var(--color-surface-raised);
+    --text:      var(--color-content);
+    --text-2:    var(--color-content-secondary);
+    --text-3:    var(--color-content-tertiary);
+    --line:      var(--color-line);
+    --line-2:    var(--color-line-strong);
+    --accent:    var(--color-accent);
+    --accent-2:  var(--color-accent-strong);
+    --accent-sf: var(--color-accent-surface);
+    --good:      var(--color-success);
+    --warn:      var(--color-warning);
+    --gold:      var(--color-warning);
+    --bad:       var(--color-danger);
+    --shadow:    rgb(0 0 0 / 0.5);
+  }
+
   /* Paper is the light theme and the default, holding exactly the colours the
      client shipped before tokens existed. :root carries it so a document with
      no data-theme still renders correctly. */
