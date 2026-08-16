@@ -94,7 +94,8 @@
     "empty_shelf": "No books in your libraries yet.",
     "range": "{{from}} to {{to}} of {{total}}",
     "per_page": "Show",
-    "of_records": "{{shown}} of {{total}} records"
+    "of_records": "{{shown}} of {{total}} records",
+    "add": "Add book"
   },
   "facets": {
     "library": "Library",

@@ -14,11 +14,12 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import PageHeader from '../components/PageHeader'
 import { PromptDialog } from '../components/Dialog'
+import AddBookModal from '../components/AddBookModal'
 import FacetRail from '../components/FacetRail'
 import BookCover, { BookCoverThumb } from '../components/BookCover'
 import { usePageTitle } from '../hooks/usePageTitle'
 import type { TFunction } from 'i18next'
-import type { Book } from '../types'
+import type { Book, Library, MediaType } from '../types'
 import {
   DEFAULT_PAGE_SIZE,
   FACET_ORDER,
@@ -150,6 +151,25 @@ export default function BooksPage() {
   const [views, setViews] = useState<SavedView[]>(() => loadViews())
   const [activeViewId, setActiveViewId] = useState<string | null>(null)
   const [naming, setNaming] = useState(false)
+  const [adding, setAdding] = useState(false)
+
+  // Fetched only when the modal opens. Books is a read surface; making every
+  // visit pay for the media types and libraries an add would need is a cost
+  // most visits never use.
+  const [addData, setAddData] = useState<{ libraries: Library[]; mediaTypes: MediaType[] } | null>(null)
+  useEffect(() => {
+    if (!adding || addData) return
+    let cancelled = false
+    Promise.all([
+      callApi<Library[]>('/api/v1/libraries'),
+      callApi<MediaType[]>('/api/v1/media-types'),
+    ])
+      .then(([libraries, mediaTypes]) => {
+        if (!cancelled) setAddData({ libraries: libraries ?? [], mediaTypes: mediaTypes ?? [] })
+      })
+      .catch(() => { if (!cancelled) setAddData({ libraries: [], mediaTypes: [] }) })
+    return () => { cancelled = true }
+  }, [adding, addData, callApi])
   const [layoutOverride, setLayoutOverride] = useState<{ viewId: string | null; layout: ViewLayout } | null>(null)
 
   const [books, setBooks] = useState<Book[]>([])
@@ -440,6 +460,11 @@ export default function BooksPage() {
                 </button>
               )}
 
+              <button type="button" onClick={() => setAdding(true)}
+                className="lb-btn sm">
+                {t('books.add', { defaultValue: 'Add book' })}
+              </button>
+
               <div className="flex overflow-hidden rounded-md border border-line-strong">
                 {(['rows', 'grid'] as ViewLayout[]).map(opt => (
                   <button key={opt} type="button" onClick={() => chooseLayout(opt)}
@@ -603,6 +628,23 @@ export default function BooksPage() {
           </div>
         </div>
       </div>
+
+      {adding && addData && (
+        <AddBookModal
+          libraries={addData.libraries}
+          mediaTypes={addData.mediaTypes}
+          onClose={() => setAdding(false)}
+          onSaved={() => {
+            setAdding(false)
+            // Re-run the current query rather than pushing the new book into
+            // the list by hand: it may not match the filter on screen, and a
+            // book that appears where it does not belong is worse than one
+            // that needs a moment to show up.
+            setLoadedKey(null)
+            window.dispatchEvent(new Event('librarium:collection-changed'))
+          }}
+        />
+      )}
 
       <PromptDialog
         open={naming}
