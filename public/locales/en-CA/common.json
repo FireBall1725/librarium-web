@@ -106,7 +106,11 @@
   "common": {
     "loading": "Loading…",
     "cancel": "Cancel",
-    "save": "Save"
+    "save": "Save",
+    "unknown": "Unknown",
+    "open": "Open",
+    "closed": "Closed",
+    "planned": "Planned"
   },
   "read_status": {
     "read": "Read",
@@ -201,5 +205,20 @@
     "read_agpl": "Read the AGPL-3.0",
     "footnote": "Adding a dependency means adding it here in the same pull request.",
     "api_note": "The API server ships its own dependencies and notices; see its repository for that list."
+  },
+  "settings_general": {
+    "description": "What this instance is running and where it keeps things.",
+    "version": "Version",
+    "licence": "Licence",
+    "storage": "Storage",
+    "storage_note": "Set on the server, not here. These are the paths the running instance is using.",
+    "covers": "Covers",
+    "ebooks": "Ebooks",
+    "audiobooks": "Audiobooks",
+    "access": "Access",
+    "registration": "Registration",
+    "registration_note": "Whether anyone can create an account on this instance.",
+    "planned": "Planned",
+    "planned_note": "Not built yet. Listed so it is clear what this page will grow into."
   }
 }

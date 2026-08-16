@@ -106,7 +106,11 @@
   "common": {
     "loading": "Chargement…",
     "cancel": "Annuler",
-    "save": "Enregistrer"
+    "save": "Enregistrer",
+    "unknown": "Inconnu",
+    "open": "Ouverte",
+    "closed": "Fermée",
+    "planned": "Prévu"
   },
   "read_status": {
     "read": "Lu",
@@ -201,5 +205,20 @@
     "read_agpl": "Lire la licence AGPL-3.0",
     "footnote": "Ajouter une dépendance implique de l'ajouter ici dans la même pull request.",
     "api_note": "Le serveur API a ses propres dépendances et mentions ; voir son dépôt pour cette liste."
+  },
+  "settings_general": {
+    "description": "Ce que cette instance exécute et où elle range ses fichiers.",
+    "version": "Version",
+    "licence": "Licence",
+    "storage": "Stockage",
+    "storage_note": "Défini sur le serveur, pas ici. Voici les chemins utilisés par l instance en cours.",
+    "covers": "Couvertures",
+    "ebooks": "Livres numériques",
+    "audiobooks": "Livres audio",
+    "access": "Accès",
+    "registration": "Inscription",
+    "registration_note": "Si n importe qui peut créer un compte sur cette instance.",
+    "planned": "Prévu",
+    "planned_note": "Pas encore construit. Listé pour montrer ce que cette page deviendra."
   }
 }
