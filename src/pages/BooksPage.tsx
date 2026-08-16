@@ -21,8 +21,11 @@ import type { TFunction } from 'i18next'
 import type { Book } from '../types'
 import {
   DEFAULT_PAGE_SIZE,
+  FACET_ORDER,
   PAGE_SIZES,
+  OWNERSHIP_ANY,
   clearAll,
+  isDefaultOwnership,
   pageWindow,
   readState,
   selectionCount,
@@ -90,6 +93,21 @@ function Stars({ rating }: { rating: number }) {
       {'★'.repeat(rating)}
     </span>
   )
+}
+
+/**
+ * What a filter chip says.
+ *
+ * Facet values arrive as raw data — a library id, a read-status enum, a bare
+ * rating — so the label comes from the counts block where the server already
+ * paired each value with its display name. Falling back to the value itself
+ * means a chip is never blank, only occasionally ugly.
+ */
+function chipLabel(key: FacetKey, value: string, facets: BookFacets | null, t: TFunction): string {
+  if (key === 'ownership') return t(`ownership.${value}`, { defaultValue: value })
+  if (key === 'read_status') return t(`read_status.${value}`, { defaultValue: value })
+  if (key === 'rating') return t('facets.stars', { count: Number(value), defaultValue: `${value} stars` })
+  return facets?.[key]?.find(v => v.value === value)?.label ?? value
 }
 
 /** Book detail still lives under a library, so link via the first one holding it. */
@@ -195,6 +213,27 @@ export default function BooksPage() {
   }, [callApi, state, perPage, fetchKey])
 
   const pages = Math.max(1, Math.ceil(total / perPage))
+
+  // Every book the caller could see under the non-ownership filters. The
+  // ownership counts are computed with the ownership selection excluded, so
+  // they already span the whole scope and summing them is the total.
+  const scopeTotal = facets
+    ? facets.ownership.reduce((n, v) => n + v.count, 0)
+    : null
+
+  // Chips for what is actually applied. Ownership at its default is not a
+  // choice the reader made, so it gets no chip to remove.
+  const activeChips = FACET_ORDER.flatMap(key =>
+    (key === 'ownership' &&
+      (isDefaultOwnership(state.selection[key]) || state.selection[key].includes(OWNERSHIP_ANY))
+      ? []
+      : state.selection[key]
+    ).map(value => ({
+      key,
+      value,
+      label: chipLabel(key, value, facets, t),
+    }))
+  )
   const activeFilters = selectionCount(state.selection)
 
   // A view is "open" either because it was clicked, or because the filter on
@@ -340,16 +379,34 @@ export default function BooksPage() {
               <span className="tabular-nums">
                 {loading && !books.length
                   ? t('common.loading', { defaultValue: 'Loading…' })
-                  : t('books.count', {
-                      total,
-                      defaultValue: `${total} books`,
-                    })}
+                  : scopeTotal !== null && scopeTotal !== total
+                    // "of N records" is what makes a filtered shelf legible:
+                    // 41 books alone reads as a small library rather than as a
+                    // slice of a larger one.
+                    ? t('books.of_records', {
+                        shown: total, total: scopeTotal,
+                        defaultValue: `${total} of ${scopeTotal} records`,
+                      })
+                    : t('books.count', {
+                        total,
+                        defaultValue: `${total} books`,
+                      })}
               </span>
-              {activeFilters > 0 && (
-                <span className="rounded-full bg-accent-surface px-2 py-0.5 text-xs font-medium text-accent">
-                  {t('facets.active', { count: activeFilters, defaultValue: `${activeFilters} filters` })}
-                </span>
-              )}
+
+              {/* Every applied filter as a chip that removes itself. The rail
+                  can do this too, but it is a long way from the results and
+                  the reader has to remember which of seven groups they used. */}
+              {activeChips.map(chip => (
+                <button
+                  key={`${chip.key}:${chip.value}`}
+                  type="button"
+                  onClick={() => apply(toggle(state, chip.key, chip.value))}
+                  className="lb-chip on"
+                  title={t('facets.remove', { defaultValue: 'Remove filter' })}
+                >
+                  {chip.label} ×
+                </button>
+              ))}
 
               <span className="flex-1" />
 

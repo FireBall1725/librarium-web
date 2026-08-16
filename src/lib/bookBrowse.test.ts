@@ -3,6 +3,8 @@
 
 import { describe, expect, it } from 'vitest'
 import {
+  DEFAULT_OWNERSHIP,
+  OWNERSHIP_ANY,
   clearAll,
   emptySelection,
   pageWindow,
@@ -14,8 +16,10 @@ import {
   type BrowseState,
 } from './bookBrowse'
 
+// Mirrors what readState produces for a bare URL: ownership carries its
+// default, everything else is empty.
 const base = (over: Partial<BrowseState> = {}): BrowseState => ({
-  selection: emptySelection(),
+  selection: { ...emptySelection(), ownership: [...DEFAULT_OWNERSHIP] },
   query: '',
   page: 1,
   ...over,
@@ -24,7 +28,12 @@ const base = (over: Partial<BrowseState> = {}): BrowseState => ({
 describe('URL round trip', () => {
   it('survives a round trip with several facets', () => {
     const state = base({
-      selection: { ...emptySelection(), library: ['a', 'b'], read_status: ['read'] },
+      selection: {
+        ...emptySelection(),
+        ownership: [...DEFAULT_OWNERSHIP],
+        library: ['a', 'b'],
+        read_status: ['read'],
+      },
       query: 'le guin',
       page: 4,
     })
@@ -33,6 +42,45 @@ describe('URL round trip', () => {
 
   it('omits defaults so a plain link stays clean', () => {
     expect(writeState(base()).toString()).toBe('')
+  })
+
+  it('opens on the shelf when the URL says nothing about ownership', () => {
+    expect(readState(new URLSearchParams('')).selection.ownership).toEqual(DEFAULT_OWNERSHIP)
+  })
+
+  it('keeps a cleared ownership filter cleared', () => {
+    // Absent means the default, so clearing needs a value of its own. Written
+    // as empty it would read back as absent and snap to the shelf again.
+    const cleared = base({ selection: { ...emptySelection(), ownership: [] } })
+    const url = writeState(cleared)
+    expect(url.get('own')).toBe(OWNERSHIP_ANY)
+    expect(readState(url).selection.ownership).toEqual([OWNERSHIP_ANY])
+  })
+
+  it('does not send the sentinel to the server, which has no such state', () => {
+    const any = base({ selection: { ...emptySelection(), ownership: [OWNERSHIP_ANY] } })
+    expect(new URLSearchParams(toApiQuery(any, 50, true)).get('own')).toBeNull()
+  })
+
+  it('sends a real ownership choice through', () => {
+    const wish = base({ selection: { ...emptySelection(), ownership: ['wishlist'] } })
+    expect(new URLSearchParams(toApiQuery(wish, 50, true)).get('own')).toBe('wishlist')
+  })
+
+  it('does not count the explicit any as an applied filter either', () => {
+    // Taking a filter off is not applying one.
+    expect(selectionCount(base({
+      selection: { ...emptySelection(), ownership: [OWNERSHIP_ANY] },
+    }).selection)).toBe(0)
+  })
+
+  it('does not count the default as an applied filter', () => {
+    // An untouched Books page claiming "1 filter" would be a lie about state
+    // the reader never set.
+    expect(selectionCount(base().selection)).toBe(0)
+    expect(selectionCount(base({
+      selection: { ...emptySelection(), ownership: ['wishlist'] },
+    }).selection)).toBe(1)
   })
 
   it('reads a malformed page as 1 rather than NaN', () => {
@@ -66,7 +114,12 @@ describe('selection', () => {
 describe('API query', () => {
   it('sends values within a facet as one comma-separated parameter', () => {
     const s = base({
-      selection: { ...emptySelection(), library: ['a', 'b'], read_status: ['read'] },
+      selection: {
+        ...emptySelection(),
+        ownership: [...DEFAULT_OWNERSHIP],
+        library: ['a', 'b'],
+        read_status: ['read'],
+      },
     })
     const params = new URLSearchParams(toApiQuery(s, 50))
     expect(params.get('lib')).toBe('a,b')
@@ -111,9 +164,13 @@ describe('API query', () => {
     expect(params.get('filter')).toBeNull()
   })
 
-  it('sends no facet parameters when nothing is selected', () => {
+  it('sends the ownership default even though the URL omits it', () => {
+    // The default lives in the client, so the server has to be told. Without
+    // this the rail would say "On the shelf" beside a list that also held
+    // wishlist, suggested and missing books.
     const params = new URLSearchParams(toApiQuery(base(), 50))
-    expect([...params.keys()].sort()).toEqual(['page', 'per_page'])
+    expect(params.get('own')).toBe('shelf')
+    expect([...params.keys()].sort()).toEqual(['own', 'page', 'per_page'])
   })
 })
 

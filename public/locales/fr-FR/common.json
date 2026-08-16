@@ -93,7 +93,8 @@
     "empty_filtered": "Assouplissez un filtre ou effacez-les tous.",
     "empty_shelf": "Aucun livre dans vos bibliothèques.",
     "range": "{{from}} à {{to}} sur {{total}}",
-    "per_page": "Afficher"
+    "per_page": "Afficher",
+    "of_records": "{{shown}} sur {{total}} enregistrements"
   },
   "facets": {
     "library": "Bibliothèque",
@@ -104,7 +105,9 @@
     "rating": "Note",
     "stars": "{{count}} étoiles",
     "clear": "Effacer {{count}} filtres",
-    "active": "{{count}} filtres"
+    "active": "{{count}} filtres",
+    "ownership": "Possession",
+    "remove": "Retirer le filtre"
   },
   "common": {
     "loading": "Chargement…",
@@ -238,5 +241,11 @@
     "profile_description": "Votre compte sur cette instance.",
     "tokens_description": "Un jeton agit en votre nom, limité aux portées que vous lui donnez, jusqu à sa révocation.",
     "ai_description": "Ce qu un fournisseur d IA peut voir de vos lectures. Désactivé sauf si vous l activez."
+  },
+  "ownership": {
+    "shelf": "Sur l étagère",
+    "wishlist": "Liste de souhaits",
+    "suggested": "Suggéré",
+    "gap": "Volume manquant"
   }
 }

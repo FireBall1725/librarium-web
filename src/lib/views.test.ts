@@ -102,6 +102,7 @@ describe('dirty tracking', () => {
 
 describe('viewCount', () => {
   const facets = {
+    ownership: [{ value: 'shelf', label: 'shelf', count: 279 }],
     library: [{ value: 'lib-a', label: 'Fiction', count: 108 }],
     read_status: [
       { value: 'reading', label: 'reading', count: 28 },

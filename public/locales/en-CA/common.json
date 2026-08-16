@@ -93,7 +93,8 @@
     "empty_filtered": "Loosen a filter, or clear them all.",
     "empty_shelf": "No books in your libraries yet.",
     "range": "{{from}} to {{to}} of {{total}}",
-    "per_page": "Show"
+    "per_page": "Show",
+    "of_records": "{{shown}} of {{total}} records"
   },
   "facets": {
     "library": "Library",
@@ -104,7 +105,9 @@
     "rating": "Rating",
     "stars": "{{count}} stars",
     "clear": "Clear {{count}} filters",
-    "active": "{{count}} filters"
+    "active": "{{count}} filters",
+    "ownership": "Ownership",
+    "remove": "Remove filter"
   },
   "common": {
     "loading": "Loading…",
@@ -238,5 +241,11 @@
     "profile_description": "Your account on this instance.",
     "tokens_description": "Tokens act as you, limited to the scopes you give them. Anything holding one can do what it allows until you revoke it.",
     "ai_description": "What an AI provider is allowed to see about your reading. Off unless you turn it on."
+  },
+  "ownership": {
+    "shelf": "On the shelf",
+    "wishlist": "Wishlist",
+    "suggested": "Suggested",
+    "gap": "Missing volume"
   }
 }

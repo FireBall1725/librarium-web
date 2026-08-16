@@ -26,6 +26,7 @@ interface FacetRailProps {
 }
 
 const LABEL_KEY: Record<FacetKey, string> = {
+  ownership: 'facets.ownership',
   library: 'facets.library',
   read_status: 'facets.read_status',
   media_type: 'facets.media_type',
@@ -36,8 +37,9 @@ const LABEL_KEY: Record<FacetKey, string> = {
 
 type Translate = ReturnType<typeof useTranslation>['t']
 
-/** Read statuses arrive as the raw enum; ratings as a bare number. */
+/** Read statuses, ownership and ratings arrive as raw values, not labels. */
 function displayLabel(key: FacetKey, v: FacetValue, t: Translate): string {
+  if (key === 'ownership') return t(`ownership.${v.value}`, { defaultValue: v.label })
   if (key === 'read_status') return t(`read_status.${v.value}`, { defaultValue: v.label })
   if (key === 'rating') return t('facets.stars', { count: Number(v.value), defaultValue: `${v.value} stars` })
   return v.label

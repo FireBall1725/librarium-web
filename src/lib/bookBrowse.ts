@@ -13,12 +13,15 @@
 // two people opening the same link should each get their own, and the link
 // should not change meaning when one of them switches to 200.
 
-export type FacetKey = 'library' | 'read_status' | 'media_type' | 'genre' | 'tag' | 'rating'
+export type FacetKey = 'ownership' | 'library' | 'read_status' | 'media_type' | 'genre' | 'tag' | 'rating'
 
-export const FACET_ORDER: FacetKey[] = ['library', 'read_status', 'media_type', 'genre', 'tag', 'rating']
+// Ownership leads: whether you have a book at all comes before anything else
+// about it, and it is the one facet that arrives with a default.
+export const FACET_ORDER: FacetKey[] = ['ownership', 'library', 'read_status', 'media_type', 'genre', 'tag', 'rating']
 
 /** Query-string key for each facet. Short, because these end up in shared links. */
 export const PARAM: Record<FacetKey, string> = {
+  ownership: 'own',
   library: 'lib',
   read_status: 'status',
   media_type: 'type',
@@ -44,11 +47,46 @@ export interface BrowseState {
 }
 
 export const emptySelection = (): Selection => ({
-  library: [], read_status: [], media_type: [], genre: [], tag: [], rating: [],
+  ownership: [], library: [], read_status: [], media_type: [], genre: [], tag: [], rating: [],
 })
 
+export const isDefaultOwnership = (vals: string[]): boolean =>
+  vals.length === DEFAULT_OWNERSHIP.length && DEFAULT_OWNERSHIP.every(v => vals.includes(v))
+
+/**
+ * How many filters the reader has actually applied.
+ *
+ * Ownership at its default is not one of them: it is the state Books opens in,
+ * and counting it would make a untouched page claim one active filter.
+ */
 export const selectionCount = (s: Selection): number =>
-  FACET_ORDER.reduce((n, k) => n + s[k].length, 0)
+  FACET_ORDER.reduce((n, k) => {
+    if (k === 'ownership') {
+      // Neither the default nor the explicit "any" is a filter the reader
+      // applied: one is where Books opens, the other is them taking a filter
+      // off. Counting either would report state nobody chose.
+      if (isDefaultOwnership(s[k]) || s[k].includes(OWNERSHIP_ANY)) return n
+      return n + s[k].length
+    }
+    return n + s[k].length
+  }, 0)
+
+/**
+ * What ownership means when the URL says nothing.
+ *
+ * Books opens on what you actually have. The other three states are things you
+ * do not own, and a shelf that opens by mixing them in is not your shelf.
+ */
+export const DEFAULT_OWNERSHIP = ['shelf']
+
+/**
+ * Explicit "no ownership filter".
+ *
+ * Absent has to mean the default, or every link would carry `own=shelf`; so
+ * clearing the filter needs a value of its own rather than an empty one, which
+ * would read as absent and snap straight back to the default.
+ */
+export const OWNERSHIP_ANY = 'any'
 
 export function readState(params: URLSearchParams): BrowseState {
   const selection = emptySelection()
@@ -56,6 +94,7 @@ export function readState(params: URLSearchParams): BrowseState {
     const raw = params.get(PARAM[key])
     if (raw) selection[key] = raw.split(',').filter(Boolean)
   }
+  if (!params.has(PARAM.ownership)) selection.ownership = [...DEFAULT_OWNERSHIP]
   const page = Number(params.get('page') ?? '1')
   return {
     selection,
@@ -69,6 +108,14 @@ export function writeState(state: BrowseState): URLSearchParams {
   const params = new URLSearchParams()
   for (const key of FACET_ORDER) {
     const vals = state.selection[key]
+    if (key === 'ownership') {
+      // Omitted when it matches the default, so an ordinary link stays clean;
+      // written as the sentinel when cleared, so 'show me everything' survives
+      // being sent to someone else.
+      if (isDefaultOwnership(vals)) continue
+      params.set(PARAM[key], vals.length ? vals.join(',') : OWNERSHIP_ANY)
+      continue
+    }
     if (vals.length) params.set(PARAM[key], vals.join(','))
   }
   if (state.query) params.set('q', state.query)
@@ -99,6 +146,9 @@ export function toApiQuery(state: BrowseState, perPage: number, forFacets = fals
   // silently did nothing. One format for both keeps them honest.
   for (const key of FACET_ORDER) {
     const vals = state.selection[key]
+    // The sentinel is a client-side idea; the server has no 'any' ownership,
+    // it simply receives no ownership filter.
+    if (key === 'ownership' && vals.includes(OWNERSHIP_ANY)) continue
     if (vals.length) params.set(PARAM[key], vals.join(','))
   }
 
