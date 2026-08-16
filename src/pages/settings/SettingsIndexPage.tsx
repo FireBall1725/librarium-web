@@ -16,6 +16,7 @@ import PageHeader from '../../components/PageHeader'
 import { usePageTitle } from '../../hooks/usePageTitle'
 import { SETTINGS_TREE, type FactKey, type SettingsPage } from '../../lib/settingsTree'
 import { THEMES, readStoredTheme } from '../../lib/theme'
+import { attentionRoutes, useSettingsAttention } from '../../lib/settingsAttention'
 import type { AIProviderStatus, ProviderStatus } from '../../types'
 
 /**
@@ -26,19 +27,15 @@ import type { AIProviderStatus, ProviderStatus } from '../../types'
  */
 type Facts = Partial<Record<FactKey, string>>
 
-interface Attention {
-  title: string
-  detail: string
-  to: string
-}
-
 export default function SettingsIndexPage() {
   const { t } = useTranslation()
   const { callApi, user } = useAuth()
   usePageTitle(t('nav.settings', { defaultValue: 'Settings' }))
 
   const [facts, setFacts] = useState<Facts>({})
-  const [attention, setAttention] = useState<Attention[]>([])
+  // The same source the rail marks its dots from, so a dot always has a
+  // problem listed behind it.
+  const attention = useSettingsAttention(callApi, true)
 
   useEffect(() => {
     let cancelled = false
@@ -71,25 +68,6 @@ export default function SettingsIndexPage() {
             defaultValue: '{{on}} of {{total}} on',
           }),
         })
-        // A provider that is enabled but has no key fails every lookup it is
-        // asked for, and does it silently. That is exactly the class of
-        // problem this block exists to surface.
-        const keyless = on.filter(p => p.requires_key && !p.has_api_key)
-        if (!cancelled && keyless.length > 0) {
-          setAttention(prev => [
-            ...prev,
-            ...keyless.map(p => ({
-              title: t('settings_attn.no_key', {
-                name: p.display_name || p.name,
-                defaultValue: '{{name}} is on but has no API key',
-              }),
-              detail: t('settings_attn.no_key_detail', {
-                defaultValue: 'Every lookup it is asked for fails silently.',
-              }),
-              to: '/admin/connections',
-            })),
-          ])
-        }
       })
       .catch(() => {})
 
@@ -123,7 +101,7 @@ export default function SettingsIndexPage() {
     return facts[page.fact] ?? localFacts[page.fact] ?? undefined
   }
 
-  const needsAttention = new Set(attention.map(a => a.to))
+  const needsAttention = attentionRoutes(attention)
 
   return (
     <>

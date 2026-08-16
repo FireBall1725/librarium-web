@@ -29,7 +29,8 @@
     "books": "Livres",
     "views": "Vues",
     "series": "Séries",
-    "authors": "Auteurs"
+    "authors": "Auteurs",
+    "back_to_library": "Retour à la bibliothèque"
   },
   "library_nav": {
     "books": "Books",
@@ -181,7 +182,8 @@
     "attention_count_one": "{{count}} élément",
     "attention_count_other": "{{count}} éléments",
     "pages_count_one": "{{count}} page",
-    "pages_count_other": "{{count}} pages"
+    "pages_count_other": "{{count}} pages",
+    "overview": "Aperçu"
   },
   "settings_fact": {
     "types_one": "{{count}} type",

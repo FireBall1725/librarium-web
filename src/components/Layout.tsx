@@ -8,7 +8,8 @@ import { THEMES, applyTheme, readStoredTheme, storeTheme, type ThemeId } from '.
 // of "status=reading", so a substring test lights up Finished while the reader
 // is looking at Reading now.
 import { loadViews, newViewId, normaliseParams, saveView, viewCount, type SavedView } from '../lib/views'
-import { sectionForPath } from '../lib/settingsTree'
+import { SETTINGS_TREE } from '../lib/settingsTree'
+import { attentionRoutes, useSettingsAttention } from '../lib/settingsAttention'
 import type { BookFacets } from '../lib/bookBrowse'
 import { Icon, type IconName } from '../lib/icons'
 import AuthorAvatar from './AuthorAvatar'
@@ -121,11 +122,12 @@ export default function Layout() {
   const location = useLocation()
   const [params] = useSearchParams()
   const { t } = useTranslation()
-  // Which settings section the reader is in, which is not the same as being
-  // under /settings: People and the connection pages live elsewhere in the
-  // route table but belong to a section, and the sidebar should say so.
-  const settingsSection = sectionForPath(location.pathname)
-  const inSettings = location.pathname.startsWith('/settings') || settingsSection !== null
+  // Settings covers more than the /settings prefix: People and the connection
+  // pages live elsewhere in the route table but belong to the tree.
+  const inSettings =
+    location.pathname.startsWith('/settings') ||
+    SETTINGS_TREE.some(s2 => s2.pages.some(p =>
+      location.pathname === p.to || location.pathname.startsWith(p.to + '/')))
   const libraryMatch = location.pathname.match(/^\/libraries\/([^/]+)(?:\/|$)/)
   const currentLibraryId = libraryMatch?.[1]
   const [apiVersion, setApiVersion] = useState<string | null>(null)
@@ -171,6 +173,12 @@ export default function Layout() {
   // touches, which is the thing the exhaustive-deps rule exists to catch.
   const [, setViewsTick] = useState(0)
   const [namingView, setNamingView] = useState(false)
+  // Fetched for admins everywhere, not only inside settings: the dot on the
+  // Settings row exists to tell someone who is NOT in settings that something
+  // in there is broken, so gating it on being in settings defeats it. The
+  // endpoint is admin-only, hence the check rather than a swallowed 403.
+  const attention = useSettingsAttention(callApi, user?.is_instance_admin === true)
+  const needsAttention = attentionRoutes(attention)
   const views: SavedView[] = loadViews()
 
   useEffect(() => {
@@ -327,6 +335,49 @@ export default function Layout() {
         </div>
 
         <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
+          {/* Inside settings the rail becomes the settings tree, replacing the
+              library nav rather than appending to it. One menu, not two: with
+              both on screen the reader has to work out which half they are
+              navigating, and the library nav is not what they came for.
+
+              Every section and every page is listed, not just the section in
+              use. The tree is the map of settings, and a map that only shows
+              the room you are standing in is not a map. */}
+          {inSettings ? (
+            <>
+              <NavLink to="/dashboard" className="lb-navrow back">
+                <Icon name="back" />
+                {t('nav.back_to_library', { defaultValue: 'Back to library' })}
+              </NavLink>
+              <NavRow
+                to="/settings"
+                icon="settings"
+                label={t('settings.overview', { defaultValue: 'Overview' })}
+                end
+              />
+              {SETTINGS_TREE.map(section => (
+                <div key={section.id}>
+                  <p className="lb-eyebrow px-2 pb-1 pt-3.5">
+                    {t(section.labelKey, { defaultValue: section.labelFallback })}
+                  </p>
+                  <div className="lb-subnav">
+                    {section.pages.map(page => (
+                      <NavLink
+                        key={page.id}
+                        to={page.to}
+                        end={page.to === '/settings/jobs'}
+                        className={({ isActive }) => `lb-navrow ${isActive ? 'on' : ''}`}
+                      >
+                        {t(page.labelKey, { defaultValue: page.labelFallback })}
+                        {needsAttention.has(page.to) && <span className="warn" />}
+                      </NavLink>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </>
+          ) : (
+          <>
           {/* Search sits at the top of the rail rather than on the Books page,
               because it searches everything and is reachable from everywhere. */}
           <form
@@ -422,6 +473,8 @@ export default function Layout() {
           {suggestionsAvailable && (
             <NavRow to="/suggestions" icon="suggested" label={t('nav.suggestions')} />
           )}
+          </>
+          )}
         </nav>
 
         {/* Settings sits above the account rather than in the nav above,
@@ -429,27 +482,15 @@ export default function Layout() {
             three separate destinations for what is one place to configure the
             instance. The account follows it, with the theme picker beside. */}
         <div className="lb-railfoot px-2">
-          <NavRow to="/settings" icon="settings" label={t('nav.settings')} end />
-          {/* Contextual: the section you are in, not all fifteen pages. A flat
-              list showed every settings page the same wall of links, so the
-              rail never told you where you were. */}
-          {inSettings && settingsSection && (
-            <div className="lb-subnav">
-              <p className="lb-eyebrow px-2 pb-0.5 pt-1">
-                {t(settingsSection.labelKey, { defaultValue: settingsSection.labelFallback })}
-              </p>
-              {settingsSection.pages.map(page => (
-                <NavLink
-                  key={page.id}
-                  to={page.to}
-                  end={page.to === '/settings/jobs'}
-                  className={({ isActive }) => `lb-navrow ${isActive ? 'on' : ''}`}
-                >
-                  {t(page.labelKey, { defaultValue: page.labelFallback })}
-                </NavLink>
-              ))}
-            </div>
-          )}
+          {/* The dot is the only thing that tells a reader who is not in
+              settings that something in there is broken. */}
+          <NavRow
+            to="/settings"
+            icon="settings"
+            label={t('nav.settings')}
+            warn={attention.length > 0}
+            end
+          />
           <div className="lb-acct">
             <Link to="/profile" className="lb-acctmain">
               <AuthorAvatar name={user?.display_name || user?.username || '?'} size={28} />
