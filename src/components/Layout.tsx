@@ -8,6 +8,7 @@ import { THEMES, applyTheme, readStoredTheme, storeTheme, type ThemeId } from '.
 // of "status=reading", so a substring test lights up Finished while the reader
 // is looking at Reading now.
 import { loadViews, normaliseParams, type SavedView } from '../lib/views'
+import { sectionForPath } from '../lib/settingsTree'
 
 interface CollectionCounts {
   books: number
@@ -31,17 +32,6 @@ function NavCount({ value }: { value: number | undefined }) {
   )
 }
 
-const SETTINGS_ITEMS: Array<{ to: string; labelKey: string }> = [
-  { to: '/admin/settings/media-management', labelKey: 'settings_nav.media_management' },
-  { to: '/admin/settings/metadata',         labelKey: 'settings_nav.metadata' },
-  { to: '/admin/settings/tags',             labelKey: 'settings_nav.tags' },
-  { to: '/admin/settings/genres',           labelKey: 'settings_nav.genres' },
-  { to: '/admin/settings/media-types',      labelKey: 'settings_nav.media_types' },
-  { to: '/admin/settings/profiles',         labelKey: 'settings_nav.profiles' },
-  { to: '/admin/settings/general',          labelKey: 'settings_nav.general' },
-  { to: '/admin/settings/jobs',             labelKey: 'settings_nav.jobs' },
-]
-
 const CONNECTIONS_ITEMS: Array<{ to: string; labelKey: string }> = [
   { to: '/admin/connections/ai', labelKey: 'connections_nav.ai' },
 ]
@@ -60,7 +50,11 @@ export default function Layout() {
   const navigate = useNavigate()
   const location = useLocation()
   const { t } = useTranslation()
-  const inSettings = location.pathname.startsWith('/admin/settings')
+  // Which settings section the reader is in, which is not the same as being
+  // under /settings: People and the connection pages live elsewhere in the
+  // route table but belong to a section, and the sidebar should say so.
+  const settingsSection = sectionForPath(location.pathname)
+  const inSettings = location.pathname.startsWith('/settings') || settingsSection !== null
   const inConnections = location.pathname.startsWith('/admin/connections')
   const libraryMatch = location.pathname.match(/^\/libraries\/([^/]+)(?:\/|$)/)
   const currentLibraryId = libraryMatch?.[1]
@@ -333,7 +327,8 @@ export default function Layout() {
                 </div>
               )}
               <NavLink
-                to="/admin/settings"
+                to="/settings"
+                end
                 className={({ isActive }) =>
                   `block px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                     isActive || inSettings
@@ -344,12 +339,19 @@ export default function Layout() {
               >
                 {t('nav.settings')}
               </NavLink>
-              {inSettings && (
+              {/* Contextual: the section you are in, not all thirteen pages.
+                  The flat list meant every settings page showed the same wall
+                  of links, so the sidebar never told you where you were. */}
+              {inSettings && settingsSection && (
                 <div className="mt-1 ml-3 border-l border-line pl-3 space-y-0.5">
-                  {SETTINGS_ITEMS.map(item => (
+                  <p className="px-2 pb-0.5 pt-1 text-[10px] font-semibold uppercase tracking-wider text-content-muted">
+                    {t(settingsSection.labelKey, { defaultValue: settingsSection.labelFallback })}
+                  </p>
+                  {settingsSection.pages.map(page => (
                     <NavLink
-                      key={item.to}
-                      to={item.to}
+                      key={page.id}
+                      to={page.to}
+                      end={page.to === '/settings/jobs'}
                       className={({ isActive }) =>
                         `block px-2 py-1.5 rounded-md text-sm transition-colors ${
                           isActive
@@ -358,7 +360,7 @@ export default function Layout() {
                         }`
                       }
                     >
-                      {t(item.labelKey)}
+                      {t(page.labelKey, { defaultValue: page.labelFallback })}
                     </NavLink>
                   ))}
                 </div>
@@ -414,6 +416,23 @@ export default function Layout() {
           <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5">
             <span className="font-medium text-content-tertiary">{t('app.name')}</span>
             <a
+              href="https://fireball1725.ca"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-gray-200 transition-colors"
+            >
+              {t('footer.credit', { defaultValue: 'Created by FireBall1725 in Ontario, Canada' })}
+              {/* Drawn rather than typed: the flag emoji is a regional-indicator
+                  pair and Segoe UI Emoji ships no flag glyphs, so Windows
+                  renders a boxed "CA" instead. Geometry from the public-domain
+                  Flag_of_Canada.svg on Wikimedia Commons. */}
+              <svg width="17" height="9" viewBox="0 0 9600 4800" role="img"
+                aria-label="Canada" className="flex-none rounded-[1px] border border-line-strong">
+                <title>Canada</title>
+                <path fill="#f00" d="m0 0h2400l99 99h4602l99-99h2400v4800h-2400l-99-99h-4602l-99 99H0z" />
+              </svg>
+            </a>
+            <a
               href="https://github.com/FireBall1725/librarium-web/releases"
               target="_blank"
               rel="noopener noreferrer"
@@ -442,14 +461,15 @@ export default function Layout() {
             >
               {t('footer.source')}
             </a>
-            <a
-              href="https://github.com/FireBall1725/librarium-web/blob/main/LICENSE"
-              target="_blank"
-              rel="noopener noreferrer"
+            {/* In-app now rather than off to GitHub: the notices belong with
+                the running instance, and the page carries the bundled fonts,
+                which the repository LICENSE file does not mention. */}
+            <Link
+              to="/settings/licences"
               className="hover:text-gray-900 dark:hover:text-gray-200 transition-colors"
             >
               {t('footer.license')}
-            </a>
+            </Link>
             <a
               href="https://github.com/FireBall1725/librarium-web/issues"
               target="_blank"

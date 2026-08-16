@@ -10,6 +10,9 @@ import ApiUnavailablePage from './pages/ApiUnavailablePage'
 import DashboardPage from './pages/DashboardPage'
 import BooksPage from './pages/BooksPage'
 import SeriesPage from './pages/SeriesPage'
+import SettingsIndexPage from './pages/settings/SettingsIndexPage'
+import LicencesPage from './pages/settings/LicencesPage'
+import LegacySettingsRedirect from './pages/settings/LegacySettingsRedirect'
 import AuthorsPage from './pages/AuthorsPage'
 import LibrariesPage from './pages/libraries/LibrariesPage'
 import LibraryPage from './pages/libraries/LibraryPage'
@@ -56,14 +59,25 @@ function AppRoutes() {
               <Route path="/suggestions" element={<SuggestionsPage />} />
               <Route path="/books/:bookId" element={<BookDetailPage />} />
 
+              {/* Outside the admin guard, and declared before it so the static
+                  path outranks the nested one. The footer offers Licences to
+                  everyone, and required notices are not an admin feature. */}
+              <Route path="/settings/licences" element={<SettingsLayout />}>
+                <Route index element={<LicencesPage />} />
+              </Route>
+
               <Route element={<ProtectedRoute requireAdmin />}>
                 <Route path="/admin/users" element={<UsersPage />} />
                 <Route path="/admin/connections" element={<ConnectionsLayout />}>
                   <Route index element={<Navigate to="ai" replace />} />
                   <Route path="ai" element={<AIPage />} />
                 </Route>
-                <Route path="/admin/settings" element={<SettingsLayout />}>
-                  <Route index element={<Navigate to="media-management" replace />} />
+                {/* Settings moved out from under /admin: most of these are
+                    instance configuration rather than user administration, and
+                    the split was the reason nobody could find anything. The old
+                    paths redirect so existing links and bookmarks still land. */}
+                <Route path="/settings" element={<SettingsLayout />}>
+                  <Route index element={<SettingsIndexPage />} />
                   <Route path="metadata"          element={<MetadataPage />} />
                   <Route path="media-management"  element={<MediaManagementPage />} />
                   <Route path="tags"               element={<TagsPage />} />
@@ -75,6 +89,8 @@ function AppRoutes() {
                   <Route path="jobs/history"       element={<JobsHistoryPage />} />
                   <Route path="jobs/:kind"         element={<JobKindPage />} />
                 </Route>
+                <Route path="/admin/settings" element={<Navigate to="/settings" replace />} />
+                <Route path="/admin/settings/*" element={<LegacySettingsRedirect />} />
               </Route>
 
               {/* Library section: shared sidebar, plus library-scoped breadcrumb/tabs */}

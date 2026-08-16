@@ -44,7 +44,8 @@
     "api": "API",
     "source": "Source",
     "license": "License",
-    "report_issue": "Report an issue"
+    "report_issue": "Report an issue",
+    "credit": "Créé par FireBall1725 en Ontario, Canada"
   },
   "connections_nav": {
     "ai": "AI"
@@ -57,7 +58,13 @@
     "media_types": "Media Types",
     "profiles": "Profiles",
     "general": "General",
-    "jobs": "Jobs"
+    "jobs": "Jobs",
+    "profile": "Profil",
+    "appearance": "Apparence",
+    "providers": "Fournisseurs de métadonnées",
+    "people": "Personnes",
+    "job_history": "Historique des tâches",
+    "licences": "Licences"
   },
   "theme": {
     "light": "☀ Light",
@@ -148,5 +155,44 @@
     "read_count_other": "{{count}} lus",
     "more_volumes_one": "+{{count}} de plus",
     "more_volumes_other": "+{{count}} de plus"
+  },
+  "settings_section": {
+    "account": "Compte",
+    "collection": "Collection",
+    "sources": "Sources",
+    "storage": "Stockage",
+    "system": "Système"
+  },
+  "settings": {
+    "description": "Cinq domaines. Chaque tuile est une porte et un état.",
+    "attention": "À vérifier",
+    "fix": "Corriger",
+    "attention_count_one": "{{count}} élément",
+    "attention_count_other": "{{count}} éléments",
+    "pages_count_one": "{{count}} page",
+    "pages_count_other": "{{count}} pages"
+  },
+  "settings_fact": {
+    "types_one": "{{count}} type",
+    "types_other": "{{count}} types",
+    "genres_one": "{{count}} genre",
+    "genres_other": "{{count}} genres",
+    "accounts_one": "{{count}} compte",
+    "accounts_other": "{{count}} comptes",
+    "providers_on": "{{on}} sur {{total}} actifs",
+    "none": "Aucun"
+  },
+  "settings_attn": {
+    "no_key": "{{name}} est actif mais n'a pas de clé API",
+    "no_key_detail": "Chaque recherche demandée échoue silencieusement."
+  },
+  "licences": {
+    "runtime": "Client web",
+    "typefaces": "Polices",
+    "description": "Librarium est un logiciel libre sous licence GNU AGPL-3.0. Il repose sur les projets ci-dessous, listés pour regrouper les mentions obligatoires. Chacun conserve son propre copyright.",
+    "librarium": "Copyright (C) 2026 FireBall1725. Sous licence GNU Affero General Public License, version 3.",
+    "read_agpl": "Lire la licence AGPL-3.0",
+    "footnote": "Ajouter une dépendance implique de l'ajouter ici dans la même pull request.",
+    "api_note": "Le serveur API a ses propres dépendances et mentions ; voir son dépôt pour cette liste."
   }
 }

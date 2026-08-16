@@ -44,7 +44,8 @@
     "api": "API",
     "source": "Source",
     "license": "License",
-    "report_issue": "Report an issue"
+    "report_issue": "Report an issue",
+    "credit": "Created by FireBall1725 in Ontario, Canada"
   },
   "connections_nav": {
     "ai": "AI"
@@ -57,7 +58,13 @@
     "media_types": "Media Types",
     "profiles": "Profiles",
     "general": "General",
-    "jobs": "Jobs"
+    "jobs": "Jobs",
+    "profile": "Profile",
+    "appearance": "Appearance",
+    "providers": "Metadata providers",
+    "people": "People",
+    "job_history": "Job history",
+    "licences": "Licences"
   },
   "theme": {
     "light": "☀ Light",
@@ -148,5 +155,44 @@
     "read_count_other": "{{count}} read",
     "more_volumes_one": "+{{count}} more",
     "more_volumes_other": "+{{count}} more"
+  },
+  "settings_section": {
+    "account": "Account",
+    "collection": "Collection",
+    "sources": "Sources",
+    "storage": "Storage",
+    "system": "System"
+  },
+  "settings": {
+    "description": "Five areas. Every tile is a door and a status readout.",
+    "attention": "Needs attention",
+    "fix": "Fix",
+    "attention_count_one": "{{count}} item",
+    "attention_count_other": "{{count}} items",
+    "pages_count_one": "{{count}} page",
+    "pages_count_other": "{{count}} pages"
+  },
+  "settings_fact": {
+    "types_one": "{{count}} type",
+    "types_other": "{{count}} types",
+    "genres_one": "{{count}} genre",
+    "genres_other": "{{count}} genres",
+    "accounts_one": "{{count}} account",
+    "accounts_other": "{{count}} accounts",
+    "providers_on": "{{on}} of {{total}} on",
+    "none": "None"
+  },
+  "settings_attn": {
+    "no_key": "{{name}} is on but has no API key",
+    "no_key_detail": "Every lookup it is asked for fails silently."
+  },
+  "licences": {
+    "runtime": "Web client",
+    "typefaces": "Typefaces",
+    "description": "Librarium is free and open source under the GNU AGPL-3.0. It is built on the projects below, listed so the required notices stay in one place. Each keeps its own copyright.",
+    "librarium": "Copyright (C) 2026 FireBall1725. Licensed under the GNU Affero General Public License, version 3.",
+    "read_agpl": "Read the AGPL-3.0",
+    "footnote": "Adding a dependency means adding it here in the same pull request.",
+    "api_note": "The API server ships its own dependencies and notices; see its repository for that list."
   }
 }
