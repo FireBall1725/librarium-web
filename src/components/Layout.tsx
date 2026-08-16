@@ -106,10 +106,6 @@ function libraryHue(id: string): string {
   return `oklch(0.68 0.15 ${h % 360})`
 }
 
-const CONNECTIONS_ITEMS: Array<{ to: string; labelKey: string }> = [
-  { to: '/admin/connections/ai', labelKey: 'connections_nav.ai' },
-]
-
 const LIBRARY_SECTIONS: Array<{ section: string; labelKey: string }> = [
   { section: 'books',        labelKey: 'library_nav.books' },
   { section: 'contributors', labelKey: 'library_nav.contributors' },
@@ -130,7 +126,6 @@ export default function Layout() {
   // route table but belong to a section, and the sidebar should say so.
   const settingsSection = sectionForPath(location.pathname)
   const inSettings = location.pathname.startsWith('/settings') || settingsSection !== null
-  const inConnections = location.pathname.startsWith('/admin/connections')
   const libraryMatch = location.pathname.match(/^\/libraries\/([^/]+)(?:\/|$)/)
   const currentLibraryId = libraryMatch?.[1]
   const [apiVersion, setApiVersion] = useState<string | null>(null)
@@ -281,12 +276,6 @@ export default function Layout() {
     navigate('/login')
   }
 
-  const navClass = ({ isActive }: { isActive: boolean }) =>
-    `block px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-      isActive
-        ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
-    }`
 
   return (
     <div className="app-shell h-screen flex flex-col bg-surface-muted">
@@ -431,101 +420,36 @@ export default function Layout() {
           )}
 
           {suggestionsAvailable && (
-            <NavLink to="/suggestions" className={navClass}>{t('nav.suggestions')}</NavLink>
-          )}
-
-          <div className="pt-4">
-            <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wider text-content-subtle">
-              {t('nav.tools')}
-            </p>
-            <NavLink to="/import" className={navClass}>{t('nav.import')}</NavLink>
-          </div>
-
-          {user?.is_instance_admin && (
-            <div className="pt-4">
-              <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wider text-content-subtle">
-                {t('nav.admin')}
-              </p>
-              <NavLink to="/admin/users" className={navClass}>{t('nav.users')}</NavLink>
-              <NavLink
-                to="/admin/connections"
-                className={({ isActive }) =>
-                  `block px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive || inConnections
-                      ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
-                  }`
-                }
-              >
-                {t('nav.connections')}
-              </NavLink>
-              {inConnections && (
-                <div className="mt-1 ml-3 border-l border-line pl-3 space-y-0.5">
-                  {CONNECTIONS_ITEMS.map(item => (
-                    <NavLink
-                      key={item.to}
-                      to={item.to}
-                      className={({ isActive }) =>
-                        `block px-2 py-1.5 rounded-md text-sm transition-colors ${
-                          isActive
-                            ? 'text-blue-600 dark:text-blue-400 font-medium'
-                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800'
-                        }`
-                      }
-                    >
-                      {t(item.labelKey)}
-                    </NavLink>
-                  ))}
-                </div>
-              )}
-              <NavLink
-                to="/settings"
-                end
-                className={({ isActive }) =>
-                  `block px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive || inSettings
-                      ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
-                  }`
-                }
-              >
-                {t('nav.settings')}
-              </NavLink>
-              {/* Contextual: the section you are in, not all thirteen pages.
-                  The flat list meant every settings page showed the same wall
-                  of links, so the sidebar never told you where you were. */}
-              {inSettings && settingsSection && (
-                <div className="mt-1 ml-3 border-l border-line pl-3 space-y-0.5">
-                  <p className="px-2 pb-0.5 pt-1 text-[10px] font-semibold uppercase tracking-wider text-content-muted">
-                    {t(settingsSection.labelKey, { defaultValue: settingsSection.labelFallback })}
-                  </p>
-                  {settingsSection.pages.map(page => (
-                    <NavLink
-                      key={page.id}
-                      to={page.to}
-                      end={page.to === '/settings/jobs'}
-                      className={({ isActive }) =>
-                        `block px-2 py-1.5 rounded-md text-sm transition-colors ${
-                          isActive
-                            ? 'text-blue-600 dark:text-blue-400 font-medium'
-                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800'
-                        }`
-                      }
-                    >
-                      {t(page.labelKey, { defaultValue: page.labelFallback })}
-                    </NavLink>
-                  ))}
-                </div>
-              )}
-            </div>
+            <NavRow to="/suggestions" icon="suggested" label={t('nav.suggestions')} />
           )}
         </nav>
 
-        {/* User footer */}
-        {/* The account sits at the foot of the rail, with the theme picker
-            beside it. Sign-out is an icon button rather than a text link so it
-            cannot be mistaken for navigation. */}
+        {/* Settings sits above the account rather than in the nav above,
+            because Import, Users and Connections are all settings: they were
+            three separate destinations for what is one place to configure the
+            instance. The account follows it, with the theme picker beside. */}
         <div className="lb-railfoot px-2">
+          <NavRow to="/settings" icon="settings" label={t('nav.settings')} end />
+          {/* Contextual: the section you are in, not all fifteen pages. A flat
+              list showed every settings page the same wall of links, so the
+              rail never told you where you were. */}
+          {inSettings && settingsSection && (
+            <div className="lb-subnav">
+              <p className="lb-eyebrow px-2 pb-0.5 pt-1">
+                {t(settingsSection.labelKey, { defaultValue: settingsSection.labelFallback })}
+              </p>
+              {settingsSection.pages.map(page => (
+                <NavLink
+                  key={page.id}
+                  to={page.to}
+                  end={page.to === '/settings/jobs'}
+                  className={({ isActive }) => `lb-navrow ${isActive ? 'on' : ''}`}
+                >
+                  {t(page.labelKey, { defaultValue: page.labelFallback })}
+                </NavLink>
+              ))}
+            </div>
+          )}
           <div className="lb-acct">
             <Link to="/profile" className="lb-acctmain">
               <AuthorAvatar name={user?.display_name || user?.username || '?'} size={28} />

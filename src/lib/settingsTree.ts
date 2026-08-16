@@ -78,6 +78,9 @@ export const SETTINGS_TREE: SettingsSection[] = [
     labelFallback: 'Storage',
     pages: [
       { id: 'media-management', to: '/settings/media-management', labelKey: 'settings_nav.media_management', labelFallback: 'Media Management' },
+      // Import lived under a Tools heading of its own in the nav. It is data
+      // coming in, which is a storage concern, and one destination fewer.
+      { id: 'import', to: '/import', labelKey: 'nav.import', labelFallback: 'Import' },
     ],
   },
   {
