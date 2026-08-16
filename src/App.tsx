@@ -35,7 +35,7 @@ import ProfilesPage from './pages/admin/settings/ProfilesPage'
 import GeneralPage from './pages/admin/settings/GeneralPage'
 import ConnectionsLayout from './pages/admin/ConnectionsLayout'
 import AIPage from './pages/admin/connections/AIPage'
-import ProfilePage from './pages/ProfilePage'
+import { AiPrivacyPage, ApiTokensPage, ProfilePage } from './pages/settings/AccountPages'
 import SuggestionsPage from './pages/SuggestionsPage'
 import BookDetailPage from './pages/BookDetailPage'
 
@@ -56,7 +56,9 @@ function AppRoutes() {
               <Route path="/authors" element={<AuthorsPage />} />
               <Route path="/libraries" element={<LibrariesPage />} />
               <Route path="/import" element={<ImportPage />} />
-              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/profile" element={<SettingsLayout />}>
+                <Route index element={<ProfilePage />} />
+              </Route>
               <Route path="/suggestions" element={<SuggestionsPage />} />
               <Route path="/books/:bookId" element={<BookDetailPage />} />
 
@@ -68,6 +70,12 @@ function AppRoutes() {
               </Route>
               <Route path="/settings/appearance" element={<SettingsLayout />}>
                 <Route index element={<AppearancePage />} />
+              </Route>
+              <Route path="/settings/tokens" element={<SettingsLayout />}>
+                <Route index element={<ApiTokensPage />} />
+              </Route>
+              <Route path="/settings/ai-privacy" element={<SettingsLayout />}>
+                <Route index element={<AiPrivacyPage />} />
               </Route>
 
               <Route element={<ProtectedRoute requireAdmin />}>

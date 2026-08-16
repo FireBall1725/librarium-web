@@ -65,7 +65,9 @@
     "providers": "Metadata providers",
     "people": "People",
     "job_history": "Job history",
-    "licences": "Licences"
+    "licences": "Licences",
+    "tokens": "API tokens",
+    "ai_privacy": "AI and privacy"
   },
   "theme": {
     "light": "☀ Light",
@@ -231,5 +233,10 @@
     "language_note": "Switches the language throughout the web interface.",
     "read_badges": "Show read status badges",
     "read_badges_note": "A coloured corner on covers for read and in-progress books."
+  },
+  "settings_account": {
+    "profile_description": "Your account on this instance.",
+    "tokens_description": "Tokens act as you, limited to the scopes you give them. Anything holding one can do what it allows until you revoke it.",
+    "ai_description": "What an AI provider is allowed to see about your reading. Off unless you turn it on."
   }
 }

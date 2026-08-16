@@ -65,7 +65,9 @@
     "providers": "Fournisseurs de métadonnées",
     "people": "Personnes",
     "job_history": "Historique des tâches",
-    "licences": "Licences"
+    "licences": "Licences",
+    "tokens": "Jetons API",
+    "ai_privacy": "IA et confidentialité"
   },
   "theme": {
     "light": "☀ Light",
@@ -231,5 +233,10 @@
     "language_note": "Change la langue dans toute l interface web.",
     "read_badges": "Afficher les badges de lecture",
     "read_badges_note": "Un coin coloré sur les couvertures des livres lus et en cours."
+  },
+  "settings_account": {
+    "profile_description": "Votre compte sur cette instance.",
+    "tokens_description": "Un jeton agit en votre nom, limité aux portées que vous lui donnez, jusqu à sa révocation.",
+    "ai_description": "Ce qu un fournisseur d IA peut voir de vos lectures. Désactivé sauf si vous l activez."
   }
 }

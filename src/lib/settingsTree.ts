@@ -49,6 +49,11 @@ export const SETTINGS_TREE: SettingsSection[] = [
     pages: [
       { id: 'profile', to: '/profile', labelKey: 'settings_nav.profile', labelFallback: 'Profile', fact: 'displayName' },
       { id: 'appearance', to: '/settings/appearance', labelKey: 'settings_nav.appearance', labelFallback: 'Appearance', fact: 'theme' },
+      // Were tabs on the profile page, which meant they had no URL: nothing
+      // could link to your API tokens, and nobody found them without already
+      // knowing the tab bar was there.
+      { id: 'tokens', to: '/settings/tokens', labelKey: 'settings_nav.tokens', labelFallback: 'API tokens' },
+      { id: 'ai-privacy', to: '/settings/ai-privacy', labelKey: 'settings_nav.ai_privacy', labelFallback: 'AI and privacy' },
     ],
   },
   {
