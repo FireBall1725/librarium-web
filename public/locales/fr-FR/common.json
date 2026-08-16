@@ -59,7 +59,8 @@
     "light": "☀ Light",
     "dark": "☾ Dark",
     "auto": "⊙ Auto",
-    "cycle_tooltip": "Cycle theme: light → dark → auto"
+    "cycle_tooltip": "Cycle theme: light → dark → auto",
+    "label": "Thème"
   },
   "badges": {
     "public": "Public",

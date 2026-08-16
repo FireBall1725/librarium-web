@@ -66,7 +66,11 @@
 }
 
 @layer base {
-  :root {
+  /* Paper is the light theme and the default, holding exactly the colours the
+     client shipped before tokens existed. :root carries it so a document with
+     no data-theme still renders correctly. */
+  :root,
+  [data-theme="paper"] {
     color-scheme: light;
 
     --t-surface:         var(--color-white);
@@ -108,9 +112,14 @@
     --t-warning-line:    var(--color-amber-200);
   }
 
-  /* The dark theme. Note surface and surface-raised diverge here: they are both
-     white in light mode, which is why the pairing could not be inferred from the
-     light value alone. */
+  /* Ink is the dark theme, again exactly the colours that shipped before.
+     `.dark` is listed alongside the attribute because roughly 980 `dark:`
+     utilities have not been converted yet and still key off the class. When
+     that count reaches zero the `.dark` selector here can go.
+
+     Note surface and surface-raised diverge here: both are white in light mode,
+     which is why the pairing could not be inferred from the light value alone. */
+  [data-theme="ink"],
   .dark {
     color-scheme: dark;
 
@@ -151,5 +160,98 @@
     --t-warning-strong:  var(--color-amber-300);
     --t-warning-surface: --alpha(var(--color-amber-950) / 50%);
     --t-warning-line:    var(--color-amber-800);
+  }
+
+  /* ---------------------------------------------------------------------
+     Sepia. Warm dark, tuned for reading under a lamp. New in the token
+     layer, so nothing here existed as `dark:` utilities and no component
+     had to change to gain it.
+     --------------------------------------------------------------------- */
+  [data-theme="sepia"] {
+    color-scheme: dark;
+
+    --t-surface:         oklch(21% 0.017 55);
+    --t-surface-raised:  oklch(25% 0.019 55);
+    --t-surface-muted:   oklch(25% 0.019 55);
+    --t-surface-inset:   oklch(28% 0.021 55);
+    --t-surface-strong:  oklch(33% 0.024 55);
+
+    --t-content:           oklch(92% 0.026 75);
+    --t-content-strong:    oklch(86% 0.030 75);
+    --t-content-secondary: oklch(78% 0.032 72);
+    --t-content-tertiary:  oklch(69% 0.033 70);
+    --t-content-muted:     oklch(69% 0.033 70);
+    --t-content-subtle:    oklch(58% 0.031 68);
+    --t-content-faint:     oklch(46% 0.027 65);
+
+    --t-line:        oklch(31% 0.022 55);
+    --t-line-strong: oklch(38% 0.025 55);
+    --t-line-subtle: oklch(26% 0.019 55);
+
+    --t-accent:         oklch(78% 0.128 78);
+    --t-accent-strong:  oklch(85% 0.115 82);
+    --t-accent-surface: --alpha(oklch(55% 0.110 75) / 26%);
+    --t-accent-line:    oklch(52% 0.098 75);
+
+    --t-danger:         oklch(72% 0.125 32);
+    --t-danger-strong:  oklch(78% 0.115 32);
+    --t-danger-surface: --alpha(oklch(45% 0.130 30) / 34%);
+    --t-danger-line:    oklch(48% 0.120 30);
+
+    --t-success:         oklch(78% 0.105 140);
+    --t-success-strong:  oklch(84% 0.095 140);
+    --t-success-surface: --alpha(oklch(46% 0.095 142) / 32%);
+    --t-success-line:    oklch(50% 0.090 142);
+
+    --t-warning:         oklch(80% 0.125 70);
+    --t-warning-strong:  oklch(86% 0.115 72);
+    --t-warning-surface: --alpha(oklch(50% 0.115 68) / 32%);
+    --t-warning-line:    oklch(54% 0.105 68);
+  }
+
+  /* ---------------------------------------------------------------------
+     Nocturne. Cool dark with a blue-biased neutral, for low-light use where
+     the warm greys of Ink read as muddy.
+     --------------------------------------------------------------------- */
+  [data-theme="nocturne"] {
+    color-scheme: dark;
+
+    --t-surface:         oklch(19% 0.024 250);
+    --t-surface-raised:  oklch(23% 0.028 248);
+    --t-surface-muted:   oklch(23% 0.028 248);
+    --t-surface-inset:   oklch(26% 0.030 248);
+    --t-surface-strong:  oklch(32% 0.034 246);
+
+    --t-content:           oklch(94% 0.014 240);
+    --t-content-strong:    oklch(88% 0.018 240);
+    --t-content-secondary: oklch(80% 0.024 238);
+    --t-content-tertiary:  oklch(71% 0.029 236);
+    --t-content-muted:     oklch(71% 0.029 236);
+    --t-content-subtle:    oklch(60% 0.031 234);
+    --t-content-faint:     oklch(47% 0.029 232);
+
+    --t-line:        oklch(30% 0.030 248);
+    --t-line-strong: oklch(37% 0.033 246);
+    --t-line-subtle: oklch(25% 0.028 248);
+
+    --t-accent:         oklch(78% 0.098 218);
+    --t-accent-strong:  oklch(85% 0.084 216);
+    --t-accent-surface: --alpha(oklch(52% 0.098 220) / 28%);
+    --t-accent-line:    oklch(50% 0.090 220);
+
+    --t-danger:         oklch(72% 0.130 20);
+    --t-danger-strong:  oklch(79% 0.118 20);
+    --t-danger-surface: --alpha(oklch(44% 0.135 22) / 34%);
+    --t-danger-line:    oklch(48% 0.125 22);
+
+    --t-success:         oklch(79% 0.110 160);
+    --t-success-strong:  oklch(85% 0.098 160);
+    --t-success-surface: --alpha(oklch(46% 0.098 162) / 32%);
+    --t-success-line:    oklch(50% 0.092 162);
+
+    --t-warning:         oklch(82% 0.115 82);
+    --t-warning-strong:  oklch(88% 0.100 84);
+    --t-warning-surface: --alpha(oklch(50% 0.105 80) / 32%);
+    --t-warning-line:    oklch(54% 0.098 80);
   }
 }

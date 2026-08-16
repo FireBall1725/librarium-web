@@ -3,19 +3,7 @@ import { Link, NavLink, Outlet, useNavigate, useLocation } from 'react-router-do
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import type { SuggestionQuotaView } from '../types'
-
-type Theme = 'light' | 'dark' | 'system'
-
-function applyTheme(theme: Theme) {
-  const isDark =
-    theme === 'dark' ||
-    (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
-  document.documentElement.classList.toggle('dark', isDark)
-  document.documentElement.style.colorScheme = isDark ? 'dark' : 'light'
-  localStorage.setItem('theme', theme)
-}
-
-const NEXT_THEME: Record<Theme, Theme> = { light: 'dark', dark: 'system', system: 'light' }
+import { THEMES, applyTheme, readStoredTheme, storeTheme, type ThemeId } from '../lib/theme'
 
 const SETTINGS_ITEMS: Array<{ to: string; labelKey: string }> = [
   { to: '/admin/settings/media-management', labelKey: 'settings_nav.media_management' },
@@ -50,15 +38,8 @@ export default function Layout() {
   const inConnections = location.pathname.startsWith('/admin/connections')
   const libraryMatch = location.pathname.match(/^\/libraries\/([^/]+)(?:\/|$)/)
   const currentLibraryId = libraryMatch?.[1]
-  const themeLabels: Record<Theme, string> = {
-    light: t('theme.light'),
-    dark: t('theme.dark'),
-    system: t('theme.auto'),
-  }
   const [apiVersion, setApiVersion] = useState<string | null>(null)
-  const [theme, setTheme] = useState<Theme>(
-    () => (localStorage.getItem('theme') as Theme) ?? 'system'
-  )
+  const [theme, setTheme] = useState<ThemeId>(readStoredTheme)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   // Hide the Suggestions nav entry when AI is unavailable for this user
   // (job disabled, no active provider, or not opted in). Start undefined so
@@ -89,6 +70,8 @@ export default function Layout() {
 
   useEffect(() => {
     applyTheme(theme)
+    storeTheme(theme)
+    // Only `system` needs to react to the OS flipping; a named theme is fixed.
     if (theme !== 'system') return
     const mq = window.matchMedia('(prefers-color-scheme: dark)')
     const handler = () => applyTheme('system')
@@ -307,13 +290,18 @@ export default function Layout() {
               >
                 {t('nav.profile')}
               </Link>
-              <button
-                onClick={() => setTheme(prev => NEXT_THEME[prev])}
-                title={t('theme.cycle_tooltip')}
-                className="text-xs text-content-subtle hover:text-content-secondary transition-colors"
+              <select
+                value={theme}
+                onChange={e => setTheme(e.target.value as ThemeId)}
+                aria-label={t('theme.label')}
+                className="text-xs bg-transparent text-content-subtle hover:text-content-secondary transition-colors border-0 focus:outline-none focus:ring-0 cursor-pointer"
               >
-                {themeLabels[theme]}
-              </button>
+                {THEMES.map(th => (
+                  <option key={th.id} value={th.id} className="bg-surface text-content">
+                    {th.label}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
         </div>

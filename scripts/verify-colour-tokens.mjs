@@ -17,24 +17,53 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 const DIST = "dist/assets";
-const cssFile = readdirSync(DIST).find((f) => f.endsWith(".css"));
+const cssFile = readdirSync(DIST).filter((f) => f.endsWith(".css")).sort().pop();
 if (!cssFile) {
   console.error("No built CSS in dist/assets. Run `npm run build` first.");
   process.exit(1);
 }
 const css = readFileSync(join(DIST, cssFile), "utf8");
 
-function mergedVars(selectorLiteral) {
-  const re = new RegExp(`${selectorLiteral}\\{([^}]*)\\}`, "g");
+// Match any rule whose selector LIST mentions the target, so `:root,
+// [data-theme="paper"] { ... }` is found by either name. Tailwind also splits a
+// selector across several rules when a value uses --alpha(), so all matching
+// blocks are merged.
+function mergedVars(needle) {
   const out = {};
-  for (const m of css.matchAll(re)) {
-    for (const v of m[1].matchAll(/--t-([a-z-]+):var\(--color-([a-z0-9-]+)\)/g)) out[v[1]] = v[2];
+  for (const m of css.matchAll(/([^{}]+)\{([^}]*)\}/g)) {
+    const [, selector, body] = m;
+    if (!selector.replace(/["']/g, "").includes(needle)) continue;
+    if (!body.includes("--t-")) continue;
+    for (const v of body.matchAll(/--t-([a-z-]+):var\(--color-([a-z0-9-]+)\)/g)) out[v[1]] = v[2];
   }
   return out;
 }
 
-const light = mergedVars(":root");
-const dark = mergedVars("\\.dark");
+// Same, but for the alpha-blended surfaces.
+function mergedAlpha(needle) {
+  const out = {};
+  for (const m of css.matchAll(/([^{}]+)\{([^}]*)\}/g)) {
+    const [, selector, body] = m;
+    if (!selector.replace(/["']/g, "").includes(needle)) continue;
+    for (const v of body.matchAll(/--t-([a-z-]+-surface):color-mix\(in oklab,\s*var\(--color-([a-z0-9-]+)\)\s*([0-9]+)%/g))
+      out[v[1]] = [v[2], v[3]];
+  }
+  return out;
+}
+
+// The minifier strips quotes from attribute selectors, so compare unquoted.
+function mergedVarsAny(needle) {
+  const out = {};
+  for (const m of css.matchAll(/([^{}]+)\{([^}]*)\}/g)) {
+    const [, selector, body] = m;
+    if (!selector.replace(/["']/g, "").includes(needle)) continue;
+    for (const v of body.matchAll(/--t-([a-z-]+):/g)) out[v[1]] = true;
+  }
+  return out;
+}
+
+const light = mergedVars("[data-theme=paper]");
+const dark = mergedVars("[data-theme=ink]");
 
 // token -> [light palette entry, dark palette entry] it must equal
 const EXPECT = {
@@ -89,16 +118,17 @@ for (const [tok, [wantL, wantD]] of Object.entries(EXPECT)) {
   console.log(`  MISMATCH ${tok}: light ${light[tok]} (want ${wantL}), dark ${dark[tok]} (want ${wantD})`);
 }
 
-const alphaFound = Object.fromEntries(
-  [...css.matchAll(/--t-([a-z-]+-surface):color-mix\(in oklab,\s*var\(--color-([a-z0-9-]+)\)\s*([0-9]+)%/g)]
-    .map((m) => [m[1], [m[2], m[3]]])
-);
+// The alpha surfaces are emitted twice by the minifier: a precomputed hex and a
+// color-mix() fallback, and which one appears where is its business, not ours.
+// So intent is checked in the SOURCE and presence in the build.
+const srcCss = readFileSync("src/index.css", "utf8");
+const inkBlock = srcCss.slice(srcCss.indexOf('[data-theme="ink"]'), srcCss.indexOf('[data-theme="sepia"]'));
 for (const [tok, [wantL, wantDColour, wantPct]] of Object.entries(EXPECT_ALPHA)) {
-  const gotL = light[tok];
-  const got = alphaFound[tok];
-  if (gotL === wantL && got && got[0] === wantDColour && got[1] === wantPct) { ok++; continue; }
+  const declared = new RegExp(`--t-${tok}:\\s*--alpha\\(var\\(--color-${wantDColour}\\)\\s*/\\s*${wantPct}%\\)`).test(inkBlock);
+  const present = new RegExp(`--t-${tok}:`).test(css);
+  if (light[tok] === wantL && declared && present) { ok++; continue; }
   bad++;
-  console.log(`  MISMATCH ${tok}: light ${gotL} (want ${wantL}), dark ${got ? got.join(" @ ") + "%" : "missing"} (want ${wantDColour} @ ${wantPct}%)`);
+  console.log(`  MISMATCH ${tok}: light ${light[tok]} (want ${wantL}), ink declares ${wantDColour} @ ${wantPct}%? ${declared}, in build? ${present}`);
 }
 
 console.log(`\n${ok} tokens resolve to the colour they replaced, ${bad} mismatched`);
@@ -119,3 +149,19 @@ for (const f of files) {
   if (hits) leftovers += hits.length;
 }
 console.log(`${leftovers} paired dark: palette utilities remain (tail, not yet tokenised)`);
+
+// Every theme must define the full token set, or a component falls back to
+// whatever :root left behind and the theme is subtly broken rather than absent.
+const REQUIRED = [...Object.keys(EXPECT), ...Object.keys(EXPECT_ALPHA)];
+let incomplete = 0;
+for (const theme of ["paper", "ink", "sepia", "nocturne"]) {
+  const plain = mergedVarsAny(`[data-theme=${theme}]`);
+  const missing = REQUIRED.filter((t) => !(t in plain));
+  if (missing.length) {
+    incomplete++;
+    console.log(`  ${theme} is missing ${missing.length} token(s): ${missing.slice(0, 6).join(", ")}`);
+  } else {
+    console.log(`  ${theme}: all ${REQUIRED.length} tokens defined`);
+  }
+}
+if (incomplete) process.exit(1);
