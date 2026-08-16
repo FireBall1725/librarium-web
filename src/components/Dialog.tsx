@@ -91,6 +91,56 @@ export function Dialog({
 }
 
 /**
+ * Confirm before doing something that cannot be undone.
+ *
+ * The destructive action is styled as such and is NOT the initially focused
+ * control: focus lands on Cancel, so a reflexive Enter or Space on an
+ * unexpected dialog does not delete anything.
+ */
+export function ConfirmDialog({
+  open,
+  title,
+  description,
+  confirmLabel,
+  destructive,
+  onCancel,
+  onConfirm,
+}: {
+  open: boolean
+  title: string
+  description?: string
+  confirmLabel?: string
+  destructive?: boolean
+  onCancel: () => void
+  onConfirm: () => void
+}) {
+  const { t } = useTranslation()
+  return (
+    <Dialog
+      open={open}
+      title={title}
+      description={description}
+      onClose={onCancel}
+      footer={
+        <>
+          <button type="button" className="lb-btn ghost" onClick={onCancel}>
+            {t('common.cancel', { defaultValue: 'Cancel' })}
+          </button>
+          <button
+            type="button"
+            className="lb-btn"
+            style={destructive ? { background: 'var(--color-danger)' } : undefined}
+            onClick={onConfirm}
+          >
+            {confirmLabel ?? t('common.confirm', { defaultValue: 'Confirm' })}
+          </button>
+        </>
+      }
+    />
+  )
+}
+
+/**
  * Ask for one line of text.
  *
  * A form rather than a pair of buttons, so Enter submits and Escape cancels the
