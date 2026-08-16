@@ -275,8 +275,8 @@ function CreateTokenModal({
                 key={p}
                 className={`flex items-start gap-3 rounded-lg border p-3 cursor-pointer transition-colors ${
                   preset === p
-                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/30'
-                    : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                    ? 'border-accent bg-accent-surface'
+                    : 'border-line hover:border-line-strong'
                 }`}
               >
                 <input
@@ -285,7 +285,7 @@ function CreateTokenModal({
                   value={p}
                   checked={preset === p}
                   onChange={() => setPreset(p)}
-                  className="mt-0.5 accent-blue-600"
+                  className="mt-0.5 accent-accent"
                 />
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-content">{PRESET_LABELS[p].title}</p>
@@ -346,8 +346,8 @@ function NewTokenModal({ token, onClose }: { token: CreateTokenResponse; onClose
   return (
     <Modal title="Your new token" onClose={onClose} dismissOnBackdrop={false}>
       <div className="space-y-4">
-        <div className="rounded-lg border border-amber-400/60 bg-warning-surface p-3">
-          <p className="text-sm font-medium text-amber-900 dark:text-amber-200">Copy this now</p>
+        <div className="rounded-lg border border-warning-line bg-warning-surface p-3">
+          <p className="text-sm font-medium text-warning-strong">Copy this now</p>
           <p className="text-xs text-warning-strong mt-0.5">
             This is the only time the raw value will be shown. Once you close this dialog it cannot
             be recovered. If you lose it, revoke and create a new one.
@@ -395,8 +395,8 @@ function Modal({
  className="w-full max-w-md rounded-xl bg-surface border border-line shadow-xl"
  onClick={e => e.stopPropagation()}
  >
- <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
- <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{title}</h3>
+ <div className="px-5 py-4 border-b border-line-subtle">
+ <h3 className="text-sm font-semibold text-content">{title}</h3>
  </div>
  <div className="p-5">{children}</div>
  </div>

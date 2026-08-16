@@ -282,7 +282,7 @@ export default function SuggestionsPage() {
                 type="button"
                 onClick={() => openModal(null)}
                 disabled={runDisabled}
-                className="rounded-md border border-line-strong bg-surface-raised px-3 py-1.5 text-sm font-medium text-content-secondary hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors"
+                className="rounded-md border border-line-strong bg-surface-raised px-3 py-1.5 text-sm font-medium text-content-secondary hover:bg-surface-inset disabled:opacity-50 transition-colors"
               >
                 Custom request…
               </button>
@@ -290,7 +290,7 @@ export default function SuggestionsPage() {
                 type="button"
                 onClick={runNow}
                 disabled={runDisabled}
-                className="rounded-md border border-accent-line bg-accent-surface px-3 py-1.5 text-sm font-medium text-accent-strong hover:bg-blue-100 dark:hover:bg-blue-900/50 disabled:opacity-50 transition-colors"
+                className="rounded-md border border-accent-line bg-accent-surface px-3 py-1.5 text-sm font-medium text-accent-strong hover:bg-accent-surface disabled:opacity-50 transition-colors"
               >
                 {running || activeRun !== null ? t('suggestions_page.running') : t('suggestions_page.run_now')}
               </button>
@@ -342,13 +342,13 @@ export default function SuggestionsPage() {
             </div>
 
             {activeRun && (
-              <div className="flex items-center gap-3 rounded-lg border border-blue-200 dark:border-blue-900 bg-accent-surface px-4 py-3">
+              <div className="flex items-center gap-3 rounded-lg border border-accent-line bg-accent-surface px-4 py-3">
                 <svg className="h-4 w-4 animate-spin text-accent flex-shrink-0" viewBox="0 0 24 24" fill="none">
                   <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25" />
                   <path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
                 </svg>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                  <p className="text-sm font-medium text-accent-strong">
                     {t('suggestions_page.progress.title')}
                   </p>
                   <p className="text-xs text-accent-strong">
@@ -429,7 +429,7 @@ function FilterTab({
       onClick={onClick}
       className={
         active
-          ? 'rounded-full bg-blue-600 text-white px-3 py-1.5 text-xs font-medium'
+          ? 'rounded-full bg-accent text-white px-3 py-1.5 text-xs font-medium'
           : 'rounded-full border border-line bg-surface text-content-secondary hover:border-accent-line px-3 py-1.5 text-xs font-medium transition-colors'
       }
     >
@@ -471,7 +471,7 @@ function UnavailableCard({ reason }: { reason: string | null }) {
  )
  return (
  <div className="rounded-xl border border-line bg-surface p-6 text-center">
- <p className="text-sm font-semibold text-gray-900 dark:text-white">{title}</p>
+ <p className="text-sm font-semibold text-content">{title}</p>
  <p className="mt-2 text-sm text-content-tertiary max-w-xl mx-auto">{body}</p>
  </div>
  )
@@ -498,11 +498,11 @@ function relativeTime(iso: string | undefined): string {
 // Palette classes echo the modal's chip colours so the banner and Recent
 // runs entries are visually traceable back to what the user asked for.
 const bannerChipClasses = {
-  indigo: 'bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300',
-  purple: 'bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300',
-  emerald: 'bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300',
-  amber: 'bg-amber-100 dark:bg-amber-900/60 text-warning-strong ',
-  gray: 'bg-surface-strong text-content-secondary ',
+  indigo: 'lb-chip',
+  purple: 'lb-chip',
+  emerald: 'lb-chip',
+  amber: 'lb-chip',
+  gray: 'lb-chip',
 }
 
 function BannerChip({
@@ -544,7 +544,7 @@ function SteeringBanner({
         (steering.notes ?? '').trim().length > 0),
   )
   return (
-    <div className="rounded-lg border border-blue-200 dark:border-blue-900 bg-accent-surface px-4 py-3">
+    <div className="rounded-lg border border-accent-line bg-accent-surface px-4 py-3">
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
@@ -557,9 +557,9 @@ function SteeringBanner({
             >
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
-            <span className="text-sm font-semibold text-blue-900 dark:text-blue-100">
+            <span className="text-sm font-semibold text-accent-strong">
               {isSteered ? 'Custom request' : 'Scheduled run'}
-              <span className="ml-1.5 font-normal text-blue-700/80 dark:text-blue-300/80">
+              <span className="ml-1.5 font-normal text-accent">
                 · {relativeTime(run?.started_at)}
               </span>
             </span>
@@ -612,7 +612,7 @@ function SteeringBanner({
             type="button"
             onClick={onClear}
             title="Clear scope"
-            className="p-1 -m-1 rounded text-accent-strong hover:text-blue-900 dark:hover:text-blue-100"
+            className="p-1 -m-1 rounded text-accent-strong hover:text-accent-strong"
             aria-label="Clear scope"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -663,9 +663,9 @@ function RecentRunsPanel({
       {expanded && (
         <ul className="space-y-2">
           {runs === null ? (
-            <li className="text-xs text-gray-400">Loading…</li>
+            <li className="text-xs text-content-subtle">Loading…</li>
           ) : visibleRuns.length === 0 ? (
-            <li className="text-xs text-gray-400">No runs yet.</li>
+            <li className="text-xs text-content-subtle">No runs yet.</li>
           ) : (
             visibleRuns.map(run => {
               const steering = run.steering
@@ -686,7 +686,7 @@ function RecentRunsPanel({
                   key={run.id}
                   className={
                     isActive
-                      ? 'rounded-lg border border-blue-200 dark:border-blue-900 bg-blue-50/50 dark:bg-blue-950/20 px-3 py-2.5'
+                      ? 'rounded-lg border border-accent-line bg-accent-surface px-3 py-2.5'
                       : 'rounded-lg border border-line px-3 py-2.5'
                   }
                 >
@@ -697,7 +697,7 @@ function RecentRunsPanel({
                           className={
                             isSteered
                               ? isActive
-                                ? 'text-xs font-semibold text-blue-900 dark:text-blue-100'
+                                ? 'text-xs font-semibold text-accent-strong'
                                 : 'text-xs font-semibold text-content '
                               : 'text-xs font-semibold text-content-muted '
                           }

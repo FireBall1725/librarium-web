@@ -159,12 +159,12 @@ function unifiedToJob(u: UnifiedJobRow): Job {
 
 function TypeBadge({ type }: { type: JobType }) {
   const cfg: Record<JobType, { label: string; cls: string }> = {
-    import:               { label: 'Import',         cls: 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300' },
+    import:               { label: 'Import',         cls: 'bg-accent-surface text-accent-strong' },
     metadata:             { label: 'Metadata',       cls: 'bg-sky-100 dark:bg-sky-900/40 text-sky-700 dark:text-sky-300' },
     cover:                { label: 'Covers',         cls: 'bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300' },
     cover_backfill:       { label: 'Cover backfill', cls: 'bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300' },
-    ai_suggestions:       { label: 'Suggestions',    cls: 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300' },
-    ai_metadata_proposal: { label: 'AI proposal',    cls: 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300' },
+    ai_suggestions:       { label: 'Suggestions',    cls: 'bg-accent-surface text-accent' },
+    ai_metadata_proposal: { label: 'AI proposal',    cls: 'bg-accent-surface text-accent-strong' },
     history_prune:        { label: 'Cleanup',        cls: 'bg-surface-inset text-content-tertiary ' },
   }
   const { label, cls } = cfg[type] ?? cfg.import

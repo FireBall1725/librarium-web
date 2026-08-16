@@ -116,7 +116,7 @@ export default function HistoryPruneJobCard() {
               max={3650}
               value={maxAgeDays}
               onChange={e => setMaxAgeDays(Math.max(0, Number(e.target.value)))}
-              className="w-28 rounded-md border border-line-strong dark:bg-gray-800 dark:text-white px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-28 rounded-md border border-line-strong dark:bg-surface-raised dark:text-white px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-accent"
             />
             <span className="text-xs text-content-muted">days</span>
           </div>
@@ -137,7 +137,7 @@ export default function HistoryPruneJobCard() {
               max={100000}
               value={maxPerKind}
               onChange={e => setMaxPerKind(Math.max(0, Number(e.target.value)))}
-              className="w-28 rounded-md border border-line-strong dark:bg-gray-800 dark:text-white px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-28 rounded-md border border-line-strong dark:bg-surface-raised dark:text-white px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-accent"
             />
             <span className="text-xs text-content-muted">runs per kind</span>
           </div>
@@ -155,7 +155,7 @@ export default function HistoryPruneJobCard() {
           type="button"
           onClick={save}
           disabled={saving || !dirty}
-          className="rounded-md bg-blue-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 transition-colors"
+          className="rounded-md bg-accent px-4 py-1.5 text-sm font-medium text-white hover:brightness-110 disabled:opacity-50 transition-colors"
         >
           {saving ? 'Saving…' : 'Save retention'}
         </button>

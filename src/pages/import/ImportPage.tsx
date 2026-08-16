@@ -299,10 +299,10 @@ function StepIndicator({ current }: { current: Step }) {
           <div className="flex items-center gap-2">
             <div className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-semibold transition-colors ${
               current === s.n
-                ? 'bg-blue-600 text-white'
+                ? 'bg-accent text-white'
                 : current > s.n
-                  ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400'
-                  : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500'
+                  ? 'bg-accent-surface text-accent'
+                  : 'bg-surface-inset text-content-subtle'
             }`}>
               {current > s.n ? (
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -311,12 +311,12 @@ function StepIndicator({ current }: { current: Step }) {
               ) : s.n}
             </div>
             <span className={`text-sm font-medium ${
-              current === s.n ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'
+              current === s.n ? 'text-content' : 'text-content-subtle'
             }`}>{s.label}</span>
           </div>
           {i < STEPS.length - 1 && (
             <div className={`mx-3 h-px w-10 transition-colors ${
-              current > s.n ? 'bg-blue-400 dark:bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'
+              current > s.n ? 'bg-accent dark:bg-accent' : 'bg-surface-strong'
             }`} />
           )}
         </div>
@@ -570,8 +570,8 @@ export default function ImportPage() {
       {step === 1 && (
         <div className="space-y-4">
           {libsLoading ? (
-            <div className="flex items-center justify-center py-16 text-gray-400">
-              <div className="w-5 h-5 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+            <div className="flex items-center justify-center py-16 text-content-subtle">
+              <div className="w-5 h-5 rounded-full border-2 border-accent border-t-transparent animate-spin" />
             </div>
           ) : libraries.length === 0 ? (
             <div className="rounded-xl border border-dashed border-line-strong p-12 text-center">
@@ -590,7 +590,7 @@ export default function ImportPage() {
                   <button
                     key={lib.id}
                     onClick={() => { setSelectedLibrary(lib); setStep(2) }}
-                    className="w-full text-left rounded-xl border border-line bg-surface hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/10 px-5 py-4 transition-colors group flex items-center gap-4"
+                    className="w-full text-left rounded-xl border border-line bg-surface hover:border-accent-line dark:hover:border-accent hover:bg-accent-surface px-5 py-4 transition-colors group flex items-center gap-4"
                   >
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-content group-hover:text-accent-strong truncate">
@@ -601,7 +601,7 @@ export default function ImportPage() {
                       )}
                     </div>
                     <svg
-                      className="w-5 h-5 text-content-faint group-hover:text-blue-500 dark:group-hover:text-blue-400 group-hover:translate-x-0.5 transition-all flex-shrink-0"
+                      className="w-5 h-5 text-content-faint group-hover:text-accent dark:group-hover:text-accent group-hover:translate-x-0.5 transition-all flex-shrink-0"
                       fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"
                     >
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -637,10 +637,10 @@ export default function ImportPage() {
             onClick={() => fileInputRef.current?.click()}
             className={`relative rounded-xl border-2 border-dashed transition-colors cursor-pointer p-10 text-center ${
               isDragging
-                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                ? 'border-accent bg-accent-surface'
                 : csvFile
-                  ? 'border-green-400 dark:border-green-600 bg-green-50 dark:bg-green-900/10'
-                  : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 hover:border-blue-400 hover:bg-gray-50 dark:hover:bg-gray-800/50'
+                  ? 'border-success-line bg-success-surface'
+                  : 'border-line-strong bg-surface hover:border-accent-line hover:bg-surface-inset/50'
             }`}
           >
             <input ref={fileInputRef} type="file" accept=".csv,.tsv,.txt" className="hidden"
@@ -649,7 +649,7 @@ export default function ImportPage() {
             />
             {csvFile ? (
               <div className="flex flex-col items-center gap-2">
-                <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-8 h-8 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <p className="font-medium text-content">{csvFile.name}</p>
@@ -659,11 +659,11 @@ export default function ImportPage() {
               </div>
             ) : (
               <div className="flex flex-col items-center gap-2">
-                <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-8 h-8 text-content-subtle" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                 </svg>
                 <p className="font-medium text-content-secondary">Drop a CSV here, or click to browse</p>
-                <p className="text-xs text-gray-400">CSV, TSV, or TXT</p>
+                <p className="text-xs text-content-subtle">CSV, TSV, or TXT</p>
               </div>
             )}
           </div>
@@ -681,7 +681,7 @@ export default function ImportPage() {
  <select
  value={source}
  onChange={e => handleSourceChange(e.target.value as Source)}
- className="rounded-lg border border-line-strong bg-surface-raised text-content px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+ className="rounded-lg border border-line-strong bg-surface-raised text-content px-3 py-1.5 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
  >
  {(Object.keys(SOURCE_PRESETS) as Source[]).map(s => (
  <option key={s} value={s}>{SOURCE_PRESETS[s].label}</option>
@@ -697,7 +697,7 @@ export default function ImportPage() {
  <div className="flex items-end justify-between mb-3 gap-3">
  <div>
  <h3 className="text-base font-semibold text-content mb-1">Column Mapping</h3>
- <p className="text-xs text-content-muted dark:text-gray-400">
+ <p className="text-xs text-content-muted dark:text-content-subtle">
  Each row is a column from your CSV. Auto-detected mappings are pre-filled — adjust any that look wrong.
  </p>
  </div>
@@ -705,7 +705,7 @@ export default function ImportPage() {
  <button
  type="button"
  onClick={() => setSampleSeed(s => s + 1)}
- className="inline-flex items-center gap-1.5 rounded-lg border border-line-strong bg-surface-raised px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:border-blue-400 hover:text-accent dark:hover:border-blue-500 transition-colors flex-shrink-0"
+ className="inline-flex items-center gap-1.5 rounded-lg border border-line-strong bg-surface-raised px-2.5 py-1.5 text-xs font-medium text-content-tertiary hover:border-accent-line hover:text-accent dark:hover:border-accent transition-colors flex-shrink-0"
  title="Show a different random sample of rows"
  >
  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -715,16 +715,16 @@ export default function ImportPage() {
  </button>
  )}
  </div>
- <div className="rounded-xl border border-gray-200 overflow-hidden bg-surface-raised dark:bg-gray-900">
+ <div className="rounded-xl border border-line overflow-hidden bg-surface-raised">
  <table className="w-full text-sm">
  <thead>
- <tr className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
- <th className="text-left px-4 py-2.5 font-semibold text-gray-600 w-1/4">CSV Column</th>
- <th className="text-left px-4 py-2.5 font-semibold text-gray-600 w-1/2">Examples</th>
- <th className="text-left px-4 py-2.5 font-semibold text-gray-600 w-1/4">Maps To</th>
+ <tr className="bg-surface-muted/50 border-b border-line">
+ <th className="text-left px-4 py-2.5 font-semibold text-content-tertiary w-1/4">CSV Column</th>
+ <th className="text-left px-4 py-2.5 font-semibold text-content-tertiary w-1/2">Examples</th>
+ <th className="text-left px-4 py-2.5 font-semibold text-content-tertiary w-1/4">Maps To</th>
  </tr>
  </thead>
- <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+ <tbody className="divide-y divide-line-subtle">
  {headers.map((h, colIdx) => {
  const examples = previewIndices
  .map(rowIdx => csvSamples[rowIdx]?.[colIdx] ?? '')
@@ -733,7 +733,7 @@ export default function ImportPage() {
                       const isDuplicate = mappedField !== '' && (fieldUsage[mappedField]?.length ?? 0) > 1
 
  return (
- <tr key={colIdx} className="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
+ <tr key={colIdx} className="hover:bg-surface-inset/30 transition-colors">
  <td className="px-4 py-2.5">
  <span className="font-mono text-xs font-medium text-content-strong bg-surface-inset px-1.5 py-0.5 rounded">
  {h || `col_${colIdx + 1}`}
@@ -752,10 +752,10 @@ export default function ImportPage() {
  <select
  value={mappedField}
  onChange={e => setCsvMapping(prev => ({ ...prev, [colIdx]: e.target.value }))}
- className={`w-full rounded-lg border px-2.5 py-1.5 text-sm bg-white text-content focus:outline-none focus:ring-1 focus:ring-blue-500 ${
+ className={`w-full rounded-lg border px-2.5 py-1.5 text-sm bg-surface-raised text-content focus:outline-none focus:ring-1 focus:ring-accent ${
  isDuplicate
- ? 'border-amber-400 dark:border-amber-500'
-                                  : 'border-gray-300 dark:border-gray-600 focus:border-blue-500'
+ ? 'border-warning-line'
+                                  : 'border-line-strong focus:border-accent'
  }`}
  >
  <option value="">— skip —</option>
@@ -781,20 +781,20 @@ export default function ImportPage() {
  {headers.length > 0 && (
  <div className="space-y-4">
  {/* Mapping */}
- <section className="rounded-xl border border-line bg-surface-raised dark:bg-gray-900">
+ <section className="rounded-xl border border-line bg-surface-raised">
  <header className="px-4 pt-3.5 pb-2">
  <h3 className="text-sm font-semibold text-content dark:text-white">Mapping</h3>
  </header>
- <div className="border-t border-line-subtle divide-y divide-gray-100 dark:divide-gray-800">
+ <div className="border-t border-line-subtle divide-y divide-line-subtle">
  <div className="flex items-center justify-between px-4 py-3.5">
  <div>
- <p className="text-sm font-medium text-gray-800 dark:text-gray-200">Default format</p>
+ <p className="text-sm font-medium text-content-strong">Default format</p>
  <p className="text-xs text-content-muted mt-0.5">Applied when the CSV does not specify a format</p>
  </div>
  <select
  value={defaultFormat}
  onChange={e => setDefaultFormat(e.target.value)}
- className="rounded-lg border border-line-strong bg-surface-raised text-content px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+ className="rounded-lg border border-line-strong bg-surface-raised text-content px-3 py-1.5 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
  >
  {FORMAT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
  </select>
@@ -811,7 +811,7 @@ export default function ImportPage() {
                       <select
                         value={attributeToUserId}
                         onChange={e => setAttributeToUserId(e.target.value)}
-                        className="rounded-lg border border-line-strong bg-surface-raised text-content px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 max-w-xs"
+                        className="rounded-lg border border-line-strong bg-surface-raised text-content px-3 py-1.5 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent max-w-xs"
                       >
                         {members.map(m => (
                           <option key={m.user_id} value={m.user_id}>
@@ -838,7 +838,7 @@ export default function ImportPage() {
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input type="checkbox" checked={duplicateIncrementCount} onChange={e => setDuplicateIncrementCount(e.target.checked)} className="sr-only peer" />
-                      <div className="w-9 h-5 bg-surface-strong rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
+                      <div className="w-9 h-5 bg-surface-strong rounded-full peer peer-checked:bg-accent after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-surface-raised after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
                     </label>
                   </div>
                   <div className="flex items-center justify-between px-4 py-3.5">
@@ -848,7 +848,7 @@ export default function ImportPage() {
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input type="checkbox" checked={duplicateUpdateFromCSV} onChange={e => setDuplicateUpdateFromCSV(e.target.checked)} className="sr-only peer" />
-                      <div className="w-9 h-5 bg-surface-strong rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
+                      <div className="w-9 h-5 bg-surface-strong rounded-full peer peer-checked:bg-accent after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-surface-raised after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
                     </label>
                   </div>
                 </div>
@@ -868,7 +868,7 @@ export default function ImportPage() {
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input type="checkbox" checked={enrichMetadata} onChange={e => setEnrichMetadata(e.target.checked)} className="sr-only peer" />
-                      <div className="w-9 h-5 bg-surface-strong rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
+                      <div className="w-9 h-5 bg-surface-strong rounded-full peer peer-checked:bg-accent after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-surface-raised after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
                     </label>
                   </div>
                   <div className="flex items-center justify-between px-4 py-3.5">
@@ -878,17 +878,17 @@ export default function ImportPage() {
  </div>
  <label className="relative inline-flex items-center cursor-pointer">
  <input type="checkbox" checked={enrichCovers} onChange={e => setEnrichCovers(e.target.checked)} className="sr-only peer" />
- <div className="w-9 h-5 bg-surface-strong rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
+ <div className="w-9 h-5 bg-surface-strong rounded-full peer peer-checked:bg-accent after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-surface-raised after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
  </label>
  </div>
  <div className="flex items-center justify-between px-4 py-3.5">
  <div>
- <p className="text-sm font-medium text-gray-800 dark:text-gray-200">Clean descriptions with AI</p>
+ <p className="text-sm font-medium text-content-strong">Clean descriptions with AI</p>
  <p className="text-xs text-content-muted mt-0.5">After enrichment, ask the configured AI to strip marketing fluff and retailer boilerplate from descriptions. Costs AI tokens per book; disabled if no AI provider is configured.</p>
  </div>
  <label className="relative inline-flex items-center cursor-pointer">
  <input type="checkbox" checked={useAICleanup} onChange={e => setUseAICleanup(e.target.checked)} disabled={!enrichMetadata} className="sr-only peer" />
- <div className="w-9 h-5 bg-surface-strong rounded-full peer peer-checked:bg-blue-600 peer-disabled:opacity-50 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
+ <div className="w-9 h-5 bg-surface-strong rounded-full peer peer-checked:bg-accent peer-disabled:opacity-50 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-surface-raised after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
  </label>
  </div>
  </div>
@@ -897,7 +897,7 @@ export default function ImportPage() {
  )}
 
  {submitError && (
- <div className="rounded-lg bg-danger-surface border border-danger-line px-4 py-3 text-sm text-red-700 dark:text-red-400">
+ <div className="rounded-lg bg-danger-surface border border-danger-line px-4 py-3 text-sm text-danger">
  {submitError}
  </div>
  )}
@@ -906,7 +906,7 @@ export default function ImportPage() {
  <button
  onClick={handleStartImport}
  disabled={!csvFile || !anyMapped || isSubmitting}
- className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+ className="rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-white hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
  >
  {isSubmitting ? 'Starting…' : 'Start Import'}
  </button>
@@ -929,37 +929,37 @@ export default function ImportPage() {
  <div className="rounded-xl border border-line bg-surface p-6">
  <div className="mb-4">
  <div className="flex items-center justify-between mb-1">
- <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+ <span className="text-sm font-medium text-content-secondary">
  {importJob.status === 'pending' ? 'Queued…' : `Processing… ${handled}/${importJob.total_rows} rows`}
                 </span>
-                <span className="text-sm text-gray-500 dark:text-gray-400">
+                <span className="text-sm text-content-muted">
                   {importJob.total_rows > 0 ? `${Math.round(pct)}%` : '—'}
  </span>
  </div>
  <div className="h-2.5 w-full rounded-full bg-surface-inset overflow-hidden">
  <div
- className="h-full rounded-full bg-blue-600 transition-all duration-500"
+ className="h-full rounded-full bg-accent transition-all duration-500"
  style={{ width: `${pct}%` }}
  />
  </div>
  </div>
  <div className="grid grid-cols-3 gap-4 mt-5">
  <div className="rounded-lg bg-surface-muted px-4 py-3 text-center">
- <p className="text-xl font-bold text-gray-900 dark:text-white">{importJob.processed_rows}</p>
+ <p className="text-xl font-bold text-content">{importJob.processed_rows}</p>
  <p className="text-xs text-content-muted mt-0.5">Processed</p>
  </div>
  <div className="rounded-lg bg-danger-surface px-4 py-3 text-center">
- <p className="text-xl font-bold text-red-600 dark:text-red-400">{importJob.failed_rows}</p>
+ <p className="text-xl font-bold text-danger">{importJob.failed_rows}</p>
  <p className="text-xs text-content-muted mt-0.5">Failed</p>
  </div>
  <div className="rounded-lg bg-warning-surface px-4 py-3 text-center">
- <p className="text-xl font-bold text-amber-600 dark:text-amber-400">{importJob.skipped_rows}</p>
+ <p className="text-xl font-bold text-warning">{importJob.skipped_rows}</p>
  <p className="text-xs text-content-muted mt-0.5">Skipped</p>
  </div>
  </div>
  </div>
- <div className="flex items-center gap-2 text-sm text-gray-400 dark:text-gray-500">
- <div className="w-3 h-3 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+ <div className="flex items-center gap-2 text-sm text-content-subtle">
+ <div className="w-3 h-3 rounded-full border-2 border-accent border-t-transparent animate-spin" />
  Checking for updates every 2 seconds…
  </div>
  </div>
@@ -971,25 +971,25 @@ export default function ImportPage() {
  <div className="space-y-6">
  <div className={`rounded-xl border p-6 ${
  importJob.status === 'failed'
-              ? 'border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/30'
-              : 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/20'
+              ? 'border-danger-line bg-danger-surface'
+              : 'border-success-line bg-success-surface'
           }`}>
             <div className="flex items-center gap-3 mb-4">
               {importJob.status === 'failed' ? (
-                <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-10 h-10 rounded-full bg-danger-surface flex items-center justify-center flex-shrink-0">
+                  <svg className="w-5 h-5 text-danger" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </div>
               ) : (
-                <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-10 h-10 rounded-full bg-success-surface flex items-center justify-center flex-shrink-0">
+                  <svg className="w-5 h-5 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
               )}
               <div>
-                <p className={`font-semibold text-base ${importJob.status === 'failed' ? 'text-red-700 dark:text-red-400' : 'text-green-700 dark:text-green-400'}`}>
+                <p className={`font-semibold text-base ${importJob.status === 'failed' ? 'text-danger' : 'text-success'}`}>
                   {importJob.status === 'failed' ? 'Import failed' : 'Import complete'}
  </p>
  <p className="text-sm text-content-muted mt-0.5">
@@ -999,15 +999,15 @@ export default function ImportPage() {
  </div>
  <div className="grid grid-cols-3 gap-4">
  <div className="rounded-lg bg-surface px-4 py-3 text-center">
- <p className="text-2xl font-bold text-gray-900 dark:text-white">{importJob.processed_rows}</p>
+ <p className="text-2xl font-bold text-content">{importJob.processed_rows}</p>
  <p className="text-xs text-content-muted mt-0.5">Processed</p>
  </div>
  <div className="rounded-lg bg-surface px-4 py-3 text-center">
- <p className="text-2xl font-bold text-red-600 dark:text-red-400">{importJob.failed_rows}</p>
+ <p className="text-2xl font-bold text-danger">{importJob.failed_rows}</p>
  <p className="text-xs text-content-muted mt-0.5">Failed</p>
  </div>
  <div className="rounded-lg bg-surface px-4 py-3 text-center">
- <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">{importJob.skipped_rows}</p>
+ <p className="text-2xl font-bold text-warning">{importJob.skipped_rows}</p>
  <p className="text-xs text-content-muted mt-0.5">Skipped</p>
  </div>
  </div>
@@ -1028,7 +1028,7 @@ export default function ImportPage() {
  {selectedLibrary && (
  <Link
  to={`/libraries/${selectedLibrary.id}/books`}
- className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+ className="rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-white hover:brightness-110 transition-colors"
  >
  Go to Books
  </Link>

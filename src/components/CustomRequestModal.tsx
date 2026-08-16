@@ -32,20 +32,20 @@ const paletteClasses: Record<
   { chip: string; chipButton: string }
 > = {
   indigo: {
-    chip: 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300',
-    chipButton: 'text-indigo-500 hover:text-indigo-700 dark:hover:text-indigo-200',
+    chip: 'bg-accent-surface text-accent',
+    chipButton: 'text-accent hover:text-accent-strong',
   },
   purple: {
-    chip: 'bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300',
-    chipButton: 'text-purple-500 hover:text-purple-700 dark:hover:text-purple-200',
+    chip: 'bg-accent-surface text-accent-strong',
+    chipButton: 'text-accent hover:text-accent-strong',
   },
   emerald: {
-    chip: 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300',
-    chipButton: 'text-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-200',
+    chip: 'bg-success-surface text-success',
+    chipButton: 'text-success hover:text-success-strong',
   },
   amber: {
-    chip: 'bg-amber-100 dark:bg-amber-900/50 text-warning-strong ',
-    chipButton: 'text-amber-500 hover:text-amber-700 dark:hover:text-amber-200',
+    chip: 'bg-warning-surface text-warning-strong ',
+    chipButton: 'text-warning hover:text-warning',
   },
 }
 
@@ -114,7 +114,7 @@ function ChipCombo({
             onChange={e => onQueryChange(e.target.value)}
             placeholder={placeholder}
             disabled={disabled}
-            className="flex-1 min-w-[8rem] bg-transparent outline-none text-sm text-content placeholder-gray-400"
+            className="flex-1 min-w-[8rem] bg-transparent outline-none text-sm text-content"
           />
         </div>
         {showResults && (
@@ -132,7 +132,7 @@ function ChipCombo({
           </div>
         )}
         {searching && !showResults && query.trim().length >= 2 && (
-          <p className="absolute right-2 top-2 text-xs text-gray-400">Searching…</p>
+          <p className="absolute right-2 top-2 text-xs text-content-subtle">Searching…</p>
         )}
       </div>
       {footnote && (
@@ -374,7 +374,7 @@ export default function CustomRequestModal({
  type="button"
  onClick={onClose}
  disabled={submitting}
- className="p-1 -m-1 rounded text-gray-400 hover:text-content-secondary disabled:opacity-50"
+ className="p-1 -m-1 rounded text-content-subtle hover:text-content-secondary disabled:opacity-50"
  aria-label="Close"
  >
  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -468,12 +468,12 @@ export default function CustomRequestModal({
  placeholder='e.g. "long series I can binge" or "similar tone to Piranesi"'
  disabled={submitting}
  rows={3}
- className="w-full rounded-md border border-line-strong bg-surface px-3 py-2 text-sm text-content placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 resize-y"
+ className="w-full rounded-md border border-line-strong bg-surface px-3 py-2 text-sm text-content focus:outline-none focus:ring-2 focus:ring-accent disabled:opacity-50 resize-y"
  />
  </div>
  </div>
 
- <div className="flex items-center justify-end gap-2 p-4 border-t border-gray-200 dark:border-gray-800">
+ <div className="flex items-center justify-end gap-2 p-4 border-t border-line">
  <button
  type="button"
  onClick={onClose}
@@ -486,7 +486,7 @@ export default function CustomRequestModal({
  type="button"
  onClick={handleSubmit}
  disabled={!canSubmit || submitting}
- className="rounded-md bg-blue-600 text-white px-3 py-1.5 text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+ className="rounded-md bg-accent text-white px-3 py-1.5 text-sm font-medium hover:brightness-110 disabled:opacity-50"
  >
  {submitting ? 'Generating…' : 'Generate suggestions'}
           </button>

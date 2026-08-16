@@ -176,11 +176,11 @@ export function RunSummary({ run }: { run: SuggestionRunView }) {
 function StatusBadge({ status }: { status: string }) {
   const styles =
     status === 'completed'
-      ? 'bg-green-100 dark:bg-green-900/40 text-success-strong '
+      ? 'bg-success-surface text-success-strong '
       : status === 'failed'
-        ? 'bg-red-100 dark:bg-red-900/40 text-danger-strong '
+        ? 'bg-danger-surface text-danger-strong '
         : status === 'running'
-          ? 'bg-blue-100 dark:bg-blue-900/40 text-accent-strong '
+          ? 'bg-accent-surface text-accent-strong '
           : 'bg-surface-inset text-content-tertiary '
   return <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium ${styles}`}>{status}</span>
 }
@@ -195,7 +195,7 @@ function EventRow({ event }: { event: SuggestionRunEvent }) {
         className="flex w-full items-start gap-2 text-left"
       >
         <svg
-          className={`mt-1 h-3 w-3 flex-shrink-0 text-gray-400 transition-transform ${open ? 'rotate-90' : ''}`}
+          className={`mt-1 h-3 w-3 flex-shrink-0 text-content-subtle transition-transform ${open ? 'rotate-90' : ''}`}
           fill="none" stroke="currentColor" viewBox="0 0 24 24"
         >
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -218,15 +218,15 @@ function EventRow({ event }: { event: SuggestionRunEvent }) {
 
 function TypeBadge({ type }: { type: string }) {
   const styles: Record<string, string> = {
-    pipeline_start: 'bg-blue-100 dark:bg-blue-900/40 text-accent-strong ',
-    pipeline_end: 'bg-blue-100 dark:bg-blue-900/40 text-accent-strong ',
-    prompt: 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300',
-    backfill_prompt: 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300',
-    ai_response: 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300',
-    backfill_response: 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300',
-    enrichment_decision: 'bg-amber-100 dark:bg-amber-900/40 text-warning-strong ',
-    read_next_match: 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300',
-    error: 'bg-red-100 dark:bg-red-900/40 text-danger-strong ',
+    pipeline_start: 'bg-accent-surface text-accent-strong ',
+    pipeline_end: 'bg-accent-surface text-accent-strong ',
+    prompt: 'bg-accent-surface text-accent-strong',
+    backfill_prompt: 'bg-accent-surface text-accent-strong',
+    ai_response: 'bg-accent-surface text-accent',
+    backfill_response: 'bg-accent-surface text-accent',
+    enrichment_decision: 'bg-warning-surface text-warning-strong ',
+    read_next_match: 'bg-success-surface text-success',
+    error: 'bg-danger-surface text-danger-strong ',
   }
   const cls = styles[type] ?? 'bg-surface-inset text-content-tertiary '
   return <span className={`inline-flex rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${cls}`}>{type}</span>

@@ -70,8 +70,8 @@ export default function LibraryOutlet() {
   const tabClass = ({ isActive }: { isActive: boolean }) =>
     `inline-flex items-center px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
       isActive
-        ? 'border-blue-500 text-blue-700 dark:text-blue-400'
-        : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+        ? 'border-accent text-accent-strong dark:text-accent'
+        : 'border-transparent text-content-muted hover:text-content-secondary'
     }`
 
   return (

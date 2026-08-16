@@ -35,13 +35,13 @@ export default function MediaTypeSelect({ value, mediaTypes, onChange }: Props) 
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between rounded-lg border border-line-strong dark:bg-gray-800 dark:text-white px-3 py-2 text-sm text-left focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
+        className="w-full flex items-center justify-between rounded-lg border border-line-strong dark:bg-surface-raised dark:text-white px-3 py-2 text-sm text-left focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent transition-colors"
       >
-        <span className={selected ? 'text-content ' : 'text-gray-400'}>
+        <span className={selected ? 'text-content ' : 'text-content-subtle'}>
           {selected?.display_name ?? 'Select type…'}
         </span>
         <svg
-          className={`w-4 h-4 text-gray-400 transition-transform flex-shrink-0 ${open ? 'rotate-180' : ''}`}
+          className={`w-4 h-4 text-content-subtle transition-transform flex-shrink-0 ${open ? 'rotate-180' : ''}`}
           fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
         >
           <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
@@ -59,8 +59,8 @@ export default function MediaTypeSelect({ value, mediaTypes, onChange }: Props) 
                   onClick={() => { onChange(mt.id); setOpen(false) }}
                   className={`w-full text-left px-3 py-2.5 flex items-start gap-3 transition-colors ${
                     isSelected
-                      ? 'bg-blue-50 dark:bg-blue-900/30'
-                      : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                      ? 'bg-accent-surface'
+                      : 'hover:bg-surface-inset/50'
                   }`}
                 >
                   <span className="mt-0.5 w-4 flex-shrink-0 text-accent">

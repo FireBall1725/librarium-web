@@ -436,7 +436,7 @@ function ProviderCard({ provider, onSaved, onActivate, activating }: ProviderCar
             onChange={e => setEnabled(e.target.checked)}
             disabled={!canToggleOn && !enabled}
           />
-          <div className="w-10 h-6 bg-surface-strong peer-focus:outline-none rounded-full peer peer-checked:bg-accent after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full" />
+          <div className="w-10 h-6 bg-surface-strong peer-focus:outline-none rounded-full peer peer-checked:bg-accent after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-surface-raised after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full" />
         </label>
       </div>
 
@@ -674,7 +674,7 @@ function PermissionsCard({ permissions, onSaved }: PermissionsCardProps) {
  checked={local[item.key]}
  onChange={() => toggle(item.key)}
  />
- <div className="w-10 h-6 bg-surface-strong peer-focus:outline-none rounded-full peer peer-checked:bg-accent after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full" />
+ <div className="w-10 h-6 bg-surface-strong peer-focus:outline-none rounded-full peer peer-checked:bg-accent after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-surface-raised after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full" />
             </label>
           </div>
         ))}

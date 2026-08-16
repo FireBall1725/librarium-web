@@ -66,7 +66,7 @@ export default function SetupPage() {
  </p>
  </div>
 
- <div className="bg-white rounded-xl border border-line shadow-sm">
+ <div className="bg-surface-raised rounded-xl border border-line shadow-sm">
  {step === 'admin' && (
             <AdminStep
               form={form}

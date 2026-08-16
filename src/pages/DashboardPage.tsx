@@ -96,7 +96,7 @@ function Sparkline({ data }: { data: number[] }) {
             width={barWidth}
             height={h}
             rx={1}
-            className={v === 0 ? 'fill-gray-200 dark:fill-gray-700' : 'fill-blue-500 dark:fill-blue-400'}
+            className={v === 0 ? 'fill-line-strong' : 'fill-accent'}
           />
         )
       })}
@@ -146,7 +146,7 @@ function ContinueReadingHero() {
       <Module className="min-h-[14rem]">
         <div className="flex flex-col items-center justify-center text-center gap-2 h-full p-8 min-h-[14rem]">
           <div className="w-12 h-12 rounded-full bg-accent-surface flex items-center justify-center">
-            <svg className="w-6 h-6 text-blue-500 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6 text-accent dark:text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C20.168 18.477 18.254 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
             </svg>
           </div>
@@ -165,7 +165,7 @@ function ContinueReadingHero() {
   return (
     <div className="relative rounded-xl border border-line bg-surface overflow-hidden">
       {/* Soft gradient backdrop */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-50/60 via-white to-white dark:from-blue-950/30 dark:via-gray-900 dark:to-gray-900 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-br from-accent-surface via-white to-white pointer-events-none" />
 
       <div className="relative flex flex-col sm:flex-row gap-5 p-5 sm:p-6">
         <Link
@@ -696,7 +696,7 @@ function LibraryChips() {
     return (
       <Link
         to="/libraries"
-        className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-line-strong px-3 py-1.5 text-xs font-medium text-content-muted hover:border-blue-400 hover:text-accent transition-colors"
+        className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-line-strong px-3 py-1.5 text-xs font-medium text-content-muted hover:border-accent-line hover:text-accent transition-colors"
       >
         {t('library_chips.create_first')}
       </Link>
@@ -716,7 +716,7 @@ function LibraryChips() {
           <span className="truncate max-w-[12rem]">{lib.name}</span>
           {lib.is_public && (
             <span
-              className="flex-shrink-0 h-1.5 w-1.5 rounded-full bg-green-500"
+              className="flex-shrink-0 h-1.5 w-1.5 rounded-full bg-success"
               title={publicLabel}
               aria-label={publicLabel}
             />

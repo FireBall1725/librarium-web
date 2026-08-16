@@ -81,7 +81,7 @@ export default function InteractionForm({ libraryId, bookId, editionId }: Props)
         <div>
           <label className="block text-xs text-content-tertiary mb-1">Status</label>
           <select value={form.read_status} onChange={e => setForm(f => ({ ...f, read_status: e.target.value }))}
-            className="w-full rounded border border-line-strong dark:bg-gray-800 dark:text-white px-2 py-1.5 text-xs focus:border-blue-500 focus:outline-none">
+            className="w-full rounded border border-line-strong dark:bg-surface-raised dark:text-white px-2 py-1.5 text-xs focus:border-accent focus:outline-none">
             {READ_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
           </select>
         </div>
@@ -90,30 +90,30 @@ export default function InteractionForm({ libraryId, bookId, editionId }: Props)
           <input type="number" min="1" max="10" value={form.rating}
             onChange={e => setForm(f => ({ ...f, rating: e.target.value }))}
             placeholder="—"
-            className="w-full rounded border border-line-strong dark:bg-gray-800 dark:text-white px-2 py-1.5 text-xs focus:border-blue-500 focus:outline-none" />
+            className="w-full rounded border border-line-strong dark:bg-surface-raised dark:text-white px-2 py-1.5 text-xs focus:border-accent focus:outline-none" />
         </div>
         <div>
           <label className="block text-xs text-content-tertiary mb-1">Date started</label>
           <input type="date" value={form.date_started} onChange={e => setForm(f => ({ ...f, date_started: e.target.value }))}
-            className="w-full rounded border border-line-strong dark:bg-gray-800 dark:text-white px-2 py-1.5 text-xs focus:border-blue-500 focus:outline-none" />
+            className="w-full rounded border border-line-strong dark:bg-surface-raised dark:text-white px-2 py-1.5 text-xs focus:border-accent focus:outline-none" />
         </div>
         <div>
           <label className="block text-xs text-content-tertiary mb-1">Date finished</label>
           <input type="date" value={form.date_finished} onChange={e => setForm(f => ({ ...f, date_finished: e.target.value }))}
-            className="w-full rounded border border-line-strong dark:bg-gray-800 dark:text-white px-2 py-1.5 text-xs focus:border-blue-500 focus:outline-none" />
+            className="w-full rounded border border-line-strong dark:bg-surface-raised dark:text-white px-2 py-1.5 text-xs focus:border-accent focus:outline-none" />
         </div>
       </div>
       <div className="mt-2">
         <label className="block text-xs text-content-tertiary mb-1">Notes <span className="text-content-subtle">(private)</span></label>
         <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
           rows={2} placeholder="Personal notes…"
-          className="w-full rounded border border-line-strong dark:bg-gray-800 dark:text-white px-2 py-1.5 text-xs focus:border-blue-500 focus:outline-none resize-none" />
+          className="w-full rounded border border-line-strong dark:bg-surface-raised dark:text-white px-2 py-1.5 text-xs focus:border-accent focus:outline-none resize-none" />
       </div>
       <div className="mt-2">
         <label className="block text-xs text-content-tertiary mb-1">Review <span className="text-content-subtle">(visible to members)</span></label>
         <textarea value={form.review} onChange={e => setForm(f => ({ ...f, review: e.target.value }))}
           rows={2} placeholder="Share your thoughts…"
-          className="w-full rounded border border-line-strong dark:bg-gray-800 dark:text-white px-2 py-1.5 text-xs focus:border-blue-500 focus:outline-none resize-none" />
+          className="w-full rounded border border-line-strong dark:bg-surface-raised dark:text-white px-2 py-1.5 text-xs focus:border-accent focus:outline-none resize-none" />
       </div>
       <div className="mt-2 flex items-center justify-between">
         <label className="flex items-center gap-1.5 text-xs text-content-tertiary">
@@ -132,7 +132,7 @@ export default function InteractionForm({ libraryId, bookId, editionId }: Props)
             }} className="text-xs text-danger hover:underline">Remove</button>
           )}
           <button onClick={save} disabled={isLoading}
-            className="rounded bg-blue-600 px-3 py-1 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
+            className="rounded bg-accent px-3 py-1 text-xs font-medium text-white hover:brightness-110 disabled:opacity-50 transition-colors">
             {isLoading ? 'Saving…' : 'Save'}
           </button>
         </div>

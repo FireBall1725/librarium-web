@@ -115,7 +115,7 @@ export default function JobKindPage() {
             type="button"
             onClick={runNow}
             disabled={running}
-            className="rounded-lg border border-accent-line bg-accent-surface px-3 py-2 text-sm font-medium text-accent-strong hover:bg-blue-100 dark:hover:bg-blue-900/50 disabled:opacity-50 transition-colors"
+            className="rounded-lg border border-accent-line bg-accent-surface px-3 py-2 text-sm font-medium text-accent-strong hover:bg-accent-surface disabled:opacity-50 transition-colors"
           >
             {running ? 'Running…' : 'Run now'}
           </button>
@@ -219,10 +219,10 @@ function RecentRuns({ rows }: { rows: UnifiedJobRow[] | null }) {
 }
 
 function StatusDot({ status }: { status: string }) {
-  const cls = status === 'completed' ? 'bg-green-500'
-    : status === 'running'   ? 'bg-blue-500 animate-pulse'
-    : status === 'failed'    ? 'bg-red-500'
-    : status === 'cancelled' ? 'bg-gray-400'
-    :                          'bg-amber-400'
+  const cls = status === 'completed' ? 'bg-success'
+    : status === 'running'   ? 'bg-accent animate-pulse'
+    : status === 'failed'    ? 'bg-danger'
+    : status === 'cancelled' ? 'bg-content-faint'
+    :                          'bg-warning'
   return <span className={`inline-block w-2 h-2 rounded-full flex-shrink-0 ${cls}`} />
 }

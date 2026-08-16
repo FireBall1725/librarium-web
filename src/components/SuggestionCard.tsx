@@ -111,7 +111,7 @@ export default function SuggestionCard({ suggestion, onChanged }: SuggestionCard
         {isReadNext && detailHref ? (
           <Link
             to={detailHref}
-            className="flex-1 text-center rounded border border-accent-line bg-accent-surface px-2 py-1 font-medium text-accent-strong hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
+            className="flex-1 text-center rounded border border-accent-line bg-accent-surface px-2 py-1 font-medium text-accent-strong hover:bg-accent-surface transition-colors"
           >
             Open
           </Link>
@@ -120,7 +120,7 @@ export default function SuggestionCard({ suggestion, onChanged }: SuggestionCard
             type="button"
             onClick={() => setStatus('interested')}
             disabled={busy || suggestion.status === 'interested'}
-            className="flex-1 rounded border border-accent-line bg-accent-surface px-2 py-1 font-medium text-accent-strong hover:bg-blue-100 dark:hover:bg-blue-900/50 disabled:opacity-50 transition-colors"
+            className="flex-1 rounded border border-accent-line bg-accent-surface px-2 py-1 font-medium text-accent-strong hover:bg-accent-surface disabled:opacity-50 transition-colors"
           >
             {suggestion.status === 'interested' ? 'Saved ✓' : 'Interested'}
           </button>
@@ -130,7 +130,7 @@ export default function SuggestionCard({ suggestion, onChanged }: SuggestionCard
           onClick={() => setStatus('dismissed')}
           disabled={busy}
           title="Dismiss"
-          className="rounded border border-line-strong px-2 py-1 font-medium text-content-tertiary hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors"
+          className="rounded border border-line-strong px-2 py-1 font-medium text-content-tertiary hover:bg-surface-inset disabled:opacity-50 transition-colors"
         >
           ✕
         </button>
@@ -140,7 +140,7 @@ export default function SuggestionCard({ suggestion, onChanged }: SuggestionCard
             onClick={() => setBlockOpen(o => !o)}
             disabled={busy}
             title="Block"
-            className="rounded border border-line-strong px-2 py-1 font-medium text-content-tertiary hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors"
+            className="rounded border border-line-strong px-2 py-1 font-medium text-content-tertiary hover:bg-surface-inset disabled:opacity-50 transition-colors"
           >
             ⊘
           </button>
@@ -149,7 +149,7 @@ export default function SuggestionCard({ suggestion, onChanged }: SuggestionCard
               <button
                 type="button"
                 onClick={() => block('book')}
-                className="block w-full text-left px-3 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 text-content-secondary"
+                className="block w-full text-left px-3 py-2 text-xs hover:bg-surface-inset text-content-secondary"
               >
                 Block this book
               </button>
@@ -157,7 +157,7 @@ export default function SuggestionCard({ suggestion, onChanged }: SuggestionCard
                 <button
                   type="button"
                   onClick={() => block('author')}
-                  className="block w-full text-left px-3 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 text-content-secondary"
+                  className="block w-full text-left px-3 py-2 text-xs hover:bg-surface-inset text-content-secondary"
                 >
                   Block by {suggestion.author}
                 </button>
@@ -165,7 +165,7 @@ export default function SuggestionCard({ suggestion, onChanged }: SuggestionCard
               <button
                 type="button"
                 onClick={() => setBlockOpen(false)}
-                className="block w-full text-left px-3 py-2 text-xs text-content-subtle border-t border-line-subtle hover:bg-gray-50 dark:hover:bg-gray-700"
+                className="block w-full text-left px-3 py-2 text-xs text-content-subtle border-t border-line-subtle hover:bg-surface-inset"
               >
                 Cancel
               </button>

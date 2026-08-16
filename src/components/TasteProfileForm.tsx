@@ -55,9 +55,9 @@ function TriChip({ label, state, onChange, starred, onToggleStar, allowStar }: T
     neutral:
       'bg-surface-inset text-content-secondary border-line ',
     love:
-      'bg-green-100 dark:bg-green-900/30 text-success-strong border-green-300 dark:border-green-800',
+      'bg-success-surface text-success-strong border-success-line',
     avoid:
-      'bg-red-100 dark:bg-red-900/30 text-danger-strong border-red-300 dark:border-red-800',
+      'bg-danger-surface text-danger-strong border-danger-line',
   }
   const prefix = state === 'love' ? '♥ ' : state === 'avoid' ? '✕ ' : ''
   return (
@@ -74,7 +74,7 @@ function TriChip({ label, state, onChange, starred, onToggleStar, allowStar }: T
           type="button"
           onClick={onToggleStar}
           title="Strong preference"
-          className={`p-0.5 text-sm ${starred ? 'text-amber-500' : 'text-gray-300 dark:text-gray-600 hover:text-amber-400'}`}
+          className={`p-0.5 text-sm ${starred ? 'text-warning' : 'text-content-faint dark:text-content-tertiary hover:text-warning'}`}
         >
           {starred ? '★' : '☆'}
         </button>
@@ -180,13 +180,13 @@ function ChipSubcategory({
           onChange={e => setCustomInput(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCustom() } }}
           placeholder={`Add custom ${title.toLowerCase().replace(/s$/, '')}…`}
-          className="flex-1 rounded-md border border-line-strong dark:bg-gray-800 dark:text-white px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="flex-1 rounded-md border border-line-strong dark:bg-surface-raised dark:text-white px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-accent"
         />
         <button
           type="button"
           onClick={addCustom}
           disabled={!customInput.trim()}
-          className="rounded-md border border-line-strong px-3 py-1.5 text-sm font-medium text-content-secondary hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors"
+          className="rounded-md border border-line-strong px-3 py-1.5 text-sm font-medium text-content-secondary hover:bg-surface-inset disabled:opacity-50 transition-colors"
         >
           Add
         </button>
@@ -317,8 +317,8 @@ export default function TasteProfileForm({ disabled }: TasteProfileFormProps) {
                 onClick={() => setProfile(prev => ({ ...prev, era: opt.value }))}
                 className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
                   active
-                    ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-800'
-                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700'
+                    ? 'bg-accent-surface text-accent-strong border-accent-line'
+                    : 'bg-surface-inset text-content-secondary border-line'
                 }`}
               >
                 {opt.label}
@@ -336,7 +336,7 @@ export default function TasteProfileForm({ disabled }: TasteProfileFormProps) {
           value={(profile.favourite_authors ?? []).join(', ')}
           onChange={e => handleAuthorsChange(e.target.value)}
           placeholder="e.g. Ursula K. Le Guin, Ted Chiang"
-          className="mt-3 w-full rounded-md border border-line-strong dark:bg-gray-800 dark:text-white px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="mt-3 w-full rounded-md border border-line-strong dark:bg-surface-raised dark:text-white px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-accent"
         />
       </div>
 
@@ -350,7 +350,7 @@ export default function TasteProfileForm({ disabled }: TasteProfileFormProps) {
           onChange={e => setProfile(prev => ({ ...prev, hard_nos: e.target.value }))}
           rows={3}
           placeholder="e.g. no explicit content, no novels over 800 pages, no ongoing series"
-          className="mt-3 w-full rounded-md border border-line-strong dark:bg-gray-800 dark:text-white px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="mt-3 w-full rounded-md border border-line-strong dark:bg-surface-raised dark:text-white px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-accent"
         />
       </div>
 
@@ -359,7 +359,7 @@ export default function TasteProfileForm({ disabled }: TasteProfileFormProps) {
           type="button"
           onClick={handleSave}
           disabled={saving || !dirty}
-          className="rounded-md bg-blue-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 transition-colors"
+          className="rounded-md bg-accent px-4 py-1.5 text-sm font-medium text-white hover:brightness-110 disabled:opacity-50 transition-colors"
         >
           {saving ? 'Saving…' : 'Save taste profile'}
         </button>

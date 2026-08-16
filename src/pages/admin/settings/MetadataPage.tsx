@@ -206,7 +206,7 @@ function ProviderCard({ provider, onSaved }: ProviderCardProps) {
             {error && <span className="text-sm text-danger">{error}</span>}
           </div>
           {testState.status === 'ok' && (
-            <div className="rounded-lg bg-green-50 dark:bg-green-900/20 border border-success-line px-3 py-2 text-sm text-success-strong">
+            <div className="rounded-lg bg-success-surface border border-success-line px-3 py-2 text-sm text-success-strong">
               Connected — returned: <span className="font-medium">{testState.title}</span>
             </div>
           )}

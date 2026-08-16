@@ -112,7 +112,7 @@ export default function AISuggestionsJobCard({ onRunKicked }: AISuggestionsJobCa
       >
         <div className="flex items-center gap-4">
           <svg
-            className={`w-4 h-4 text-gray-400 flex-shrink-0 transition-transform ${expanded ? 'rotate-90' : ''}`}
+            className={`w-4 h-4 text-content-subtle flex-shrink-0 transition-transform ${expanded ? 'rotate-90' : ''}`}
             fill="none" stroke="currentColor" viewBox="0 0 24 24"
           >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -122,8 +122,8 @@ export default function AISuggestionsJobCard({ onRunKicked }: AISuggestionsJobCa
               <span className="text-sm font-medium text-content">AI suggestions</span>
               <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
                 config.enabled
-                  ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300'
-                  : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
+                  ? 'bg-success-surface text-success-strong'
+                  : 'bg-surface-inset text-content-muted'
               }`}>
                 {config.enabled ? 'Enabled' : 'Disabled'}
               </span>
@@ -137,7 +137,7 @@ export default function AISuggestionsJobCard({ onRunKicked }: AISuggestionsJobCa
               type="button"
               onClick={handleRunNow}
               disabled={running}
-              className="rounded-lg border border-line-strong px-3 py-1.5 text-xs font-medium text-content-secondary hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors"
+              className="rounded-lg border border-line-strong px-3 py-1.5 text-xs font-medium text-content-secondary hover:bg-surface-inset disabled:opacity-50 transition-colors"
             >
               {running ? 'Running…' : 'Run now'}
             </button>
@@ -162,7 +162,7 @@ export default function AISuggestionsJobCard({ onRunKicked }: AISuggestionsJobCa
                 checked={config.enabled}
                 onChange={e => set('enabled', e.target.checked)}
  />
- <div className="w-10 h-6 bg-surface-strong peer-focus:outline-none rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full" />
+ <div className="w-10 h-6 bg-surface-strong peer-focus:outline-none rounded-full peer peer-checked:bg-accent after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-surface-raised after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full" />
             </label>
           </div>
 
@@ -181,7 +181,7 @@ export default function AISuggestionsJobCard({ onRunKicked }: AISuggestionsJobCa
                 min={0}
                 value={config.interval_minutes}
                 onChange={e => set('interval_minutes', Math.max(0, Number(e.target.value)))}
-                className="w-28 rounded-md border border-line-strong dark:bg-gray-800 dark:text-white px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-28 rounded-md border border-line-strong dark:bg-surface-raised dark:text-white px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-accent"
               />
               <span className="text-xs text-content-muted">minutes</span>
             </div>
@@ -196,7 +196,7 @@ export default function AISuggestionsJobCard({ onRunKicked }: AISuggestionsJobCa
                 min={0}
                 value={config.max_buy_per_user}
                 onChange={e => set('max_buy_per_user', Math.max(0, Number(e.target.value)))}
-                className="mt-1 w-full rounded-md border border-line-strong dark:bg-gray-800 dark:text-white px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="mt-1 w-full rounded-md border border-line-strong dark:bg-surface-raised dark:text-white px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-accent"
               />
             </div>
             <div>
@@ -206,7 +206,7 @@ export default function AISuggestionsJobCard({ onRunKicked }: AISuggestionsJobCa
                 min={0}
                 value={config.max_read_next_per_user}
                 onChange={e => set('max_read_next_per_user', Math.max(0, Number(e.target.value)))}
-                className="mt-1 w-full rounded-md border border-line-strong dark:bg-gray-800 dark:text-white px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="mt-1 w-full rounded-md border border-line-strong dark:bg-surface-raised dark:text-white px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-accent"
               />
             </div>
           </div>
@@ -226,14 +226,14 @@ export default function AISuggestionsJobCard({ onRunKicked }: AISuggestionsJobCa
                 checked={config.include_taste_profile}
                 onChange={e => set('include_taste_profile', e.target.checked)}
  />
- <div className="w-10 h-6 bg-surface-strong peer-focus:outline-none rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full" />
+ <div className="w-10 h-6 bg-surface-strong peer-focus:outline-none rounded-full peer peer-checked:bg-accent after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-surface-raised after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full" />
  </label>
  </div>
 
  {/* Max tokens */}
  <div className="grid gap-3 sm:grid-cols-2">
  <div>
- <label className="block text-sm font-medium text-gray-900 dark:text-white">Max tokens (initial pass)</label>
+ <label className="block text-sm font-medium text-content">Max tokens (initial pass)</label>
  <p className="text-xs text-content-muted mt-0.5">
  Output-token cap for the first suggestion request. Thinking models (qwen3, deepseek-r1, extended-thinking Claude) need a higher cap — 6000 is a reasonable starting point.
  </p>
@@ -242,7 +242,7 @@ export default function AISuggestionsJobCard({ onRunKicked }: AISuggestionsJobCa
  min={0}
  value={config.max_tokens_initial}
  onChange={e => set('max_tokens_initial', Math.max(0, Number(e.target.value)))}
- className="mt-1 w-28 rounded-md border border-line-strong dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+ className="mt-1 w-28 rounded-md border border-line-strong dark:bg-surface-raised px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-accent"
  />
  </div>
  <div>
@@ -255,7 +255,7 @@ export default function AISuggestionsJobCard({ onRunKicked }: AISuggestionsJobCa
                 min={0}
                 value={config.max_tokens_backfill}
                 onChange={e => set('max_tokens_backfill', Math.max(0, Number(e.target.value)))}
- className="mt-1 w-28 rounded-md border border-line-strong dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+ className="mt-1 w-28 rounded-md border border-line-strong dark:bg-surface-raised px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-accent"
  />
  </div>
  </div>
@@ -273,14 +273,14 @@ export default function AISuggestionsJobCard({ onRunKicked }: AISuggestionsJobCa
  value={config.user_run_rate_limit_per_day < 0 ? '' : config.user_run_rate_limit_per_day}
                 disabled={config.user_run_rate_limit_per_day < 0}
                 onChange={e => set('user_run_rate_limit_per_day', Math.max(0, Number(e.target.value)))}
- className="w-28 rounded-md border border-line-strong dark:bg-gray-800 dark:text-white px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+ className="w-28 rounded-md border border-line-strong dark:bg-surface-raised dark:text-white px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-accent disabled:opacity-50 disabled:cursor-not-allowed"
  />
  <label className="inline-flex items-center gap-2 text-sm text-content-secondary cursor-pointer select-none">
  <input
  type="checkbox"
  checked={config.user_run_rate_limit_per_day < 0}
  onChange={e => set('user_run_rate_limit_per_day', e.target.checked ? -1 : 1)}
- className="h-4 w-4 rounded border-line-strong text-blue-600 focus:ring-blue-500"
+ className="h-4 w-4 rounded border-line-strong text-accent focus:ring-accent"
  />
  Unlimited
  </label>
@@ -292,11 +292,11 @@ export default function AISuggestionsJobCard({ onRunKicked }: AISuggestionsJobCa
  type="button"
  onClick={handleSave}
  disabled={saving || !dirty}
- className="rounded-md bg-blue-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 transition-colors"
+ className="rounded-md bg-accent px-4 py-1.5 text-sm font-medium text-white hover:brightness-110 disabled:opacity-50 transition-colors"
  >
  {saving ? 'Saving…' : 'Save config'}
             </button>
-            {error && <span className="text-sm text-red-600 dark:text-red-400">{error}</span>}
+            {error && <span className="text-sm text-danger">{error}</span>}
           </div>
         </div>
       )}

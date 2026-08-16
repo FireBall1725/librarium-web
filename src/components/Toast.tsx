@@ -80,8 +80,8 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: number)
       className={`pointer-events-auto flex items-center gap-3 rounded-xl border px-4 py-3 shadow-lg text-sm
         backdrop-blur-sm animate-in slide-in-from-bottom-2 fade-in duration-200
         ${isError
-          ? 'bg-red-50 dark:bg-red-950/80 border-red-200 dark:border-red-800 text-red-800 dark:text-red-200'
-          : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-100'
+          ? 'bg-danger-surface border-danger-line text-danger-strong'
+          : 'bg-surface border-line text-content-strong'
         }`}
     >
       {/* Icon */}
@@ -92,7 +92,7 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: number)
           </svg>
         </span>
       ) : (
-        <span className="text-green-500 dark:text-green-400 flex-shrink-0">
+        <span className="text-success dark:text-success flex-shrink-0">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>

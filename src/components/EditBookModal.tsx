@@ -21,13 +21,13 @@ interface Props {
   initialTab?: 'details' | 'editions'
 }
 
-const inputCls = 'w-full rounded-lg border border-line-strong dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
+const inputCls = 'w-full rounded-lg border border-line-strong dark:bg-surface-raised dark:text-white px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent'
 const labelCls = 'block text-sm font-medium text-content-secondary mb-1'
 
 const formatBadgeClass = (fmt: string) => {
-  if (fmt === 'ebook') return 'bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-400 ring-purple-200 dark:ring-purple-800'
-  if (fmt === 'audiobook') return 'bg-warning-surface text-warning-strong ring-amber-200 dark:ring-amber-800'
-  return 'bg-accent-surface text-accent-strong ring-blue-200 dark:ring-blue-800'
+  if (fmt === 'ebook') return 'bg-accent-surface text-accent-strong ring-accent-line'
+  if (fmt === 'audiobook') return 'bg-warning-surface text-warning-strong ring-warning-line'
+  return 'bg-accent-surface text-accent-strong ring-accent-line'
 }
 
 export default function EditBookModal({ libraryId, book, onClose, onSaved, initialTab = 'details' }: Props) {
@@ -187,15 +187,15 @@ export default function EditBookModal({ libraryId, book, onClose, onSaved, initi
         <div className="px-6 pt-4 pb-0 border-b border-line">
           <div className="flex items-center justify-between mb-3">
             <p className="text-xs text-content-muted truncate max-w-sm font-medium">{book.title}</p>
-            <button onClick={onClose} className="text-gray-400 hover:text-content-tertiary text-xl leading-none">×</button>
+            <button onClick={onClose} className="text-content-subtle hover:text-content-tertiary text-xl leading-none">×</button>
           </div>
           <div className="flex gap-0">
             {(['details', 'editions'] as const).map(t => (
               <button key={t} type="button" onClick={() => setTab(t)}
                 className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors capitalize ${
                   tab === t
-                    ? 'border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400'
-                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                    ? 'border-accent text-accent dark:border-accent-line'
+                    : 'border-transparent text-content-muted hover:text-content-secondary'
                 }`}>
                 {t}
               </button>
@@ -340,8 +340,8 @@ export default function EditBookModal({ libraryId, book, onClose, onSaved, initi
                       <label key={shelf.id}
                         className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs cursor-pointer transition-colors ${
                           checked
-                            ? 'border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400'
-                            : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600'
+                            ? 'border-accent-line bg-accent-surface text-accent-strong dark:text-accent'
+                            : 'border-line text-content-tertiary hover:border-line-strong'
                         }`}>
                         <input type="checkbox" className="sr-only" checked={checked}
                           onChange={e => setSelectedShelfIds(ids => {
@@ -367,7 +367,7 @@ export default function EditBookModal({ libraryId, book, onClose, onSaved, initi
                 Cancel
               </button>
               <button type="submit" disabled={saving}
-                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
+                className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:brightness-110 disabled:opacity-50 transition-colors">
                 {saving ? 'Saving…' : 'Save changes'}
               </button>
             </div>
@@ -380,7 +380,7 @@ export default function EditBookModal({ libraryId, book, onClose, onSaved, initi
             <div className="px-6 py-3 border-b border-line flex items-center justify-between flex-shrink-0">
               <p className="text-xs text-content-muted">Paperback, hardcover, ebook, audiobook, etc.</p>
               <button onClick={() => setShowAddEdition(true)}
-                className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 transition-colors">
+                className="rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-white hover:brightness-110 transition-colors">
                 Add edition
               </button>
             </div>
@@ -389,7 +389,7 @@ export default function EditBookModal({ libraryId, book, onClose, onSaved, initi
               {!editionsLoading && editions.length === 0 && (
                 <div className="text-center py-10">
                   <p className="text-sm text-content-muted mb-2">No editions yet</p>
-                  <button onClick={() => setShowAddEdition(true)} className="text-sm text-blue-600 hover:underline">Add the first edition</button>
+                  <button onClick={() => setShowAddEdition(true)} className="text-sm text-accent hover:underline">Add the first edition</button>
                 </div>
               )}
               {editions.map(e => {

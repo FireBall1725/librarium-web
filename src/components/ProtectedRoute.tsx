@@ -11,7 +11,7 @@ export default function ProtectedRoute({ requireAdmin = false }: Props) {
   if (isLoading || initialized === null) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <span className="text-gray-500">Loading…</span>
+        <span className="text-content-muted">Loading…</span>
       </div>
     )
   }

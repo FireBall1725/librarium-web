@@ -126,8 +126,8 @@ function ScheduleRow({ initial, onSaved, onError, showToast }: {
             <h3 className="text-sm font-semibold text-content">{initial.display_name}</h3>
             <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
               enabled
-                ? 'bg-green-50 dark:bg-green-950/50 text-green-700 dark:text-green-400 ring-1 ring-green-200 dark:ring-green-800'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
+                ? 'bg-success-surface text-success ring-1 ring-success-line'
+                : 'bg-surface-inset text-content-muted'
             }`}>
               {enabled ? 'Enabled' : 'Disabled'}
             </span>
@@ -148,7 +148,7 @@ function ScheduleRow({ initial, onSaved, onError, showToast }: {
             checked={enabled}
             onChange={e => setEnabled(e.target.checked)}
           />
-          <div className="w-10 h-6 bg-surface-strong peer-focus:outline-none rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full" />
+          <div className="w-10 h-6 bg-surface-strong peer-focus:outline-none rounded-full peer peer-checked:bg-accent after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-surface-raised after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full" />
         </label>
       </div>
 
@@ -175,7 +175,7 @@ function ScheduleRow({ initial, onSaved, onError, showToast }: {
             type="button"
             onClick={() => { setCron(initial.cron); setEnabled(initial.enabled); setCronErr(undefined) }}
             disabled={!dirty || saving}
-            className="rounded-md border border-line-strong bg-surface-raised px-3 py-1.5 text-sm font-medium text-content-secondary hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors"
+            className="rounded-md border border-line-strong bg-surface-raised px-3 py-1.5 text-sm font-medium text-content-secondary hover:bg-surface-inset disabled:opacity-50 transition-colors"
           >
             Reset
           </button>
@@ -183,7 +183,7 @@ function ScheduleRow({ initial, onSaved, onError, showToast }: {
             type="button"
             onClick={save}
             disabled={!dirty || saving || !!cronErr}
-            className="rounded-md border border-accent-line bg-accent-surface px-3 py-1.5 text-sm font-medium text-accent-strong hover:bg-blue-100 dark:hover:bg-blue-900/50 disabled:opacity-50 transition-colors"
+            className="rounded-md border border-accent-line bg-accent-surface px-3 py-1.5 text-sm font-medium text-accent-strong hover:bg-accent-surface disabled:opacity-50 transition-colors"
           >
             {saving ? 'Saving…' : 'Save'}
           </button>

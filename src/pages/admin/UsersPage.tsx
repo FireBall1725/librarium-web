@@ -432,7 +432,7 @@ export default function UsersPage() {
  <td className="px-4 py-3 text-content-tertiary">{u.email}</td>
  <td className="px-4 py-3">
  {u.is_instance_admin ? (
- <span className="inline-flex items-center rounded-full bg-purple-50 dark:bg-purple-950/50 px-2 py-0.5 text-xs font-medium text-purple-700 dark:text-purple-400 ring-1 ring-purple-200 dark:ring-purple-800">
+ <span className="inline-flex items-center rounded-full bg-accent-surface px-2 py-0.5 text-xs font-medium text-accent-strong dark:text-accent ring-1 ring-accent-line">
  Admin
  </span>
  ) : (
@@ -477,7 +477,7 @@ export default function UsersPage() {
  className={`p-1.5 rounded text-content-muted transition-colors ${
  isSelf
  ? 'opacity-30 cursor-not-allowed'
-                          : 'hover:!text-purple-500 dark:hover:!text-purple-400 hover:!bg-purple-50 dark:hover:!bg-purple-900/20'
+                          : 'hover:!text-accent dark:hover:!text-accent hover:!bg-accent-surface dark:hover:!bg-accent-surface'
                       }`}
                       title={isSelf ? 'Use Profile → Change password to set your own password' : 'Set password'}
  aria-label="Set password"

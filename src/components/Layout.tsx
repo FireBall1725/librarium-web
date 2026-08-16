@@ -462,8 +462,8 @@ export default function Layout() {
                   className={({ isActive }) =>
                     `block px-2 py-1.5 rounded-md text-sm transition-colors ${
                       isActive
-                        ? 'text-blue-600 dark:text-blue-400 font-medium'
-                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800'
+                        ? 'text-accent font-medium'
+                        : 'text-content-tertiary hover:text-content hover:bg-surface-inset'
                     }`
                   }
                 >
@@ -545,7 +545,7 @@ export default function Layout() {
               href="https://fireball1725.ca"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-gray-200 transition-colors"
+              className="flex items-center gap-1.5 hover:text-content transition-colors"
             >
               {t('footer.credit', { defaultValue: 'Created by FireBall1725 in Ontario, Canada' })}
               {/* Drawn rather than typed: the flag emoji is a regional-indicator
@@ -562,7 +562,7 @@ export default function Layout() {
               href="https://github.com/FireBall1725/librarium-web/releases"
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-gray-900 dark:hover:text-gray-200 transition-colors"
+              className="hover:text-content transition-colors"
             >
               {t('footer.web')}: v{__APP_VERSION__}
             </a>
@@ -571,7 +571,7 @@ export default function Layout() {
                 href="https://github.com/FireBall1725/librarium-api/releases"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hover:text-gray-900 dark:hover:text-gray-200 transition-colors"
+                className="hover:text-content transition-colors"
                 title={apiVersion}
               >
                 {t('footer.api')}: v{apiVersion}
@@ -583,7 +583,7 @@ export default function Layout() {
               href="https://github.com/FireBall1725/librarium-web"
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-gray-900 dark:hover:text-gray-200 transition-colors"
+              className="hover:text-content transition-colors"
             >
               {t('footer.source')}
             </a>
@@ -592,7 +592,7 @@ export default function Layout() {
                 which the repository LICENSE file does not mention. */}
             <Link
               to="/settings/licences"
-              className="hover:text-gray-900 dark:hover:text-gray-200 transition-colors"
+              className="hover:text-content transition-colors"
             >
               {t('footer.license')}
             </Link>
@@ -600,7 +600,7 @@ export default function Layout() {
               href="https://github.com/FireBall1725/librarium-web/issues"
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-gray-900 dark:hover:text-gray-200 transition-colors"
+              className="hover:text-content transition-colors"
             >
               {t('footer.report_issue')}
             </a>

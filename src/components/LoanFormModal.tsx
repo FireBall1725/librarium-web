@@ -92,7 +92,7 @@ export default function LoanFormModal({ libraryId, loan, prefillBook, onClose, o
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-base font-semibold text-content">{loan ? 'Edit loan' : 'New loan'}</h3>
           <button type="button" onClick={onClose}
-            className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-surface-inset transition-colors"
+            className="p-1.5 rounded-md text-content-subtle hover:text-content-tertiary hover:bg-surface-inset transition-colors"
             aria-label="Close">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -114,8 +114,8 @@ export default function LoanFormModal({ libraryId, loan, prefillBook, onClose, o
                 <div className="relative">
                   <input type="text" value={bookQuery} onChange={e => setBookQuery(e.target.value)}
                     placeholder="Search books…"
-                    className="w-full rounded-lg border border-line-strong dark:bg-gray-800 dark:text-white pl-9 pr-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
-                  <svg className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    className="w-full rounded-lg border border-line-strong dark:bg-surface-raised dark:text-white pl-9 pr-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent" />
+                  <svg className="absolute left-3 top-2.5 w-4 h-4 text-content-subtle" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                 </div>
@@ -148,7 +148,7 @@ export default function LoanFormModal({ libraryId, loan, prefillBook, onClose, o
             <input type="text" autoFocus={!!loan} value={form.loaned_to}
               onChange={e => setForm(f => ({ ...f, loaned_to: e.target.value }))}
               placeholder="Name or contact"
-              className="w-full rounded-lg border border-line-strong dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+              className="w-full rounded-lg border border-line-strong dark:bg-surface-raised dark:text-white px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent" />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -157,14 +157,14 @@ export default function LoanFormModal({ libraryId, loan, prefillBook, onClose, o
                 <label className="block text-sm font-medium text-content-secondary mb-1">Loaned date</label>
                 <input type="date" value={form.loaned_at}
                   onChange={e => setForm(f => ({ ...f, loaned_at: e.target.value }))}
-                  className="w-full rounded-lg border border-line-strong dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                  className="w-full rounded-lg border border-line-strong dark:bg-surface-raised dark:text-white px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent" />
               </div>
             )}
             <div className={loan ? 'col-span-2' : ''}>
               <label className="block text-sm font-medium text-content-secondary mb-1">Due date</label>
               <input type="date" value={form.due_date}
                 onChange={e => setForm(f => ({ ...f, due_date: e.target.value }))}
-                className="w-full rounded-lg border border-line-strong dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                className="w-full rounded-lg border border-line-strong dark:bg-surface-raised dark:text-white px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent" />
             </div>
           </div>
 
@@ -172,7 +172,7 @@ export default function LoanFormModal({ libraryId, loan, prefillBook, onClose, o
             <label className="block text-sm font-medium text-content-secondary mb-1">Notes</label>
             <input type="text" value={form.notes}
               onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
-              className="w-full rounded-lg border border-line-strong dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+              className="w-full rounded-lg border border-line-strong dark:bg-surface-raised dark:text-white px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent" />
           </div>
 
           {error && <div className="rounded-lg bg-danger-surface border border-danger-line px-3 py-2 text-sm text-danger-strong">{error}</div>}
@@ -180,7 +180,7 @@ export default function LoanFormModal({ libraryId, loan, prefillBook, onClose, o
             <button type="button" onClick={onClose}
               className="flex-1 rounded-lg border border-line-strong px-4 py-2 text-sm font-medium text-content-secondary hover:bg-surface-muted transition-colors">Cancel</button>
             <button type="submit" disabled={isLoading || !form.loaned_to}
-              className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
+              className="flex-1 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white hover:brightness-110 disabled:opacity-50 transition-colors">
               {isLoading ? 'Saving…' : loan ? 'Save changes' : 'Create loan'}
             </button>
           </div>

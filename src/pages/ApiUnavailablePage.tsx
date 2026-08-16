@@ -14,7 +14,7 @@ export default function ApiUnavailablePage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-surface-muted px-4">
       <div className="w-full max-w-md text-center">
-        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100 dark:bg-red-950/50">
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-danger-surface">
           <svg className="h-8 w-8 text-danger" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 9v4" />
             <path d="M12 17h.01" />
@@ -22,14 +22,14 @@ export default function ApiUnavailablePage() {
           </svg>
         </div>
         <h1 className="text-2xl font-semibold text-content">Can't reach the server</h1>
-        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+        <p className="mt-2 text-sm text-content-tertiary">
           Librarium's API isn't responding. It may be restarting or temporarily offline.
         </p>
         <button
           type="button"
           onClick={handleRetry}
           disabled={isRetrying}
-          className="mt-6 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="mt-6 inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {isRetrying ? 'Retrying…' : 'Try again'}
         </button>

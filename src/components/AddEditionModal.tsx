@@ -154,7 +154,7 @@ export function AddEditionModal({ libraryId, bookId, edition, contributors = [],
     } finally { setIsLoading(false) }
   }
 
-  const inputCls = 'w-full rounded-lg border border-line-strong dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
+  const inputCls = 'w-full rounded-lg border border-line-strong dark:bg-surface-raised dark:text-white px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent'
   const labelCls = 'block text-sm font-medium text-content-secondary mb-1'
 
   return (
@@ -163,7 +163,7 @@ export function AddEditionModal({ libraryId, bookId, edition, contributors = [],
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-base font-semibold text-content">{edition ? 'Edit edition' : 'Add edition'}</h3>
           <button type="button" onClick={onClose}
-            className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-surface-inset transition-colors"
+            className="p-1.5 rounded-md text-content-subtle hover:text-content-tertiary hover:bg-surface-inset transition-colors"
             aria-label="Close">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -179,8 +179,8 @@ export function AddEditionModal({ libraryId, bookId, edition, contributors = [],
                 onClick={() => setForm(f => ({ ...f, format: fmt.value }))}
                 className={`flex flex-col items-center gap-1.5 rounded-xl border-2 py-3 text-xs font-medium transition-colors ${
                   form.format === fmt.value
-                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-                    : 'border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700/40'
+                    ? 'border-accent bg-accent-surface text-accent'
+                    : 'border-line text-content-muted hover:border-line-strong hover:bg-surface-inset/40'
                 }`}>
                 {fmt.icon}
                 {fmt.label}
@@ -313,7 +313,7 @@ export function AddEditionModal({ libraryId, bookId, edition, contributors = [],
               Cancel
             </button>
             <button type="submit" disabled={isLoading}
-              className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
+              className="flex-1 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white hover:brightness-110 disabled:opacity-50 transition-colors">
               {isLoading ? 'Saving…' : edition ? 'Save changes' : 'Add edition'}
             </button>
           </div>

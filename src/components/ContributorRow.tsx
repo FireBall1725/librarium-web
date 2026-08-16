@@ -70,7 +70,7 @@ export default function ContributorRow({ contributor, role, onContributorChange,
         ) : (
           <input type="text" value={query} onChange={e => setQuery(e.target.value)}
             onFocus={() => results.length > 0 && setShowDropdown(true)}
-            className="w-full h-9 rounded-lg border border-line-strong dark:bg-gray-800 dark:text-white px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full h-9 rounded-lg border border-line-strong dark:bg-surface-raised dark:text-white px-3 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
             placeholder="Search contributor…" />
         )}
         {showDropdown && (results.length > 0 || query.trim().length >= 2) && (
@@ -85,7 +85,7 @@ export default function ContributorRow({ contributor, role, onContributorChange,
             {query.trim().length >= 2 && (
               <li>
                 <button type="button" onMouseDown={e => e.preventDefault()} onClick={createAndSelect}
-                  className="w-full text-left px-3 py-2 text-sm text-blue-600 hover:bg-accent-surface transition-colors border-t border-line-subtle">
+                  className="w-full text-left px-3 py-2 text-sm text-accent hover:bg-accent-surface transition-colors border-t border-line-subtle">
                   + Create "{query.trim()}"
                 </button>
               </li>
@@ -94,11 +94,11 @@ export default function ContributorRow({ contributor, role, onContributorChange,
         )}
       </div>
       <select value={role} onChange={e => onRoleChange(e.target.value)}
-        className="h-9 rounded-lg border border-line-strong dark:bg-gray-800 dark:text-white px-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
+        className="h-9 rounded-lg border border-line-strong dark:bg-surface-raised dark:text-white px-2 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent">
         {CONTRIBUTOR_ROLES.map(r => <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</option>)}
       </select>
       <button type="button" onClick={onRemove}
-        className="h-9 px-2 text-gray-400 hover:text-red-500 transition-colors text-lg leading-none">×</button>
+        className="h-9 px-2 text-content-subtle hover:text-danger transition-colors text-lg leading-none">×</button>
     </div>
   )
 }

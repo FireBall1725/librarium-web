@@ -176,7 +176,7 @@ export default function JobsPage() {
                           checked={s.enabled}
                           onChange={e => toggleEnabled(s, e.target.checked)}
                         />
-                        <div className="w-9 h-5 bg-surface-strong rounded-full peer peer-checked:bg-accent after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full" />
+                        <div className="w-9 h-5 bg-surface-strong rounded-full peer peer-checked:bg-accent after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-surface-raised after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full" />
                       </label>
                     </td>
                     <td className="px-4 py-3" onClick={e => e.stopPropagation()}>

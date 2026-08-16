@@ -231,7 +231,7 @@ export default function BookDetailPage() {
                 onClick={refreshMetadata}
                 disabled={busy}
                 title="Refresh metadata"
-                className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-surface-inset transition-colors disabled:opacity-50"
+                className="p-1.5 rounded-md text-content-subtle hover:text-content-tertiary hover:bg-surface-inset transition-colors disabled:opacity-50"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -243,7 +243,7 @@ export default function BookDetailPage() {
                   onClick={removeSuggestion}
                   disabled={busy}
                   title="Delete suggestion"
-                  className="p-1.5 rounded-md text-gray-400 hover:text-danger hover:bg-surface-inset transition-colors disabled:opacity-50"
+                  className="p-1.5 rounded-md text-content-subtle hover:text-danger hover:bg-surface-inset transition-colors disabled:opacity-50"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -283,7 +283,7 @@ export default function BookDetailPage() {
                 href={bookFinderURL}
                 target="_blank"
                 rel="noopener noreferrer nofollow"
-                className="rounded-md border border-accent-line bg-accent-surface px-3 py-1.5 text-sm font-medium text-accent-strong hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
+                className="rounded-md border border-accent-line bg-accent-surface px-3 py-1.5 text-sm font-medium text-accent-strong hover:bg-accent-surface transition-colors"
               >
                 Find where to buy →
               </a>
@@ -297,7 +297,7 @@ export default function BookDetailPage() {
                   type="button"
                   onClick={() => setBlockOpen(o => !o)}
                   disabled={busy}
-                  className="rounded-md border border-line-strong bg-surface-raised px-3 py-1.5 text-sm font-medium text-content-secondary hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors"
+                  className="rounded-md border border-line-strong bg-surface-raised px-3 py-1.5 text-sm font-medium text-content-secondary hover:bg-surface-inset disabled:opacity-50 transition-colors"
                 >
                   Block ▾
                 </button>
@@ -306,7 +306,7 @@ export default function BookDetailPage() {
                     <button
                       type="button"
                       onClick={() => blockSuggestion('book')}
-                      className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 text-content-secondary"
+                      className="block w-full text-left px-3 py-2 text-sm hover:bg-surface-inset text-content-secondary"
                     >
                       Block this book
                     </button>
@@ -314,7 +314,7 @@ export default function BookDetailPage() {
                       <button
                         type="button"
                         onClick={() => blockSuggestion('author')}
-                        className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 text-content-secondary"
+                        className="block w-full text-left px-3 py-2 text-sm hover:bg-surface-inset text-content-secondary"
                       >
                         Block by {suggestions[0].author}
                       </button>
@@ -322,7 +322,7 @@ export default function BookDetailPage() {
                     <button
                       type="button"
                       onClick={() => setBlockOpen(false)}
-                      className="block w-full text-left px-3 py-2 text-xs text-content-subtle border-t border-line-subtle hover:bg-gray-50 dark:hover:bg-gray-700"
+                      className="block w-full text-left px-3 py-2 text-xs text-content-subtle border-t border-line-subtle hover:bg-surface-inset"
                     >
                       Cancel
                     </button>
@@ -373,23 +373,23 @@ function AddToLibraryButton({ disabled, open, onOpenChange, onPick }: {
         type="button"
         onClick={toggle}
         disabled={disabled}
-        className="rounded-md border border-accent-line bg-accent-surface px-3 py-1.5 text-sm font-medium text-accent-strong hover:bg-blue-100 dark:hover:bg-blue-900/50 disabled:opacity-50 transition-colors"
+        className="rounded-md border border-accent-line bg-accent-surface px-3 py-1.5 text-sm font-medium text-accent-strong hover:bg-accent-surface disabled:opacity-50 transition-colors"
       >
         Add to library ▾
       </button>
       {open && (
         <div className="absolute left-0 z-20 mt-1 w-56 rounded-md border border-line bg-surface-raised shadow-lg py-1">
           {libs === null ? (
-            <div className="px-3 py-2 text-xs text-gray-400">Loading…</div>
+            <div className="px-3 py-2 text-xs text-content-subtle">Loading…</div>
           ) : libs.length === 0 ? (
-            <div className="px-3 py-2 text-xs text-gray-400">No libraries yet</div>
+            <div className="px-3 py-2 text-xs text-content-subtle">No libraries yet</div>
           ) : (
             libs.map(lib => (
               <button
                 key={lib.id}
                 type="button"
                 onClick={() => onPick(lib.id)}
-                className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 text-content-secondary"
+                className="block w-full text-left px-3 py-2 text-sm hover:bg-surface-inset text-content-secondary"
               >
                 {lib.name}
               </button>
@@ -398,7 +398,7 @@ function AddToLibraryButton({ disabled, open, onOpenChange, onPick }: {
           <button
             type="button"
             onClick={() => onOpenChange(false)}
-            className="block w-full text-left px-3 py-2 text-xs text-content-subtle border-t border-line-subtle hover:bg-gray-50 dark:hover:bg-gray-700"
+            className="block w-full text-left px-3 py-2 text-xs text-content-subtle border-t border-line-subtle hover:bg-surface-inset"
           >
             Cancel
           </button>
