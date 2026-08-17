@@ -18,21 +18,21 @@ interface PageHeaderProps {
 
 export default function PageHeader({ title, description, breadcrumbs, actions }: PageHeaderProps) {
   return (
-    <div className="sticky top-0 z-10 flex-shrink-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-8 py-4">
+    <div className="sticky top-0 z-20 flex-shrink-0 bg-surface border-b border-line px-8 py-4">
       {breadcrumbs && breadcrumbs.length > 0 && (
         <nav className="flex items-center gap-2 text-sm flex-wrap mb-1" aria-label="Breadcrumb">
           {breadcrumbs.map((crumb, i) => (
             <Fragment key={i}>
-              {i > 0 && <span className="text-gray-300 dark:text-gray-600">/</span>}
+              {i > 0 && <span className="text-content-faint">/</span>}
               {crumb.to ? (
                 <Link
                   to={crumb.to}
-                  className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+                  className="text-content-muted hover:text-content-secondary transition-colors"
                 >
                   {crumb.label}
                 </Link>
               ) : (
-                <span className="text-gray-500 dark:text-gray-400 truncate max-w-xs">{crumb.label}</span>
+                <span className="text-content-muted truncate max-w-xs">{crumb.label}</span>
               )}
             </Fragment>
           ))}
@@ -40,9 +40,13 @@ export default function PageHeader({ title, description, breadcrumbs, actions }:
       )}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-gray-900 dark:text-white">{title}</h1>
+          {/* The display face earns its place on the page title and nowhere
+              else in this component: chrome stays on the system stack. */}
+          <h1 className="font-display text-2xl font-semibold text-content text-balance">{title}</h1>
           {description && (
-            <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">{description}</p>
+            <p className="font-read mt-0.5 text-[15px] leading-snug text-content-muted max-w-[62ch]">
+              {description}
+            </p>
           )}
         </div>
         {actions && <div className="flex-shrink-0 flex items-center gap-2 pt-0.5">{actions}</div>}

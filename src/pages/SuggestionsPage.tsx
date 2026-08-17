@@ -270,7 +270,7 @@ export default function SuggestionsPage() {
             <div className="flex items-center gap-3">
               {quota !== null && (
                 <span
-                  className="text-xs text-gray-500 dark:text-gray-400"
+                  className="text-xs text-content-muted"
                   title={quota.resets_at ? t('suggestions_page.quota.resets_at', { at: new Date(quota.resets_at).toLocaleString() }) : undefined}
                 >
                   {quota.unlimited
@@ -282,7 +282,7 @@ export default function SuggestionsPage() {
                 type="button"
                 onClick={() => openModal(null)}
                 disabled={runDisabled}
-                className="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors"
+                className="rounded-md border border-line-strong bg-surface-raised px-3 py-1.5 text-sm font-medium text-content-secondary hover:bg-surface-inset disabled:opacity-50 transition-colors"
               >
                 Custom request…
               </button>
@@ -290,7 +290,7 @@ export default function SuggestionsPage() {
                 type="button"
                 onClick={runNow}
                 disabled={runDisabled}
-                className="rounded-md border border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/30 px-3 py-1.5 text-sm font-medium text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/50 disabled:opacity-50 transition-colors"
+                className="rounded-md border border-accent-line bg-accent-surface px-3 py-1.5 text-sm font-medium text-accent-strong hover:bg-accent-surface disabled:opacity-50 transition-colors"
               >
                 {running || activeRun !== null ? t('suggestions_page.running') : t('suggestions_page.run_now')}
               </button>
@@ -334,7 +334,7 @@ export default function SuggestionsPage() {
                 <button
                   type="button"
                   onClick={() => setShowOlder(o => !o)}
-                  className="ml-auto text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 underline underline-offset-2"
+                  className="ml-auto text-xs text-content-muted hover:text-content-secondary underline underline-offset-2"
                 >
                   {showOlder ? 'Last 30 days only' : 'Show older suggestions'}
                 </button>
@@ -342,16 +342,16 @@ export default function SuggestionsPage() {
             </div>
 
             {activeRun && (
-              <div className="flex items-center gap-3 rounded-lg border border-blue-200 dark:border-blue-900 bg-blue-50 dark:bg-blue-950/40 px-4 py-3">
-                <svg className="h-4 w-4 animate-spin text-blue-600 dark:text-blue-400 flex-shrink-0" viewBox="0 0 24 24" fill="none">
+              <div className="flex items-center gap-3 rounded-lg border border-accent-line bg-accent-surface px-4 py-3">
+                <svg className="h-4 w-4 animate-spin text-accent flex-shrink-0" viewBox="0 0 24 24" fill="none">
                   <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25" />
                   <path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
                 </svg>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                  <p className="text-sm font-medium text-accent-strong">
                     {t('suggestions_page.progress.title')}
                   </p>
-                  <p className="text-xs text-blue-700 dark:text-blue-300">
+                  <p className="text-xs text-accent-strong">
                     {activeEventCount > 0
                       ? t('suggestions_page.progress.steps', { count: activeEventCount })
                       : t('suggestions_page.progress.starting')}
@@ -361,25 +361,25 @@ export default function SuggestionsPage() {
             )}
 
             {error ? (
-              <div className="rounded-lg border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/30 p-4 text-sm text-red-700 dark:text-red-300">
+              <div className="rounded-lg border border-danger-line bg-danger-surface p-4 text-sm text-danger-strong">
                 {error}
               </div>
             ) : filtered === null ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
                 {[...Array(6)].map((_, i) => (
                   <div key={i} className="space-y-2">
-                    <div className="aspect-[2/3] rounded-lg bg-gray-100 dark:bg-gray-800 animate-pulse" />
-                    <div className="h-3 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" />
-                    <div className="h-2 w-2/3 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" />
+                    <div className="aspect-[2/3] rounded-lg bg-surface-inset animate-pulse" />
+                    <div className="h-3 rounded bg-surface-inset animate-pulse" />
+                    <div className="h-2 w-2/3 rounded bg-surface-inset animate-pulse" />
                   </div>
                 ))}
               </div>
             ) : filtered.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-gray-300 dark:border-gray-700 p-8 text-center">
-                <p className="text-sm font-medium text-gray-900 dark:text-white">
+              <div className="rounded-xl border border-dashed border-line-strong p-8 text-center">
+                <p className="text-sm font-medium text-content">
                   {t(isSaved ? 'suggestions_page.saved_empty.title' : 'suggestions_page.empty.title')}
                 </p>
-                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                <p className="mt-1 text-sm text-content-muted">
                   {t(isSaved ? 'suggestions_page.saved_empty.hint' : 'suggestions_page.empty.hint')}
                 </p>
               </div>
@@ -429,8 +429,8 @@ function FilterTab({
       onClick={onClick}
       className={
         active
-          ? 'rounded-full bg-blue-600 text-white px-3 py-1.5 text-xs font-medium'
-          : 'rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:border-blue-300 dark:hover:border-blue-700 px-3 py-1.5 text-xs font-medium transition-colors'
+          ? 'rounded-full bg-accent text-white px-3 py-1.5 text-xs font-medium'
+          : 'rounded-full border border-line bg-surface text-content-secondary hover:border-accent-line px-3 py-1.5 text-xs font-medium transition-colors'
       }
     >
       {children}
@@ -453,7 +453,7 @@ function UnavailableCard({ reason }: { reason: string | null }) {
     ) : reason === 'no_provider' ? (
       <>
         An administrator needs to configure an AI provider under{' '}
-        <Link to="/admin/connections/ai" className="text-blue-600 dark:text-blue-400 hover:underline">
+        <Link to="/admin/connections/ai" className="text-accent hover:underline">
           Connections → AI
         </Link>{' '}
         before suggestions can run.
@@ -461,27 +461,27 @@ function UnavailableCard({ reason }: { reason: string | null }) {
     ) : reason === 'not_opted_in' ? (
       <>
         Enable AI features on your{' '}
-        <Link to="/profile" className="text-blue-600 dark:text-blue-400 hover:underline">
+        <Link to="/profile" className="text-accent hover:underline">
           profile page
         </Link>{' '}
         to start getting book suggestions.
       </>
     ) : (
       <>Suggestions can't run right now. Please check back later.</>
-    )
-  return (
-    <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6 text-center">
-      <p className="text-sm font-semibold text-gray-900 dark:text-white">{title}</p>
-      <p className="mt-2 text-sm text-gray-600 dark:text-gray-300 max-w-xl mx-auto">{body}</p>
-    </div>
-  )
+ )
+ return (
+ <div className="rounded-xl border border-line bg-surface p-6 text-center">
+ <p className="text-sm font-semibold text-content">{title}</p>
+ <p className="mt-2 text-sm text-content-tertiary max-w-xl mx-auto">{body}</p>
+ </div>
+ )
 }
 
 // Relative-time formatter used by the banner + Recent runs panel. We prefer
 // "just now" / "3 days ago" over absolute timestamps when the run is recent
 // so the UI feels live; older runs fall back to a locale date.
 function relativeTime(iso: string | undefined): string {
-  if (!iso) return ''
+ if (!iso) return ''
   const then = new Date(iso).getTime()
   if (isNaN(then)) return ''
   const diffMs = Date.now() - then
@@ -498,11 +498,11 @@ function relativeTime(iso: string | undefined): string {
 // Palette classes echo the modal's chip colours so the banner and Recent
 // runs entries are visually traceable back to what the user asked for.
 const bannerChipClasses = {
-  indigo: 'bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300',
-  purple: 'bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300',
-  emerald: 'bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300',
-  amber: 'bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300',
-  gray: 'bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300',
+  indigo: 'lb-chip',
+  purple: 'lb-chip',
+  emerald: 'lb-chip',
+  amber: 'lb-chip',
+  gray: 'lb-chip',
 }
 
 function BannerChip({
@@ -544,12 +544,12 @@ function SteeringBanner({
         (steering.notes ?? '').trim().length > 0),
   )
   return (
-    <div className="rounded-lg border border-blue-200 dark:border-blue-900 bg-blue-50 dark:bg-blue-950/40 px-4 py-3">
+    <div className="rounded-lg border border-accent-line bg-accent-surface px-4 py-3">
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <svg
-              className="h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0"
+              className="h-4 w-4 text-accent flex-shrink-0"
               fill="none"
               stroke="currentColor"
               strokeWidth="2"
@@ -557,9 +557,9 @@ function SteeringBanner({
             >
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
-            <span className="text-sm font-semibold text-blue-900 dark:text-blue-100">
+            <span className="text-sm font-semibold text-accent-strong">
               {isSteered ? 'Custom request' : 'Scheduled run'}
-              <span className="ml-1.5 font-normal text-blue-700/80 dark:text-blue-300/80">
+              <span className="ml-1.5 font-normal text-accent">
                 · {relativeTime(run?.started_at)}
               </span>
             </span>
@@ -593,7 +593,7 @@ function SteeringBanner({
               )}
             </div>
           ) : (
-            <p className="mt-1.5 text-xs text-blue-700 dark:text-blue-300">
+            <p className="mt-1.5 text-xs text-accent-strong">
               Showing the results of this scheduled run. Clear to return to the mixed pool.
             </p>
           )}
@@ -603,7 +603,7 @@ function SteeringBanner({
             <button
               type="button"
               onClick={onEdit}
-              className="text-xs font-medium text-blue-700 dark:text-blue-300 hover:underline whitespace-nowrap"
+              className="text-xs font-medium text-accent-strong hover:underline whitespace-nowrap"
             >
               Edit & re-run
             </button>
@@ -612,7 +612,7 @@ function SteeringBanner({
             type="button"
             onClick={onClear}
             title="Clear scope"
-            className="p-1 -m-1 rounded text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-100"
+            className="p-1 -m-1 rounded text-accent-strong hover:text-accent-strong"
             aria-label="Clear scope"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -649,13 +649,13 @@ function RecentRunsPanel({
 }) {
   const visibleRuns = useMemo(() => (runs ?? []).slice(0, 5), [runs])
   return (
-    <div className="border-t border-gray-200 dark:border-gray-800 pt-4">
+    <div className="border-t border-line pt-4">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Recent runs</h3>
+        <h3 className="text-sm font-semibold text-content">Recent runs</h3>
         <button
           type="button"
           onClick={onToggle}
-          className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+          className="text-xs text-content-muted hover:text-content-secondary"
         >
           {expanded ? 'Collapse' : 'Expand'}
         </button>
@@ -663,9 +663,9 @@ function RecentRunsPanel({
       {expanded && (
         <ul className="space-y-2">
           {runs === null ? (
-            <li className="text-xs text-gray-400">Loading…</li>
+            <li className="text-xs text-content-subtle">Loading…</li>
           ) : visibleRuns.length === 0 ? (
-            <li className="text-xs text-gray-400">No runs yet.</li>
+            <li className="text-xs text-content-subtle">No runs yet.</li>
           ) : (
             visibleRuns.map(run => {
               const steering = run.steering
@@ -686,8 +686,8 @@ function RecentRunsPanel({
                   key={run.id}
                   className={
                     isActive
-                      ? 'rounded-lg border border-blue-200 dark:border-blue-900 bg-blue-50/50 dark:bg-blue-950/20 px-3 py-2.5'
-                      : 'rounded-lg border border-gray-200 dark:border-gray-800 px-3 py-2.5'
+                      ? 'rounded-lg border border-accent-line bg-accent-surface px-3 py-2.5'
+                      : 'rounded-lg border border-line px-3 py-2.5'
                   }
                 >
                   <div className="flex items-center justify-between gap-3">
@@ -697,14 +697,14 @@ function RecentRunsPanel({
                           className={
                             isSteered
                               ? isActive
-                                ? 'text-xs font-semibold text-blue-900 dark:text-blue-100'
-                                : 'text-xs font-semibold text-gray-900 dark:text-white'
-                              : 'text-xs font-semibold text-gray-500 dark:text-gray-400'
+                                ? 'text-xs font-semibold text-accent-strong'
+                                : 'text-xs font-semibold text-content '
+                              : 'text-xs font-semibold text-content-muted '
                           }
                         >
                           {isSteered ? 'Custom' : 'Scheduled'}
                         </span>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                        <span className="text-xs text-content-muted">
                           · {when}
                           {run.status === 'running' ? ' · running…' : ` · ${count} suggestions`}
                         </span>
@@ -744,7 +744,7 @@ function RecentRunsPanel({
                         <button
                           type="button"
                           onClick={() => onView(run.id)}
-                          className="text-xs font-medium text-gray-600 dark:text-gray-400 hover:underline"
+                          className="text-xs font-medium text-content-tertiary hover:underline"
                         >
                           View
                         </button>
@@ -755,8 +755,8 @@ function RecentRunsPanel({
                           onClick={() => onRerun(run)}
                           className={
                             isActive
-                              ? 'text-xs font-medium text-blue-700 dark:text-blue-300 hover:underline'
-                              : 'text-xs font-medium text-gray-600 dark:text-gray-400 hover:underline'
+                              ? 'text-xs font-medium text-accent-strong hover:underline'
+                              : 'text-xs font-medium text-content-tertiary hover:underline'
                           }
                         >
                           Re-run

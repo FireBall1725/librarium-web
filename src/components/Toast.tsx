@@ -80,19 +80,19 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: number)
       className={`pointer-events-auto flex items-center gap-3 rounded-xl border px-4 py-3 shadow-lg text-sm
         backdrop-blur-sm animate-in slide-in-from-bottom-2 fade-in duration-200
         ${isError
-          ? 'bg-red-50 dark:bg-red-950/80 border-red-200 dark:border-red-800 text-red-800 dark:text-red-200'
-          : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-100'
+          ? 'bg-danger-surface border-danger-line text-danger-strong'
+          : 'bg-surface border-line text-content-strong'
         }`}
     >
       {/* Icon */}
       {isError ? (
-        <span className="text-red-500 dark:text-red-400 flex-shrink-0">
+        <span className="text-danger flex-shrink-0">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </span>
       ) : (
-        <span className="text-green-500 dark:text-green-400 flex-shrink-0">
+        <span className="text-success dark:text-success flex-shrink-0">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
@@ -104,7 +104,7 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: number)
       {toast.action && (
         <Link
           to={toast.action.to}
-          className="flex-shrink-0 font-medium text-blue-600 dark:text-blue-400 hover:underline"
+          className="flex-shrink-0 font-medium text-accent hover:underline"
         >
           {toast.action.label}
         </Link>
@@ -112,7 +112,7 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: number)
 
       <button
         onClick={() => onDismiss(toast.id)}
-        className="flex-shrink-0 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors ml-1"
+        className="flex-shrink-0 text-content-subtle hover:text-content-tertiary transition-colors ml-1"
         aria-label="Dismiss"
       >
         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

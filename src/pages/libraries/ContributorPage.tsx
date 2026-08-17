@@ -29,7 +29,7 @@ function ContributorAvatar({ photoUrl, name, size }: { photoUrl: string | null; 
     )
   }
   return (
-    <div className={`rounded-full flex-shrink-0 flex items-center justify-center bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-semibold ${lg ? 'w-16 h-16 text-xl' : 'w-8 h-8 text-xs'}`}>
+    <div className={`rounded-full flex-shrink-0 flex items-center justify-center bg-blue-100 dark:bg-blue-900/40 text-accent-strong font-semibold ${lg ? 'w-16 h-16 text-xl' : 'w-8 h-8 text-xs'}`}>
       {initials || '?'}
     </div>
   )
@@ -50,7 +50,7 @@ function Section({ title, action, children }: { title: string; action?: React.Re
   return (
     <div className="pt-6">
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{title}</h2>
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-content-muted">{title}</h2>
         {action}
       </div>
       {children}
@@ -107,15 +107,15 @@ function EditContributorModal({ contributorId, contributor, onClose, onSaved }: 
     } finally { setSaving(false) }
   }
 
-  const inputCls = 'w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
-  const labelCls = 'block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1'
+  const inputCls = 'w-full rounded-lg border border-line-strong bg-surface-raised text-content px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
+  const labelCls = 'block text-xs font-medium text-content-muted mb-1'
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 overflow-y-auto py-16 p-4" onClick={onClose}>
-      <div className="w-full max-w-md rounded-xl bg-white dark:bg-gray-900 shadow-xl" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-base font-semibold text-gray-900 dark:text-white">Edit contributor</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xl leading-none">×</button>
+      <div className="w-full max-w-md rounded-xl bg-surface shadow-xl" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-line">
+          <h2 className="text-base font-semibold text-content">Edit contributor</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-content-tertiary text-xl leading-none">×</button>
         </div>
         <form onSubmit={submit} className="px-6 py-5 space-y-4">
           <div>
@@ -133,8 +133,8 @@ function EditContributorModal({ contributorId, contributor, onClose, onSaved }: 
           <div className="flex items-center gap-2">
             <input id="is-corporate" type="checkbox" checked={isCorporate}
               onChange={e => setIsCorporate(e.target.checked)}
-              className="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500" />
-            <label htmlFor="is-corporate" className="text-sm text-gray-700 dark:text-gray-300">
+              className="h-4 w-4 rounded border-line-strong text-blue-600 focus:ring-blue-500" />
+            <label htmlFor="is-corporate" className="text-sm text-content-secondary">
               Corporate entity (publisher, studio, etc.) — don't invert name for sorting
             </label>
           </div>
@@ -161,22 +161,22 @@ function EditContributorModal({ contributorId, contributor, onClose, onSaved }: 
             <button type="submit" disabled={saving || !name.trim()}
               className="flex-1 rounded-lg bg-blue-600 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
               {saving ? 'Saving…' : 'Save'}
-            </button>
-            <button type="button" onClick={onClose}
-              className="px-4 rounded-lg border border-gray-300 dark:border-gray-600 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-              Cancel
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  )
+ </button>
+ <button type="button" onClick={onClose}
+ className="px-4 rounded-lg border border-line-strong text-sm text-content-tertiary hover:bg-surface-muted transition-colors">
+ Cancel
+ </button>
+ </div>
+ </form>
+ </div>
+ </div>
+ )
 }
 
 // ─── Metadata modal ───────────────────────────────────────────────────────────
 
 const PROVIDER_LABELS: Record<string, string> = {
-  hardcover: 'Hardcover',
+ hardcover: 'Hardcover',
   open_library: 'Open Library',
   openlibrary: 'Open Library',
 }
@@ -296,134 +296,134 @@ function ContributorMetadataModal({ contributor, onClose, onApplied }: {
         { key: 'photo',       label: 'Photo',        current: contributor.photo_url ? 'Has photo' : 'No photo', proposed: fetchData.photo_url ? 'New photo available' : '' },
         { key: 'works',       label: 'Bibliography', current: `${contributor.works.length} works`, proposed: fetchData.works.length > 0 ? `${fetchData.works.length} works from ${PROVIDER_LABELS[fetchData.provider] ?? fetchData.provider}` : '' },
       ].filter(f => f.proposed !== '')
-    : []
+ : []
 
-  const selectedCount = fields.filter(f => enabled.has(f.key)).length
+ const selectedCount = fields.filter(f => enabled.has(f.key)).length
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 overflow-y-auto py-16 px-4" onClick={onClose}>
-      <div className="w-full max-w-xl rounded-xl bg-white dark:bg-gray-900 shadow-xl" onClick={e => e.stopPropagation()}>
+ return (
+ <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 overflow-y-auto py-16 px-4" onClick={onClose}>
+ <div className="w-full max-w-xl rounded-xl bg-surface shadow-xl" onClick={e => e.stopPropagation()}>
 
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-base font-semibold text-gray-900 dark:text-white">Refresh metadata</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xl leading-none">×</button>
-        </div>
+ {/* Header */}
+ <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+ <h2 className="text-base font-semibold text-gray-900 dark:text-white">Refresh metadata</h2>
+ <button onClick={onClose} className="text-gray-400 hover:text-content-tertiary text-xl leading-none">×</button>
+ </div>
 
-        <div className="px-6 py-5 space-y-5">
+ <div className="px-6 py-5 space-y-5">
 
-          {/* Search bar */}
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={query}
-              onChange={e => setQuery(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && doSearch()}
-              placeholder="Search by name…"
-              className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            />
-            <button onClick={doSearch} disabled={searching || !query.trim()}
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
-              {searching ? '…' : 'Search'}
-            </button>
-          </div>
+ {/* Search bar */}
+ <div className="flex gap-2">
+ <input
+ type="text"
+ value={query}
+ onChange={e => setQuery(e.target.value)}
+ onKeyDown={e => e.key === 'Enter' && doSearch()}
+ placeholder="Search by name…"
+ className="flex-1 rounded-lg border border-line-strong dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+ />
+ <button onClick={doSearch} disabled={searching || !query.trim()}
+ className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
+ {searching ? '…' : 'Search'}
+ </button>
+ </div>
 
-          {searchError && <p className="text-sm text-red-600 dark:text-red-400">{searchError}</p>}
-          {searching && <p className="text-sm text-gray-400 dark:text-gray-500">Searching providers…</p>}
+ {searchError && <p className="text-sm text-red-600 dark:text-red-400">{searchError}</p>}
+ {searching && <p className="text-sm text-gray-400 dark:text-gray-500">Searching providers…</p>}
 
-          {/* Candidate list */}
-          {candidates !== null && !fetchData && (
-            candidates.length === 0 ? (
-              <p className="text-sm text-gray-500 dark:text-gray-400">No results found.</p>
-            ) : (
-              <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden divide-y divide-gray-100 dark:divide-gray-800">
-                {candidates.map((c, i) => (
-                  <button
-                    key={i}
-                    onClick={() => doFetch(c)}
-                    disabled={fetching && fetchTarget?.external_id === c.external_id}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50"
-                  >
-                    {c.photo_url ? (
-                      <img src={c.photo_url} alt={c.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
-                    ) : (
-                      <div className="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-sm font-semibold">
-                        {c.name.slice(0, 2).toUpperCase()}
-                      </div>
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{c.name}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {PROVIDER_LABELS[c.provider] ?? c.provider}
-                      </p>
-                    </div>
-                    {fetching && fetchTarget?.external_id === c.external_id
-                      ? <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin flex-shrink-0" />
-                      : <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-                    }
-                  </button>
-                ))}
-              </div>
-            )
-          )}
+ {/* Candidate list */}
+ {candidates !== null && !fetchData && (
+ candidates.length === 0 ? (
+ <p className="text-sm text-content-muted dark:text-gray-400">No results found.</p>
+ ) : (
+ <div className="rounded-xl border border-line overflow-hidden divide-y divide-gray-100 dark:divide-gray-800">
+ {candidates.map((c, i) => (
+ <button
+ key={i}
+ onClick={() => doFetch(c)}
+ disabled={fetching && fetchTarget?.external_id === c.external_id}
+ className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-surface-muted transition-colors disabled:opacity-50"
+ >
+ {c.photo_url ? (
+ <img src={c.photo_url} alt={c.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+ ) : (
+ <div className="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center bg-blue-100 dark:bg-blue-900/40 text-accent-strong text-sm font-semibold">
+ {c.name.slice(0, 2).toUpperCase()}
+ </div>
+ )}
+ <div className="min-w-0 flex-1">
+ <p className="text-sm font-medium text-content truncate">{c.name}</p>
+ <p className="text-xs text-content-muted dark:text-gray-400">
+ {PROVIDER_LABELS[c.provider] ?? c.provider}
+ </p>
+ </div>
+ {fetching && fetchTarget?.external_id === c.external_id
+ ? <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin flex-shrink-0" />
+ : <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+ }
+ </button>
+ ))}
+ </div>
+ )
+ )}
 
-          {fetchError && <p className="text-sm text-red-600 dark:text-red-400">{fetchError}</p>}
+ {fetchError && <p className="text-sm text-red-600 dark:text-red-400">{fetchError}</p>}
 
-          {/* Field rows */}
-          {fetchData && (
-            <>
-              {/* Back link */}
-              <button onClick={() => { setFetchData(null); setFetchTarget(null) }}
-                className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-                Back to results
-              </button>
+ {/* Field rows */}
+ {fetchData && (
+ <>
+ {/* Back link */}
+ <button onClick={() => { setFetchData(null); setFetchTarget(null) }}
+ className="flex items-center gap-1.5 text-xs text-content-muted hover:text-accent transition-colors">
+ <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+ <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+ </svg>
+ Back to results
+ </button>
 
-              {/* Provider header */}
-              <div className="flex items-center gap-3">
-                {fetchData.photo_url && (
-                  <img src={fetchData.photo_url} alt="" className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
-                )}
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-gray-900 dark:text-white">{fetchData.name}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {PROVIDER_LABELS[fetchData.provider] ?? fetchData.provider}
-                  </p>
-                </div>
-              </div>
+ {/* Provider header */}
+ <div className="flex items-center gap-3">
+ {fetchData.photo_url && (
+ <img src={fetchData.photo_url} alt="" className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+ )}
+ <div className="min-w-0">
+ <p className="text-sm font-semibold text-content dark:text-white">{fetchData.name}</p>
+ <p className="text-xs text-content-muted dark:text-gray-400">
+ {PROVIDER_LABELS[fetchData.provider] ?? fetchData.provider}
+ </p>
+ </div>
+ </div>
 
-              {/* Field comparison rows */}
-              <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <div className="divide-y divide-gray-100 dark:divide-gray-800">
-                  {fields.map(fd => {
-                    const isSame = fd.proposed === fd.current
-                    const isOn = enabled.has(fd.key)
-                    return (
-                      <div key={fd.key} className={`flex items-start gap-3 px-4 py-3 ${isSame ? 'opacity-50' : ''}`}>
-                        <input type="checkbox"
-                          checked={isOn && !isSame}
-                          disabled={isSame}
-                          onChange={() => !isSame && toggle(fd.key)}
-                          className="mt-0.5 rounded border-gray-300 dark:border-gray-600 text-blue-600 flex-shrink-0"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-1">
-                            {fd.label}
-                          </p>
-                          {isSame ? (
-                            <p className={`text-sm text-gray-500 dark:text-gray-400 ${fd.multiline ? 'line-clamp-2' : 'truncate'}`}>
+ {/* Field comparison rows */}
+ <div className="rounded-xl border border-line overflow-hidden">
+ <div className="divide-y divide-gray-100 dark:divide-gray-800">
+ {fields.map(fd => {
+ const isSame = fd.proposed === fd.current
+ const isOn = enabled.has(fd.key)
+ return (
+ <div key={fd.key} className={`flex items-start gap-3 px-4 py-3 ${isSame ? 'opacity-50' : ''}`}>
+ <input type="checkbox"
+ checked={isOn && !isSame}
+ disabled={isSame}
+ onChange={() => !isSame && toggle(fd.key)}
+ className="mt-0.5 rounded border-line-strong text-blue-600 flex-shrink-0"
+ />
+ <div className="flex-1 min-w-0">
+ <p className="text-xs font-semibold uppercase tracking-wider text-content-subtle mb-1">
+ {fd.label}
+ </p>
+ {isSame ? (
+ <p className={`text-sm text-content-muted ${fd.multiline ? 'line-clamp-2' : 'truncate'}`}>
                               {fd.current || '(empty)'}
-                            </p>
-                          ) : (
-                            <div className="space-y-0.5">
-                              {fd.current && (
-                                <p className={`text-xs text-gray-400 dark:text-gray-500 line-through ${fd.multiline ? 'line-clamp-1' : 'truncate'}`}>
-                                  {fd.current}
-                                </p>
-                              )}
-                              <p className={`text-sm text-gray-800 dark:text-gray-200 ${fd.multiline ? 'line-clamp-3' : 'truncate'}`}>
+ </p>
+ ) : (
+ <div className="space-y-0.5">
+ {fd.current && (
+ <p className={`text-xs text-content-subtle line-through ${fd.multiline ? 'line-clamp-1' : 'truncate'}`}>
+ {fd.current}
+ </p>
+ )}
+ <p className={`text-sm text-content-strong ${fd.multiline ? 'line-clamp-3' : 'truncate'}`}>
                                 {fd.proposed}
                               </p>
                             </div>
@@ -456,21 +456,21 @@ function ContributorMetadataModal({ contributor, onClose, onApplied }: {
 
 function LibraryBooksList({ books, libraryId }: { books: Book[]; libraryId: string }) {
   const showReadBadges = localStorage.getItem('librarium:show_read_badges') !== 'false'
-  if (books.length === 0) {
-    return <p className="text-sm text-gray-400 dark:text-gray-500">No books by this contributor in the library yet.</p>
-  }
-  return (
-    <div className="grid grid-cols-[repeat(auto-fill,minmax(110px,1fr))] gap-3">
-      {books.map(b => (
-        <Link key={b.id} to={`/libraries/${libraryId}/books/${b.id}`} className="group flex flex-col gap-1.5">
-          <BookCover title={b.title} coverUrl={b.cover_url} className="w-full" readStatus={showReadBadges ? b.user_read_status : undefined} />
-          <p className="text-xs font-medium text-gray-900 dark:text-white line-clamp-2 leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors px-0.5">
-            {b.title}
-          </p>
-        </Link>
-      ))}
-    </div>
-  )
+ if (books.length === 0) {
+ return <p className="text-sm text-gray-400 dark:text-gray-500">No books by this contributor in the library yet.</p>
+ }
+ return (
+ <div className="grid grid-cols-[repeat(auto-fill,minmax(110px,1fr))] gap-3">
+ {books.map(b => (
+ <Link key={b.id} to={`/libraries/${libraryId}/books/${b.id}`} className="group flex flex-col gap-1.5">
+ <BookCover title={b.title} coverUrl={b.cover_url} className="w-full" readStatus={showReadBadges ? b.user_read_status : undefined} />
+ <p className="text-xs font-medium text-content line-clamp-2 leading-snug group-hover:text-accent transition-colors px-0.5">
+ {b.title}
+ </p>
+ </Link>
+ ))}
+ </div>
+ )
 }
 
 // ─── Bibliography grid ────────────────────────────────────────────────────────
@@ -478,19 +478,19 @@ function LibraryBooksList({ books, libraryId }: { books: Book[]; libraryId: stri
 const PREVIEW_COUNT = 12
 
 function WorksList({ works, libraryId, onDelete }: { works: ContributorWork[]; libraryId: string; onDelete: (id: string) => void }) {
-  const navigate = useNavigate()
-  const [showAll, setShowAll] = useState(false)
-  const visible = showAll ? works : works.slice(0, PREVIEW_COUNT)
+ const navigate = useNavigate()
+ const [showAll, setShowAll] = useState(false)
+ const visible = showAll ? works : works.slice(0, PREVIEW_COUNT)
 
-  if (works.length === 0) {
-    return <p className="text-sm text-gray-400 dark:text-gray-500">No bibliography entries yet. Use the refresh metadata button to enrich this contributor.</p>
-  }
+ if (works.length === 0) {
+ return <p className="text-sm text-gray-400 dark:text-gray-500">No bibliography entries yet. Use the refresh metadata button to enrich this contributor.</p>
+ }
 
-  return (
-    <div>
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(110px,1fr))] gap-3">
-        {visible.map(w => (
-          <div key={w.id} className={`group relative flex flex-col gap-1.5 ${w.in_library ? '' : 'opacity-60'}`}>
+ return (
+ <div>
+ <div className="grid grid-cols-[repeat(auto-fill,minmax(110px,1fr))] gap-3">
+ {visible.map(w => (
+ <div key={w.id} className={`group relative flex flex-col gap-1.5 ${w.in_library ? '' : 'opacity-60'}`}>
             {/* Cover */}
             <div className="relative aspect-[2/3] rounded-md overflow-hidden bg-gray-100 dark:bg-gray-800">
               {w.cover_url ? (
@@ -514,40 +514,40 @@ function WorksList({ works, libraryId, onDelete }: { works: ContributorWork[]; l
                     onClick={() => {
                       const isbn = w.isbn_13 || w.isbn_10
                       navigate(`/libraries/${libraryId}/books`, { state: { openAdd: true, isbn: isbn || '', title: w.title } })
-                    }}
-                    className="w-full text-xs font-medium bg-blue-600/90 text-white rounded px-1.5 py-1 hover:bg-blue-600 transition-colors"
-                  >
-                    Add
-                  </button>
-                )}
-                <button onClick={() => onDelete(w.id)}
-                  className="w-full text-xs text-white/80 hover:text-white transition-colors">
-                  Remove
-                </button>
-              </div>
-            </div>
-            {/* Title */}
-            <div className="min-w-0 px-0.5">
-              <p className="text-xs font-medium text-gray-900 dark:text-white line-clamp-2 leading-snug">
-                {w.in_library && w.library_book_id ? (
-                  <Link to={`/libraries/${libraryId}/books/${w.library_book_id}`}
-                    className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                    {w.title}
-                  </Link>
-                ) : w.title}
-              </p>
-              {w.publish_year && (
-                <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{w.publish_year}</p>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
+ }}
+ className="w-full text-xs font-medium bg-blue-600/90 text-white rounded px-1.5 py-1 hover:bg-blue-600 transition-colors"
+ >
+ Add
+ </button>
+ )}
+ <button onClick={() => onDelete(w.id)}
+ className="w-full text-xs text-white/80 hover:text-white transition-colors">
+ Remove
+ </button>
+ </div>
+ </div>
+ {/* Title */}
+ <div className="min-w-0 px-0.5">
+ <p className="text-xs font-medium text-content line-clamp-2 leading-snug">
+ {w.in_library && w.library_book_id ? (
+ <Link to={`/libraries/${libraryId}/books/${w.library_book_id}`}
+ className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+ {w.title}
+ </Link>
+ ) : w.title}
+ </p>
+ {w.publish_year && (
+ <p className="text-xs text-content-subtle mt-0.5">{w.publish_year}</p>
+ )}
+ </div>
+ </div>
+ ))}
+ </div>
 
-      {works.length > PREVIEW_COUNT && (
-        <button onClick={() => setShowAll(s => !s)}
-          className="mt-4 text-sm text-blue-600 dark:text-blue-400 hover:underline">
-          {showAll ? 'Show fewer' : `Show all ${works.length} works`}
+ {works.length > PREVIEW_COUNT && (
+ <button onClick={() => setShowAll(s => !s)}
+ className="mt-4 text-sm text-accent hover:underline">
+ {showAll ? 'Show fewer' : `Show all ${works.length} works`}
         </button>
       )}
     </div>
@@ -650,26 +650,26 @@ export default function ContributorPage() {
   if (contributor.external_ids?.hardcover)
     externalLinks.push({ label: 'Hardcover', url: `https://hardcover.app/authors/${contributor.external_ids.hardcover}` })
 
-  return (
-    <div className="p-8">
-      <div className="flex gap-8 items-start">
+ return (
+ <div className="p-8">
+ <div className="flex gap-8 items-start">
 
-        {/* ── Left sidebar ── */}
-        <div className="w-48 flex-shrink-0 sticky top-8 space-y-5">
+ {/* ── Left sidebar ── */}
+ <div className="w-48 flex-shrink-0 sticky top-8 space-y-5">
 
-          {/* Photo with upload overlay */}
-          <div className="relative group cursor-pointer"
-            onClick={() => !photoUploading && photoInputRef.current?.click()}>
-            <input ref={photoInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
-            {sidebarPhotoSrc ? (
-              <img
-                src={sidebarPhotoSrc}
-                alt={contributor.name}
-                className="w-full aspect-square rounded-xl object-cover"
-              />
-            ) : (
-              <div className="w-full aspect-square rounded-xl flex items-center justify-center bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-4xl font-bold">
-                {contributor.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
+ {/* Photo with upload overlay */}
+ <div className="relative group cursor-pointer"
+ onClick={() => !photoUploading && photoInputRef.current?.click()}>
+ <input ref={photoInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
+ {sidebarPhotoSrc ? (
+ <img
+ src={sidebarPhotoSrc}
+ alt={contributor.name}
+ className="w-full aspect-square rounded-xl object-cover"
+ />
+ ) : (
+ <div className="w-full aspect-square rounded-xl flex items-center justify-center bg-blue-100 dark:bg-blue-900/40 text-accent-strong text-4xl font-bold">
+ {contributor.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
               </div>
             )}
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/50 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity">
@@ -677,93 +677,92 @@ export default function ContributorPage() {
                 onClick={e => { e.stopPropagation(); photoInputRef.current?.click() }}
                 className="rounded-md bg-white/90 px-3 py-1.5 text-xs font-medium text-gray-900 hover:bg-white disabled:opacity-50 transition-colors">
                 {photoUploading ? 'Uploading…' : contributor.photo_url ? 'Change photo' : 'Add photo'}
-              </button>
-              {contributor.photo_url && !photoUploading && (
-                <button type="button"
-                  onClick={e => { e.stopPropagation(); handlePhotoDelete() }}
-                  className="rounded-md bg-white/90 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-white transition-colors">
-                  Remove
-                </button>
-              )}
-            </div>
-          </div>
+ </button>
+ {contributor.photo_url && !photoUploading && (
+ <button type="button"
+ onClick={e => { e.stopPropagation(); handlePhotoDelete() }}
+ className="rounded-md bg-white/90 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-surface-raised transition-colors">
+ Remove
+ </button>
+ )}
+ </div>
+ </div>
 
-          {/* Metadata facts */}
-          {(contributor.born_date || contributor.died_date || contributor.nationality) && (
-            <dl className="space-y-2.5">
-              {contributor.born_date && (
-                <div>
-                  <dt className="text-xs text-gray-400 dark:text-gray-500">Born</dt>
-                  <dd className="text-sm text-gray-700 dark:text-gray-300 mt-0.5">{formatYear(contributor.born_date)}</dd>
-                </div>
-              )}
-              {contributor.died_date && (
-                <div>
-                  <dt className="text-xs text-gray-400 dark:text-gray-500">Died</dt>
-                  <dd className="text-sm text-gray-700 dark:text-gray-300 mt-0.5">{formatYear(contributor.died_date)}</dd>
-                </div>
-              )}
-              {contributor.nationality && (
-                <div>
-                  <dt className="text-xs text-gray-400 dark:text-gray-500">Nationality</dt>
-                  <dd className="text-sm text-gray-700 dark:text-gray-300 mt-0.5">{contributor.nationality}</dd>
-                </div>
-              )}
-            </dl>
-          )}
+ {/* Metadata facts */}
+ {(contributor.born_date || contributor.died_date || contributor.nationality) && (
+ <dl className="space-y-2.5">
+ {contributor.born_date && (
+ <div>
+ <dt className="text-xs text-gray-400 dark:text-gray-500">Born</dt>
+ <dd className="text-sm text-content-secondary mt-0.5">{formatYear(contributor.born_date)}</dd>
+ </div>
+ )}
+ {contributor.died_date && (
+ <div>
+ <dt className="text-xs text-gray-400 dark:text-gray-500">Died</dt>
+ <dd className="text-sm text-content-secondary mt-0.5">{formatYear(contributor.died_date)}</dd>
+ </div>
+ )}
+ {contributor.nationality && (
+ <div>
+ <dt className="text-xs text-gray-400 dark:text-gray-500">Nationality</dt>
+ <dd className="text-sm text-content-secondary mt-0.5">{contributor.nationality}</dd>
+ </div>
+ )}
+ </dl>
+ )}
 
-          {/* External links */}
-          {externalLinks.length > 0 && (
-            <div className="space-y-1.5">
-              {externalLinks.map(l => (
-                <a key={l.label} href={l.url} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400 hover:underline">
-                  {l.label}
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                  </svg>
-                </a>
-              ))}
-            </div>
-          )}
-        </div>
+ {/* External links */}
+ {externalLinks.length > 0 && (
+ <div className="space-y-1.5">
+ {externalLinks.map(l => (
+ <a key={l.label} href={l.url} target="_blank" rel="noopener noreferrer"
+ className="flex items-center gap-1.5 text-xs text-accent hover:underline">
+ {l.label}
+ <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+ <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+ </svg>
+ </a>
+ ))}
+ </div>
+ )}
+ </div>
 
-        {/* ── Right main column ── */}
-        <div className="flex-1 min-w-0">
+ {/* ── Right main column ── */}
+ <div className="flex-1 min-w-0">
 
-          {/* Name row */}
-          <div className="flex items-start justify-between gap-3">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white leading-tight">
-              {contributor.name}
-            </h1>
-            <div className="flex items-center gap-1 flex-shrink-0">
-              <button onClick={() => setShowRename(true)} title="Rename"
-                className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-              </button>
-              <button onClick={() => setShowMetaModal(true)} title="Refresh metadata"
-                className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-              </button>
-            </div>
-          </div>
+ {/* Actions. The name sat here as a second h1, directly under the one the
+     sticky header already renders from the same crumb — see the note on
+     BookPage's title row for why the header's is the one that stays. */}
+ <div className="flex items-start justify-end gap-3">
+ <div className="flex items-center gap-1 flex-shrink-0">
+ <button onClick={() => setShowRename(true)} title="Rename"
+ className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-surface-inset transition-colors">
+ <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+ <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+ </svg>
+ </button>
+ <button onClick={() => setShowMetaModal(true)} title="Refresh metadata"
+ className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-surface-inset transition-colors">
+ <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+ <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+ </svg>
+ </button>
+ </div>
+ </div>
 
-          {/* Bio */}
-          {contributor.bio && (
-            <Section title="About">
-              <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
-                {contributor.bio}
-              </p>
-            </Section>
-          )}
+ {/* Bio */}
+ {contributor.bio && (
+ <Section title="About">
+ <p className="text-sm text-content-secondary whitespace-pre-wrap leading-relaxed">
+ {contributor.bio}
+ </p>
+ </Section>
+ )}
 
-          {/* Books in library */}
-          <Section
-            title={`Books in Library${contributor.books.length > 0 ? ` (${contributor.books.length})` : ''}`}
+ {/* Books in library */}
+ <Section
+ title={`Books in Library${contributor.books.length > 0 ? ` (${contributor.books.length})` : ''}`}
           >
             <LibraryBooksList books={contributor.books} libraryId={libraryId!} />
           </Section>

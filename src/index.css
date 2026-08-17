@@ -1,9 +1,348 @@
 @import "tailwindcss";
+@import "./styles/reference.css";
+
+/* ---------------------------------------------------------------------------
+   Typefaces
+   ---------------------------------------------------------------------------
+   Two families with one job each. Cormorant Garamond sets titles and headings;
+   Crimson Pro sets reading-length prose. Everything functional (labels, chips,
+   buttons, numbers) stays on the system sans stack, which keeps the serif from
+   becoming decoration.
+
+   Both are SIL OFL 1.1 and self-hosted: a font CDN is a third party watching
+   every page load, which a privacy-focused self-hosted app should not require.
+
+   Variable fonts, subset to Latin, Latin Extended-A/B and punctuation, since
+   author names carry accents well past ASCII. 1.4 MB of TTF became 114 KB of
+   woff2 with the weight axis intact. Regenerate with:
+     pyftsubset FONT.ttf --output-file=FONT.woff2 --flavor=woff2 \
+       --unicodes="U+0000-00FF,U+0100-017F,U+0180-024F,U+1E00-1EFF,U+2000-206F,..." \
+       --layout-features='kern,liga,clig,calt,onum,tnum,frac'
+--------------------------------------------------------------------------- */
+
+@font-face {
+  font-family: "Cormorant Garamond";
+  src: url("/fonts/CormorantGaramond.woff2") format("woff2-variations");
+  font-weight: 300 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Crimson Pro";
+  src: url("/fonts/CrimsonPro.woff2") format("woff2-variations");
+  font-weight: 200 900;
+  font-style: normal;
+  font-display: swap;
+}
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* ---------------------------------------------------------------------------
+   Semantic colour tokens
+   ---------------------------------------------------------------------------
+   Components name a role (bg-surface, text-content-muted, border-line) and the
+   role resolves per theme. Nothing outside this file names a raw palette shade.
+
+   Why not `dark:` utilities: that variant is binary, so it can express light and
+   dark and nothing else. Themes beyond those two have nowhere to live, and the
+   pairing has to be repeated at every call site, which is how the codebase ended
+   up with eight different dark values for `bg-gray-50`.
+
+   `@theme inline` emits the utility referencing our variable rather than a fixed
+   colour, so one class picks up whatever the active theme sets.
+
+   Values below are the colours already on screen. This layer is a refactor, not
+   a redesign; new themes come later and touch only the blocks at the bottom.
+--------------------------------------------------------------------------- */
+
+@theme inline {
+  /* Typefaces. `font-display` and `font-read` rather than overriding
+     font-sans, so the system stack stays the default for UI chrome. */
+  --font-display: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+  --font-read: "Crimson Pro", Georgia, "Times New Roman", serif;
+
+  /* Surfaces, back to front */
+  --color-surface:          var(--t-surface);
+  --color-surface-raised:   var(--t-surface-raised);
+  --color-surface-muted:    var(--t-surface-muted);
+  --color-surface-inset:    var(--t-surface-inset);
+  --color-surface-strong:   var(--t-surface-strong);
+
+  /* Content, most to least prominent */
+  --color-content:           var(--t-content);
+  --color-content-strong:    var(--t-content-strong);
+  --color-content-secondary: var(--t-content-secondary);
+  --color-content-tertiary:  var(--t-content-tertiary);
+  --color-content-muted:     var(--t-content-muted);
+  --color-content-subtle:    var(--t-content-subtle);
+  --color-content-faint:     var(--t-content-faint);
+
+  /* Hairlines */
+  --color-line:         var(--t-line);
+  --color-line-strong:  var(--t-line-strong);
+  --color-line-subtle:  var(--t-line-subtle);
+
+  /* Accent, kept separate from the semantic states below */
+  --color-accent:         var(--t-accent);
+  --color-accent-strong:  var(--t-accent-strong);
+  --color-accent-surface: var(--t-accent-surface);
+  --color-accent-line:    var(--t-accent-line);
+
+  /* Semantic states */
+  --color-danger:          var(--t-danger);
+  --color-danger-strong:   var(--t-danger-strong);
+  --color-danger-surface:  var(--t-danger-surface);
+  --color-danger-line:     var(--t-danger-line);
+
+  --color-success:         var(--t-success);
+  --color-success-strong:  var(--t-success-strong);
+  --color-success-surface: var(--t-success-surface);
+  --color-success-line:    var(--t-success-line);
+
+  --color-warning:         var(--t-warning);
+  --color-warning-strong:  var(--t-warning-strong);
+  --color-warning-surface: var(--t-warning-surface);
+  --color-warning-line:    var(--t-warning-line);
+}
+
 @layer base {
-  :root {
+  /* Themes.
+     ------------------------------------------------------------------------
+     These are the reference implementation's palettes, not the colours the
+     client shipped before the redesign. The earlier token work deliberately
+     kept the old values so the mechanical conversion changed nothing on screen;
+     that job is finished, and holding onto them afterwards is what made the app
+     draw the mockup's shapes in the old blue and grey.
+
+     Each theme names sixteen colours, which is what the reference uses. The
+     rest of our token set is derived from those with color-mix rather than
+     hand-picked, so a theme is sixteen decisions instead of thirty-one, and a
+     tweak to an accent carries through everything built on it.
+
+     Deriving toward --t-content works in both directions without a special
+     case: on a dark theme the content colour is light, so mixing brightens; on
+     a light theme it is near-black, so the same expression darkens. */
+
+  :root,
+  [data-theme="paper"] {
     color-scheme: light;
+
+    --r-bg:        #f7f4ec;
+    --r-bg-raise:  #fffdf7;
+    --r-card:      #fffdf7;
+    --r-text:      #1d1b16;
+    --r-text-2:    #56514a;
+    --r-text-3:    #8b857b;
+    --r-line:      rgb(29 27 22 / 0.10);
+    --r-line-2:    rgb(29 27 22 / 0.18);
+    --r-accent:    #4b53c9;
+    --r-accent-2:  #343bab;
+    --r-accent-sf: rgb(75 83 201 / 0.12);
+    --r-good:      #2f8a63;
+    --r-warn:      #b3701f;
+    --r-bad:       #b4474c;
+    --r-shadow:    rgb(29 27 22 / 0.14);
+  }
+
+  /* `.dark` is listed alongside the attribute because roughly 980 `dark:`
+     utilities have not been converted yet and still key off the class. When
+     that count reaches zero the `.dark` selector here can go. */
+  [data-theme="ink"],
+  .dark {
+    color-scheme: dark;
+
+    --r-bg:        #0c0d12;
+    --r-bg-raise:  #16181f;
+    --r-card:      #1b1d25;
+    --r-text:      #f1ede2;
+    --r-text-2:    #b9b3a4;
+    --r-text-3:    #6e6a5f;
+    --r-line:      rgb(255 255 255 / 0.07);
+    --r-line-2:    rgb(255 255 255 / 0.13);
+    --r-accent:    #8089ff;
+    --r-accent-2:  #aab1ff;
+    --r-accent-sf: rgb(128 137 255 / 0.18);
+    --r-good:      #7bd6a8;
+    --r-warn:      #ffb866;
+    --r-bad:       #ff8a8a;
+    --r-shadow:    rgb(0 0 0 / 0.5);
+  }
+
+  [data-theme="sepia"] {
+    color-scheme: dark;
+
+    --r-bg:        #1a1512;
+    --r-bg-raise:  #241d18;
+    --r-card:      #2a221c;
+    --r-text:      #f0e4d4;
+    --r-text-2:    #c2ae97;
+    --r-text-3:    #877661;
+    --r-line:      rgb(240 228 212 / 0.08);
+    --r-line-2:    rgb(240 228 212 / 0.15);
+    --r-accent:    #d9a441;
+    --r-accent-2:  #edbe63;
+    --r-accent-sf: rgb(217 164 65 / 0.16);
+    --r-good:      #8fbf7a;
+    --r-warn:      #e0954a;
+    --r-bad:       #d97b6c;
+    --r-shadow:    rgb(0 0 0 / 0.55);
+  }
+
+  [data-theme="nocturne"] {
+    color-scheme: dark;
+
+    --r-bg:        #0a1018;
+    --r-bg-raise:  #111b26;
+    --r-card:      #14202d;
+    --r-text:      #e4eef5;
+    --r-text-2:    #9fb3c2;
+    --r-text-3:    #607585;
+    --r-line:      rgb(228 238 245 / 0.07);
+    --r-line-2:    rgb(228 238 245 / 0.14);
+    --r-accent:    #56b6d4;
+    --r-accent-2:  #85d3ea;
+    --r-accent-sf: rgb(86 182 212 / 0.16);
+    --r-good:      #6fcf9f;
+    --r-warn:      #e8b268;
+    --r-bad:       #ef8a8a;
+    --r-shadow:    rgb(0 0 0 / 0.55);
+  }
+
+  /* The token set, derived once from whichever palette is active above.
+     Declared on :root so it recomputes when a [data-theme] block changes the
+     --r-* values underneath it. */
+  :root {
+    --t-surface:         var(--r-bg-raise);
+    --t-surface-raised:  var(--r-card);
+    --t-surface-muted:   var(--r-bg);
+    --t-surface-inset:   color-mix(in srgb, var(--r-text) 6%, var(--r-bg-raise));
+    --t-surface-strong:  color-mix(in srgb, var(--r-text) 13%, var(--r-bg-raise));
+
+    --t-content:           var(--r-text);
+    --t-content-strong:    var(--r-text);
+    --t-content-secondary: var(--r-text-2);
+    --t-content-tertiary:  var(--r-text-3);
+    --t-content-muted:     var(--r-text-3);
+    --t-content-subtle:    color-mix(in srgb, var(--r-text-3) 75%, var(--r-bg));
+    --t-content-faint:     color-mix(in srgb, var(--r-text-3) 50%, var(--r-bg));
+
+    --t-line:        var(--r-line);
+    --t-line-strong: var(--r-line-2);
+    --t-line-subtle: color-mix(in srgb, var(--r-line) 60%, transparent);
+
+    --t-accent:         var(--r-accent);
+    --t-accent-strong:  var(--r-accent-2);
+    --t-accent-surface: var(--r-accent-sf);
+    --t-accent-line:    color-mix(in srgb, var(--r-accent) 40%, transparent);
+
+    --t-danger:         var(--r-bad);
+    --t-danger-strong:  color-mix(in srgb, var(--r-bad) 78%, var(--r-text));
+    --t-danger-surface: color-mix(in srgb, var(--r-bad) 13%, transparent);
+    --t-danger-line:    color-mix(in srgb, var(--r-bad) 35%, transparent);
+
+    --t-success:         var(--r-good);
+    --t-success-strong:  color-mix(in srgb, var(--r-good) 78%, var(--r-text));
+    --t-success-surface: color-mix(in srgb, var(--r-good) 13%, transparent);
+    --t-success-line:    color-mix(in srgb, var(--r-good) 35%, transparent);
+
+    --t-warning:         var(--r-warn);
+    --t-warning-strong:  color-mix(in srgb, var(--r-warn) 78%, var(--r-text));
+    --t-warning-surface: color-mix(in srgb, var(--r-warn) 13%, transparent);
+    --t-warning-line:    color-mix(in srgb, var(--r-warn) 35%, transparent);
+  }
+
+  /* Aliases for the ported reference CSS, which names its colours --bg and
+     --text-2. They point at the same palette the tokens are built from, so the
+     ported components and the app's own utilities cannot disagree.
+
+     --gold and --warn are one token: the reference gives them separate hexes
+     but they sit within a few degrees of each other in every theme, and one
+     token that is right beats two that drift apart. */
+  :root {
+    --bg:        var(--r-bg);
+    --bg-raise:  var(--r-bg-raise);
+    --card:      var(--r-card);
+    --text:      var(--r-text);
+    --text-2:    var(--r-text-2);
+    --text-3:    var(--r-text-3);
+    --line:      var(--r-line);
+    --line-2:    var(--r-line-2);
+    --accent:    var(--r-accent);
+    --accent-2:  var(--r-accent-2);
+    --accent-sf: var(--r-accent-sf);
+    --good:      var(--r-good);
+    --warn:      var(--r-warn);
+    --gold:      var(--r-warn);
+    --bad:       var(--r-bad);
+    --shadow:    var(--r-shadow);
+  }
+
+  /* The reference sets 14px as its base, and the density of every screen in it
+     follows from that. Applied to body rather than html so Tailwind's rem-based
+     utilities keep their own scale; only text that carries no explicit size
+     picks this up. */
+  body {
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+
+/* ---------------------------------------------------------------------------
+   Shell layout
+   ---------------------------------------------------------------------------
+   The shell measures ITSELF rather than the viewport. `lg:` asks how wide the
+   browser window is, which is the wrong question: the same client renders in a
+   split pane, an iPad slide-over and a desktop window, and only the container's
+   width decides whether a sidebar fits.
+
+   One breakpoint, `@container shell (min-width: 64rem)`, replaces the `lg:`
+   variants in Layout. Below it the sidebar is a drawer over the content; above
+   it the drawer styles are unwound and it sits inline.
+--------------------------------------------------------------------------- */
+
+@layer components {
+  .app-shell {
+    container-type: inline-size;
+    container-name: shell;
+  }
+
+  /* Placeholder tints for the many books with no cover art. The shape of the
+     cover itself comes from the ported .lb-cover; only the four grounds live
+     here, because they are drawn from our accent tokens rather than the fixed
+     hexes the reference uses inline. */
+  .cover-a { background: linear-gradient(160deg, var(--color-accent),  color-mix(in srgb, var(--color-accent) 42%,  var(--color-surface-raised))); }
+  .cover-g { background: linear-gradient(160deg, var(--color-warning), color-mix(in srgb, var(--color-warning) 40%, var(--color-surface-raised))); }
+  .cover-s { background: linear-gradient(160deg, var(--color-success), color-mix(in srgb, var(--color-success) 40%, var(--color-surface-raised))); }
+  .cover-r { background: linear-gradient(160deg, var(--color-danger),  color-mix(in srgb, var(--color-danger) 40%,  var(--color-surface-raised))); }
+
+  /* Narrow is the default, so a container query is never needed to reach it. */
+  .app-shell-body { display: flex; flex-direction: column; min-height: 0; flex: 1 1 0%; }
+  .app-topbar     { display: flex; }
+  .app-sidebar    { position: fixed; inset-block: 0; left: 0; z-index: 40; width: 16rem; }
+  .app-scrim      { display: block; }
+
+  @container shell (min-width: 64rem) {
+    .app-shell-body { flex-direction: row; }
+    .app-topbar     { display: none; }
+    .app-scrim      { display: none; }
+    .app-sidebar {
+      position: static;
+      /* 238px is the reference rail's width. At 14rem the rail was 14px
+         narrower than the design, which the account block paid for by
+         truncating the email. */
+      width: 238px;
+      transition: none;
+
+      /* Tailwind v4 compiles -translate-x-full to the standalone `translate`
+         property, not `transform`. Neutralising only `transform` leaves the
+         drawer sitting at -100% with a computed transform of "none", which
+         looks like the sidebar failing to render at all. Both are reset here
+         so the utility cannot win whichever property it uses. */
+      translate: none !important;
+      transform: none !important;
+    }
   }
 }

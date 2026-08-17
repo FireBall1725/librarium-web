@@ -159,13 +159,13 @@ function unifiedToJob(u: UnifiedJobRow): Job {
 
 function TypeBadge({ type }: { type: JobType }) {
   const cfg: Record<JobType, { label: string; cls: string }> = {
-    import:               { label: 'Import',         cls: 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300' },
+    import:               { label: 'Import',         cls: 'bg-accent-surface text-accent-strong' },
     metadata:             { label: 'Metadata',       cls: 'bg-sky-100 dark:bg-sky-900/40 text-sky-700 dark:text-sky-300' },
     cover:                { label: 'Covers',         cls: 'bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300' },
     cover_backfill:       { label: 'Cover backfill', cls: 'bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300' },
-    ai_suggestions:       { label: 'Suggestions',    cls: 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300' },
-    ai_metadata_proposal: { label: 'AI proposal',    cls: 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300' },
-    history_prune:        { label: 'Cleanup',        cls: 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300' },
+    ai_suggestions:       { label: 'Suggestions',    cls: 'bg-accent-surface text-accent' },
+    ai_metadata_proposal: { label: 'AI proposal',    cls: 'bg-accent-surface text-accent-strong' },
+    history_prune:        { label: 'Cleanup',        cls: 'bg-surface-inset text-content-tertiary ' },
   }
   const { label, cls } = cfg[type] ?? cfg.import
   return (
@@ -192,16 +192,16 @@ function formatDurationSec(startIso: string, endIso?: string): string | null {
 
 function StatusBadge({ status }: { status: JobStatus }) {
   const cfg: Record<JobStatus, { label: string; cls: string; spin?: boolean }> = {
-    pending:    { label: 'Queued',     cls: 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300' },
-    processing: { label: 'Processing', cls: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300', spin: true },
-    done:       { label: 'Done',       cls: 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300' },
-    failed:     { label: 'Failed',     cls: 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300' },
-    cancelled:  { label: 'Cancelled',  cls: 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400' },
+    pending:    { label: 'Queued',     cls: 'bg-warning-surface text-warning ' },
+    processing: { label: 'Processing', cls: 'bg-accent-surface text-accent ', spin: true },
+    done:       { label: 'Done',       cls: 'bg-success-surface text-success ' },
+    failed:     { label: 'Failed',     cls: 'bg-danger-surface text-danger ' },
+    cancelled:  { label: 'Cancelled',  cls: 'bg-surface-inset text-content-muted ' },
   }
   const { label, cls, spin } = cfg[status] ?? cfg.failed
   return (
     <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${cls}`}>
-      {spin && <span className="w-2 h-2 rounded-full border border-blue-500 border-t-transparent animate-spin" />}
+      {spin && <span className="w-2 h-2 rounded-full border border-accent border-t-transparent animate-spin" />}
       {label}
     </span>
   )
@@ -209,10 +209,10 @@ function StatusBadge({ status }: { status: JobStatus }) {
 
 function ItemStatusDot({ status }: { status: ImportItem['status'] }) {
   const cls: Record<ImportItem['status'], string> = {
-    pending: 'bg-gray-300 dark:bg-gray-600',
-    done:    'bg-green-500',
-    skipped: 'bg-amber-400',
-    failed:  'bg-red-500',
+    pending: 'bg-line-strong',
+    done:    'bg-success',
+    skipped: 'bg-warning',
+    failed:  'bg-danger',
   }
   return <span className={`inline-block w-2 h-2 rounded-full flex-shrink-0 ${cls[status]}`} />
 }
@@ -263,43 +263,43 @@ function AICallsPanel({ jobID }: { jobID: string }) {
   const totalTokens = runs.reduce((s, r) => s + (r.tokens_in || 0) + (r.tokens_out || 0), 0)
 
   return (
-    <div className="border-t border-gray-100 dark:border-gray-800 px-5 py-3">
+    <div className="border-t border-line-subtle px-5 py-3">
       <div className="flex items-center gap-3 mb-2">
-        <span className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 font-semibold">AI calls</span>
-        <span className="text-xs text-gray-400 dark:text-gray-500">{runs.length} · {totalTokens.toLocaleString()} tokens · ${totalCost.toFixed(4)}</span>
+        <span className="text-xs uppercase tracking-wide text-content-muted font-semibold">AI calls</span>
+        <span className="text-xs text-content-subtle">{runs.length} · {totalTokens.toLocaleString()} tokens · ${totalCost.toFixed(4)}</span>
       </div>
-      <div className="divide-y divide-gray-100 dark:divide-gray-800">
+      <div className="divide-y divide-line-subtle">
         {runs.map(r => (
           <div key={r.id}>
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); setExpanded(prev => prev === r.id ? null : r.id) }}
-              className="w-full flex items-center gap-3 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-800 -mx-2 px-2 rounded">
+              className="w-full flex items-center gap-3 py-2 text-left text-sm hover:bg-surface-muted -mx-2 px-2 rounded">
               <ItemStatusDot status={r.status === 'completed' ? 'done' : r.status === 'failed' ? 'failed' : 'pending'} />
-              <span className="text-gray-700 dark:text-gray-300 font-medium font-mono text-xs">{r.kind}</span>
-              <span className="text-xs text-gray-400 dark:text-gray-500 flex-1 truncate">{r.target_type} {r.target_id.slice(0, 8)}</span>
-              <span className="text-xs text-gray-400 dark:text-gray-500">{r.tokens_in + r.tokens_out} tok</span>
-              <span className="text-xs text-gray-400 dark:text-gray-500">${r.estimated_cost_usd.toFixed(4)}</span>
-              <svg className={`w-3.5 h-3.5 text-gray-400 transition-transform ${expanded === r.id ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <span className="text-content-secondary font-medium font-mono text-xs">{r.kind}</span>
+              <span className="text-xs text-content-subtle flex-1 truncate">{r.target_type} {r.target_id.slice(0, 8)}</span>
+              <span className="text-xs text-content-subtle">{r.tokens_in + r.tokens_out} tok</span>
+              <span className="text-xs text-content-subtle">${r.estimated_cost_usd.toFixed(4)}</span>
+              <svg className={`w-3.5 h-3.5 text-content-muted transition-transform ${expanded === r.id ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </button>
             {expanded === r.id && (
               <div className="pb-3 space-y-2">
                 {r.error && (
-                  <div className="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 px-3 py-2 rounded">
+                  <div className="text-xs text-danger bg-danger-surface px-3 py-2 rounded">
                     {r.error}
                   </div>
                 )}
                 <details className="text-xs">
-                  <summary className="cursor-pointer text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">Prompt ({r.prompt.length} chars)</summary>
-                  <pre className="mt-1 whitespace-pre-wrap font-mono text-[11px] bg-gray-50 dark:bg-gray-900 px-3 py-2 rounded border border-gray-200 dark:border-gray-700 max-h-96 overflow-y-auto">{r.prompt}</pre>
+                  <summary className="cursor-pointer text-content-muted hover:text-content-secondary">Prompt ({r.prompt.length} chars)</summary>
+                  <pre className="mt-1 whitespace-pre-wrap font-mono text-[11px] bg-surface-muted px-3 py-2 rounded border border-line max-h-96 overflow-y-auto">{r.prompt}</pre>
                 </details>
                 <details className="text-xs" open>
-                  <summary className="cursor-pointer text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">Response ({r.response_text.length} chars)</summary>
-                  <pre className="mt-1 whitespace-pre-wrap font-mono text-[11px] bg-gray-50 dark:bg-gray-900 px-3 py-2 rounded border border-gray-200 dark:border-gray-700 max-h-96 overflow-y-auto">{r.response_text}</pre>
+                  <summary className="cursor-pointer text-content-muted hover:text-content-secondary">Response ({r.response_text.length} chars)</summary>
+                  <pre className="mt-1 whitespace-pre-wrap font-mono text-[11px] bg-surface-muted px-3 py-2 rounded border border-line max-h-96 overflow-y-auto">{r.response_text}</pre>
                 </details>
-                <div className="text-[11px] text-gray-400 dark:text-gray-500 font-mono">
+                <div className="text-[11px] text-content-subtle font-mono">
                   {r.provider_type}/{r.model_id} · started {formatDate(r.started_at)}{r.finished_at ? ` · finished ${formatDate(r.finished_at)}` : ''}
                 </div>
               </div>
@@ -437,10 +437,10 @@ function JobRow({
     <Fragment>
       <tr
         onClick={toggleExpand}
-        className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+        className="hover:bg-surface-muted transition-colors cursor-pointer"
       >
         <td className="pl-4 pr-1 py-3 w-8">
-          <svg className={`w-4 h-4 text-gray-400 transition-transform ${expanded ? 'rotate-90' : ''}`}
+          <svg className={`w-4 h-4 text-content-muted transition-transform ${expanded ? 'rotate-90' : ''}`}
             fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
@@ -449,13 +449,13 @@ function JobRow({
         <td className="px-3 py-3 whitespace-nowrap"><StatusBadge status={job.status} /></td>
         <td className="px-3 py-3 min-w-0">
           <div className="flex flex-col">
-            <span className="text-sm font-medium text-gray-900 dark:text-white truncate">{sourceLabel}</span>
-            <span className="text-xs text-gray-400 dark:text-gray-500 font-mono">{job.id.slice(0, 8)}</span>
+            <span className="text-sm font-medium text-content truncate">{sourceLabel}</span>
+            <span className="text-xs text-content-subtle font-mono">{job.id.slice(0, 8)}</span>
           </div>
         </td>
         <td className="px-3 py-3 min-w-0">
           {isHistoryPrune ? (
-            <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+            <div className="flex items-center gap-3 text-xs text-content-muted">
               <span className="tabular-nums">
                 {job.total_rows} record{job.total_rows === 1 ? '' : 's'} removed
               </span>
@@ -463,22 +463,22 @@ function JobRow({
                 <span className="tabular-nums">{formatDurationSec(job.created_at, job.finished_at)}</span>
               )}
               {job.run_error && (
-                <span className="text-red-600 dark:text-red-400 truncate max-w-xs" title={job.run_error}>
+                <span className="text-danger truncate max-w-xs" title={job.run_error}>
                   {job.run_error}
                 </span>
               )}
             </div>
           ) : (isAISuggestions || isAIMetadata) ? (
             isActive ? (
-              <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                <span className="inline-block w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+              <div className="flex items-center gap-2 text-xs text-content-muted">
+                <span className="inline-block w-2 h-2 rounded-full bg-accent animate-pulse" />
                 <span>Running…</span>
                 {job.provider_type && (
-                  <span className="text-gray-400">{job.provider_type}{job.model_id ? ` (${job.model_id})` : ''}</span>
+                  <span className="text-content-muted">{job.provider_type}{job.model_id ? ` (${job.model_id})` : ''}</span>
                 )}
               </div>
             ) : (
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-gray-500 dark:text-gray-400">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-content-muted">
                 {job.provider_type && (
                   <span>{job.provider_type}{job.model_id ? ` (${job.model_id})` : ''}</span>
                 )}
@@ -494,7 +494,7 @@ function JobRow({
                   <span className="tabular-nums">{formatDurationSec(job.created_at, job.finished_at)}</span>
                 )}
                 {job.run_error && (
-                  <span className="text-red-600 dark:text-red-400 truncate max-w-xs" title={job.run_error}>
+                  <span className="text-danger truncate max-w-xs" title={job.run_error}>
                     {job.run_error}
                   </span>
                 )}
@@ -508,44 +508,44 @@ function JobRow({
               const pct = job.total_rows > 0 ? Math.round((handled / job.total_rows) * 100) : 0
               return (
                 <div className="flex items-center gap-2">
-                  <div className="flex-1 h-1.5 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden max-w-xs">
-                    <div className="h-full rounded-full bg-blue-500 transition-all duration-500"
+                  <div className="flex-1 h-1.5 rounded-full bg-surface-inset overflow-hidden max-w-xs">
+                    <div className="h-full rounded-full bg-accent transition-all duration-500"
                       style={{ width: `${pct}%` }} />
                   </div>
-                  <span className="text-xs text-gray-400 tabular-nums whitespace-nowrap">
+                  <span className="text-xs text-content-muted tabular-nums whitespace-nowrap">
                     {handled}/{job.total_rows}
                   </span>
                 </div>
               )
             })()
           ) : (
-            <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+            <div className="flex items-center gap-3 text-xs text-content-muted">
               <span>{job.total_rows} {isEnrichment ? 'books' : 'rows'}</span>
               {successRows !== null && successRows > 0 && (
-                <span className="text-green-600 dark:text-green-400">
+                <span className="text-success">
                   {successRows} {isEnrichment ? 'updated' : 'added'}
                 </span>
               )}
-              {job.skipped_rows > 0 && <span className="text-amber-600 dark:text-amber-400">{job.skipped_rows} skipped</span>}
-              {job.failed_rows > 0 && <span className="text-red-600 dark:text-red-400">{job.failed_rows} failed</span>}
+              {job.skipped_rows > 0 && <span className="text-warning">{job.skipped_rows} skipped</span>}
+              {job.failed_rows > 0 && <span className="text-danger">{job.failed_rows} failed</span>}
             </div>
           )}
         </td>
-        <td className="px-3 py-3 text-xs text-gray-400 dark:text-gray-500 tabular-nums whitespace-nowrap">
+        <td className="px-3 py-3 text-xs text-content-subtle tabular-nums whitespace-nowrap">
           {formatDate(job.created_at)}
         </td>
         <td className="pl-3 pr-4 py-3" onClick={e => e.stopPropagation()}>
           <div className="flex items-center gap-3 justify-end">
             {canCancel && (
               <button onClick={handleCancel} disabled={cancelling}
-                className="text-xs text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 disabled:opacity-50 transition-colors"
+                className="text-xs text-content-muted hover:text-danger disabled:opacity-50 transition-colors"
                 title="Cancel job">
                 {cancelling ? '…' : 'Cancel'}
               </button>
             )}
             {canDelete && (
               <button onClick={handleDelete} disabled={deleting}
-                className="text-xs text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 disabled:opacity-50 transition-colors"
+                className="text-xs text-content-muted hover:text-danger disabled:opacity-50 transition-colors"
                 title="Delete job">
                 {deleting ? '…' : 'Delete'}
               </button>
@@ -554,8 +554,8 @@ function JobRow({
         </td>
       </tr>
       {expanded && (
-        <tr className="bg-gray-50 dark:bg-gray-900/50">
-          <td colSpan={7} className="border-b border-gray-100 dark:border-gray-800 p-0">
+        <tr className="bg-surface-muted">
+          <td colSpan={7} className="border-b border-line-subtle p-0">
           {isAISuggestions ? (
             <div className="px-5 py-4">
               <RunDetailPanel
@@ -571,52 +571,52 @@ function JobRow({
               />
             </div>
           ) : isHistoryPrune ? (
-            <div className="px-5 py-4 text-sm text-gray-600 dark:text-gray-400 space-y-1">
+            <div className="px-5 py-4 text-sm text-content-tertiary space-y-1">
               <p>
                 Deleted {job.jobs_deleted ?? 0} finished job{(job.jobs_deleted ?? 0) === 1 ? '' : 's'} (with their
                 event logs and per-row items) and {job.ai_runs_deleted ?? 0} AI call
                 record{(job.ai_runs_deleted ?? 0) === 1 ? '' : 's'}.
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-500">
+              <p className="text-xs text-content-muted">
                 Retention window is set on the Job history cleanup settings page.
               </p>
               {job.run_error && (
-                <p className="text-xs text-red-600 dark:text-red-400">{job.run_error}</p>
+                <p className="text-xs text-danger">{job.run_error}</p>
               )}
             </div>
           ) : isCoverBackfill ? (
-            <div className="px-5 py-4 text-sm text-gray-600 dark:text-gray-400 space-y-1">
+            <div className="px-5 py-4 text-sm text-content-tertiary space-y-1">
               <p>
                 Enumerated {job.total_rows} book{job.total_rows === 1 ? '' : 's'} missing covers and dispatched cover-only enrichment batches.
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-500">
+              <p className="text-xs text-content-muted">
                 Per-book progress lives on the child Metadata rows above/below.
               </p>
               {job.run_error && (
-                <p className="text-xs text-red-600 dark:text-red-400">{job.run_error}</p>
+                <p className="text-xs text-danger">{job.run_error}</p>
               )}
             </div>
           ) : loadingItems ? (
-            <div className="flex items-center justify-center py-8 text-sm text-gray-400 dark:text-gray-500">
-              <div className="w-4 h-4 rounded-full border-2 border-blue-500 border-t-transparent animate-spin mr-2" />
+            <div className="flex items-center justify-center py-8 text-sm text-content-subtle">
+              <div className="w-4 h-4 rounded-full border-2 border-accent border-t-transparent animate-spin mr-2" />
               Loading…
             </div>
           ) : isEnrichment ? (
             <>
               {enrichItems && enrichItems.length > 0 ? (
-                <div className="divide-y divide-gray-100 dark:divide-gray-800">
+                <div className="divide-y divide-line-subtle">
                   {enrichItems.map(item => (
                     <div key={item.id} className="flex items-start gap-3 px-5 py-2.5 text-sm">
                       <ItemStatusDot status={item.status} />
                       <div className="flex-1 min-w-0">
-                        <span className="text-gray-800 dark:text-gray-200 font-medium">
-                          {item.book_title || <span className="text-gray-400 italic font-mono text-xs">{item.book_id?.slice(0, 8) ?? 'Unknown'}</span>}
+                        <span className="text-content-strong font-medium">
+                          {item.book_title || <span className="text-content-muted italic font-mono text-xs">{item.book_id?.slice(0, 8) ?? 'Unknown'}</span>}
                         </span>
                         {item.message && (
                           <p className={`text-xs mt-0.5 ${
-                            item.status === 'failed' ? 'text-red-600 dark:text-red-400'
-                              : item.status === 'skipped' ? 'text-amber-600 dark:text-amber-400'
-                              : 'text-gray-400 dark:text-gray-500'
+                            item.status === 'failed' ? 'text-danger'
+                              : item.status === 'skipped' ? 'text-warning'
+                              : 'text-content-muted'
                           }`}>
                             {item.message}
                           </p>
@@ -627,7 +627,7 @@ function JobRow({
                           to={job.library_id
                             ? `/libraries/${job.library_id}/books/${item.book_id}`
                             : `/books/${item.book_id}`}
-                          className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex-shrink-0"
+                          className="text-xs text-accent hover:underline flex-shrink-0"
                           onClick={e => e.stopPropagation()}
                         >
                           View
@@ -637,28 +637,28 @@ function JobRow({
                   ))}
                 </div>
               ) : (
-                <p className="px-5 py-4 text-sm text-gray-400 dark:text-gray-500">No items.</p>
+                <p className="px-5 py-4 text-sm text-content-subtle">No items.</p>
               )}
               <AICallsPanel jobID={job.id} />
             </>
           ) : items && items.length > 0 ? (
-            <div className="divide-y divide-gray-100 dark:divide-gray-800">
+            <div className="divide-y divide-line-subtle">
               {items.map(item => (
                 <div key={item.id} className="flex items-start gap-3 px-5 py-2.5 text-sm">
-                  <span className="text-xs tabular-nums text-gray-400 dark:text-gray-500 w-8 flex-shrink-0 pt-0.5 text-right">
+                  <span className="text-xs tabular-nums text-content-subtle w-8 flex-shrink-0 pt-0.5 text-right">
                     {item.row_number}
                   </span>
                   <ItemStatusDot status={item.status} />
                   <div className="flex-1 min-w-0">
-                    <span className="text-gray-800 dark:text-gray-200 font-medium">
-                      {item.title || <span className="text-gray-400 italic">Untitled</span>}
+                    <span className="text-content-strong font-medium">
+                      {item.title || <span className="text-content-muted italic">Untitled</span>}
                     </span>
-                    {item.isbn && <span className="ml-2 text-xs text-gray-400 font-mono">{item.isbn}</span>}
+                    {item.isbn && <span className="ml-2 text-xs text-content-muted font-mono">{item.isbn}</span>}
                     {item.message && (
                       <p className={`text-xs mt-0.5 ${
-                        item.status === 'failed' ? 'text-red-600 dark:text-red-400'
-                          : item.status === 'skipped' ? 'text-amber-600 dark:text-amber-400'
-                          : 'text-gray-400 dark:text-gray-500'
+                        item.status === 'failed' ? 'text-danger'
+                          : item.status === 'skipped' ? 'text-warning'
+                          : 'text-content-muted'
                       }`}>
                         {item.message}
                       </p>
@@ -667,7 +667,7 @@ function JobRow({
                   {item.book_id && (
                     <Link
                       to={`/libraries/${job.library_id}/books/${item.book_id}`}
-                      className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex-shrink-0"
+                      className="text-xs text-accent hover:underline flex-shrink-0"
                       onClick={e => e.stopPropagation()}
                     >
                       View
@@ -677,7 +677,7 @@ function JobRow({
               ))}
             </div>
           ) : (
-            <p className="px-5 py-4 text-sm text-gray-400 dark:text-gray-500">No items.</p>
+            <p className="px-5 py-4 text-sm text-content-subtle">No items.</p>
           )}
           </td>
         </tr>
@@ -790,8 +790,8 @@ export default function JobsHistoryPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20 text-gray-400 dark:text-gray-500">
-        <div className="w-5 h-5 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+      <div className="flex items-center justify-center py-20 text-content-subtle">
+        <div className="w-5 h-5 rounded-full border-2 border-accent border-t-transparent animate-spin" />
       </div>
     )
   }
@@ -802,15 +802,15 @@ export default function JobsHistoryPage() {
         title="Job history"
         description="Every job run across every kind, newest first."
         breadcrumbs={[
-          { label: 'Settings', to: '/admin/settings' },
-          { label: 'Jobs', to: '/admin/settings/jobs' },
+          { label: 'Settings', to: '/settings' },
+          { label: 'Jobs', to: '/settings/jobs' },
           { label: 'History' },
         ]}
         actions={hasFinished ? (
           <button
             onClick={handleClearFinished}
             disabled={clearingAll}
-            className="rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:border-red-400 hover:text-red-600 dark:hover:border-red-500 dark:hover:text-red-400 disabled:opacity-50 transition-colors"
+            className="rounded-lg border border-line-strong px-3 py-2 text-sm font-medium text-content-tertiary hover:border-danger-line hover:text-danger dark:hover:border-danger disabled:opacity-50 transition-colors"
           >
             {clearingAll ? 'Clearing…' : 'Clear finished'}
           </button>
@@ -824,7 +824,7 @@ export default function JobsHistoryPage() {
       <div className="max-w-7xl px-8 py-8">
 
       {error && (
-        <div className="mb-6 rounded-lg bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-400">
+        <div className="mb-6 rounded-lg bg-danger-surface border border-danger-line px-4 py-3 text-sm text-danger-strong">
           {error}
         </div>
       )}
@@ -832,9 +832,9 @@ export default function JobsHistoryPage() {
       {/* Filter row */}
       <div className="flex flex-wrap items-center gap-3 mb-4">
         <label className="flex items-center gap-2 text-sm">
-          <span className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Type</span>
+          <span className="text-xs uppercase tracking-wide text-content-muted">Type</span>
           <select value={kindFilter} onChange={e => setKindFilter(e.target.value)}
-            className="rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-2 py-1 text-sm">
+            className="lb-field">
             <option value="">All</option>
             <option value="import">Import</option>
             <option value="metadata">Metadata</option>
@@ -846,9 +846,9 @@ export default function JobsHistoryPage() {
           </select>
         </label>
         <label className="flex items-center gap-2 text-sm">
-          <span className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Status</span>
+          <span className="text-xs uppercase tracking-wide text-content-muted">Status</span>
           <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
-            className="rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-2 py-1 text-sm">
+            className="lb-field">
             <option value="">All</option>
             <option value="pending">Pending</option>
             <option value="running">Running</option>
@@ -859,21 +859,21 @@ export default function JobsHistoryPage() {
         </label>
         {(kindFilter !== '' || statusFilter !== '') && (
           <button onClick={() => { setKindFilter(''); setStatusFilter('') }}
-            className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">
+            className="text-xs text-content-muted hover:text-content-secondary">
             Clear filters
           </button>
         )}
-        <span className="ml-auto text-xs text-gray-400 dark:text-gray-500">
+        <span className="ml-auto text-xs text-content-subtle">
           {total === 0 ? 'No matches' : total === 1 ? '1 job' : `${total.toLocaleString()} jobs`}
         </span>
       </div>
 
       {jobs.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-gray-300 dark:border-gray-600 p-12 text-center">
-          <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+        <div className="rounded-xl border border-dashed border-line-strong p-12 text-center">
+          <p className="text-sm font-medium text-content-muted">
             {kindFilter !== '' || statusFilter !== '' ? 'No jobs match these filters' : 'No jobs yet'}
           </p>
-          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+          <p className="text-xs text-content-subtle mt-1">
             {kindFilter !== '' || statusFilter !== ''
               ? 'Adjust the type or status filter above.'
               : 'Start an import from the Import tool to see background jobs here.'}
@@ -881,16 +881,16 @@ export default function JobsHistoryPage() {
         </div>
       ) : (
         <>
-          <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-x-auto">
+          <div className="rounded-xl border border-line bg-surface overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+              <thead className="bg-surface-muted border-b border-line">
                 <tr>
                   {['', 'Type', 'Status', 'Source', 'Summary', 'Created', ''].map((h, i) => (
-                    <th key={i} className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 whitespace-nowrap">{h}</th>
+                    <th key={i} className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-content-muted whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+              <tbody className="divide-y divide-line-subtle">
                 {jobs.map(job => (
                   <JobRow
                     key={job.id}
@@ -907,16 +907,16 @@ export default function JobsHistoryPage() {
               one page. Server enforces newest-first ordering. */}
           {total > PAGE_SIZE && (
             <div className="flex items-center justify-between mt-4 text-sm">
-              <span className="text-xs text-gray-500 dark:text-gray-400">
+              <span className="text-xs text-content-muted">
                 Page {page} of {Math.max(1, Math.ceil(total / PAGE_SIZE))} · showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, total)} of {total.toLocaleString()}
               </span>
               <div className="flex items-center gap-2">
                 <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-                  className="rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                  className="rounded-lg border border-line-strong px-3 py-1.5 text-xs font-medium text-content-secondary hover:bg-surface-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
                   ← Newer
                 </button>
                 <button onClick={() => setPage(p => p + 1)} disabled={page * PAGE_SIZE >= total}
-                  className="rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                  className="rounded-lg border border-line-strong px-3 py-1.5 text-xs font-medium text-content-secondary hover:bg-surface-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
                   Older →
                 </button>
               </div>

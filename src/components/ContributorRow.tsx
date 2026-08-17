@@ -62,30 +62,30 @@ export default function ContributorRow({ contributor, role, onContributorChange,
     <div className="flex gap-2 items-start">
       <div ref={ref} className="relative flex-1">
         {contributor ? (
-          <div className="flex items-center gap-2 rounded-lg border border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-950/30 px-3 py-2 h-9">
-            <span className="flex-1 text-sm text-gray-900 dark:text-white truncate">{contributor.name}</span>
+          <div className="flex items-center gap-2 rounded-lg border border-accent-line bg-accent-surface px-3 py-2 h-9">
+            <span className="flex-1 text-sm text-content truncate">{contributor.name}</span>
             <button type="button" onClick={() => { onContributorChange(null); setQuery('') }}
-              className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 text-lg leading-none flex-shrink-0">×</button>
+              className="text-content-subtle hover:text-content-tertiary text-lg leading-none flex-shrink-0">×</button>
           </div>
         ) : (
           <input type="text" value={query} onChange={e => setQuery(e.target.value)}
             onFocus={() => results.length > 0 && setShowDropdown(true)}
-            className="w-full h-9 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full h-9 rounded-lg border border-line-strong dark:bg-surface-raised dark:text-white px-3 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
             placeholder="Search contributor…" />
         )}
         {showDropdown && (results.length > 0 || query.trim().length >= 2) && (
-          <ul className="absolute z-20 mt-1 w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg overflow-hidden">
+          <ul className="absolute z-20 mt-1 w-full rounded-lg border border-line bg-surface-raised shadow-lg overflow-hidden">
             {results.map(c => (
               <li key={c.id}>
                 <button type="button" onMouseDown={e => e.preventDefault()}
                   onClick={() => { onContributorChange(c); setQuery(''); setShowDropdown(false) }}
-                  className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors">{c.name}</button>
+                  className="w-full text-left px-3 py-2 text-sm hover:bg-accent-surface transition-colors">{c.name}</button>
               </li>
             ))}
             {query.trim().length >= 2 && (
               <li>
                 <button type="button" onMouseDown={e => e.preventDefault()} onClick={createAndSelect}
-                  className="w-full text-left px-3 py-2 text-sm text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors border-t border-gray-100 dark:border-gray-700">
+                  className="w-full text-left px-3 py-2 text-sm text-accent hover:bg-accent-surface transition-colors border-t border-line-subtle">
                   + Create "{query.trim()}"
                 </button>
               </li>
@@ -94,11 +94,11 @@ export default function ContributorRow({ contributor, role, onContributorChange,
         )}
       </div>
       <select value={role} onChange={e => onRoleChange(e.target.value)}
-        className="h-9 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
+        className="h-9 rounded-lg border border-line-strong dark:bg-surface-raised dark:text-white px-2 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent">
         {CONTRIBUTOR_ROLES.map(r => <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</option>)}
       </select>
       <button type="button" onClick={onRemove}
-        className="h-9 px-2 text-gray-400 hover:text-red-500 transition-colors text-lg leading-none">×</button>
+        className="h-9 px-2 text-content-subtle hover:text-danger transition-colors text-lg leading-none">×</button>
     </div>
   )
 }

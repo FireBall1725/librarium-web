@@ -108,7 +108,7 @@ export default function ApiTokensTab() {
       <div className="flex items-center justify-between">
         <div>
           <SectionHeading label="API tokens" />
-          <p className="text-xs text-gray-500 dark:text-gray-400 -mt-2">
+          <p className="text-xs text-content-muted -mt-2">
             Personal access tokens for scripts, CI, and the Librarium MCP server.
             The raw value is shown only when created, so copy it somewhere safe.
           </p>
@@ -124,9 +124,9 @@ export default function ApiTokensTab() {
 
       <div className={cardClass}>
         {tokens === null ? (
-          <div className="px-6 py-8 text-sm text-gray-500 dark:text-gray-400 text-center">Loading…</div>
+          <div className="px-6 py-8 text-sm text-content-muted text-center">Loading…</div>
         ) : active.length === 0 ? (
-          <div className="px-6 py-8 text-sm text-gray-500 dark:text-gray-400 text-center">
+          <div className="px-6 py-8 text-sm text-content-muted text-center">
             No active tokens. Create one above to get started.
           </div>
         ) : (
@@ -170,13 +170,13 @@ function TokenRow({ token, onRevoke }: { token: APIToken; onRevoke: (id: string)
     <div className="px-6 py-4 flex items-start gap-4">
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <p className="text-sm font-medium text-gray-900 dark:text-white">{token.name}</p>
-          <span className="rounded bg-gray-100 dark:bg-gray-800 px-2 py-0.5 text-xs text-gray-600 dark:text-gray-400">
+          <p className="text-sm font-medium text-content">{token.name}</p>
+          <span className="rounded bg-surface-inset px-2 py-0.5 text-xs text-content-tertiary">
             {scopeLabel}
           </span>
         </div>
-        <p className="mt-1 font-mono text-xs text-gray-500 dark:text-gray-400 truncate">{masked}</p>
-        <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
+        <p className="mt-1 font-mono text-xs text-content-muted truncate">{masked}</p>
+        <p className="mt-1 text-xs text-content-subtle">
           Created {formatDate(token.created_at)}
           {token.last_used_at
             ? ` · last used ${formatDate(token.last_used_at)}`
@@ -186,7 +186,7 @@ function TokenRow({ token, onRevoke }: { token: APIToken; onRevoke: (id: string)
       </div>
       <button
         type="button"
-        className="text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors"
+        className="text-xs text-danger hover:text-danger-strong transition-colors"
         onClick={() => onRevoke(token.id)}
       >
         Revoke
@@ -249,7 +249,7 @@ function CreateTokenModal({
     <Modal onClose={onClose} title="New API token">
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1" htmlFor="token-name">
+          <label className="block text-xs font-medium text-content-muted mb-1" htmlFor="token-name">
             Name
           </label>
           <input
@@ -266,7 +266,7 @@ function CreateTokenModal({
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
+          <label className="block text-xs font-medium text-content-muted mb-2">
             Scope
           </label>
           <div className="space-y-2">
@@ -275,8 +275,8 @@ function CreateTokenModal({
                 key={p}
                 className={`flex items-start gap-3 rounded-lg border p-3 cursor-pointer transition-colors ${
                   preset === p
-                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/30'
-                    : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                    ? 'border-accent bg-accent-surface'
+                    : 'border-line hover:border-line-strong'
                 }`}
               >
                 <input
@@ -285,11 +285,11 @@ function CreateTokenModal({
                   value={p}
                   checked={preset === p}
                   onChange={() => setPreset(p)}
-                  className="mt-0.5 accent-blue-600"
+                  className="mt-0.5 accent-accent"
                 />
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-gray-900 dark:text-white">{PRESET_LABELS[p].title}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{PRESET_LABELS[p].body}</p>
+                  <p className="text-sm font-medium text-content">{PRESET_LABELS[p].title}</p>
+                  <p className="text-xs text-content-muted mt-0.5">{PRESET_LABELS[p].body}</p>
                 </div>
               </label>
             ))}
@@ -297,7 +297,7 @@ function CreateTokenModal({
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1" htmlFor="token-expiry">
+          <label className="block text-xs font-medium text-content-muted mb-1" htmlFor="token-expiry">
             Expiration
           </label>
           <select
@@ -346,16 +346,16 @@ function NewTokenModal({ token, onClose }: { token: CreateTokenResponse; onClose
   return (
     <Modal title="Your new token" onClose={onClose} dismissOnBackdrop={false}>
       <div className="space-y-4">
-        <div className="rounded-lg border border-amber-400/60 bg-amber-50 dark:bg-amber-950/30 p-3">
-          <p className="text-sm font-medium text-amber-900 dark:text-amber-200">Copy this now</p>
-          <p className="text-xs text-amber-800 dark:text-amber-300 mt-0.5">
+        <div className="rounded-lg border border-warning-line bg-warning-surface p-3">
+          <p className="text-sm font-medium text-warning-strong">Copy this now</p>
+          <p className="text-xs text-warning-strong mt-0.5">
             This is the only time the raw value will be shown. Once you close this dialog it cannot
             be recovered. If you lose it, revoke and create a new one.
           </p>
         </div>
 
-        <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-950 p-3">
-          <p className="font-mono text-xs text-gray-900 dark:text-gray-100 break-all select-all">
+        <div className="rounded-lg border border-line bg-surface-muted p-3">
+          <p className="font-mono text-xs text-content break-all select-all">
             {token.token}
           </p>
         </div>
@@ -366,40 +366,40 @@ function NewTokenModal({ token, onClose }: { token: CreateTokenResponse; onClose
           </button>
           <button type="button" onClick={onClose} className={buttonPrimaryClass}>
             I've saved it
-          </button>
-        </div>
-      </div>
-    </Modal>
-  )
+ </button>
+ </div>
+ </div>
+ </Modal>
+ )
 }
 
 // ─── Shared modal chrome ─────────────────────────────────────────────────────
 
 function Modal({
-  title,
-  children,
-  onClose,
-  dismissOnBackdrop = true,
+ title,
+ children,
+ onClose,
+ dismissOnBackdrop = true,
 }: {
-  title: string
-  children: React.ReactNode
-  onClose: () => void
-  dismissOnBackdrop?: boolean
+ title: string
+ children: React.ReactNode
+ onClose: () => void
+ dismissOnBackdrop?: boolean
 }) {
-  return (
-    <div
-      className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
-      onClick={dismissOnBackdrop ? onClose : undefined}
-    >
-      <div
-        className="w-full max-w-md rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-xl"
-        onClick={e => e.stopPropagation()}
-      >
-        <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{title}</h3>
-        </div>
-        <div className="p-5">{children}</div>
-      </div>
-    </div>
-  )
+ return (
+ <div
+ className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
+ onClick={dismissOnBackdrop ? onClose : undefined}
+ >
+ <div
+ className="w-full max-w-md rounded-xl bg-surface border border-line shadow-xl"
+ onClick={e => e.stopPropagation()}
+ >
+ <div className="px-5 py-4 border-b border-line-subtle">
+ <h3 className="text-sm font-semibold text-content">{title}</h3>
+ </div>
+ <div className="p-5">{children}</div>
+ </div>
+ </div>
+ )
 }

@@ -299,10 +299,10 @@ function StepIndicator({ current }: { current: Step }) {
           <div className="flex items-center gap-2">
             <div className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-semibold transition-colors ${
               current === s.n
-                ? 'bg-blue-600 text-white'
+                ? 'bg-accent text-white'
                 : current > s.n
-                  ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400'
-                  : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500'
+                  ? 'bg-accent-surface text-accent'
+                  : 'bg-surface-inset text-content-subtle'
             }`}>
               {current > s.n ? (
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -311,12 +311,12 @@ function StepIndicator({ current }: { current: Step }) {
               ) : s.n}
             </div>
             <span className={`text-sm font-medium ${
-              current === s.n ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'
+              current === s.n ? 'text-content' : 'text-content-subtle'
             }`}>{s.label}</span>
           </div>
           {i < STEPS.length - 1 && (
             <div className={`mx-3 h-px w-10 transition-colors ${
-              current > s.n ? 'bg-blue-400 dark:bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'
+              current > s.n ? 'bg-accent dark:bg-accent' : 'bg-surface-strong'
             }`} />
           )}
         </div>
@@ -570,19 +570,19 @@ export default function ImportPage() {
       {step === 1 && (
         <div className="space-y-4">
           {libsLoading ? (
-            <div className="flex items-center justify-center py-16 text-gray-400">
-              <div className="w-5 h-5 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+            <div className="flex items-center justify-center py-16 text-content-subtle">
+              <div className="w-5 h-5 rounded-full border-2 border-accent border-t-transparent animate-spin" />
             </div>
           ) : libraries.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-gray-300 dark:border-gray-600 p-12 text-center">
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">No libraries found.</p>
-              <Link to="/libraries" className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
+            <div className="rounded-xl border border-dashed border-line-strong p-12 text-center">
+              <p className="text-sm text-content-muted mb-3">No libraries found.</p>
+              <Link to="/libraries" className="text-sm text-accent hover:underline">
                 Create a library first →
               </Link>
             </div>
           ) : (
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+              <p className="text-sm text-content-muted mb-3">
                 Choose the library this CSV will land in.
               </p>
               <div className="grid grid-cols-1 gap-3">
@@ -590,18 +590,18 @@ export default function ImportPage() {
                   <button
                     key={lib.id}
                     onClick={() => { setSelectedLibrary(lib); setStep(2) }}
-                    className="w-full text-left rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/10 px-5 py-4 transition-colors group flex items-center gap-4"
+                    className="w-full text-left rounded-xl border border-line bg-surface hover:border-accent-line dark:hover:border-accent hover:bg-accent-surface px-5 py-4 transition-colors group flex items-center gap-4"
                   >
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-900 dark:text-white group-hover:text-blue-700 dark:group-hover:text-blue-300 truncate">
+                      <p className="font-semibold text-content group-hover:text-accent-strong truncate">
                         {lib.name}
                       </p>
                       {lib.description && (
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5 truncate">{lib.description}</p>
+                        <p className="text-sm text-content-muted mt-0.5 truncate">{lib.description}</p>
                       )}
                     </div>
                     <svg
-                      className="w-5 h-5 text-gray-300 dark:text-gray-600 group-hover:text-blue-500 dark:group-hover:text-blue-400 group-hover:translate-x-0.5 transition-all flex-shrink-0"
+                      className="w-5 h-5 text-content-faint group-hover:text-accent dark:group-hover:text-accent group-hover:translate-x-0.5 transition-all flex-shrink-0"
                       fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"
                     >
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -619,11 +619,11 @@ export default function ImportPage() {
         <div className="space-y-6">
           {/* Library badge */}
           <div className="flex items-center gap-2 text-sm">
-            <span className="text-gray-500 dark:text-gray-400">Importing into:</span>
-            <span className="font-semibold text-gray-900 dark:text-white">{selectedLibrary.name}</span>
+            <span className="text-content-muted">Importing into:</span>
+            <span className="font-semibold text-content">{selectedLibrary.name}</span>
             <button
               onClick={() => setStep(1)}
-              className="text-blue-600 dark:text-blue-400 hover:underline text-xs"
+              className="text-accent hover:underline text-xs"
             >
               Change
             </button>
@@ -637,10 +637,10 @@ export default function ImportPage() {
             onClick={() => fileInputRef.current?.click()}
             className={`relative rounded-xl border-2 border-dashed transition-colors cursor-pointer p-10 text-center ${
               isDragging
-                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                ? 'border-accent bg-accent-surface'
                 : csvFile
-                  ? 'border-green-400 dark:border-green-600 bg-green-50 dark:bg-green-900/10'
-                  : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 hover:border-blue-400 hover:bg-gray-50 dark:hover:bg-gray-800/50'
+                  ? 'border-success-line bg-success-surface'
+                  : 'border-line-strong bg-surface hover:border-accent-line hover:bg-surface-inset/50'
             }`}
           >
             <input ref={fileInputRef} type="file" accept=".csv,.tsv,.txt" className="hidden"
@@ -649,169 +649,169 @@ export default function ImportPage() {
             />
             {csvFile ? (
               <div className="flex flex-col items-center gap-2">
-                <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-8 h-8 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <p className="font-medium text-gray-900 dark:text-white">{csvFile.name}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
+                <p className="font-medium text-content">{csvFile.name}</p>
+                <p className="text-xs text-content-muted">
                   {headers.length} column{headers.length !== 1 ? 's' : ''} — click to change
                 </p>
               </div>
             ) : (
               <div className="flex flex-col items-center gap-2">
-                <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-8 h-8 text-content-subtle" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                 </svg>
-                <p className="font-medium text-gray-700 dark:text-gray-300">Drop a CSV here, or click to browse</p>
-                <p className="text-xs text-gray-400">CSV, TSV, or TXT</p>
+                <p className="font-medium text-content-secondary">Drop a CSV here, or click to browse</p>
+                <p className="text-xs text-content-subtle">CSV, TSV, or TXT</p>
               </div>
             )}
           </div>
 
           {/* Source picker — auto-detected from headers; user can override. */}
           {headers.length > 0 && (
-            <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
+            <div className="rounded-xl border border-line bg-surface p-4">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
-                  <p className="text-sm font-medium text-gray-800 dark:text-gray-200">Importing from…</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                  <p className="text-sm font-medium text-content-strong">Importing from…</p>
+                  <p className="text-xs text-content-muted mt-0.5">
                     Picking a source pre-fills the column mapping below. Detected automatically from the file's headers; override here if it picked wrong.
-                  </p>
-                </div>
-                <select
-                  value={source}
-                  onChange={e => handleSourceChange(e.target.value as Source)}
-                  className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                >
-                  {(Object.keys(SOURCE_PRESETS) as Source[]).map(s => (
-                    <option key={s} value={s}>{SOURCE_PRESETS[s].label}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          )}
+ </p>
+ </div>
+ <select
+ value={source}
+ onChange={e => handleSourceChange(e.target.value as Source)}
+ className="rounded-lg border border-line-strong bg-surface-raised text-content px-3 py-1.5 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+ >
+ {(Object.keys(SOURCE_PRESETS) as Source[]).map(s => (
+ <option key={s} value={s}>{SOURCE_PRESETS[s].label}</option>
+ ))}
+ </select>
+ </div>
+ </div>
+ )}
 
-          {/* Column mapping — one row per CSV column */}
-          {headers.length > 0 && (
-            <div>
-              <div className="flex items-end justify-between mb-3 gap-3">
-                <div>
-                  <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-1">Column Mapping</h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Each row is a column from your CSV. Auto-detected mappings are pre-filled — adjust any that look wrong.
-                  </p>
-                </div>
-                {csvSamples.length > 3 && (
-                  <button
-                    type="button"
-                    onClick={() => setSampleSeed(s => s + 1)}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-2.5 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 hover:border-blue-400 hover:text-blue-600 dark:hover:border-blue-500 dark:hover:text-blue-400 transition-colors flex-shrink-0"
-                    title="Show a different random sample of rows"
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                    Shuffle examples
-                  </button>
-                )}
-              </div>
-              <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden bg-white dark:bg-gray-900">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
-                      <th className="text-left px-4 py-2.5 font-semibold text-gray-600 dark:text-gray-400 w-1/4">CSV Column</th>
-                      <th className="text-left px-4 py-2.5 font-semibold text-gray-600 dark:text-gray-400 w-1/2">Examples</th>
-                      <th className="text-left px-4 py-2.5 font-semibold text-gray-600 dark:text-gray-400 w-1/4">Maps To</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                    {headers.map((h, colIdx) => {
-                      const examples = previewIndices
-                        .map(rowIdx => csvSamples[rowIdx]?.[colIdx] ?? '')
+ {/* Column mapping — one row per CSV column */}
+ {headers.length > 0 && (
+ <div>
+ <div className="flex items-end justify-between mb-3 gap-3">
+ <div>
+ <h3 className="text-base font-semibold text-content mb-1">Column Mapping</h3>
+ <p className="text-xs text-content-muted dark:text-content-subtle">
+ Each row is a column from your CSV. Auto-detected mappings are pre-filled — adjust any that look wrong.
+ </p>
+ </div>
+ {csvSamples.length > 3 && (
+ <button
+ type="button"
+ onClick={() => setSampleSeed(s => s + 1)}
+ className="inline-flex items-center gap-1.5 rounded-lg border border-line-strong bg-surface-raised px-2.5 py-1.5 text-xs font-medium text-content-tertiary hover:border-accent-line hover:text-accent dark:hover:border-accent transition-colors flex-shrink-0"
+ title="Show a different random sample of rows"
+ >
+ <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+ <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+ </svg>
+ Shuffle examples
+ </button>
+ )}
+ </div>
+ <div className="rounded-xl border border-line overflow-hidden bg-surface-raised">
+ <table className="w-full text-sm">
+ <thead>
+ <tr className="bg-surface-muted/50 border-b border-line">
+ <th className="text-left px-4 py-2.5 font-semibold text-content-tertiary w-1/4">CSV Column</th>
+ <th className="text-left px-4 py-2.5 font-semibold text-content-tertiary w-1/2">Examples</th>
+ <th className="text-left px-4 py-2.5 font-semibold text-content-tertiary w-1/4">Maps To</th>
+ </tr>
+ </thead>
+ <tbody className="divide-y divide-line-subtle">
+ {headers.map((h, colIdx) => {
+ const examples = previewIndices
+ .map(rowIdx => csvSamples[rowIdx]?.[colIdx] ?? '')
                         .filter(v => v !== '')
                       const mappedField = csvMapping[colIdx] ?? ''
                       const isDuplicate = mappedField !== '' && (fieldUsage[mappedField]?.length ?? 0) > 1
 
-                      return (
-                        <tr key={colIdx} className="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
-                          <td className="px-4 py-2.5">
-                            <span className="font-mono text-xs font-medium text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded">
-                              {h || `col_${colIdx + 1}`}
-                            </span>
-                          </td>
-                          <td className="px-4 py-2.5">
-                            <div className="space-y-0.5">
-                              {examples.length > 0 ? examples.map((ex, i) => (
-                                <p key={i} className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[180px]" title={ex}>{ex}</p>
-                              )) : (
-                                <span className="text-xs text-gray-300 dark:text-gray-600 italic">empty</span>
-                              )}
-                            </div>
-                          </td>
-                          <td className="px-4 py-2.5">
-                            <select
-                              value={mappedField}
-                              onChange={e => setCsvMapping(prev => ({ ...prev, [colIdx]: e.target.value }))}
-                              className={`w-full rounded-lg border px-2.5 py-1.5 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500 ${
-                                isDuplicate
-                                  ? 'border-amber-400 dark:border-amber-500'
-                                  : 'border-gray-300 dark:border-gray-600 focus:border-blue-500'
-                              }`}
-                            >
-                              <option value="">— skip —</option>
-                              {IMPORT_FIELDS.map(f => (
-                                <option key={f.value} value={f.value}>{f.label}</option>
-                              ))}
-                            </select>
-                            {isDuplicate && (
-                              <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">mapped twice</p>
-                            )}
-                          </td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
+ return (
+ <tr key={colIdx} className="hover:bg-surface-inset/30 transition-colors">
+ <td className="px-4 py-2.5">
+ <span className="font-mono text-xs font-medium text-content-strong bg-surface-inset px-1.5 py-0.5 rounded">
+ {h || `col_${colIdx + 1}`}
+ </span>
+ </td>
+ <td className="px-4 py-2.5">
+ <div className="space-y-0.5">
+ {examples.length > 0 ? examples.map((ex, i) => (
+ <p key={i} className="text-xs text-content-muted truncate max-w-[180px]" title={ex}>{ex}</p>
+ )) : (
+ <span className="text-xs text-content-faint italic">empty</span>
+ )}
+ </div>
+ </td>
+ <td className="px-4 py-2.5">
+ <select
+ value={mappedField}
+ onChange={e => setCsvMapping(prev => ({ ...prev, [colIdx]: e.target.value }))}
+ className={`w-full rounded-lg border px-2.5 py-1.5 text-sm bg-surface-raised text-content focus:outline-none focus:ring-1 focus:ring-accent ${
+ isDuplicate
+ ? 'border-warning-line'
+                                  : 'border-line-strong focus:border-accent'
+ }`}
+ >
+ <option value="">— skip —</option>
+ {IMPORT_FIELDS.map(f => (
+ <option key={f.value} value={f.value}>{f.label}</option>
+ ))}
+ </select>
+ {isDuplicate && (
+ <p className="text-xs text-warning mt-0.5">mapped twice</p>
+ )}
+ </td>
+ </tr>
+ )
+ })}
+ </tbody>
+ </table>
+ </div>
+ </div>
+ )}
 
-          {/* Options — three labelled groups: per-row mapping, duplicate
-              policy, and the post-import enrichment toggles. */}
-          {headers.length > 0 && (
-            <div className="space-y-4">
-              {/* Mapping */}
-              <section className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
-                <header className="px-4 pt-3.5 pb-2">
-                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Mapping</h3>
-                </header>
-                <div className="border-t border-gray-100 dark:border-gray-800 divide-y divide-gray-100 dark:divide-gray-800">
-                  <div className="flex items-center justify-between px-4 py-3.5">
-                    <div>
-                      <p className="text-sm font-medium text-gray-800 dark:text-gray-200">Default format</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Applied when the CSV does not specify a format</p>
-                    </div>
-                    <select
-                      value={defaultFormat}
-                      onChange={e => setDefaultFormat(e.target.value)}
-                      className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    >
-                      {FORMAT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                    </select>
-                  </div>
-                  {/* Admin-only attribution override. Only renders when
-                      the library has more than one member; with a single
-                      member there's no other choice to make. */}
+ {/* Options — three labelled groups: per-row mapping, duplicate
+ policy, and the post-import enrichment toggles. */}
+ {headers.length > 0 && (
+ <div className="space-y-4">
+ {/* Mapping */}
+ <section className="rounded-xl border border-line bg-surface-raised">
+ <header className="px-4 pt-3.5 pb-2">
+ <h3 className="text-sm font-semibold text-content dark:text-white">Mapping</h3>
+ </header>
+ <div className="border-t border-line-subtle divide-y divide-line-subtle">
+ <div className="flex items-center justify-between px-4 py-3.5">
+ <div>
+ <p className="text-sm font-medium text-content-strong">Default format</p>
+ <p className="text-xs text-content-muted mt-0.5">Applied when the CSV does not specify a format</p>
+ </div>
+ <select
+ value={defaultFormat}
+ onChange={e => setDefaultFormat(e.target.value)}
+ className="rounded-lg border border-line-strong bg-surface-raised text-content px-3 py-1.5 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+ >
+ {FORMAT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+ </select>
+ </div>
+ {/* Admin-only attribution override. Only renders when
+ the library has more than one member; with a single
+ member there's no other choice to make. */}
                   {user?.is_instance_admin && members.length > 1 && (
                     <div className="flex items-center justify-between px-4 py-3.5">
                       <div>
-                        <p className="text-sm font-medium text-gray-800 dark:text-gray-200">Reading data attributed to</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Read status, rating, review, and dates land on this user.</p>
+                        <p className="text-sm font-medium text-content-strong">Reading data attributed to</p>
+                        <p className="text-xs text-content-muted mt-0.5">Read status, rating, review, and dates land on this user.</p>
                       </div>
                       <select
                         value={attributeToUserId}
                         onChange={e => setAttributeToUserId(e.target.value)}
-                        className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 max-w-xs"
+                        className="rounded-lg border border-line-strong bg-surface-raised text-content px-3 py-1.5 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent max-w-xs"
                       >
                         {members.map(m => (
                           <option key={m.user_id} value={m.user_id}>
@@ -825,218 +825,218 @@ export default function ImportPage() {
               </section>
 
               {/* Duplicate policy */}
-              <section className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+              <section className="rounded-xl border border-line bg-surface">
                 <header className="px-4 pt-3.5 pb-2">
-                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white">When a book already exists</h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Default: do nothing. Enable either action — they compose.</p>
+                  <h3 className="text-sm font-semibold text-content">When a book already exists</h3>
+                  <p className="text-xs text-content-muted mt-0.5">Default: do nothing. Enable either action — they compose.</p>
                 </header>
-                <div className="border-t border-gray-100 dark:border-gray-800 divide-y divide-gray-100 dark:divide-gray-800">
+                <div className="border-t border-line-subtle divide-y divide-line-subtle">
                   <div className="flex items-center justify-between px-4 py-3.5">
                     <div>
-                      <p className="text-sm font-medium text-gray-800 dark:text-gray-200">Add to copy count</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Bump the per-edition copy count for each duplicate row</p>
+                      <p className="text-sm font-medium text-content-strong">Add to copy count</p>
+                      <p className="text-xs text-content-muted mt-0.5">Bump the per-edition copy count for each duplicate row</p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input type="checkbox" checked={duplicateIncrementCount} onChange={e => setDuplicateIncrementCount(e.target.checked)} className="sr-only peer" />
-                      <div className="w-9 h-5 bg-gray-200 dark:bg-gray-700 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
+                      <div className="w-9 h-5 bg-surface-strong rounded-full peer peer-checked:bg-accent after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-surface-raised after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
                     </label>
                   </div>
                   <div className="flex items-center justify-between px-4 py-3.5">
                     <div>
-                      <p className="text-sm font-medium text-gray-800 dark:text-gray-200">Update read state, rating, review, dates</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Refresh your interaction fields from the CSV row</p>
+                      <p className="text-sm font-medium text-content-strong">Update read state, rating, review, dates</p>
+                      <p className="text-xs text-content-muted mt-0.5">Refresh your interaction fields from the CSV row</p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input type="checkbox" checked={duplicateUpdateFromCSV} onChange={e => setDuplicateUpdateFromCSV(e.target.checked)} className="sr-only peer" />
-                      <div className="w-9 h-5 bg-gray-200 dark:bg-gray-700 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
+                      <div className="w-9 h-5 bg-surface-strong rounded-full peer peer-checked:bg-accent after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-surface-raised after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
                     </label>
                   </div>
                 </div>
               </section>
 
               {/* Post-import enrichment */}
-              <section className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+              <section className="rounded-xl border border-line bg-surface">
                 <header className="px-4 pt-3.5 pb-2">
-                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white">After import</h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Run these in the background on books this import added to the library. Pure duplicates already in this library are skipped, and books that already have the data are no-ops.</p>
+                  <h3 className="text-sm font-semibold text-content">After import</h3>
+                  <p className="text-xs text-content-muted mt-0.5">Run these in the background on books this import added to the library. Pure duplicates already in this library are skipped, and books that already have the data are no-ops.</p>
                 </header>
-                <div className="border-t border-gray-100 dark:border-gray-800 divide-y divide-gray-100 dark:divide-gray-800">
+                <div className="border-t border-line-subtle divide-y divide-line-subtle">
                   <div className="flex items-center justify-between px-4 py-3.5">
                     <div>
-                      <p className="text-sm font-medium text-gray-800 dark:text-gray-200">Fill missing metadata</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Look each book up against metadata providers to populate blank fields</p>
+                      <p className="text-sm font-medium text-content-strong">Fill missing metadata</p>
+                      <p className="text-xs text-content-muted mt-0.5">Look each book up against metadata providers to populate blank fields</p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input type="checkbox" checked={enrichMetadata} onChange={e => setEnrichMetadata(e.target.checked)} className="sr-only peer" />
-                      <div className="w-9 h-5 bg-gray-200 dark:bg-gray-700 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
+                      <div className="w-9 h-5 bg-surface-strong rounded-full peer peer-checked:bg-accent after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-surface-raised after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
                     </label>
                   </div>
                   <div className="flex items-center justify-between px-4 py-3.5">
                     <div>
-                      <p className="text-sm font-medium text-gray-800 dark:text-gray-200">Download cover art</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Pull cover images from metadata providers for books that don't have one</p>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input type="checkbox" checked={enrichCovers} onChange={e => setEnrichCovers(e.target.checked)} className="sr-only peer" />
-                      <div className="w-9 h-5 bg-gray-200 dark:bg-gray-700 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
-                    </label>
-                  </div>
-                  <div className="flex items-center justify-between px-4 py-3.5">
-                    <div>
-                      <p className="text-sm font-medium text-gray-800 dark:text-gray-200">Clean descriptions with AI</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">After enrichment, ask the configured AI to strip marketing fluff and retailer boilerplate from descriptions. Costs AI tokens per book; disabled if no AI provider is configured.</p>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input type="checkbox" checked={useAICleanup} onChange={e => setUseAICleanup(e.target.checked)} disabled={!enrichMetadata} className="sr-only peer" />
-                      <div className="w-9 h-5 bg-gray-200 dark:bg-gray-700 rounded-full peer peer-checked:bg-blue-600 peer-disabled:opacity-50 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
-                    </label>
-                  </div>
-                </div>
-              </section>
-            </div>
-          )}
+                      <p className="text-sm font-medium text-content-strong">Download cover art</p>
+                      <p className="text-xs text-content-muted mt-0.5">Pull cover images from metadata providers for books that don't have one</p>
+ </div>
+ <label className="relative inline-flex items-center cursor-pointer">
+ <input type="checkbox" checked={enrichCovers} onChange={e => setEnrichCovers(e.target.checked)} className="sr-only peer" />
+ <div className="w-9 h-5 bg-surface-strong rounded-full peer peer-checked:bg-accent after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-surface-raised after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
+ </label>
+ </div>
+ <div className="flex items-center justify-between px-4 py-3.5">
+ <div>
+ <p className="text-sm font-medium text-content-strong">Clean descriptions with AI</p>
+ <p className="text-xs text-content-muted mt-0.5">After enrichment, ask the configured AI to strip marketing fluff and retailer boilerplate from descriptions. Costs AI tokens per book; disabled if no AI provider is configured.</p>
+ </div>
+ <label className="relative inline-flex items-center cursor-pointer">
+ <input type="checkbox" checked={useAICleanup} onChange={e => setUseAICleanup(e.target.checked)} disabled={!enrichMetadata} className="sr-only peer" />
+ <div className="w-9 h-5 bg-surface-strong rounded-full peer peer-checked:bg-accent peer-disabled:opacity-50 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-surface-raised after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
+ </label>
+ </div>
+ </div>
+ </section>
+ </div>
+ )}
 
-          {submitError && (
-            <div className="rounded-lg bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-400">
-              {submitError}
-            </div>
-          )}
+ {submitError && (
+ <div className="rounded-lg bg-danger-surface border border-danger-line px-4 py-3 text-sm text-danger">
+ {submitError}
+ </div>
+ )}
 
-          <div className="flex justify-end">
-            <button
-              onClick={handleStartImport}
-              disabled={!csvFile || !anyMapped || isSubmitting}
-              className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {isSubmitting ? 'Starting…' : 'Start Import'}
-            </button>
-          </div>
-        </div>
-      )}
+ <div className="flex justify-end">
+ <button
+ onClick={handleStartImport}
+ disabled={!csvFile || !anyMapped || isSubmitting}
+ className="rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-white hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+ >
+ {isSubmitting ? 'Starting…' : 'Start Import'}
+ </button>
+ </div>
+ </div>
+ )}
 
-      {/* ── Step 3: Progress ── */}
-      {step === 3 && importJob && (() => {
-        // The API treats processed/failed/skipped as disjoint buckets —
-        // skipped rows are NOT a subset of processed. The progress bar
-        // tracks "rows the worker has finished with", which is the sum
-        // of all three. Without this, an import that skips most rows
-        // (e.g. re-uploading the same CSV with duplicate handling off)
-        // sits at 0% all the way through.
-        const handled = importJob.processed_rows + importJob.failed_rows + importJob.skipped_rows
-        const pct = importJob.total_rows > 0 ? (handled / importJob.total_rows) * 100 : 0
-        return (
-        <div className="space-y-6">
-          <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
-            <div className="mb-4">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {importJob.status === 'pending' ? 'Queued…' : `Processing… ${handled}/${importJob.total_rows} rows`}
+ {/* ── Step 3: Progress ── */}
+ {step === 3 && importJob && (() => {
+ // The API treats processed/failed/skipped as disjoint buckets —
+ // skipped rows are NOT a subset of processed. The progress bar
+ // tracks "rows the worker has finished with", which is the sum
+ // of all three. Without this, an import that skips most rows
+ // (e.g. re-uploading the same CSV with duplicate handling off)
+ // sits at 0% all the way through.
+ const handled = importJob.processed_rows + importJob.failed_rows + importJob.skipped_rows
+ const pct = importJob.total_rows > 0 ? (handled / importJob.total_rows) * 100 : 0
+ return (
+ <div className="space-y-6">
+ <div className="rounded-xl border border-line bg-surface p-6">
+ <div className="mb-4">
+ <div className="flex items-center justify-between mb-1">
+ <span className="text-sm font-medium text-content-secondary">
+ {importJob.status === 'pending' ? 'Queued…' : `Processing… ${handled}/${importJob.total_rows} rows`}
                 </span>
-                <span className="text-sm text-gray-500 dark:text-gray-400">
+                <span className="text-sm text-content-muted">
                   {importJob.total_rows > 0 ? `${Math.round(pct)}%` : '—'}
-                </span>
-              </div>
-              <div className="h-2.5 w-full rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-blue-600 transition-all duration-500"
-                  style={{ width: `${pct}%` }}
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-3 gap-4 mt-5">
-              <div className="rounded-lg bg-gray-50 dark:bg-gray-800/50 px-4 py-3 text-center">
-                <p className="text-xl font-bold text-gray-900 dark:text-white">{importJob.processed_rows}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Processed</p>
-              </div>
-              <div className="rounded-lg bg-red-50 dark:bg-red-900/20 px-4 py-3 text-center">
-                <p className="text-xl font-bold text-red-600 dark:text-red-400">{importJob.failed_rows}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Failed</p>
-              </div>
-              <div className="rounded-lg bg-amber-50 dark:bg-amber-900/20 px-4 py-3 text-center">
-                <p className="text-xl font-bold text-amber-600 dark:text-amber-400">{importJob.skipped_rows}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Skipped</p>
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 text-sm text-gray-400 dark:text-gray-500">
-            <div className="w-3 h-3 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
-            Checking for updates every 2 seconds…
-          </div>
-        </div>
-        )
-      })()}
+ </span>
+ </div>
+ <div className="h-2.5 w-full rounded-full bg-surface-inset overflow-hidden">
+ <div
+ className="h-full rounded-full bg-accent transition-all duration-500"
+ style={{ width: `${pct}%` }}
+ />
+ </div>
+ </div>
+ <div className="grid grid-cols-3 gap-4 mt-5">
+ <div className="rounded-lg bg-surface-muted px-4 py-3 text-center">
+ <p className="text-xl font-bold text-content">{importJob.processed_rows}</p>
+ <p className="text-xs text-content-muted mt-0.5">Processed</p>
+ </div>
+ <div className="rounded-lg bg-danger-surface px-4 py-3 text-center">
+ <p className="text-xl font-bold text-danger">{importJob.failed_rows}</p>
+ <p className="text-xs text-content-muted mt-0.5">Failed</p>
+ </div>
+ <div className="rounded-lg bg-warning-surface px-4 py-3 text-center">
+ <p className="text-xl font-bold text-warning">{importJob.skipped_rows}</p>
+ <p className="text-xs text-content-muted mt-0.5">Skipped</p>
+ </div>
+ </div>
+ </div>
+ <div className="flex items-center gap-2 text-sm text-content-subtle">
+ <div className="w-3 h-3 rounded-full border-2 border-accent border-t-transparent animate-spin" />
+ Checking for updates every 2 seconds…
+ </div>
+ </div>
+ )
+ })()}
 
-      {/* ── Step 4: Results ── */}
-      {step === 4 && importJob && (
-        <div className="space-y-6">
-          <div className={`rounded-xl border p-6 ${
-            importJob.status === 'failed'
-              ? 'border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/30'
-              : 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/20'
+ {/* ── Step 4: Results ── */}
+ {step === 4 && importJob && (
+ <div className="space-y-6">
+ <div className={`rounded-xl border p-6 ${
+ importJob.status === 'failed'
+              ? 'border-danger-line bg-danger-surface'
+              : 'border-success-line bg-success-surface'
           }`}>
             <div className="flex items-center gap-3 mb-4">
               {importJob.status === 'failed' ? (
-                <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-10 h-10 rounded-full bg-danger-surface flex items-center justify-center flex-shrink-0">
+                  <svg className="w-5 h-5 text-danger" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </div>
               ) : (
-                <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-10 h-10 rounded-full bg-success-surface flex items-center justify-center flex-shrink-0">
+                  <svg className="w-5 h-5 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
               )}
               <div>
-                <p className={`font-semibold text-base ${importJob.status === 'failed' ? 'text-red-700 dark:text-red-400' : 'text-green-700 dark:text-green-400'}`}>
+                <p className={`font-semibold text-base ${importJob.status === 'failed' ? 'text-danger' : 'text-success'}`}>
                   {importJob.status === 'failed' ? 'Import failed' : 'Import complete'}
-                </p>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-                  {importJob.total_rows} row{importJob.total_rows !== 1 ? 's' : ''} total
-                </p>
-              </div>
-            </div>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="rounded-lg bg-white dark:bg-gray-900/60 px-4 py-3 text-center">
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{importJob.processed_rows}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Processed</p>
-              </div>
-              <div className="rounded-lg bg-white dark:bg-gray-900/60 px-4 py-3 text-center">
-                <p className="text-2xl font-bold text-red-600 dark:text-red-400">{importJob.failed_rows}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Failed</p>
-              </div>
-              <div className="rounded-lg bg-white dark:bg-gray-900/60 px-4 py-3 text-center">
-                <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">{importJob.skipped_rows}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Skipped</p>
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleReset}
-              className="rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-            >
-              Import another file
-            </button>
-            <button
-              onClick={() => navigate('/admin/settings/jobs')}
-              className="rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-            >
-              View all jobs
-            </button>
-            {selectedLibrary && (
-              <Link
-                to={`/libraries/${selectedLibrary.id}/books`}
-                className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
-              >
-                Go to Books
-              </Link>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-    </>
-  )
+ </p>
+ <p className="text-sm text-content-muted mt-0.5">
+ {importJob.total_rows} row{importJob.total_rows !== 1 ? 's' : ''} total
+ </p>
+ </div>
+ </div>
+ <div className="grid grid-cols-3 gap-4">
+ <div className="rounded-lg bg-surface px-4 py-3 text-center">
+ <p className="text-2xl font-bold text-content">{importJob.processed_rows}</p>
+ <p className="text-xs text-content-muted mt-0.5">Processed</p>
+ </div>
+ <div className="rounded-lg bg-surface px-4 py-3 text-center">
+ <p className="text-2xl font-bold text-danger">{importJob.failed_rows}</p>
+ <p className="text-xs text-content-muted mt-0.5">Failed</p>
+ </div>
+ <div className="rounded-lg bg-surface px-4 py-3 text-center">
+ <p className="text-2xl font-bold text-warning">{importJob.skipped_rows}</p>
+ <p className="text-xs text-content-muted mt-0.5">Skipped</p>
+ </div>
+ </div>
+ </div>
+ <div className="flex items-center gap-3">
+ <button
+ onClick={handleReset}
+ className="rounded-lg border border-line-strong px-4 py-2.5 text-sm font-semibold text-content-secondary hover:bg-surface-muted transition-colors"
+ >
+ Import another file
+ </button>
+ <button
+ onClick={() => navigate('/settings/jobs')}
+ className="rounded-lg border border-line-strong px-4 py-2.5 text-sm font-semibold text-content-secondary hover:bg-surface-muted transition-colors"
+ >
+ View all jobs
+ </button>
+ {selectedLibrary && (
+ <Link
+ to={`/libraries/${selectedLibrary.id}/books`}
+ className="rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-white hover:brightness-110 transition-colors"
+ >
+ Go to Books
+ </Link>
+ )}
+ </div>
+ </div>
+ )}
+ </div>
+ </>
+ )
 }

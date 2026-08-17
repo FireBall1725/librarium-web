@@ -128,6 +128,11 @@ export interface Book {
   publish_year: number | null
   language: string
   user_read_status?: string
+  // Caller-scoped, and all three pick the same interaction row, so a user who
+  // owns several editions of one work gets a consistent status, rating and
+  // progress rather than three answers from three editions. 0 means unrated.
+  user_rating?: number
+  user_progress_pct?: number
   // active_loan_count is on every book row (drives the "loaned" badge in
   // list views). active_loans is only populated by single-book reads (the
   // GetBook endpoint) for the loan panel.
@@ -268,6 +273,36 @@ export interface SeriesPreviewBook {
   cover_url: string | null
 }
 
+// ── Cross-library index surfaces ────────────────────────────────────────────
+// GET /api/v1/me/authors/index and GET /api/v1/me/series/index. Both are
+// unpaged: the A-Z bar has to know which letters have anything behind them,
+// which means the client holds the whole set anyway.
+
+export interface AuthorSpine {
+  book_id: string
+  title: string
+  cover_url: string | null
+}
+
+export interface AuthorLibraryRef {
+  id: string
+  name: string
+}
+
+export interface AuthorIndexEntry {
+  id: string
+  name: string
+  sort_name: string
+  photo_url: string | null
+  /** Letter the index files this author under, from sort_name, folded for
+   *  accents. '#' for anything that does not resolve to a letter. */
+  letter: string
+  book_count: number
+  read_count: number
+  spines: AuthorSpine[]
+  libraries: AuthorLibraryRef[]
+}
+
 export interface SeriesArc {
   id: string
   series_id: string
@@ -370,6 +405,8 @@ export interface Loan {
   library_id: string
   book_id: string
   book_title: string
+  /** Only on the cross-library list, which has to say which library a row is in. */
+  library_name?: string
   loaned_to: string
   loaned_at: string
   due_date: string | null
@@ -768,4 +805,41 @@ export interface TasteProfile {
   era?: string
   favourite_authors?: string[]
   hard_nos?: string
+}
+
+/**
+ * One entry in the grouped Books list: a series shown as a unit, or a single
+ * book that belongs to none.
+ *
+ * `matched` is how many of the series' books match the current filter, and
+ * `owned` how many the caller holds in total. They differ whenever a filter is
+ * on, which is exactly when the reader needs both numbers to make sense of what
+ * they are looking at.
+ */
+export interface SeriesGroupEntry {
+  kind: 'series'
+  series_id: string
+  series_name: string
+  matched: number
+  owned: number
+  read: number
+  total_count: number | null
+  cover_url: string | null
+}
+
+export interface BookGroupEntry {
+  kind: 'book'
+  book: Book
+}
+
+export type GroupedEntry = SeriesGroupEntry | BookGroupEntry
+
+export interface PagedGroupedBooks {
+  items: GroupedEntry[]
+  /** Entries on this page's terms: groups plus standalone books. */
+  total: number
+  /** Books those entries stand for. The facet rail counts these, not entries. */
+  book_total: number
+  page: number
+  per_page: number
 }

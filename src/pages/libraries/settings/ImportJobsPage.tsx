@@ -35,10 +35,10 @@ interface ImportJob {
 
 function StatusBadge({ status }: { status: JobStatus }) {
   const cfg: Record<JobStatus, { label: string; cls: string; spin?: boolean }> = {
-    pending:    { label: 'Queued',     cls: 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300' },
-    processing: { label: 'Processing', cls: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300', spin: true },
-    done:       { label: 'Done',       cls: 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300' },
-    failed:     { label: 'Failed',     cls: 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300' },
+    pending:    { label: 'Queued',     cls: 'bg-amber-100 dark:bg-amber-900/40 text-warning-strong ' },
+    processing: { label: 'Processing', cls: 'bg-blue-100 dark:bg-blue-900/40 text-accent-strong ', spin: true },
+    done:       { label: 'Done',       cls: 'bg-green-100 dark:bg-green-900/40 text-success-strong ' },
+    failed:     { label: 'Failed',     cls: 'bg-red-100 dark:bg-red-900/40 text-danger-strong ' },
   }
   const { label, cls, spin } = cfg[status]
   return (
@@ -72,7 +72,7 @@ function ProgressBar({ job }: { job: ImportJob }) {
     : 0
   return (
     <div className="flex items-center gap-2">
-      <div className="flex-1 h-1.5 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
+      <div className="flex-1 h-1.5 rounded-full bg-surface-inset overflow-hidden">
         <div
           className={`h-full rounded-full transition-all duration-500 ${
             job.status === 'failed' ? 'bg-red-500' : 'bg-blue-500'
@@ -80,7 +80,7 @@ function ProgressBar({ job }: { job: ImportJob }) {
           style={{ width: `${pct}%` }}
         />
       </div>
-      <span className="text-xs tabular-nums text-gray-400 dark:text-gray-500 w-8 text-right">{pct}%</span>
+      <span className="text-xs tabular-nums text-content-subtle w-8 text-right">{pct}%</span>
     </div>
   )
 }
@@ -113,11 +113,11 @@ function JobRow({ job, libraryId }: { job: ImportJob; libraryId: string }) {
     : null
 
   return (
-    <div className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+    <div className="border border-line rounded-xl overflow-hidden">
       {/* Summary row */}
       <button
         onClick={toggleExpand}
-        className="w-full text-left px-5 py-4 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+        className="w-full text-left px-5 py-4 bg-surface hover:bg-surface-muted transition-colors"
       >
         <div className="flex items-center gap-4">
           {/* Chevron */}
@@ -132,26 +132,26 @@ function JobRow({ job, libraryId }: { job: ImportJob; libraryId: string }) {
             <StatusBadge status={job.status} />
 
             <div className="min-w-0">
-              <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">{formatDate(job.created_at)}</p>
+              <p className="text-xs text-content-subtle mb-1">{formatDate(job.created_at)}</p>
               {(job.status === 'processing' || job.status === 'pending') ? (
                 <ProgressBar job={job} />
               ) : (
-                <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+                <div className="flex items-center gap-3 text-xs text-content-muted">
                   <span>{job.total_rows} rows</span>
                   {successRows !== null && successRows > 0 && (
-                    <span className="text-green-600 dark:text-green-400">{successRows} added</span>
+                    <span className="text-success">{successRows} added</span>
                   )}
                   {job.skipped_rows > 0 && (
-                    <span className="text-amber-600 dark:text-amber-400">{job.skipped_rows} skipped</span>
+                    <span className="text-warning">{job.skipped_rows} skipped</span>
                   )}
                   {job.failed_rows > 0 && (
-                    <span className="text-red-600 dark:text-red-400">{job.failed_rows} failed</span>
+                    <span className="text-danger">{job.failed_rows} failed</span>
                   )}
                 </div>
               )}
             </div>
 
-            <span className="text-xs text-gray-400 dark:text-gray-500 font-mono truncate max-w-[100px]">
+            <span className="text-xs text-content-subtle font-mono truncate max-w-[100px]">
               {job.id.slice(0, 8)}
             </span>
           </div>
@@ -160,26 +160,26 @@ function JobRow({ job, libraryId }: { job: ImportJob; libraryId: string }) {
 
       {/* Items list */}
       {expanded && (
-        <div className="border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50">
+        <div className="border-t border-line-subtle bg-surface-muted">
           {loadingItems ? (
-            <div className="flex items-center justify-center py-8 text-sm text-gray-400 dark:text-gray-500">
+            <div className="flex items-center justify-center py-8 text-sm text-content-subtle">
               <div className="w-4 h-4 rounded-full border-2 border-blue-500 border-t-transparent animate-spin mr-2" />
               Loading…
             </div>
           ) : items && items.length > 0 ? (
-            <div className="divide-y divide-gray-100 dark:divide-gray-800">
+            <div className="divide-y divide-line-subtle">
               {items.map(item => (
                 <div key={item.id} className="flex items-start gap-3 px-5 py-2.5 text-sm">
-                  <span className="text-xs tabular-nums text-gray-400 dark:text-gray-500 w-8 flex-shrink-0 pt-0.5 text-right">
+                  <span className="text-xs tabular-nums text-content-subtle w-8 flex-shrink-0 pt-0.5 text-right">
                     {item.row_number}
                   </span>
                   <ItemStatusDot status={item.status} />
                   <div className="flex-1 min-w-0">
-                    <span className="text-gray-800 dark:text-gray-200 font-medium">
-                      {item.title || <span className="text-gray-400 dark:text-gray-500 italic">Untitled</span>}
+                    <span className="text-content-strong font-medium">
+                      {item.title || <span className="text-content-subtle italic">Untitled</span>}
                     </span>
                     {item.isbn && (
-                      <span className="ml-2 text-xs text-gray-400 dark:text-gray-500 font-mono">{item.isbn}</span>
+                      <span className="ml-2 text-xs text-content-subtle font-mono">{item.isbn}</span>
                     )}
                     {item.message && (
                       <p className={`text-xs mt-0.5 ${
@@ -196,7 +196,7 @@ function JobRow({ job, libraryId }: { job: ImportJob; libraryId: string }) {
                   {item.book_id && (
                     <Link
                       to={`/libraries/${libraryId}/books/${item.book_id}`}
-                      className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex-shrink-0"
+                      className="text-xs text-accent hover:underline flex-shrink-0"
                       onClick={e => e.stopPropagation()}
                     >
                       View
@@ -206,7 +206,7 @@ function JobRow({ job, libraryId }: { job: ImportJob; libraryId: string }) {
               ))}
             </div>
           ) : (
-            <p className="px-5 py-4 text-sm text-gray-400 dark:text-gray-500">No items.</p>
+            <p className="px-5 py-4 text-sm text-content-subtle">No items.</p>
           )}
         </div>
       )}
@@ -260,7 +260,7 @@ export default function ImportJobsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20 text-gray-400 dark:text-gray-500">
+      <div className="flex items-center justify-center py-20 text-content-subtle">
         <div className="w-5 h-5 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
       </div>
     )
@@ -278,15 +278,15 @@ export default function ImportJobsPage() {
       </div>
 
       {error && (
-        <div className="mb-6 rounded-lg bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-400">
+        <div className="mb-6 rounded-lg bg-danger-surface border border-danger-line px-4 py-3 text-sm text-danger-strong">
           {error}
         </div>
       )}
 
       {jobs.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-gray-300 dark:border-gray-600 p-12 text-center">
-          <p className="text-sm font-medium text-gray-500 dark:text-gray-400">No import jobs yet</p>
-          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 mb-4">
+        <div className="rounded-xl border border-dashed border-line-strong p-12 text-center">
+          <p className="text-sm font-medium text-content-muted">No import jobs yet</p>
+          <p className="text-xs text-content-subtle mt-1 mb-4">
             Start your first import to populate this library.
           </p>
           <Link

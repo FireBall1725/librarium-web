@@ -32,18 +32,18 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950">
+    <div className="min-h-screen flex items-center justify-center bg-surface-muted">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <img src="/logo.png" alt="Librarium" className="mx-auto h-32 w-auto mb-4" />
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t('app.name')}</h1>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{t('auth.sign_in_subtitle')}</p>
+          <img src="/logo.png" alt="Librarium" className="mx-auto mb-4 h-24 w-auto" />
+          <h1 className="lb-display text-4xl text-content">{t('app.name')}</h1>
+          <p className="mt-1 text-sm text-content-muted">{t('auth.sign_in_subtitle')}</p>
         </div>
 
-        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm px-8 py-8">
+        <div className="lb-card px-8 py-8">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label htmlFor="identifier" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="identifier" className="block text-sm font-medium text-content-secondary mb-1">
                 {t('auth.username_or_email')}
               </label>
               <input
@@ -53,13 +53,13 @@ export default function LoginPage() {
                 required
                 value={identifier}
                 onChange={e => setIdentifier(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm text-gray-900 dark:text-white dark:bg-gray-800 placeholder-gray-400 dark:placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="lb-field"
                 placeholder={t('auth.username_placeholder')}
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="password" className="block text-sm font-medium text-content-secondary mb-1">
                 {t('auth.password')}
               </label>
               <input
@@ -69,23 +69,23 @@ export default function LoginPage() {
                 required
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm text-gray-900 dark:text-white dark:bg-gray-800 placeholder-gray-400 dark:placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="lb-field"
                 placeholder="••••••••"
               />
             </div>
 
-            <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 select-none">
+            <label className="flex items-center gap-2 text-sm text-content-tertiary select-none">
               <input
                 type="checkbox"
                 checked={rememberMe}
                 onChange={e => setRememberMe(e.target.checked)}
-                className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500"
+                className="rounded border-line-strong text-accent focus:ring-accent"
               />
               {t('auth.remember_me')}
             </label>
 
             {error && (
-              <div className="rounded-lg bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 px-3 py-2 text-sm text-red-700 dark:text-red-400">
+              <div className="rounded-lg bg-danger-surface border border-danger-line px-3 py-2 text-sm text-danger-strong">
                 {error}
               </div>
             )}
@@ -93,14 +93,14 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="lb-btn w-full"
             >
               {isLoading ? t('auth.signing_in') : t('auth.sign_in')}
             </button>
           </form>
         </div>
 
-        <p className="mt-4 text-center text-xs text-gray-400 dark:text-gray-500">
+        <p className="mt-4 text-center text-xs text-content-subtle">
           v{__APP_VERSION__}
         </p>
       </div>

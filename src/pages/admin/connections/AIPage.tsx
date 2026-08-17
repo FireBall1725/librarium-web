@@ -104,13 +104,13 @@ function OllamaModelPicker({
           value={value}
           onChange={e => onChange(e.target.value)}
           placeholder={placeholder}
-          className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="lb-field flex-1"
         />
         {models && (
           <button
             type="button"
             onClick={() => setCustomMode(false)}
-            className="rounded-lg border border-gray-300 dark:border-gray-600 px-2 py-1 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            className="lb-btn ghost sm"
             title="Pick from installed models"
           >
             List
@@ -120,13 +120,13 @@ function OllamaModelPicker({
           type="button"
           onClick={fetchModels}
           disabled={loading || !configuredBaseURL}
-          className="rounded-lg border border-gray-300 dark:border-gray-600 px-2 py-1 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors"
+          className="lb-btn ghost sm"
           title={configuredBaseURL ? 'Refresh model list' : 'Save a base URL first'}
         >
           {loading ? '…' : '↻'}
         </button>
         {error && !loading && (
-          <span className="self-center text-xs text-amber-600 dark:text-amber-400">{error}</span>
+          <span className="self-center text-xs text-warning">{error}</span>
         )}
       </div>
     )
@@ -146,7 +146,7 @@ function OllamaModelPicker({
             onChange(e.target.value)
           }
         }}
-        className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        className="lb-field flex-1"
       >
         {models.length === 0 ? (
           <option value="">No models pulled — use `ollama pull` on the host</option>
@@ -171,7 +171,7 @@ function OllamaModelPicker({
         type="button"
         onClick={fetchModels}
         disabled={loading}
-        className="rounded-lg border border-gray-300 dark:border-gray-600 px-2 py-1 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors"
+        className="lb-btn ghost sm"
         title="Refresh model list"
       >
         {loading ? '…' : '↻'}
@@ -244,13 +244,13 @@ function OsaurusModelPicker({
           value={value}
           onChange={e => onChange(e.target.value)}
           placeholder={placeholder}
-          className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="lb-field flex-1"
         />
         {models && (
           <button
             type="button"
             onClick={() => setCustomMode(false)}
-            className="rounded-lg border border-gray-300 dark:border-gray-600 px-2 py-1 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            className="lb-btn ghost sm"
             title="Pick from installed models"
           >
             List
@@ -260,13 +260,13 @@ function OsaurusModelPicker({
           type="button"
           onClick={fetchModels}
           disabled={loading || !configuredBaseURL}
-          className="rounded-lg border border-gray-300 dark:border-gray-600 px-2 py-1 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors"
+          className="lb-btn ghost sm"
           title={configuredBaseURL ? 'Refresh model list' : 'Save a base URL first'}
         >
           {loading ? '…' : '↻'}
         </button>
         {error && !loading && (
-          <span className="self-center text-xs text-amber-600 dark:text-amber-400">{error}</span>
+          <span className="self-center text-xs text-warning">{error}</span>
         )}
       </div>
     )
@@ -286,7 +286,7 @@ function OsaurusModelPicker({
             onChange(e.target.value)
           }
         }}
-        className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        className="lb-field flex-1"
       >
         {models.length === 0 ? (
           <option value="">No models downloaded — download one in the Osaurus app</option>
@@ -306,7 +306,7 @@ function OsaurusModelPicker({
         type="button"
         onClick={fetchModels}
         disabled={loading}
-        className="rounded-lg border border-gray-300 dark:border-gray-600 px-2 py-1 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors"
+        className="lb-btn ghost sm"
         title="Refresh model list"
       >
         {loading ? '…' : '↻'}
@@ -409,22 +409,22 @@ function ProviderCard({ provider, onSaved, onActivate, activating }: ProviderCar
     || Boolean(values['api_key'])
 
   return (
-    <div className={`rounded-xl border bg-white dark:bg-gray-800 p-5 ${
+    <div className={`rounded-xl border bg-surface-raised p-5 ${
       provider.active
-        ? 'border-blue-500 ring-1 ring-blue-500/30 dark:border-blue-400'
-        : 'border-gray-200 dark:border-gray-700'
+        ? 'border-accent ring-1 ring-accent-line dark:border-accent-line'
+        : 'border-line'
     }`}>
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <h3 className="font-semibold text-gray-900 dark:text-white">{provider.display_name}</h3>
+            <h3 className="font-semibold text-content">{provider.display_name}</h3>
             {provider.active && (
-              <span className="inline-flex items-center rounded-full bg-blue-100 dark:bg-blue-900/40 px-2 py-0.5 text-xs font-medium text-blue-700 dark:text-blue-300">
+              <span className="inline-flex items-center rounded-full bg-accent-surface dark:bg-accent-surface px-2 py-0.5 text-xs font-medium text-accent-strong">
                 Active
               </span>
             )}
           </div>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{provider.description}</p>
+          <p className="mt-1 text-sm text-content-muted">{provider.description}</p>
         </div>
         <label className="relative inline-flex items-center cursor-pointer shrink-0" title={
           !canToggleOn ? 'Save an API key first' : ''
@@ -436,12 +436,12 @@ function ProviderCard({ provider, onSaved, onActivate, activating }: ProviderCar
             onChange={e => setEnabled(e.target.checked)}
             disabled={!canToggleOn && !enabled}
           />
-          <div className="w-10 h-6 bg-gray-200 dark:bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full" />
+          <div className="w-10 h-6 bg-surface-strong peer-focus:outline-none rounded-full peer peer-checked:bg-accent after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-surface-raised after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full" />
         </label>
       </div>
 
       {provider.help_text && (
-        <div className="mt-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 px-3 py-2 text-sm text-blue-700 dark:text-blue-300">
+        <div className="mt-3 rounded-lg bg-accent-surface border border-accent-line px-3 py-2 text-sm text-accent-strong">
           {provider.help_text}
           {provider.help_url && (
             <> <a href={provider.help_url} target="_blank" rel="noopener noreferrer" className="font-medium underline hover:no-underline">Learn more →</a></>
@@ -459,13 +459,13 @@ function ProviderCard({ provider, onSaved, onActivate, activating }: ProviderCar
           const isOsaurusModel = provider.name === 'osaurus' && field.key === 'model'
           return (
             <div key={field.key} className={(field.options?.length || isOllamaModel || isOsaurusModel) ? 'sm:col-span-2' : ''}>
-              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+              <label className="block text-xs font-medium text-content-tertiary mb-1">
                 {field.label}
                 {sensitive && provider.has_api_key && (
-                  <span className="ml-1 text-green-600 dark:text-green-400">(saved)</span>
+                  <span className="ml-1 text-success">(saved)</span>
                 )}
                 {field.required && !provider.has_api_key && sensitive && (
-                  <span className="ml-1 text-gray-400">*</span>
+                  <span className="ml-1 text-content-muted">*</span>
                 )}
               </label>
               {isOllamaModel ? (
@@ -497,7 +497,7 @@ function ProviderCard({ provider, onSaved, onActivate, activating }: ProviderCar
                         setValue(field.key, e.target.value)
                       }
                     }}
-                    className="rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="rounded-lg border border-line-strong px-3 py-2 text-sm focus:border-accent focus:outline-none"
                   >
                     {field.options.map(o => (
                       <option key={o} value={o}>{o}</option>
@@ -509,7 +509,7 @@ function ProviderCard({ provider, onSaved, onActivate, activating }: ProviderCar
                     value={values[field.key] ?? ''}
                     onChange={e => setValue(field.key, e.target.value)}
                     placeholder={placeholder}
-                    className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="lb-field flex-1"
                   />
                 </div>
               ) : (
@@ -518,11 +518,11 @@ function ProviderCard({ provider, onSaved, onActivate, activating }: ProviderCar
                   value={values[field.key] ?? ''}
                   onChange={e => setValue(field.key, e.target.value)}
                   placeholder={placeholder}
-                  className="w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full rounded-lg border border-line-strong px-3 py-2 text-sm focus:border-accent focus:outline-none"
                 />
               )}
               {field.help_text && (
-                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{field.help_text}</p>
+                <p className="mt-1 text-xs text-content-muted">{field.help_text}</p>
               )}
             </div>
           )
@@ -535,7 +535,7 @@ function ProviderCard({ provider, onSaved, onActivate, activating }: ProviderCar
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 transition-colors"
+            className="lb-btn sm"
           >
             {saving ? 'Saving…' : 'Save'}
           </button>
@@ -544,7 +544,7 @@ function ProviderCard({ provider, onSaved, onActivate, activating }: ProviderCar
             onClick={handleTest}
             disabled={testState.status === 'testing' || !provider.enabled}
             title={!provider.enabled ? 'Enable the provider first' : ''}
-            className="rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors"
+            className="rounded-lg border border-line-strong px-3 py-1.5 text-sm font-medium text-content-secondary hover:bg-surface-inset disabled:opacity-50 transition-colors"
           >
             {testState.status === 'testing' ? 'Testing…' : 'Test'}
           </button>
@@ -553,21 +553,21 @@ function ProviderCard({ provider, onSaved, onActivate, activating }: ProviderCar
               type="button"
               onClick={() => onActivate(provider.name)}
               disabled={activating}
-              className="rounded-lg border border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/30 px-3 py-1.5 text-sm font-medium text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/50 disabled:opacity-50 transition-colors"
+              className="rounded-lg border border-accent-line bg-accent-surface px-3 py-1.5 text-sm font-medium text-accent-strong hover:bg-accent-surface dark:hover:bg-accent-surface disabled:opacity-50 transition-colors"
             >
               {activating ? 'Activating…' : 'Set active'}
             </button>
           )}
-          {success && <span className="text-sm text-green-600 dark:text-green-400">Saved</span>}
-          {error && <span className="text-sm text-red-600 dark:text-red-400">{error}</span>}
+          {success && <span className="text-sm text-success">Saved</span>}
+          {error && <span className="text-sm text-danger">{error}</span>}
         </div>
         {testState.status === 'ok' && (
-          <div className="rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 px-3 py-2 text-sm text-green-700 dark:text-green-300">
+          <div className="rounded-lg bg-success-surface border border-success-line px-3 py-2 text-sm text-success-strong">
             Connected — reply: <span className="font-medium">{testState.reply}</span>
           </div>
         )}
         {testState.status === 'fail' && (
-          <div className="rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-3 py-2 text-sm text-red-700 dark:text-red-300">
+          <div className="rounded-lg bg-danger-surface border border-danger-line px-3 py-2 text-sm text-danger-strong">
             {testState.error}
           </div>
         )}
@@ -654,27 +654,27 @@ function PermissionsCard({ permissions, onSaved }: PermissionsCardProps) {
   }
 
   return (
-    <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5">
-      <h3 className="font-semibold text-gray-900 dark:text-white">Data-access permissions</h3>
-      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+    <div className="rounded-xl border border-line bg-surface-raised p-5">
+      <h3 className="font-semibold text-content">Data-access permissions</h3>
+      <p className="mt-1 text-sm text-content-muted">
         Controls which personal data the AI may see. Combined restrictively with each user's opt-in — if either
-        is off, that category is withheld.
-      </p>
-      <div className="mt-4 divide-y divide-gray-100 dark:divide-gray-700 border-t border-gray-100 dark:border-gray-700">
-        {PERMISSION_ITEMS.map(item => (
-          <div key={item.key} className="flex items-start justify-between gap-4 py-3">
-            <div className="min-w-0">
-              <p className="text-sm font-medium text-gray-900 dark:text-white">{item.label}</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">{item.description}</p>
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer shrink-0 mt-0.5">
-              <input
-                type="checkbox"
-                className="sr-only peer"
-                checked={local[item.key]}
-                onChange={() => toggle(item.key)}
-              />
-              <div className="w-10 h-6 bg-gray-200 dark:bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full" />
+ is off, that category is withheld.
+ </p>
+ <div className="mt-4 divide-y divide-line-subtle border-t border-line-subtle dark:border-line">
+ {PERMISSION_ITEMS.map(item => (
+ <div key={item.key} className="flex items-start justify-between gap-4 py-3">
+ <div className="min-w-0">
+ <p className="text-sm font-medium text-content">{item.label}</p>
+ <p className="text-xs text-content-muted">{item.description}</p>
+ </div>
+ <label className="relative inline-flex items-center cursor-pointer shrink-0 mt-0.5">
+ <input
+ type="checkbox"
+ className="sr-only peer"
+ checked={local[item.key]}
+ onChange={() => toggle(item.key)}
+ />
+ <div className="w-10 h-6 bg-surface-strong peer-focus:outline-none rounded-full peer peer-checked:bg-accent after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-surface-raised after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full" />
             </label>
           </div>
         ))}
@@ -684,12 +684,12 @@ function PermissionsCard({ permissions, onSaved }: PermissionsCardProps) {
           type="button"
           onClick={handleSave}
           disabled={saving || !dirty}
-          className="rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 transition-colors"
+          className="lb-btn sm"
         >
           {saving ? 'Saving…' : 'Save permissions'}
         </button>
-        {success && <span className="text-sm text-green-600 dark:text-green-400">Saved</span>}
-        {error && <span className="text-sm text-red-600 dark:text-red-400">{error}</span>}
+        {success && <span className="text-sm text-success">Saved</span>}
+        {error && <span className="text-sm text-danger">{error}</span>}
       </div>
     </div>
   )
@@ -771,66 +771,66 @@ export default function AIPage() {
       <PageHeader
         title="AI"
         description="Configure AI providers for book suggestions. Only one provider is active at a time."
-        breadcrumbs={[{ label: 'Connections', to: '/admin/connections' }, { label: 'AI' }]}
-      />
-      <div className="max-w-3xl px-8 py-8 space-y-8">
-        {error && (
-          <div className="rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4 text-sm text-red-700 dark:text-red-400">
-            {error}
-          </div>
-        )}
+        breadcrumbs={[{ label: 'Settings', to: '/settings' }, { label: 'AI provider' }]}
+ />
+ <div className="max-w-3xl px-8 py-8 space-y-8">
+ {error && (
+ <div className="rounded-lg bg-danger-surface border border-danger-line p-4 text-sm text-danger">
+ {error}
+ </div>
+ )}
 
-        {loading ? (
-          <div className="flex items-center justify-center py-20 text-gray-500 dark:text-gray-400">
-            Loading…
-          </div>
-        ) : (
-          <>
-            <section>
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                    Providers
-                  </h2>
-                  <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">
-                    {active
-                      ? <>Active: <span className="font-medium text-gray-700 dark:text-gray-300">{active.display_name}</span></>
-                      : 'No provider active — suggestions are disabled.'}
-                  </p>
-                </div>
-                {active && (
-                  <button
-                    type="button"
-                    onClick={handleDeactivate}
-                    disabled={activating !== null}
-                    className="rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors"
-                  >
-                    Clear active
-                  </button>
-                )}
-              </div>
-              <div className="space-y-3">
-                {providers.map(p => (
-                  <ProviderCard
-                    key={p.name}
-                    provider={p}
-                    onSaved={setProviders}
-                    onActivate={handleActivate}
-                    activating={activating === p.name}
-                  />
-                ))}
-              </div>
-            </section>
+ {loading ? (
+ <div className="flex items-center justify-center py-20 text-content-muted">
+ Loading…
+ </div>
+ ) : (
+ <>
+ <section>
+ <div className="flex items-center justify-between mb-3">
+ <div>
+ <h2 className="text-sm font-semibold uppercase tracking-wider text-content-muted">
+ Providers
+ </h2>
+ <p className="mt-0.5 text-xs text-content-muted">
+ {active
+ ? <>Active: <span className="font-medium text-content-secondary">{active.display_name}</span></>
+ : 'No provider active — suggestions are disabled.'}
+ </p>
+ </div>
+ {active && (
+ <button
+ type="button"
+ onClick={handleDeactivate}
+ disabled={activating !== null}
+ className="rounded-lg border border-line-strong px-3 py-1.5 text-xs font-medium text-content-tertiary hover:bg-surface-inset disabled:opacity-50 transition-colors"
+ >
+ Clear active
+ </button>
+ )}
+ </div>
+ <div className="space-y-3">
+ {providers.map(p => (
+ <ProviderCard
+ key={p.name}
+ provider={p}
+ onSaved={setProviders}
+ onActivate={handleActivate}
+ activating={activating === p.name}
+ />
+ ))}
+ </div>
+ </section>
 
-            <section>
-              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                Permissions
-              </h2>
-              <PermissionsCard permissions={permissions} onSaved={setPermissions} />
-            </section>
-          </>
-        )}
-      </div>
-    </>
-  )
+ <section>
+ <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-content-muted">
+ Permissions
+ </h2>
+ <PermissionsCard permissions={permissions} onSaved={setPermissions} />
+ </section>
+ </>
+ )}
+ </div>
+ </>
+ )
 }

@@ -110,11 +110,11 @@ export default function JobsPage() {
       <PageHeader
         title="Jobs"
         description="Scheduled background tasks."
-        breadcrumbs={[{ label: 'Settings', to: '/admin/settings' }, { label: 'Jobs' }]}
+        breadcrumbs={[{ label: 'Settings', to: '/settings' }, { label: 'Jobs' }]}
         actions={
           <Link
             to="/admin/settings/jobs/history"
-            className="rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500 transition-colors"
+            className="lb-btn ghost"
           >
             History
           </Link>
@@ -122,51 +122,55 @@ export default function JobsPage() {
       />
       <div className="max-w-3xl px-8 py-8 space-y-6">
         {error && (
-          <div className="mb-6 rounded-lg bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-400">
+          <div className="mb-6 rounded-lg bg-danger-surface border border-danger-line px-4 py-3 text-sm text-danger-strong">
             {error}
           </div>
         )}
 
         {schedules === null ? (
-          <div className="text-sm text-gray-400 dark:text-gray-500">Loading…</div>
+          <div className="text-sm text-content-subtle">Loading…</div>
         ) : schedules.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-gray-300 dark:border-gray-600 p-12 text-center">
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">No scheduled jobs registered</p>
+          <div className="rounded-xl border border-dashed border-line-strong p-12 text-center">
+            <p className="text-sm font-medium text-content-muted">No scheduled jobs registered</p>
           </div>
         ) : (
-          <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
+          <div className="rounded-xl border border-line bg-surface overflow-x-auto">
+            {/* overflow-x-auto, not hidden: the table is wider than a phone,
+                and hidden clipped the trailing columns away with no way to
+                reach them. Scrolling inside its own box keeps the page from
+                scrolling sideways while leaving the data readable. */}
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+              <thead className="bg-surface-muted border-b border-line">
                 <tr>
                   {['Name', 'Cron', 'Next run', 'Enabled', ''].map(h => (
-                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-content-muted">
                       {h}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+              <tbody className="divide-y divide-line-subtle">
                 {schedules.map(s => (
                   <tr
                     key={s.kind}
                     onClick={() => navigate(`/admin/settings/jobs/${encodeURIComponent(s.kind)}`)}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+                    className="hover:bg-surface-muted transition-colors cursor-pointer"
                   >
                     <td className="px-4 py-3">
-                      <p className="font-medium text-gray-900 dark:text-white">{s.display_name}</p>
+                      <p className="font-medium text-content">{s.display_name}</p>
                       {s.description && (
-                        <p className="text-xs text-gray-400 dark:text-gray-500 max-w-md">
+                        <p className="text-xs text-content-subtle max-w-md">
                           {s.description}
                         </p>
                       )}
                     </td>
-                    <td className="px-4 py-3 font-mono text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                    <td className="px-4 py-3 font-mono text-xs text-content-tertiary whitespace-nowrap">
                       {s.cron}
                     </td>
-                    <td className="px-4 py-3 text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                    <td className="px-4 py-3 text-xs text-content-tertiary whitespace-nowrap">
                       {s.enabled && s.next_fire_at
                         ? formatCountdown(new Date(s.next_fire_at).getTime() - now)
-                        : <span className="text-gray-300 dark:text-gray-600">—</span>}
+                        : <span className="text-content-faint">—</span>}
                     </td>
                     <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                       <label className="relative inline-flex items-center cursor-pointer">
@@ -176,7 +180,7 @@ export default function JobsPage() {
                           checked={s.enabled}
                           onChange={e => toggleEnabled(s, e.target.checked)}
                         />
-                        <div className="w-9 h-5 bg-gray-200 dark:bg-gray-600 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full" />
+                        <div className="w-9 h-5 bg-surface-strong rounded-full peer peer-checked:bg-accent after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-surface-raised after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full" />
                       </label>
                     </td>
                     <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
@@ -185,14 +189,14 @@ export default function JobsPage() {
                           type="button"
                           onClick={() => runNow(s)}
                           title="Run now"
-                          className="p-1.5 rounded-md text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                          className="p-1.5 rounded-md text-content-muted hover:text-accent hover:bg-surface-inset transition-colors"
                         >
                           <RunIcon />
                         </button>
                         <Link
                           to={`/admin/settings/jobs/${encodeURIComponent(s.kind)}`}
                           title="Edit"
-                          className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                          className="p-1.5 rounded-md text-content-muted hover:text-content hover:bg-surface-inset transition-colors"
                         >
                           <EditIcon />
                         </Link>

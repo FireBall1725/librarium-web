@@ -6,12 +6,16 @@ import { useAuth, ApiError } from '../../../auth/AuthContext'
 import type { ProviderStatus } from '../../../types'
 import PageHeader from '../../../components/PageHeader'
 import { usePageTitle } from '../../../hooks/usePageTitle'
+import { Switch } from '../../../components/settings/SettingRow'
 
-const CAP_LABELS: Record<string, { label: string; cls: string }> = {
-  book_isbn:      { label: 'ISBN Lookup',    cls: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300' },
-  book_search:    { label: 'Book Search',    cls: 'bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300' },
-  series_name:    { label: 'Series Search',  cls: 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300' },
-  series_volumes: { label: 'Series Volumes', cls: 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300' },
+// The reference gives capabilities one chip, not a hue each: four colours for
+// four capabilities is a legend the reader has to learn, and the label already
+// says which is which.
+const CAP_LABELS: Record<string, string> = {
+  book_isbn:      'ISBN lookup',
+  book_search:    'Book search',
+  series_name:    'Series search',
+  series_volumes: 'Series volumes',
 }
 
 interface ProviderCardProps {
@@ -96,46 +100,41 @@ function ProviderCard({ provider, onSaved }: ProviderCardProps) {
   const isTest = provider.name === 'test'
 
   return (
-    <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5">
+    <div className="lb-card">
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <h3 className="font-semibold text-gray-900 dark:text-white">{provider.display_name}</h3>
-            {provider.capabilities.map(cap => {
-              const meta = CAP_LABELS[cap]
-              return (
-                <span key={cap} className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${meta?.cls ?? 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}`}>
-                  {meta?.label ?? cap}
-                </span>
-              )
-            })}
+            <h3 className="font-semibold text-content">{provider.display_name}</h3>
+            {provider.capabilities.length > 0 && (
+              <span className="lb-caps">
+                {provider.capabilities.map(cap => (
+                  <span key={cap} className="lb-cap">{CAP_LABELS[cap] ?? cap}</span>
+                ))}
+              </span>
+            )}
             {isTest && (
-              <span className="inline-flex items-center rounded-full bg-amber-100 dark:bg-amber-900/40 px-2 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-300">
+              <span className="lb-chip warn">
                 Built-in
               </span>
             )}
           </div>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{provider.description}</p>
+          <p className="mt-1 text-sm text-content-muted">{provider.description}</p>
         </div>
 
         {!isTest && (
-          <label className="relative inline-flex items-center cursor-pointer shrink-0">
-            <input
-              type="checkbox"
-              className="sr-only peer"
-              checked={enabled}
-              onChange={e => setEnabled(e.target.checked)}
-              disabled={missingRequiredField}
-            />
-            <div className="w-10 h-6 bg-gray-200 dark:bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full" />
-          </label>
+          <Switch
+            checked={enabled}
+            label={`Enable ${provider.display_name}`}
+            disabled={missingRequiredField}
+            onChange={setEnabled}
+          />
         )}
       </div>
 
       {hasConfigFields && !isTest && (
         <div className="mt-3 space-y-2">
           {provider.help_text && (
-            <div className="rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 px-3 py-2 text-sm text-blue-700 dark:text-blue-300">
+            <div className="rounded-lg bg-accent-surface border border-accent-line px-3 py-2 text-sm text-accent-strong">
               {provider.help_text}
               {provider.help_url && (
                 <> <a href={provider.help_url} target="_blank" rel="noopener noreferrer" className="font-medium underline hover:no-underline">Learn more →</a></>
@@ -148,18 +147,18 @@ function ProviderCard({ provider, onSaved }: ProviderCardProps) {
             const inputType = field.type === 'password' ? 'password' : field.type === 'url' ? 'url' : 'text'
             return (
               <div key={field.key}>
-                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
-                  {field.label} {isSaved && <span className="text-green-600 dark:text-green-400">(saved)</span>}
+                <label className="block text-xs font-medium text-content-tertiary mb-1">
+                  {field.label} {isSaved && <span className="text-success">(saved)</span>}
                 </label>
                 <input
                   type={inputType}
                   value={fieldValues[field.key] ?? ''}
                   onChange={e => setFieldValues(prev => ({ ...prev, [field.key]: e.target.value }))}
                   placeholder={isSaved ? (field.type === 'password' ? '••••••••••••••••' : savedValue) : (field.placeholder ?? `Enter ${field.label.toLowerCase()}…`)}
-                  className="w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="lb-field"
                 />
                 {field.help_text && (
-                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{field.help_text}</p>
+                  <p className="mt-1 text-xs text-content-muted">{field.help_text}</p>
                 )}
               </div>
             )
@@ -170,7 +169,7 @@ function ProviderCard({ provider, onSaved }: ProviderCardProps) {
       {!hasConfigFields && provider.requires_key && !isTest && (
         <div className="mt-3 space-y-2">
           {provider.help_text && (
-            <div className="rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 px-3 py-2 text-sm text-blue-700 dark:text-blue-300">
+            <div className="rounded-lg bg-accent-surface border border-accent-line px-3 py-2 text-sm text-accent-strong">
               {provider.help_text}
               {provider.help_url && (
                 <> <a href={provider.help_url} target="_blank" rel="noopener noreferrer" className="font-medium underline hover:no-underline">Get API key →</a></>
@@ -178,15 +177,15 @@ function ProviderCard({ provider, onSaved }: ProviderCardProps) {
             </div>
           )}
           <div>
-            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
-              API Key {provider.has_api_key && <span className="text-green-600 dark:text-green-400">(saved)</span>}
+            <label className="block text-xs font-medium text-content-tertiary mb-1">
+              API Key {provider.has_api_key && <span className="text-success">(saved)</span>}
             </label>
             <input
               type="password"
               value={apiKey}
               onChange={e => setApiKey(e.target.value)}
               placeholder={provider.has_api_key ? '••••••••••••••••' : 'Enter API key…'}
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="lb-field"
             />
           </div>
         </div>
@@ -196,23 +195,23 @@ function ProviderCard({ provider, onSaved }: ProviderCardProps) {
         <div className="mt-3 space-y-2">
           <div className="flex items-center gap-3">
             <button onClick={handleSave} disabled={saving}
-              className="rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
+              className="lb-btn sm">
               {saving ? 'Saving…' : 'Save'}
             </button>
             <button onClick={handleTest} disabled={testState.status === 'testing'}
-              className="rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors">
+              className="lb-btn ghost sm">
               {testState.status === 'testing' ? 'Testing…' : 'Test'}
             </button>
-            {success && <span className="text-sm text-green-600 dark:text-green-400">Saved</span>}
-            {error && <span className="text-sm text-red-600 dark:text-red-400">{error}</span>}
+            {success && <span className="text-sm text-success">Saved</span>}
+            {error && <span className="text-sm text-danger">{error}</span>}
           </div>
           {testState.status === 'ok' && (
-            <div className="rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 px-3 py-2 text-sm text-green-700 dark:text-green-300">
+            <div className="rounded-lg bg-success-surface border border-success-line px-3 py-2 text-sm text-success-strong">
               Connected — returned: <span className="font-medium">{testState.title}</span>
             </div>
           )}
           {testState.status === 'fail' && (
-            <div className="rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-3 py-2 text-sm text-red-700 dark:text-red-300">
+            <div className="rounded-lg bg-danger-surface border border-danger-line px-3 py-2 text-sm text-danger-strong">
               {testState.error}
             </div>
           )}
@@ -230,7 +229,7 @@ export default function MetadataPage() {
   const [providerOrder, setProviderOrder] = useState<string[]>([])
   const [orderSaving, setOrderSaving] = useState(false)
   const [orderSaved, setOrderSaved] = useState(false)
-  usePageTitle('Metadata')
+  usePageTitle('Metadata providers')
 
   const loadOrder = useCallback(async () => {
     try {
@@ -277,30 +276,30 @@ export default function MetadataPage() {
   return (
     <>
       <PageHeader
-        title="Metadata"
-        description="Configure metadata providers for book and series lookups."
-        breadcrumbs={[{ label: 'Settings', to: '/admin/settings' }, { label: 'Metadata' }]}
+        title="Metadata providers"
+        description="Where book and series details are looked up. Order is priority: the first provider that answers a lookup wins."
+        breadcrumbs={[{ label: 'Settings', to: '/settings' }, { label: 'Metadata providers' }]}
       />
-      <div className="max-w-3xl px-8 py-8 space-y-8">
+      <div className="px-8 py-6 space-y-6">
 
         {error && (
-          <div className="rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4 text-sm text-red-700 dark:text-red-400">
+          <div className="rounded-lg bg-danger-surface border border-danger-line p-4 text-sm text-danger-strong">
             {error}
           </div>
         )}
 
         {loading ? (
-          <div className="flex items-center justify-center py-20 text-gray-500 dark:text-gray-400">
+          <div className="flex items-center justify-center py-20 text-content-muted">
             Loading…
           </div>
         ) : (
           <>
             {/* All providers in one section */}
             <section>
-              <h2 className="mb-1 text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+              <h2 className="mb-1 text-sm font-semibold uppercase tracking-wider text-content-muted">
                 Providers
               </h2>
-              <p className="mb-3 text-xs text-gray-400 dark:text-gray-500">
+              <p className="mb-3 text-xs text-content-subtle">
                 Each provider can support multiple capabilities. Badges indicate what each provider can do.
               </p>
               <div className="space-y-3">
@@ -313,31 +312,31 @@ export default function MetadataPage() {
             {/* Search order — only meaningful when multiple book providers are enabled */}
             {providerOrder.length > 1 && (
               <section>
-                <h2 className="mb-1 text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                <h2 className="mb-1 text-sm font-semibold uppercase tracking-wider text-content-muted">
                   Search Order
                 </h2>
-                <p className="mb-3 text-xs text-gray-400 dark:text-gray-500">
+                <p className="mb-3 text-xs text-content-subtle">
                   When multiple providers return conflicting data for the same book, the higher-ranked provider wins.
                 </p>
-                <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden bg-white dark:bg-gray-800 divide-y divide-gray-100 dark:divide-gray-700">
+                <div className="rounded-xl border border-line overflow-hidden bg-surface-raised divide-y divide-line-subtle">
                   {providerOrder.map((name, idx) => {
                     const p = providers.find(p => p.name === name)
                     return (
                       <div key={name} className="flex items-center gap-3 px-4 py-3">
-                        <span className="w-5 text-center text-xs font-semibold text-gray-400 dark:text-gray-500">{idx + 1}</span>
-                        <span className="flex-1 text-sm font-medium text-gray-800 dark:text-gray-200">
+                        <span className="w-5 text-center text-xs font-semibold text-content-subtle">{idx + 1}</span>
+                        <span className="flex-1 text-sm font-medium text-content-strong">
                           {p?.display_name ?? name}
                         </span>
                         <div className="flex gap-1">
                           <button onClick={() => moveProvider(idx, -1)} disabled={idx === 0}
-                            className="p-1 rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 disabled:opacity-30 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                            className="rounded p-1 text-content-muted transition-colors hover:bg-surface-inset hover:text-content disabled:opacity-30"
                             title="Move up">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
                             </svg>
                           </button>
                           <button onClick={() => moveProvider(idx, 1)} disabled={idx === providerOrder.length - 1}
-                            className="p-1 rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 disabled:opacity-30 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                            className="rounded p-1 text-content-muted transition-colors hover:bg-surface-inset hover:text-content disabled:opacity-30"
                             title="Move down">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -350,10 +349,10 @@ export default function MetadataPage() {
                 </div>
                 <div className="mt-3 flex items-center gap-3">
                   <button onClick={saveOrder} disabled={orderSaving}
-                    className="rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
+                    className="lb-btn sm">
                     {orderSaving ? 'Saving…' : 'Save order'}
                   </button>
-                  {orderSaved && <span className="text-sm text-green-600 dark:text-green-400">Saved</span>}
+                  {orderSaved && <span className="text-sm text-success">Saved</span>}
                 </div>
               </section>
             )}

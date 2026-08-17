@@ -52,12 +52,12 @@ export default function SuggestionsWidget({ type }: SuggestionsWidgetProps) {
   const title = type === 'buy' ? t('suggestions.buy_title') : t('suggestions.read_next_title')
 
   return (
-    <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+    <div className="rounded-xl border border-line bg-surface">
       <div className="flex items-center justify-between px-5 pt-4 pb-2">
-        <h2 className="text-sm font-semibold text-gray-900 dark:text-white">{title}</h2>
+        <h2 className="text-sm font-semibold text-content">{title}</h2>
         <Link
           to={`/suggestions?type=${type}`}
-          className="text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline"
+          className="text-xs font-medium text-accent hover:underline"
         >
           {t('suggestions.see_all')}
         </Link>

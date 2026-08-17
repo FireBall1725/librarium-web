@@ -32,20 +32,20 @@ const paletteClasses: Record<
   { chip: string; chipButton: string }
 > = {
   indigo: {
-    chip: 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300',
-    chipButton: 'text-indigo-500 hover:text-indigo-700 dark:hover:text-indigo-200',
+    chip: 'bg-accent-surface text-accent',
+    chipButton: 'text-accent hover:text-accent-strong',
   },
   purple: {
-    chip: 'bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300',
-    chipButton: 'text-purple-500 hover:text-purple-700 dark:hover:text-purple-200',
+    chip: 'bg-accent-surface text-accent-strong',
+    chipButton: 'text-accent hover:text-accent-strong',
   },
   emerald: {
-    chip: 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300',
-    chipButton: 'text-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-200',
+    chip: 'bg-success-surface text-success',
+    chipButton: 'text-success hover:text-success-strong',
   },
   amber: {
-    chip: 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300',
-    chipButton: 'text-amber-500 hover:text-amber-700 dark:hover:text-amber-200',
+    chip: 'bg-warning-surface text-warning-strong ',
+    chipButton: 'text-warning hover:text-warning',
   },
 }
 
@@ -86,11 +86,11 @@ function ChipCombo({
   const showResults = results.length > 0
   return (
     <div>
-      <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+      <label className="block text-xs font-medium text-content-secondary mb-1.5">
         {label}
       </label>
       <div className="relative">
-        <div className="min-h-[38px] rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 px-2 py-1.5 flex flex-wrap gap-1.5 items-center">
+        <div className="min-h-[38px] rounded-md border border-line-strong bg-surface px-2 py-1.5 flex flex-wrap gap-1.5 items-center">
           {chips.map(c => (
             <span
               key={c.id}
@@ -114,17 +114,17 @@ function ChipCombo({
             onChange={e => onQueryChange(e.target.value)}
             placeholder={placeholder}
             disabled={disabled}
-            className="flex-1 min-w-[8rem] bg-transparent outline-none text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400"
+            className="flex-1 min-w-[8rem] bg-transparent outline-none text-sm text-content"
           />
         </div>
         {showResults && (
-          <div className="absolute z-10 mt-1 w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg max-h-60 overflow-y-auto">
+          <div className="absolute z-10 mt-1 w-full rounded-md border border-line bg-surface-raised shadow-lg max-h-60 overflow-y-auto">
             {results.map(r => (
               <button
                 type="button"
                 key={r.id}
                 onClick={() => onPick(r)}
-                className="block w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-blue-900/30"
+                className="block w-full text-left px-3 py-1.5 text-sm text-content-secondary hover:bg-accent-surface"
               >
                 {r.label}
               </button>
@@ -132,11 +132,11 @@ function ChipCombo({
           </div>
         )}
         {searching && !showResults && query.trim().length >= 2 && (
-          <p className="absolute right-2 top-2 text-xs text-gray-400">Searching…</p>
+          <p className="absolute right-2 top-2 text-xs text-content-subtle">Searching…</p>
         )}
       </div>
       {footnote && (
-        <p className="mt-1 text-[11px] text-gray-500 dark:text-gray-400">{footnote}</p>
+        <p className="mt-1 text-[11px] text-content-muted">{footnote}</p>
       )}
     </div>
   )
@@ -358,44 +358,44 @@ export default function CustomRequestModal({
       <div
         ref={dialogRef}
         onClick={e => e.stopPropagation()}
-        className="w-full max-w-xl rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg"
+        className="w-full max-w-xl rounded-xl border border-line-strong bg-surface shadow-lg"
       >
-        <div className="p-5 border-b border-gray-200 dark:border-gray-800 flex items-start justify-between gap-4">
+        <div className="p-5 border-b border-line flex items-start justify-between gap-4">
           <div>
-            <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-base font-semibold text-content">
               Custom suggestion request
             </h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            <p className="text-xs text-content-muted mt-1">
               Pick any combination. Leave fields blank if they don't apply.
-              This uses one of your daily runs.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={submitting}
-            className="p-1 -m-1 rounded text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 disabled:opacity-50"
-            aria-label="Close"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+ This uses one of your daily runs.
+ </p>
+ </div>
+ <button
+ type="button"
+ onClick={onClose}
+ disabled={submitting}
+ className="p-1 -m-1 rounded text-content-subtle hover:text-content-secondary disabled:opacity-50"
+ aria-label="Close"
+ >
+ <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+ <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+ </svg>
+ </button>
+ </div>
 
-        <div className="p-5 space-y-5">
-          <ChipCombo
-            label="Authors"
-            palette="indigo"
-            placeholder="Type to search authors…"
-            chips={authors}
-            query={authorQuery}
-            onQueryChange={setAuthorQuery}
-            onRemove={id => setAuthors(prev => prev.filter(a => a.id !== id))}
-            results={authorResults}
-            onPick={c => {
-              setAuthors(prev => [...prev, c])
-              setAuthorQuery('')
+ <div className="p-5 space-y-5">
+ <ChipCombo
+ label="Authors"
+ palette="indigo"
+ placeholder="Type to search authors…"
+ chips={authors}
+ query={authorQuery}
+ onQueryChange={setAuthorQuery}
+ onRemove={id => setAuthors(prev => prev.filter(a => a.id !== id))}
+ results={authorResults}
+ onPick={c => {
+ setAuthors(prev => [...prev, c])
+ setAuthorQuery('')
               setAuthorResults([])
             }}
             searching={authorSearching}
@@ -451,44 +451,44 @@ export default function CustomRequestModal({
             onPick={c => {
               setTags(prev => [...prev, c])
               setTagQuery('')
-              setTagResults([])
-            }}
-            searching={tagSearching}
-            disabled={submitting}
-            footnote="Tags are per-library; names suffixed with library when ambiguous."
-          />
+ setTagResults([])
+ }}
+ searching={tagSearching}
+ disabled={submitting}
+ footnote="Tags are per-library; names suffixed with library when ambiguous."
+ />
 
-          <div>
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-              Notes (optional)
-            </label>
-            <textarea
-              value={notes}
-              onChange={e => setNotes(e.target.value)}
-              placeholder='e.g. "long series I can binge" or "similar tone to Piranesi"'
-              disabled={submitting}
-              rows={3}
-              className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 resize-y"
-            />
-          </div>
-        </div>
+ <div>
+ <label className="block text-xs font-medium text-content-secondary mb-1.5">
+ Notes (optional)
+ </label>
+ <textarea
+ value={notes}
+ onChange={e => setNotes(e.target.value)}
+ placeholder='e.g. "long series I can binge" or "similar tone to Piranesi"'
+ disabled={submitting}
+ rows={3}
+ className="w-full rounded-md border border-line-strong bg-surface px-3 py-2 text-sm text-content focus:outline-none focus:ring-2 focus:ring-accent disabled:opacity-50 resize-y"
+ />
+ </div>
+ </div>
 
-        <div className="flex items-center justify-end gap-2 p-4 border-t border-gray-200 dark:border-gray-800">
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={submitting}
-            className="px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 disabled:opacity-50"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={!canSubmit || submitting}
-            className="rounded-md bg-blue-600 text-white px-3 py-1.5 text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
-          >
-            {submitting ? 'Generating…' : 'Generate suggestions'}
+ <div className="flex items-center justify-end gap-2 p-4 border-t border-line">
+ <button
+ type="button"
+ onClick={onClose}
+ disabled={submitting}
+ className="px-3 py-1.5 text-sm text-content-secondary hover:text-content disabled:opacity-50"
+ >
+ Cancel
+ </button>
+ <button
+ type="button"
+ onClick={handleSubmit}
+ disabled={!canSubmit || submitting}
+ className="rounded-md bg-accent text-white px-3 py-1.5 text-sm font-medium hover:brightness-110 disabled:opacity-50"
+ >
+ {submitting ? 'Generating…' : 'Generate suggestions'}
           </button>
         </div>
       </div>
