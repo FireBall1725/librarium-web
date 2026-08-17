@@ -10,7 +10,7 @@ import { applyTheme, readStoredTheme, storeTheme } from '../lib/theme'
 import { VIEWS_CHANGED, announceViewsChanged, defaultViewHref, loadViews, newViewId, normaliseParams, saveView, viewCount, visibleViews, type SavedView } from '../lib/views'
 import { SETTINGS_TREE } from '../lib/settingsTree'
 import { attentionRoutes, useSettingsAttention } from '../lib/settingsAttention'
-import type { BookFacets } from '../lib/bookBrowse'
+import type { BookFacets, FacetValue } from '../lib/bookBrowse'
 import { Icon, type IconName } from '../lib/icons'
 import { shelfIcon } from '../lib/shelfIcons'
 import { VIEW_ICONS, viewIcon } from '../lib/viewIcons'
@@ -25,6 +25,8 @@ interface CollectionCounts {
   authors: number
   loans: number
   loans_overdue: number
+  /** Undismissed suggestions. Absent from servers older than 26.8.1. */
+  suggestions?: number
 }
 
 /**
@@ -97,6 +99,18 @@ function NavRow({
  * land and for any view combining two facets. A zero would claim the shelf is
  * empty, which is a different and wrong statement.
  */
+/**
+ * A count for one value of a loaded facet dimension.
+ *
+ * Absent from a loaded dimension means none, not unknown: the block only lists
+ * values something matched, so an empty library or shelf had no row and showed
+ * no number rather than a nought.
+ */
+function facetCount(values: FacetValue[] | undefined, value: string): number | undefined {
+  if (!values) return undefined
+  return values.find(v => v.value === value)?.count ?? 0
+}
+
 function ViewCount({ value }: { value: number | undefined }) {
   if (value === undefined) return null
   return <span className="count">{value.toLocaleString()}</span>
@@ -444,6 +458,20 @@ export default function Layout() {
           <NavRow to="/loans" icon="lent" label={t('nav.loans', { defaultValue: 'Loans' })}
             count={counts?.loans} countWarn={(counts?.loans_overdue ?? 0) > 0} />
 
+          {/* Beside the other collection surfaces rather than below the shelves.
+              A suggestion is something to act on, and at the bottom of the rail
+              it sat under the reader's own views and shelves, which is where
+              you look for what you already have, not for what to do next.
+
+              The count is every undismissed suggestion, so it agrees with the
+              page it opens. The ownership facet's "suggested" tally is a
+              different, smaller number: a suggestion for a book already on the
+              shelf ranks as shelf and drops out of it. */}
+          {suggestionsAvailable && (
+            <NavRow to="/suggestions" icon="suggested" label={t('nav.suggestions')}
+              count={counts?.suggestions} />
+          )}
+
           {visibleViews(views).length > 0 && (
             <>
               <div className="lb-eyebrow px-2 pb-1.5 pt-4">
@@ -488,7 +516,7 @@ export default function Layout() {
                 >
                   <span className="swatchdot" style={{ background: libraryColour(l.id) }} />
                   {l.name}
-                  <ViewCount value={facets?.library.find(f => f.value === l.id)?.count} />
+                  <ViewCount value={facetCount(facets?.library, l.id)} />
                 </NavLink>
               ))}
             </>
@@ -515,15 +543,12 @@ export default function Layout() {
                   <Icon name={shelfIcon(sh.icon)}
                     style={sh.color ? { color: sh.color } : undefined} />
                   {sh.name}
-                  <ViewCount value={facets?.shelf.find(f => f.value === sh.id)?.count} />
+                  <ViewCount value={facetCount(facets?.shelf, sh.id)} />
                 </NavLink>
               ))}
             </>
           )}
 
-          {suggestionsAvailable && (
-            <NavRow to="/suggestions" icon="suggested" label={t('nav.suggestions')} />
-          )}
           </>
           )}
         </nav>
