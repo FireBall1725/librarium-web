@@ -224,7 +224,14 @@ export function viewCount(view: SavedView, facets: BookFacets | null): number | 
   const dimension = (Object.keys(PARAM) as FacetKey[]).find(k => PARAM[k] === key)
   if (!dimension) return undefined
 
-  return facets[dimension]?.find(v => v.value === value)?.count
+  const values = facets[dimension]
+  if (!values) return undefined
+
+  // Absent from a loaded dimension means none, not unknown. A facet block only
+  // lists values something matched, so a view whose answer is zero had no row
+  // and rendered no number at all — every saved view sat blank until it had at
+  // least one book, which reads as broken rather than as empty.
+  return values.find(v => v.value === value)?.count ?? 0
 }
 
 /**

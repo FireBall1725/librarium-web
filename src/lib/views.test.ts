@@ -198,9 +198,24 @@ describe('viewCount', () => {
     expect(viewCount(view({ params: 'status=reading,unread' }), facets)).toBeUndefined()
   })
 
-  it('returns undefined for an unknown value rather than zero', () => {
-    // Zero would claim the shelf is empty; undefined renders no count at all.
-    expect(viewCount(view({ params: 'tag=nonexistent' }), facets)).toBeUndefined()
+  it('counts a value absent from a loaded dimension as zero', () => {
+    // This asserted undefined, on the reasoning that zero would claim the shelf
+    // is empty. It reads the other way round in practice: a facet block only
+    // lists values something matched, so every view whose answer was none had
+    // no row and rendered no number at all. A collection with nothing read
+    // showed a blank beside Finished, which looks broken rather than empty.
+    //
+    // Absent from a *loaded* dimension is a real zero. Unknown is the case
+    // below, where the block has not arrived, and that still renders nothing.
+    expect(viewCount(view({ params: 'tag=nonexistent' }), facets)).toBe(0)
+    expect(viewCount(view({ params: 'status=read' }), facets)).toBe(0)
+  })
+
+  it('still returns undefined for a dimension the block does not carry', () => {
+    // Missing dimension, not a missing value in it: nothing has been counted,
+    // so there is no zero to claim.
+    const partial = { ...facets, tag: undefined } as unknown as typeof facets
+    expect(viewCount(view({ params: 'tag=signed' }), partial)).toBeUndefined()
   })
 
   it('returns undefined before the facets arrive', () => {
