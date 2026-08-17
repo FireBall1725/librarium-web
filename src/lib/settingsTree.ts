@@ -64,6 +64,9 @@ export const SETTINGS_TREE: SettingsSection[] = [
       { id: 'media-types', to: '/settings/media-types', labelKey: 'settings_nav.media_types', labelFallback: 'Media Types', fact: 'mediaTypes' },
       { id: 'genres', to: '/settings/genres', labelKey: 'settings_nav.genres', labelFallback: 'Genres', fact: 'genres' },
       { id: 'tags', to: '/settings/tags', labelKey: 'settings_nav.tags', labelFallback: 'Tags' },
+      // Beside Tags because they are the same shape: a named, per-library set
+      // of books. A shelf is a tag with an icon and a description.
+      { id: 'shelves', to: '/settings/shelves', labelKey: 'settings_nav.shelves', labelFallback: 'Shelves' },
       { id: 'profiles', to: '/settings/profiles', labelKey: 'settings_nav.profiles', labelFallback: 'Profiles' },
     ],
   },
@@ -98,6 +101,9 @@ export const SETTINGS_TREE: SettingsSection[] = [
     labelFallback: 'System',
     pages: [
       { id: 'people', to: '/admin/users', labelKey: 'settings_nav.people', labelFallback: 'People', fact: 'people' },
+      // Beside People because the two answer the same question at different
+      // scopes: who has an account here, and who can see which library.
+      { id: 'members', to: '/settings/members', labelKey: 'settings_nav.members', labelFallback: 'Members' },
       { id: 'jobs', to: '/settings/jobs', labelKey: 'settings_nav.jobs', labelFallback: 'Jobs' },
       { id: 'history', to: '/settings/jobs/history', labelKey: 'settings_nav.job_history', labelFallback: 'Job history' },
       { id: 'general', to: '/settings/general', labelKey: 'settings_nav.general', labelFallback: 'General', fact: 'version' },
