@@ -336,13 +336,26 @@
       width: 238px;
       transition: none;
 
-      /* Tailwind v4 compiles -translate-x-full to the standalone `translate`
-         property, not `transform`. Neutralising only `transform` leaves the
-         drawer sitting at -100% with a computed transform of "none", which
-         looks like the sidebar failing to render at all. Both are reset here
-         so the utility cannot win whichever property it uses. */
-      translate: none !important;
-      transform: none !important;
+      /* Bring the drawer back on screen.
+         ---------------------------------------------------------------------
+         Tailwind v4 compiles -translate-x-full to the standalone `translate`
+         property, not to `transform`, so this is the one that has to be
+         cancelled. Cancelling `transform` instead leaves the rail parked at
+         -100% while reporting a computed transform of "none", which reads as
+         the sidebar failing to render rather than as a sidebar pushed
+         off-screen.
+
+         `transform: none !important` used to sit here beside it, and that is
+         what broke the built app: the minifier folds the individual transform
+         properties into `transform` when both appear in one rule, so it
+         dropped the `translate` line and kept the useless one. Nothing is
+         minified by `npm run dev`, so the rail was correct locally and missing
+         in every production build. Leave this declaration alone in this rule —
+         if a `transform` reset is ever needed, it cannot live here.
+
+         `0 0` rather than `none` because none is the initial value, and
+         initial-value declarations are the next thing a minifier drops. */
+      translate: 0 0 !important;
     }
   }
 }

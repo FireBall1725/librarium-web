@@ -12,13 +12,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && node scripts/verify-built-css.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
-    "verify:tokens": "node scripts/verify-colour-tokens.mjs"
+    "verify:tokens": "node scripts/verify-colour-tokens.mjs",
+    "verify:css": "node scripts/verify-built-css.mjs"
   },
   "dependencies": {
     "i18next": "^26.3.1",
