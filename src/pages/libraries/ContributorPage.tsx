@@ -731,11 +731,10 @@ export default function ContributorPage() {
  {/* ── Right main column ── */}
  <div className="flex-1 min-w-0">
 
- {/* Name row */}
- <div className="flex items-start justify-between gap-3">
- <h1 className="text-2xl font-bold text-content leading-tight">
- {contributor.name}
- </h1>
+ {/* Actions. The name sat here as a second h1, directly under the one the
+     sticky header already renders from the same crumb — see the note on
+     BookPage's title row for why the header's is the one that stays. */}
+ <div className="flex items-start justify-end gap-3">
  <div className="flex items-center gap-1 flex-shrink-0">
  <button onClick={() => setShowRename(true)} title="Rename"
  className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-surface-inset transition-colors">

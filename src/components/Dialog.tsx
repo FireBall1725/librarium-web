@@ -11,8 +11,10 @@
 // and a toast, so this is built from its existing pieces: a .lb-card panel with
 // .lb-field inputs and .lb-btn actions. Nothing new is invented for it.
 
-import { useEffect, useId, useRef, type ReactNode } from 'react'
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Icon, type IconName } from '../lib/icons'
+import { NO_AUTOFILL } from '../lib/formHints'
 
 export function Dialog({
   open,
@@ -154,6 +156,9 @@ export function PromptDialog({
   placeholder,
   initialValue = '',
   confirmLabel,
+  icons,
+  initialIcon,
+  iconLabel,
   onCancel,
   onSubmit,
 }: {
@@ -164,19 +169,36 @@ export function PromptDialog({
   placeholder?: string
   initialValue?: string
   confirmLabel?: string
+  /**
+   * Offer an icon alongside the name. Naming a thing and choosing how it looks
+   * is one act from the reader's side, so it is one dialog rather than a second
+   * step they have to discover.
+   */
+  icons?: IconName[]
+  initialIcon?: IconName
+  iconLabel?: string
   onCancel: () => void
-  onSubmit: (value: string) => void
+  onSubmit: (value: string, icon?: IconName) => void
 }) {
   const { t } = useTranslation()
   const inputId = useId()
   const input = useRef<HTMLInputElement>(null)
+  const [icon, setIcon] = useState<IconName | undefined>(initialIcon)
+
+  // The dialog is not unmounted between opens, so without this the second
+  // thing you name arrives wearing the first one's icon.
+  const [syncedInitial, setSyncedInitial] = useState(initialIcon)
+  if (initialIcon !== syncedInitial) {
+    setSyncedInitial(initialIcon)
+    setIcon(initialIcon)
+  }
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault()
     const value = input.current?.value.trim() ?? ''
     // An empty name is a cancel, not an error to scold the reader about.
     if (!value) { onCancel(); return }
-    onSubmit(value)
+    onSubmit(value, icon)
   }
 
   return (
@@ -206,14 +228,34 @@ export function PromptDialog({
           className="lb-field"
           defaultValue={initialValue}
           placeholder={placeholder}
-          autoComplete="off"
-          // Password managers offer to fill any lone text input in a dialog.
-          // autoComplete="off" does not stop them; these vendor attributes do,
-          // and a view name is not a credential.
-          data-1p-ignore
-          data-lpignore="true"
-          data-bwignore
+          {...NO_AUTOFILL}
         />
+
+        {icons && icons.length > 0 && (
+          <>
+            <span className="lb-eyebrow mb-1.5 mt-4 block">
+              {iconLabel ?? t('common.icon', { defaultValue: 'Icon' })}
+            </span>
+            <div className="flex flex-wrap gap-1">
+              {icons.map(name => (
+                <button
+                  key={name}
+                  type="button"
+                  onClick={() => setIcon(name)}
+                  aria-label={name}
+                  aria-pressed={icon === name}
+                  className={`rounded-md border p-1.5 transition-colors ${
+                    icon === name
+                      ? 'border-accent bg-accent-surface text-accent'
+                      : 'border-line-strong text-content-tertiary hover:bg-surface-inset'
+                  }`}
+                >
+                  <Icon name={name} size={16} className="" />
+                </button>
+              ))}
+            </div>
+          </>
+        )}
       </form>
     </Dialog>
   )

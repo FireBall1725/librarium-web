@@ -164,8 +164,10 @@ function ContinueReadingHero() {
 
   return (
     <div className="relative rounded-xl border border-line bg-surface overflow-hidden">
-      {/* Soft gradient backdrop */}
-      <div className="absolute inset-0 bg-gradient-to-br from-accent-surface via-white to-white pointer-events-none" />
+      {/* A wash of the accent over the panel's own ground. The two ends have to
+          be tokens: a literal white here painted the card white on every dark
+          theme and took the text with it. */}
+      <div className="absolute inset-0 bg-gradient-to-br from-accent-surface via-surface to-surface pointer-events-none" />
 
       <div className="relative flex flex-col sm:flex-row gap-5 p-5 sm:p-6">
         <Link

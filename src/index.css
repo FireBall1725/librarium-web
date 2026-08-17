@@ -330,7 +330,10 @@
     .app-scrim      { display: none; }
     .app-sidebar {
       position: static;
-      width: 14rem;
+      /* 238px is the reference rail's width. At 14rem the rail was 14px
+         narrower than the design, which the account block paid for by
+         truncating the email. */
+      width: 238px;
       transition: none;
 
       /* Tailwind v4 compiles -translate-x-full to the standalone `translate`

@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth, ApiError } from '../../auth/AuthContext'
+import { LIBRARY_SECTIONS } from '../../lib/librarySections'
 import type { Library } from '../../types'
 import PageHeader from '../../components/PageHeader'
 import { usePageTitle } from '../../hooks/usePageTitle'
@@ -203,11 +205,13 @@ function DeleteLibraryModal({ library, onClose, onDeleted }: DeleteLibraryModalP
 // (or any of its actions) doesn't also navigate into the library.
 
 interface CardMenuProps {
+  libraryId: string
   onEdit: () => void
   onDelete: () => void
 }
 
-function CardMenu({ onEdit, onDelete }: CardMenuProps) {
+function CardMenu({ libraryId, onEdit, onDelete }: CardMenuProps) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -239,7 +243,22 @@ function CardMenu({ onEdit, onDelete }: CardMenuProps) {
         </svg>
       </button>
       {open && (
-        <div className="absolute right-0 mt-1 w-36 rounded-lg border border-line bg-surface shadow-lg z-10 overflow-hidden">
+        <div className="absolute right-0 mt-1 w-44 rounded-lg border border-line bg-surface shadow-lg z-10 overflow-hidden">
+          {/* The way into a library's own pages.
+              The sidebar used to be the only route to these, which meant they
+              appeared while you were reading a book to stay reachable at all.
+              They belong to managing a library, so they hang off the library. */}
+          {LIBRARY_SECTIONS.map(item => (
+            <Link
+              key={item.section}
+              to={`/libraries/${libraryId}/${item.section}`}
+              onClick={e => { e.stopPropagation(); setOpen(false) }}
+              className="block px-3 py-2 text-sm text-content-secondary hover:bg-surface-muted"
+            >
+              {t(item.labelKey)}
+            </Link>
+          ))}
+          <div className="border-t border-line" />
           <button
             type="button"
             onClick={stop(onEdit)}
@@ -358,6 +377,7 @@ export default function LibrariesPage() {
                     </span>
                   )}
                   <CardMenu
+                    libraryId={lib.id}
                     onEdit={() => setEditing(lib)}
                     onDelete={() => setDeleting(lib)}
                   />

@@ -10,15 +10,18 @@ import ApiUnavailablePage from './pages/ApiUnavailablePage'
 import DashboardPage from './pages/DashboardPage'
 import BooksPage from './pages/BooksPage'
 import SeriesPage from './pages/SeriesPage'
+import LoansPage from './pages/LoansPage'
 import SettingsIndexPage from './pages/settings/SettingsIndexPage'
 import LicencesPage from './pages/settings/LicencesPage'
+import MembersPage from './pages/settings/MembersPage'
+import ShelvesPage from './pages/settings/ShelvesPage'
 import AppearancePage from './pages/settings/AppearancePage'
 import LegacySettingsRedirect from './pages/settings/LegacySettingsRedirect'
 import AuthorsPage from './pages/AuthorsPage'
 import LibrariesPage from './pages/libraries/LibrariesPage'
 import LibraryPage from './pages/libraries/LibraryPage'
 import BookPage from './pages/libraries/BookPage'
-import ContributorsPage from './pages/libraries/ContributorsPage'
+import LegacyLibraryRedirect from './pages/libraries/LegacyLibraryRedirect'
 import ContributorPage from './pages/libraries/ContributorPage'
 import ImportPage from './pages/import/ImportPage'
 import UsersPage from './pages/admin/UsersPage'
@@ -53,6 +56,7 @@ function AppRoutes() {
               <Route path="/books" element={<BooksPage />} />
               <Route path="/series" element={<SeriesPage />} />
               <Route path="/authors" element={<AuthorsPage />} />
+              <Route path="/loans" element={<LoansPage />} />
               <Route path="/libraries" element={<LibrariesPage />} />
               <Route path="/import" element={<ImportPage />} />
               <Route path="/profile" element={<SettingsLayout />}>
@@ -94,9 +98,11 @@ function AppRoutes() {
                   <Route path="ai"                element={<AIPage />} />
                   <Route path="media-management"  element={<MediaManagementPage />} />
                   <Route path="tags"               element={<TagsPage />} />
+                  <Route path="shelves"           element={<ShelvesPage />} />
                   <Route path="genres"             element={<GenresPage />} />
                   <Route path="media-types"       element={<MediaTypesPage />} />
                   <Route path="profiles"          element={<ProfilesPage />} />
+                  <Route path="members"           element={<MembersPage />} />
                   <Route path="general"           element={<GeneralPage />} />
                   <Route path="jobs"              element={<JobsPage />} />
                   <Route path="jobs/history"       element={<JobsHistoryPage />} />
@@ -108,15 +114,19 @@ function AppRoutes() {
 
               {/* Library section: shared sidebar, plus library-scoped breadcrumb/tabs */}
               <Route element={<LibraryOutlet />}>
-                <Route path="/libraries/:libraryId" element={<Navigate to="books" replace />} />
-                <Route path="/libraries/:libraryId/books" element={<LibraryPage section="books" />} />
-                <Route path="/libraries/:libraryId/shelves" element={<LibraryPage section="shelves" />} />
+                {/* Books and Contributors are retired: /books and /authors do
+                    the same job with facets and saved views on top. Both keep
+                    working as redirects so existing bookmarks land somewhere
+                    sensible instead of on the dashboard. */}
+                <Route path="/libraries/:libraryId" element={<LegacyLibraryRedirect to="/books" />} />
+                <Route path="/libraries/:libraryId/books" element={<LegacyLibraryRedirect to="/books" />} />
+                <Route path="/libraries/:libraryId/shelves" element={<LegacyLibraryRedirect to="/settings/shelves" />} />
                 <Route path="/libraries/:libraryId/series" element={<LibraryPage section="series" />} />
                 <Route path="/libraries/:libraryId/series/:seriesId" element={<LibraryPage section="series" />} />
-                <Route path="/libraries/:libraryId/loans" element={<LibraryPage section="loans" />} />
-                <Route path="/libraries/:libraryId/members" element={<LibraryPage section="members" />} />
+                <Route path="/libraries/:libraryId/loans" element={<LegacyLibraryRedirect to="/loans" />} />
+                <Route path="/libraries/:libraryId/members" element={<LegacyLibraryRedirect to="/settings/members" />} />
                 <Route path="/libraries/:libraryId/books/:bookId" element={<BookPage />} />
-                <Route path="/libraries/:libraryId/contributors" element={<ContributorsPage />} />
+                <Route path="/libraries/:libraryId/contributors" element={<LegacyLibraryRedirect to="/authors" />} />
                 <Route path="/libraries/:libraryId/contributors/:contributorId" element={<ContributorPage />} />
               </Route>
             </Route>

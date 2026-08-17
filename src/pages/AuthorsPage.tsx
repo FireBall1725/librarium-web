@@ -29,17 +29,22 @@ export default function AuthorsPage() {
   const [params, setParams] = useSearchParams()
   const letter = params.get('letter')
   const sort: SortMode = params.get('sort') === 'count' ? 'count' : 'name'
+  // Carried from the retired per-library Contributors page. The server does the
+  // narrowing, because filtering here would print a count for authors the
+  // caller was never sent.
+  const lib = params.get('lib')
 
   const [authors, setAuthors] = useState<AuthorIndexEntry[] | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
-    callApi<{ items: AuthorIndexEntry[] }>('/api/v1/me/authors/index')
+    const query = lib ? `?lib=${encodeURIComponent(lib)}` : ''
+    callApi<{ items: AuthorIndexEntry[] }>(`/api/v1/me/authors/index${query}`)
       .then(res => { if (!cancelled) setAuthors(res.items ?? []) })
       .catch((e: Error) => { if (!cancelled) { setError(e.message); setAuthors([]) } })
     return () => { cancelled = true }
-  }, [callApi])
+  }, [callApi, lib])
 
   // Derived, not stored. The letters the bar can offer are a property of the
   // data, so recomputing them beats holding a second copy that can go stale.
@@ -60,6 +65,18 @@ export default function AuthorsPage() {
     return list
   }, [authors, letter, sort])
 
+  // The library's own name, taken from the rows already on screen rather than
+  // fetched: every author in a scoped result carries it. Undefined only when
+  // the scope matched nothing, which is the one case with no row to read.
+  const scopeName = useMemo(() => {
+    if (!lib) return null
+    for (const a of authors ?? []) {
+      const found = a.libraries?.find(l => l.id === lib)
+      if (found) return found.name
+    }
+    return null
+  }, [authors, lib])
+
   const setParam = (key: string, value: string | null) => {
     const next = new URLSearchParams(params)
     if (value === null) next.delete(key)
@@ -67,8 +84,12 @@ export default function AuthorsPage() {
     setParams(next, { replace: true })
   }
 
+  // The library scope rides along, so following an author out of a scoped
+  // Authors page does not quietly widen back to every library.
   const booksHref = (a: AuthorIndexEntry) =>
-    `/books?q=${encodeURIComponent(a.name)}`
+    lib
+      ? `/books?lib=${encodeURIComponent(lib)}&q=${encodeURIComponent(a.name)}`
+      : `/books?q=${encodeURIComponent(a.name)}`
 
   return (
     <>
@@ -86,6 +107,17 @@ export default function AuthorsPage() {
 
       <div className="px-8 py-6">
       <div className="flex flex-wrap items-center gap-3">
+        {/* A scoped page that looks unscoped is the bug worth avoiding here:
+            arriving from the retired per-library page shows 33 where the rail
+            says 55, and without this there is nothing to explain the gap or
+            any way back. */}
+        {lib && (
+          <button type="button" className="lb-chip on"
+            onClick={() => setParam('lib', null)}
+            title={t('authors.clear_library', { defaultValue: 'Show every library' })}>
+            {scopeName ?? t('authors.one_library', { defaultValue: 'One library' })} ×
+          </button>
+        )}
         <AlphabetBar available={available} active={letter} onSelect={v => setParam('letter', v)} />
         <span className="flex-1" />
         <div className="flex gap-1.5">

@@ -18,7 +18,7 @@ interface PageHeaderProps {
 
 export default function PageHeader({ title, description, breadcrumbs, actions }: PageHeaderProps) {
   return (
-    <div className="sticky top-0 z-10 flex-shrink-0 bg-surface border-b border-line px-8 py-4">
+    <div className="sticky top-0 z-20 flex-shrink-0 bg-surface border-b border-line px-8 py-4">
       {breadcrumbs && breadcrumbs.length > 0 && (
         <nav className="flex items-center gap-2 text-sm flex-wrap mb-1" aria-label="Breadcrumb">
           {breadcrumbs.map((crumb, i) => (

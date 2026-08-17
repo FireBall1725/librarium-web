@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
-import type { Library, SuggestionQuotaView } from '../types'
+import type { Library, Shelf, SuggestionQuotaView } from '../types'
 import { applyTheme, readStoredTheme, storeTheme } from '../lib/theme'
 // Params are compared normalised, not by substring: "status=read" is a prefix
 // of "status=reading", so a substring test lights up Finished while the reader
@@ -12,13 +12,19 @@ import { SETTINGS_TREE } from '../lib/settingsTree'
 import { attentionRoutes, useSettingsAttention } from '../lib/settingsAttention'
 import type { BookFacets } from '../lib/bookBrowse'
 import { Icon, type IconName } from '../lib/icons'
+import { shelfIcon } from '../lib/shelfIcons'
+import { VIEW_ICONS, viewIcon } from '../lib/viewIcons'
 import AuthorAvatar from './AuthorAvatar'
 import { PromptDialog } from './Dialog'
+import CommandPalette from './CommandPalette'
+import { libraryColour } from '../lib/libraryColour'
 
 interface CollectionCounts {
   books: number
   series: number
   authors: number
+  loans: number
+  loans_overdue: number
 }
 
 /**
@@ -33,6 +39,7 @@ function NavRow({
   icon,
   label,
   count,
+  countWarn,
   warn,
   dot,
   end,
@@ -42,6 +49,12 @@ function NavRow({
   icon?: IconName
   label: string
   count?: number
+  /**
+   * Draw the count as something to react to rather than replacing it with a
+   * dot. `warn` answers "is anything wrong"; this answers "how many", which is
+   * the more useful question when the number is already there.
+   */
+  countWarn?: boolean
   warn?: boolean
   /** Colour swatch instead of an icon, for a library. */
   dot?: string
@@ -54,7 +67,12 @@ function NavRow({
       {label}
       {warn
         ? <span className="warn" />
-        : count !== undefined && <span className="count">{count.toLocaleString()}</span>}
+        : count !== undefined && (
+            <span className="count"
+              style={countWarn ? { color: 'var(--color-warning)' } : undefined}>
+              {count.toLocaleString()}
+            </span>
+          )}
     </>
   )
 
@@ -84,37 +102,6 @@ function ViewCount({ value }: { value: number | undefined }) {
   return <span className="count">{value.toLocaleString()}</span>
 }
 
-/**
- * An icon per view, chosen from the built-in ids where they are known and
- * falling back to the generic one. Views are user data, so a view someone
- * created gets the neutral icon rather than a wrong guess from its name.
- */
-function viewIcon(v: SavedView): IconName {
-  switch (v.id) {
-    case 'reading': return 'next'
-    case 'unread': return 'books'
-    case 'read': return 'gaps'
-    case 'five-stars': return 'star'
-    case 'signed': return 'wish'
-    default: return 'newview'
-  }
-}
-
-/** A stable colour per library, derived from its id since the schema has none. */
-function libraryHue(id: string): string {
-  let h = 0
-  for (let i = 0; i < id.length; i++) h = (Math.imul(h, 31) + id.charCodeAt(i)) >>> 0
-  return `oklch(0.68 0.15 ${h % 360})`
-}
-
-const LIBRARY_SECTIONS: Array<{ section: string; labelKey: string }> = [
-  { section: 'books',        labelKey: 'library_nav.books' },
-  { section: 'contributors', labelKey: 'library_nav.contributors' },
-  { section: 'shelves',      labelKey: 'library_nav.shelves' },
-  { section: 'series',       labelKey: 'library_nav.series' },
-  { section: 'loans',        labelKey: 'library_nav.loans' },
-  { section: 'members',      labelKey: 'library_nav.members' },
-]
 
 export default function Layout() {
   const { user, logout, callApi } = useAuth()
@@ -128,8 +115,6 @@ export default function Layout() {
     location.pathname.startsWith('/settings') ||
     SETTINGS_TREE.some(s2 => s2.pages.some(p =>
       location.pathname === p.to || location.pathname.startsWith(p.to + '/')))
-  const libraryMatch = location.pathname.match(/^\/libraries\/([^/]+)(?:\/|$)/)
-  const currentLibraryId = libraryMatch?.[1]
   const [apiVersion, setApiVersion] = useState<string | null>(null)
   // Read once on mount and applied by the effect below. Appearance is what
   // changes it; this only has to put the stored choice on screen at startup
@@ -160,7 +145,19 @@ export default function Layout() {
   // Libraries in the rail, so a library is one click away as a filter rather
   // than a folder you navigate into first.
   const [libraries, setLibraries] = useState<Library[]>([])
-  const [railQuery, setRailQuery] = useState('')
+  // Shelves in the rail for the same reason views are: a shelf is a named set
+  // of books you go to, and the only thing separating it from a view is that
+  // its membership is picked by hand rather than by rule.
+  const [shelves, setShelves] = useState<Shelf[]>([])
+  // The rail's search box opens the palette rather than holding text of its
+  // own: it said "Search everything" while submitting to /books?q=, which
+  // searched titles. Now it is a button that looks like the field it replaced.
+  const [paletteOpen, setPaletteOpen] = useState(false)
+
+  // navigator.platform is deprecated but is the only thing that still reports
+  // the platform without a permissions-gated async call, and getting this wrong
+  // only mislabels a key hint.
+  const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform)
 
   // One unfiltered facet block answers the count for every view and every
   // library in the rail. Eight views would otherwise be eight requests per
@@ -198,6 +195,9 @@ export default function Layout() {
       callApi<Library[]>('/api/v1/libraries')
         .then(l => { if (!cancelled) setLibraries(l ?? []) })
         .catch(() => { /* The rail works without them. */ })
+      callApi<{ items: Shelf[] }>('/api/v1/me/shelves')
+        .then(r => { if (!cancelled) setShelves(r.items ?? []) })
+        .catch(() => { /* Same: the rail works without them. */ })
       callApi<{ data: BookFacets }>('/api/v1/me/books/facets')
         .then(r => { if (!cancelled) setFacets(r.data ?? null) })
         .catch(() => { /* Counts are an enhancement, not the nav. */ })
@@ -211,6 +211,22 @@ export default function Layout() {
   }, [callApi])
 
   /** Save the filter on screen as a new view, or go to Books to build one. */
+  // Cmd-K anywhere, Ctrl-K off the Mac. Ignored while typing, so the shortcut
+  // cannot steal a keystroke from a field the reader is already in.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key.toLowerCase() !== 'k' || !(e.metaKey || e.ctrlKey)) return
+      const el = document.activeElement
+      const typing = el instanceof HTMLElement &&
+        (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)
+      if (typing) return
+      e.preventDefault()
+      setPaletteOpen(true)
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [])
+
   const newView = () => {
     if (location.pathname !== '/books' || !normaliseParams(location.search)) {
       navigate('/books')
@@ -219,10 +235,10 @@ export default function Layout() {
     setNamingView(true)
   }
 
-  const saveNewView = (name: string) => {
+  const saveNewView = (name: string, icon?: IconName) => {
     setNamingView(false)
     const params = normaliseParams(location.search)
-    saveView({ id: newViewId(), name, params, layout: 'rows' })
+    saveView({ id: newViewId(), name, icon, params, layout: 'rows' })
     announceViewsChanged()
     // Views are read from storage on every render rather than held in state, so
     // the rail needs a reason to render again. A counter, not setRailQuery with
@@ -327,11 +343,15 @@ export default function Layout() {
 
       {/* Sidebar */}
       <aside
-        className={`app-sidebar border-r border-line bg-surface flex flex-col transform transition-transform duration-200 ease-out ${
+        // px-2.5 pt-[13px] is the reference rail's own padding. Without it the
+        // brand sat in the corner and its divider ran edge to edge, while the
+        // search box below was inset by its own padding, so nothing in the rail
+        // shared a left edge.
+        className={`app-sidebar border-r border-line bg-surface flex flex-col px-2.5 pt-[13px] transform transition-transform duration-200 ease-out ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="lb-brand px-2">
+        <div className="lb-brand">
           <img src="/logo.png" alt="" className="h-[25px] w-[25px] flex-none" />
           <span className="nm min-w-0 flex-1">{t('app.name')}</span>
           <button
@@ -346,7 +366,7 @@ export default function Layout() {
           </button>
         </div>
 
-        <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
+        <nav className="flex-1 space-y-1 overflow-y-auto pb-4">
           {/* Inside settings the rail becomes the settings tree, replacing the
               library nav rather than appending to it. One menu, not two: with
               both on screen the reader has to work out which half they are
@@ -392,21 +412,24 @@ export default function Layout() {
           <>
           {/* Search sits at the top of the rail rather than on the Books page,
               because it searches everything and is reachable from everywhere. */}
-          <form
-            onSubmit={e => {
-              e.preventDefault()
-              const q = railQuery.trim()
-              navigate(q ? `/books?q=${encodeURIComponent(q)}` : '/books')
-            }}
+          {/* .lb-railsearch is written for an input: fixed padding, and a
+              magnifier as a background image. As a button it needs its own row
+              layout, since a floated hint has nothing to centre against. The
+              label is muted because it stands in for placeholder text. */}
+          <button
+            type="button"
+            className="lb-railsearch flex items-center gap-2 text-left"
+            onClick={() => setPaletteOpen(true)}
           >
-            <input
-              className="lb-railsearch"
-              value={railQuery}
-              onChange={e => setRailQuery(e.target.value)}
-              placeholder={t('nav.search_everything', { defaultValue: 'Search everything…' })}
-              aria-label={t('nav.search_everything', { defaultValue: 'Search everything…' })}
-            />
-          </form>
+            <span className="min-w-0 flex-1 truncate text-content-tertiary">
+              {t('nav.search_everything', { defaultValue: 'Search everything…' })}
+            </span>
+            {/* Hidden on a phone: there is no keyboard to press it with, and a
+                shortcut you cannot use is decoration taking up the row. */}
+            <kbd className="hidden flex-none rounded border border-line-strong px-1 py-px text-[10px] leading-none text-content-subtle sm:inline-block">
+              {isMac ? '⌘K' : 'Ctrl K'}
+            </kbd>
+          </button>
 
           <NavRow to="/dashboard" icon="home" label={t('nav.dashboard')} />
           {/* Points at the default view when one is set, so Books opens on the
@@ -415,6 +438,11 @@ export default function Layout() {
           <NavRow to={defaultViewHref(views)} icon="books" label={t('nav.books')} count={counts?.books} end />
           <NavRow to="/series" icon="series" label={t('nav.series')} count={counts?.series} />
           <NavRow to="/authors" icon="authors" label={t('nav.authors')} count={counts?.authors} />
+          {/* Books still out, tinted when any of them are late. The count is
+              what is outstanding rather than every loan ever recorded, which
+              would climb forever and never mean anything. */}
+          <NavRow to="/loans" icon="lent" label={t('nav.loans', { defaultValue: 'Loans' })}
+            count={counts?.loans} countWarn={(counts?.loans_overdue ?? 0) > 0} />
 
           {visibleViews(views).length > 0 && (
             <>
@@ -458,31 +486,39 @@ export default function Layout() {
                     }`
                   }
                 >
-                  <span className="swatchdot" style={{ background: libraryHue(l.id) }} />
+                  <span className="swatchdot" style={{ background: libraryColour(l.id) }} />
                   {l.name}
                   <ViewCount value={facets?.library.find(f => f.value === l.id)?.count} />
                 </NavLink>
               ))}
             </>
           )}
-          {currentLibraryId && (
-            <div className="mt-1 ml-3 border-l border-line pl-3 space-y-0.5">
-              {LIBRARY_SECTIONS.map(item => (
+          {shelves.length > 0 && (
+            <>
+              <div className="lb-eyebrow px-2 pb-1.5 pt-4">
+                {t('nav.shelves', { defaultValue: 'Shelves' })}
+              </div>
+              {shelves.map(sh => (
                 <NavLink
-                  key={item.section}
-                  to={`/libraries/${currentLibraryId}/${item.section}`}
-                  className={({ isActive }) =>
-                    `block px-2 py-1.5 rounded-md text-sm transition-colors ${
-                      isActive
-                        ? 'text-accent font-medium'
-                        : 'text-content-tertiary hover:text-content hover:bg-surface-inset'
+                  key={sh.id}
+                  to={`/books?shelf=${sh.id}`}
+                  className={() =>
+                    `lb-navrow ${
+                      location.pathname === '/books' && params.get('shelf') === sh.id ? 'on' : ''
                     }`
                   }
+                  title={sh.description || undefined}
                 >
-                  {t(item.labelKey)}
+                  {/* The app's own icon set, tinted with the shelf's colour.
+                      Emoji here made shelves the one thing in the rail not
+                      drawn from the same set as everything above it. */}
+                  <Icon name={shelfIcon(sh.icon)}
+                    style={sh.color ? { color: sh.color } : undefined} />
+                  {sh.name}
+                  <ViewCount value={facets?.shelf.find(f => f.value === sh.id)?.count} />
                 </NavLink>
               ))}
-            </div>
+            </>
           )}
 
           {suggestionsAvailable && (
@@ -496,7 +532,7 @@ export default function Layout() {
             because Import, Users and Connections are all settings: they were
             three separate destinations for what is one place to configure the
             instance. The account follows it, with the theme picker beside. */}
-        <div className="lb-railfoot px-2">
+        <div className="lb-railfoot">
           {/* The dot is the only thing that tells a reader who is not in
               settings that something in there is broken. */}
           <NavRow
@@ -536,6 +572,8 @@ export default function Layout() {
       </main>
      </div>
 
+      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
+
       <PromptDialog
         open={namingView}
         title={t('views.new', { defaultValue: 'New view' })}
@@ -544,6 +582,9 @@ export default function Layout() {
         })}
         label={t('views.name_label', { defaultValue: 'Name' })}
         placeholder={t('views.name_placeholder', { defaultValue: 'Signed first editions' })}
+        icons={VIEW_ICONS}
+        initialIcon="newview"
+        iconLabel={t('common.icon', { defaultValue: 'Icon' })}
         onCancel={() => setNamingView(false)}
         onSubmit={saveNewView}
       />
@@ -564,10 +605,15 @@ export default function Layout() {
                   pair and Segoe UI Emoji ships no flag glyphs, so Windows
                   renders a boxed "CA" instead. Geometry from the public-domain
                   Flag_of_Canada.svg on Wikimedia Commons. */}
-              <svg width="17" height="9" viewBox="0 0 9600 4800" role="img"
+              <svg width="18" height="9" viewBox="0 0 9600 4800" role="img"
                 aria-label="Canada" className="flex-none rounded-[1px] border border-line-strong">
                 <title>Canada</title>
                 <path fill="#f00" d="m0 0h2400l99 99h4602l99-99h2400v4800h-2400l-99-99h-4602l-99 99H0z" />
+                {/* One path, not two: the white field and the leaf share a
+                    subpath, and the leaf winds the other way so it is cut out
+                    of the field rather than drawn over it. Dropping this path
+                    leaves the red base showing as a plain rectangle. */}
+                <path fill="#fff" d="m2400 0h4800v4800h-4800zm2490 4430-45-863a95 95 0 0 1 111-98l859 151-116-320a65 65 0 0 1 20-73l941-762-212-99a65 65 0 0 1-34-79l186-572-542 115a65 65 0 0 1-73-38l-105-247-423 454a65 65 0 0 1-111-57l204-1052-327 189a65 65 0 0 1-91-27l-332-652-332 652a65 65 0 0 1-91 27l-327-189 204 1052a65 65 0 0 1-111 57l-423-454-105 247a65 65 0 0 1-73 38l-542-115 186 572a65 65 0 0 1-34 79l-212 99 941 762a65 65 0 0 1 20 73l-116 320 859-151a95 95 0 0 1 111 98l-45 863z" />
               </svg>
             </a>
             <a
