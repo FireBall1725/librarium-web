@@ -28,6 +28,7 @@ interface FacetRailProps {
 const LABEL_KEY: Record<FacetKey, string> = {
   ownership: 'facets.ownership',
   library: 'facets.library',
+  shelf: 'facets.shelf',
   read_status: 'facets.read_status',
   media_type: 'facets.media_type',
   genre: 'facets.genre',

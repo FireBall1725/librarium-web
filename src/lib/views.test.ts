@@ -82,7 +82,7 @@ describe('crud', () => {
 
   it('renames without disturbing the filter', () => {
     saveView(view(), store)
-    renameView('v1', 'Something else', store)
+    renameView('v1', 'Something else', undefined, store)
     expect(ordinary()[0]).toMatchObject({ name: 'Something else', params: 'status=read' })
   })
 
@@ -161,6 +161,7 @@ describe('viewCount', () => {
   const facets = {
     ownership: [{ value: 'shelf', label: 'shelf', count: 279 }],
     library: [{ value: 'lib-a', label: 'Fiction', count: 108 }],
+    shelf: [{ value: 'sh-a', label: 'Favourites', count: 11 }],
     read_status: [
       { value: 'reading', label: 'reading', count: 28 },
       { value: 'unread', label: 'unread', count: 143 },
@@ -229,5 +230,30 @@ describe('matchView', () => {
 
   it('tolerates the leading question mark that location.search carries', () => {
     expect(matchView([view()], '?status=read')?.id).toBe('v1')
+  })
+})
+
+describe('view icons', () => {
+  beforeEach(() => { store.setItem('librarium:views_seeded', '1') })
+
+  it('stores an icon chosen when the view was saved', () => {
+    saveView(view({ icon: 'star' }), store)
+    expect(loadViews(store).find(v => v.id === 'v1')?.icon).toBe('star')
+  })
+
+  it('changes the icon alongside the name', () => {
+    saveView(view({ icon: 'star' }), store)
+    renameView('v1', 'Renamed', 'check', store)
+    expect(loadViews(store).find(v => v.id === 'v1')).toMatchObject({
+      name: 'Renamed', icon: 'check',
+    })
+  })
+
+  it('keeps the existing icon when a rename does not name one', () => {
+    // The dialog always sends one, but a caller that only renames must not
+    // silently strip the icon the reader picked earlier.
+    saveView(view({ icon: 'star' }), store)
+    renameView('v1', 'Renamed', undefined, store)
+    expect(loadViews(store).find(v => v.id === 'v1')?.icon).toBe('star')
   })
 })

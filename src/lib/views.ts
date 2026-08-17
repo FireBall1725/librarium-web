@@ -14,12 +14,21 @@
 // rather than a redesign.
 
 import { PARAM, type BookFacets, type FacetKey } from './bookBrowse'
+import type { IconName } from './icons'
 
 export type ViewLayout = 'rows' | 'grid'
 
 export interface SavedView {
   id: string
   name: string
+  /**
+   * The icon the rail draws for this view.
+   *
+   * Optional because the built-ins predate it and are mapped by id, and because
+   * a view saved before this shipped has none. Absent falls back to that map
+   * and then to the generic one, so nothing has to be migrated.
+   */
+  icon?: IconName
   /** Query string, exactly as Books puts it in the URL. */
   params: string
   layout: ViewLayout
@@ -168,8 +177,22 @@ export function deleteView(id: string, store: ViewStore = defaultStore()): Saved
   return next
 }
 
-export function renameView(id: string, name: string, store: ViewStore = defaultStore()): SavedView[] {
-  const views = read(store).map(v => (v.id === id ? { ...v, name } : v))
+/**
+ * Rename a view, and optionally change its icon.
+ *
+ * The icon rides along here rather than getting its own function because the
+ * dialog that asks for one asks for the name at the same time: they are one
+ * edit from the reader's side.
+ */
+export function renameView(
+  id: string,
+  name: string,
+  icon?: IconName,
+  store: ViewStore = defaultStore(),
+): SavedView[] {
+  const views = read(store).map(v =>
+    v.id === id ? { ...v, name, ...(icon ? { icon } : {}) } : v
+  )
   write(store, views)
   return views
 }
