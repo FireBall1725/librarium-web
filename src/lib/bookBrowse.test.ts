@@ -22,6 +22,8 @@ const base = (over: Partial<BrowseState> = {}): BrowseState => ({
   selection: { ...emptySelection(), ownership: [...DEFAULT_OWNERSHIP] },
   query: '',
   page: 1,
+  grouped: false,
+  series: '',
   ...over,
 })
 
@@ -192,5 +194,44 @@ describe('pageWindow', () => {
     expect(pageWindow(1, 40)[0]).toBe(1)
     expect(pageWindow(40, 40).at(-1)).toBe(40)
     expect(pageWindow(1, 1)).toEqual([1])
+  })
+})
+
+describe('grouping and the series drill-in', () => {
+  it('round-trips the grouping toggle through the URL', () => {
+    expect(writeState(base({ grouped: true })).get('group')).toBe('series')
+    expect(readState(new URLSearchParams('group=series')).grouped).toBe(true)
+    expect(writeState(base()).has('group')).toBe(false)
+  })
+
+  it('turns grouping off inside a series', () => {
+    // A series collapsed inside itself is one entry holding the whole page.
+    const state = readState(new URLSearchParams('group=series&series=s1'))
+    expect(state.series).toBe('s1')
+    expect(state.grouped).toBe(false)
+  })
+
+  it('does not write group alongside series', () => {
+    const params = writeState(base({ grouped: true, series: 's1' }))
+    expect(params.get('series')).toBe('s1')
+    expect(params.has('group')).toBe(false)
+  })
+
+  it('sends the series to both the list and the counts', () => {
+    // The rail has to narrow with the drill-in, or it describes the whole
+    // shelf while the list shows one run.
+    expect(toApiQuery(base({ series: 's1' }), 50)).toContain('series=s1')
+    expect(toApiQuery(base({ series: 's1' }), 50, true)).toContain('series=s1')
+  })
+
+  it('does not send grouping to the counts, which always count books', () => {
+    expect(toApiQuery(base({ grouped: true }), 50, true)).not.toContain('group')
+  })
+
+  it('leaves grouping out of the applied-filter count', () => {
+    // Grouping changes what a row is, not which rows there are, so it must not
+    // light up "clear filters".
+    expect(selectionCount(base({ grouped: true }).selection))
+      .toBe(selectionCount(base().selection))
   })
 })

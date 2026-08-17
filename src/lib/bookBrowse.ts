@@ -13,16 +13,19 @@
 // two people opening the same link should each get their own, and the link
 // should not change meaning when one of them switches to 200.
 
-export type FacetKey = 'ownership' | 'library' | 'read_status' | 'media_type' | 'genre' | 'tag' | 'rating'
+export type FacetKey = 'ownership' | 'library' | 'shelf' | 'read_status' | 'media_type' | 'genre' | 'tag' | 'rating'
 
 // Ownership leads: whether you have a book at all comes before anything else
 // about it, and it is the one facet that arrives with a default.
-export const FACET_ORDER: FacetKey[] = ['ownership', 'library', 'read_status', 'media_type', 'genre', 'tag', 'rating']
+// Shelf follows library because a shelf belongs to one, so the two read as a
+// pair: which library, then which shelf within it.
+export const FACET_ORDER: FacetKey[] = ['ownership', 'library', 'shelf', 'read_status', 'media_type', 'genre', 'tag', 'rating']
 
 /** Query-string key for each facet. Short, because these end up in shared links. */
 export const PARAM: Record<FacetKey, string> = {
   ownership: 'own',
   library: 'lib',
+  shelf: 'shelf',
   read_status: 'status',
   media_type: 'type',
   genre: 'genre',
@@ -44,10 +47,23 @@ export interface BrowseState {
   selection: Selection
   query: string
   page: number
+  /**
+   * Collapse each series into one entry.
+   *
+   * Not a facet: it changes what a row IS rather than which rows there are, so
+   * it does not belong in the selection and does not count as an applied
+   * filter.
+   */
+  grouped: boolean
+  /**
+   * Drilled into one series, which is how a collapsed group is opened. Holds a
+   * series id; empty means no drill-in.
+   */
+  series: string
 }
 
 export const emptySelection = (): Selection => ({
-  ownership: [], library: [], read_status: [], media_type: [], genre: [], tag: [], rating: [],
+  ownership: [], library: [], shelf: [], read_status: [], media_type: [], genre: [], tag: [], rating: [],
 })
 
 export const isDefaultOwnership = (vals: string[]): boolean =>
@@ -100,6 +116,11 @@ export function readState(params: URLSearchParams): BrowseState {
     selection,
     query: params.get('q') ?? '',
     page: Number.isFinite(page) && page > 0 ? page : 1,
+    // Grouping is off inside a series: the reader already opened one group, and
+    // collapsing it back into itself would show a single entry containing
+    // everything on screen.
+    grouped: params.get('group') === 'series' && !params.get('series'),
+    series: params.get('series') ?? '',
   }
 }
 
@@ -119,6 +140,8 @@ export function writeState(state: BrowseState): URLSearchParams {
     if (vals.length) params.set(PARAM[key], vals.join(','))
   }
   if (state.query) params.set('q', state.query)
+  if (state.series) params.set('series', state.series)
+  if (state.grouped && !state.series) params.set('group', 'series')
   if (state.page > 1) params.set('page', String(state.page))
   return params
 }
@@ -151,6 +174,10 @@ export function toApiQuery(state: BrowseState, perPage: number, forFacets = fals
     if (key === 'ownership' && vals.includes(OWNERSHIP_ANY)) continue
     if (vals.length) params.set(PARAM[key], vals.join(','))
   }
+
+  // The drill-in narrows the facet counts too, so the rail describes the
+  // series you opened rather than the whole shelf.
+  if (state.series) params.set('series', state.series)
 
   if (!forFacets) {
     params.set('page', String(state.page))

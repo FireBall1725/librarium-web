@@ -405,6 +405,8 @@ export interface Loan {
   library_id: string
   book_id: string
   book_title: string
+  /** Only on the cross-library list, which has to say which library a row is in. */
+  library_name?: string
   loaned_to: string
   loaned_at: string
   due_date: string | null
@@ -803,4 +805,41 @@ export interface TasteProfile {
   era?: string
   favourite_authors?: string[]
   hard_nos?: string
+}
+
+/**
+ * One entry in the grouped Books list: a series shown as a unit, or a single
+ * book that belongs to none.
+ *
+ * `matched` is how many of the series' books match the current filter, and
+ * `owned` how many the caller holds in total. They differ whenever a filter is
+ * on, which is exactly when the reader needs both numbers to make sense of what
+ * they are looking at.
+ */
+export interface SeriesGroupEntry {
+  kind: 'series'
+  series_id: string
+  series_name: string
+  matched: number
+  owned: number
+  read: number
+  total_count: number | null
+  cover_url: string | null
+}
+
+export interface BookGroupEntry {
+  kind: 'book'
+  book: Book
+}
+
+export type GroupedEntry = SeriesGroupEntry | BookGroupEntry
+
+export interface PagedGroupedBooks {
+  items: GroupedEntry[]
+  /** Entries on this page's terms: groups plus standalone books. */
+  total: number
+  /** Books those entries stand for. The facet rail counts these, not entries. */
+  book_total: number
+  page: number
+  per_page: number
 }
