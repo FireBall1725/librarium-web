@@ -3,14 +3,23 @@
 //
 // Licences: the required notices, in one place.
 //
-// The lists below cover what actually reaches the browser. Build tooling
-// (TypeScript, Vite, ESLint, Vitest and the rest) is deliberately absent: none
-// of it is distributed, so none of it carries a notice obligation here, and
-// padding the page with it buries the entries that do.
+// The hand-kept lists below cover what actually reaches the browser. Build
+// tooling (TypeScript, Vite, ESLint, Vitest and the rest) is deliberately
+// absent: none of it is distributed, so none of it carries a notice obligation
+// here, and padding the page with it buries the entries that do.
+//
+// The server's own components are not hand-kept and are not listed here. They
+// are fetched from whichever instance is connected, because that is the only
+// thing that knows what it was built from — a client can be pointed at several
+// Librarium servers on several versions, so a list compiled into the client
+// would be right for at most one of them and silently wrong for the rest.
 
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useAuth, ApiError } from '../../auth/AuthContext'
 import PageHeader from '../../components/PageHeader'
 import { usePageTitle } from '../../hooks/usePageTitle'
+import { shortVersion, type ServerComponents } from '../../lib/serverComponents'
 
 interface LicenceGroup {
   title: string
@@ -30,7 +39,6 @@ const RUNTIME: Array<[string, string]> = [
   ['react-i18next', 'MIT'],
   ['i18next-browser-languagedetector', 'MIT'],
   ['i18next-http-backend', 'MIT'],
-  ['emoji-picker-react', 'MIT'],
   ['react-js-cron', 'MIT'],
 ]
 
@@ -47,7 +55,32 @@ const TYPEFACES: Array<[string, string]> = [
 
 export default function LicencesPage() {
   const { t } = useTranslation()
+  const { callApi } = useAuth()
   usePageTitle(t('settings_nav.licences', { defaultValue: 'Licences' }))
+
+  // null while loading, so the section can say "loading" rather than showing an
+  // empty list that reads as "the server has no dependencies".
+  const [server, setServer] = useState<ServerComponents | null>(null)
+  const [serverError, setServerError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    callApi<ServerComponents>('/api/v1/components')
+      .then(r => { if (!cancelled) setServer(r) })
+      .catch(err => {
+        if (cancelled) return
+        // An older server has no /components route. That is a missing section,
+        // not a broken page, so it says so in place and the rest still renders.
+        setServerError(err instanceof ApiError && err.status === 404
+          ? t('licences.server_unsupported', {
+              defaultValue: 'This server is too old to report its components.',
+            })
+          : t('licences.server_failed', {
+              defaultValue: 'Could not reach the server for its component list.',
+            }))
+      })
+    return () => { cancelled = true }
+  }, [callApi, t])
 
   const groups: LicenceGroup[] = [
     {
@@ -110,18 +143,68 @@ export default function LicencesPage() {
           ))}
         </div>
 
-        <p className="font-read mt-6 text-[13.5px] text-content-tertiary">
-          {t('licences.footnote', {
-            defaultValue: 'Adding a dependency means adding it here in the same pull request.',
-          })}
-        </p>
+        {/* The server's list. Its own section rather than a fourth column in
+            the grid above: sixty-odd rows next to a seven-row column reads as
+            one enormous list with three stubs beside it. */}
+        <section className="mt-10 border-t border-line pt-7">
+          <div className="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <h2 className="text-[11px] font-semibold uppercase tracking-wider text-content-muted">
+              {t('licences.server', { defaultValue: 'API server' })}
+            </h2>
+            {server && (
+              <span className="text-[11px] text-content-tertiary">
+                {/* `n`, not `count`: i18next treats a variable named count as
+                    a plural selector and goes looking for server_version_one /
+                    _other, which do not exist. It happens to fall back to the
+                    base key, but only by luck. */}
+                {t('licences.server_version', {
+                  version: server.version,
+                  n: server.components.length,
+                  defaultValue: 'v{{version}} · {{n}} components',
+                })}
+              </span>
+            )}
+          </div>
 
-        <p className="font-read mt-2 text-[13.5px] text-content-tertiary">
-          {t('licences.api_note', {
-            defaultValue:
-              'The API server ships its own dependencies and notices; see its repository for that list.',
-          })}
-        </p>
+          {serverError ? (
+            <p className="font-read text-[13.5px] text-content-tertiary">{serverError}</p>
+          ) : !server ? (
+            <p className="font-read text-[13.5px] text-content-tertiary">
+              {t('common.loading', { defaultValue: 'Loading…' })}
+            </p>
+          ) : server.components.length === 0 ? (
+            <p className="font-read text-[13.5px] text-content-tertiary">
+              {t('licences.server_empty', {
+                defaultValue: 'This server was built outside module mode and cannot list its components.',
+              })}
+            </p>
+          ) : (
+            // Flowed into columns rather than laid out as a grid: the rows are
+            // one alphabetical list and reading it down a column then across
+            // keeps that order, which a grid would scramble left-to-right.
+            <ul className="columns-[340px] gap-x-8">
+              {server.components.map(c => (
+                <li key={c.name}
+                  className="flex items-center gap-3.5 break-inside-avoid border-b border-line py-2.5 text-sm">
+                  <span className="min-w-0 flex-[2] truncate text-content" title={c.name}>{c.name}</span>
+                  <span className="min-w-0 flex-1 truncate text-right font-mono text-[11px] text-content-faint"
+                    title={c.version}>
+                    {shortVersion(c.version)}
+                  </span>
+                  <code className={`flex-none rounded-md border px-2 py-[3px] font-mono text-[11px] ${
+                    c.licence
+                      ? 'border-line-strong bg-surface-inset text-content-tertiary'
+                      // Unknown is shown, not hidden: it is the row that needs
+                      // someone to go and read a LICENSE file.
+                      : 'border-warning-line text-warning'
+                  }`}>
+                    {c.licence || t('licences.unknown', { defaultValue: 'unknown' })}
+                  </code>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
       </div>
     </>
   )

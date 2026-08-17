@@ -30,7 +30,9 @@
     "views": "Views",
     "series": "Series",
     "authors": "Authors",
-    "back_to_library": "Back to library"
+    "back_to_library": "Back to library",
+    "shelves": "Shelves",
+    "loans": "Loans"
   },
   "library_nav": {
     "books": "Books",
@@ -67,7 +69,9 @@
     "job_history": "Job history",
     "licences": "Licences",
     "tokens": "API tokens",
-    "ai_privacy": "AI and privacy"
+    "ai_privacy": "AI and privacy",
+    "members": "Members",
+    "shelves": "Shelves"
   },
   "theme": {
     "light": "☀ Light",
@@ -95,7 +99,18 @@
     "range": "{{from}} to {{to}} of {{total}}",
     "per_page": "Show",
     "of_records": "{{shown}} of {{total}} records",
-    "add": "Add book"
+    "add": "Add book",
+    "select_page": "Select page",
+    "select_one": "Select {{title}}",
+    "in_libraries_one": "In {{count}} library: {{names}}",
+    "in_libraries_other": "In {{count}} libraries: {{names}}",
+    "group_series": "Group series",
+    "entry_count": "{{entries}} entries · {{books}} books",
+    "leave_series": "Back to all books",
+    "one_series": "One series",
+    "select": "Select",
+    "done_selecting": "Done",
+    "select_series": "Select every volume of {{name}}"
   },
   "facets": {
     "library": "Library",
@@ -108,7 +123,8 @@
     "clear": "Clear {{count}} filters",
     "active": "{{count}} filters",
     "ownership": "Ownership",
-    "remove": "Remove filter"
+    "remove": "Remove filter",
+    "shelf": "Shelf"
   },
   "common": {
     "loading": "Loading…",
@@ -117,7 +133,10 @@
     "unknown": "Unknown",
     "open": "Open",
     "closed": "Closed",
-    "planned": "Planned"
+    "planned": "Planned",
+    "delete": "Delete",
+    "edit": "Edit",
+    "icon": "Icon"
   },
   "read_status": {
     "read": "Read",
@@ -142,7 +161,8 @@
     "name_label": "Name",
     "name_placeholder": "Signed first editions",
     "save_as_view": "Save as a view",
-    "default_hint": "what Books opens on"
+    "default_hint": "what Books opens on",
+    "rename": "Rename"
   },
   "index": {
     "all": "All"
@@ -157,7 +177,9 @@
     "books_count_one": "{{count}} book",
     "books_count_other": "{{count}} books",
     "read_count_one": "{{count}} read",
-    "read_count_other": "{{count}} read"
+    "read_count_other": "{{count}} read",
+    "clear_library": "Show every library",
+    "one_library": "One library"
   },
   "series": {
     "complete": "complete",
@@ -173,7 +195,14 @@
     "read_count_one": "{{count}} read",
     "read_count_other": "{{count}} read",
     "more_volumes_one": "+{{count}} more",
-    "more_volumes_other": "+{{count}} more"
+    "more_volumes_other": "+{{count}} more",
+    "owned_of": "{{owned}} of {{total}}",
+    "owned_one": "{{count}} volume",
+    "owned_other": "{{count}} volumes",
+    "matching_one": "{{count}} matching",
+    "matching_other": "{{count}} matching",
+    "volumes_one": "{{count}} volume",
+    "volumes_other": "{{count}} volumes"
   },
   "settings_section": {
     "account": "Account",
@@ -212,8 +241,13 @@
     "description": "Librarium is free and open source under the GNU AGPL-3.0. It is built on the projects below, listed so the required notices stay in one place. Each keeps its own copyright.",
     "librarium": "Copyright (C) 2026 FireBall1725. Licensed under the GNU Affero General Public License, version 3.",
     "read_agpl": "Read the AGPL-3.0",
-    "footnote": "Adding a dependency means adding it here in the same pull request.",
-    "api_note": "The API server ships its own dependencies and notices; see its repository for that list."
+    "api_note": "The API server ships its own dependencies and notices; see its repository for that list.",
+    "server": "API server",
+    "server_version": "v{{version}} · {{n}} components",
+    "server_unsupported": "This server is too old to report its components.",
+    "server_failed": "Could not reach the server for its component list.",
+    "server_empty": "This server was built outside module mode and cannot list its components.",
+    "unknown": "unknown"
   },
   "settings_general": {
     "description": "What this instance is running and where it keeps things.",
@@ -249,5 +283,132 @@
     "wishlist": "Wishlist",
     "suggested": "Suggested",
     "gap": "Missing volume"
+  },
+  "bulk": {
+    "selected_one": "{{count}} selected",
+    "selected_other": "{{count}} selected",
+    "floating_one": "{{count}} not in a library",
+    "floating_other": "{{count}} not in a library",
+    "set_type": "Set type",
+    "add_genre": "Add genre",
+    "remove_genre": "Remove genre",
+    "add_tag": "Add tag",
+    "remove_tag": "Remove tag",
+    "tags_need_one_library": "Tags belong to a library. Select books from one library to edit them.",
+    "covers": "Refresh covers",
+    "enrich": "Refresh metadata",
+    "clear": "Clear",
+    "delete_title_one": "Delete {{count}} book?",
+    "delete_title_other": "Delete {{count}} books?",
+    "delete_note": "They are removed from their libraries. This cannot be undone.",
+    "type_changed": "Type changed",
+    "genre_added": "Genre added",
+    "genre_removed": "Genre removed",
+    "tag_added": "Tag added",
+    "tag_removed": "Tag removed",
+    "covers_queued": "Cover refresh queued",
+    "enrich_queued": "Metadata refresh queued",
+    "deleted": "Deleted",
+    "done_one": "{{label}}: {{count}} book",
+    "done_other": "{{label}}: {{count}} books",
+    "done_partial": "{{label}}: {{ok}} done, {{failed}} failed",
+    "multi_library_one": "{{count}} in more than one library",
+    "multi_library_other": "{{count}} in more than one library",
+    "which_library_title_one": "{{count}} of these is in more than one library",
+    "which_library_title_other": "{{count}} of these are in more than one library",
+    "which_library": "Which library should this act in? Books in only one library are unaffected.",
+    "no_common_library": "These books share no common library. Narrow the selection and try again.",
+    "tags_need_unambiguous": "Tags belong to a library, and some of these are in more than one. Filter by a library to edit tags.",
+    "add_shelf": "Add to shelf",
+    "remove_shelf": "Remove from shelf",
+    "shelved": "Added to shelf",
+    "unshelved": "Removed from shelf"
+  },
+  "library_picker": {
+    "title_one": "In {{count}} library",
+    "title_other": "In {{count}} libraries",
+    "description": "Which one do you want to see?",
+    "book_description": "Shelves, loans and tags differ per library. The rest of the book is the same either way."
+  },
+  "members": {
+    "description": "Who can see each library, and what they can do in it.",
+    "no_libraries": "No libraries yet.",
+    "search": "Find someone by name or email…",
+    "add": "Add member",
+    "remove": "Remove",
+    "remove_title": "Remove {{name}}?",
+    "remove_note": "They lose access to this library. Their account is not affected.",
+    "added": "{{name}} added",
+    "removed": "{{name}} removed",
+    "role_changed": "{{name}}'s role changed",
+    "role_for": "Role for {{name}}",
+    "role_label": "Role",
+    "role": {
+      "library_owner": "Owner",
+      "library_editor": "Editor",
+      "library_viewer": "Viewer"
+    }
+  },
+  "shelves_settings": {
+    "description": "Shelves belong to a library, not to the instance, so each library keeps its own set.",
+    "library": "Library",
+    "library_hint": "Shelves are per-library. Pick which set you are editing.",
+    "new": "New shelf",
+    "editing": "Editing {{name}}",
+    "name": "Name",
+    "note": "What goes on it (optional)",
+    "colour": "Colour",
+    "create": "Create shelf",
+    "empty": "No shelves in this library yet.",
+    "count_one": "{{count}} book",
+    "count_other": "{{count}} books",
+    "delete_title": "Delete {{name}}?",
+    "delete_note": "The shelf goes; the books on it stay in the library."
+  },
+  "loans": {
+    "description": "Books that are out of the house, across every library.",
+    "search": "Borrower or title…",
+    "status_active": "Out",
+    "status_returned": "Returned",
+    "status_all": "All",
+    "overdue_only": "Overdue",
+    "all_libraries": "All libraries",
+    "new": "New loan",
+    "to": "Lent to {{name}}",
+    "count_one": "{{count}} out",
+    "count_other": "{{count}} out",
+    "count_overdue_one": "{{count}} out, {{overdue}} overdue",
+    "count_overdue_other": "{{count}} out, {{overdue}} overdue",
+    "due_today": "Due today",
+    "due_in_one": "Due in {{count}} day",
+    "due_in_other": "Due in {{count}} days",
+    "overdue_by_one": "{{count}} day over",
+    "overdue_by_other": "{{count}} days over",
+    "returned_on": "Back {{date}}",
+    "mark_returned": "Returned",
+    "empty": "Nothing is out",
+    "delete_title": "Delete this loan?",
+    "delete_note": "The record goes. The book is not affected.",
+    "pick_library_title": "Lend from which library?",
+    "pick_library_description": "A loan is recorded against the library holding the book."
+  },
+  "palette": {
+    "title": "Search everything",
+    "placeholder": "Search books, series, people, pages…",
+    "empty": "Nothing matches",
+    "keep_typing": "Keep typing…",
+    "actions": "Actions",
+    "books": "Books",
+    "series": "Series",
+    "authors": "Authors",
+    "views": "Views",
+    "shelves": "Shelves",
+    "libraries": "Libraries",
+    "loans": "Loans",
+    "pages": "Pages",
+    "add_book": "Add a book",
+    "new_loan": "Record a loan",
+    "new_shelf": "Make a shelf",
+    "import": "Import books"
   }
 }
