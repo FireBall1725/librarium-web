@@ -406,7 +406,11 @@ export default function UsersPage() {
  </div>
  )}
 
- <div className="rounded-xl border border-line bg-surface overflow-hidden">
+ <div className="rounded-xl border border-line bg-surface overflow-x-auto">
+            {/* overflow-x-auto, not hidden: the table is wider than a phone,
+                and hidden clipped the trailing columns away with no way to
+                reach them. Scrolling inside its own box keeps the page from
+                scrolling sideways while leaving the data readable. */}
  <table className="w-full text-sm">
  <thead className="bg-surface-muted border-b border-line dark:border-line">
  <tr>

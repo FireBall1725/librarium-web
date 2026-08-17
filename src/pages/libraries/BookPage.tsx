@@ -1340,11 +1340,15 @@ export default function BookPage() {
   }
 
   return (
-    <div className="p-8">
-      <div className="flex gap-8 items-start">
+    // Stacks on a phone. Side by side, a fixed 12rem cover plus the page
+    // padding left about 150px for the details, which wrapped the title
+    // mid-name. The cover keeps a sensible size rather than going full width,
+    // and only sticks once there is a column for it to stick beside.
+    <div className="p-4 sm:p-8">
+      <div className="flex flex-col gap-5 sm:flex-row sm:gap-8 sm:items-start">
 
         {/* ── Left sidebar ── */}
-        <div className="w-48 flex-shrink-0 sticky top-8 space-y-5">
+        <div className="w-40 flex-shrink-0 space-y-5 sm:sticky sm:top-8 sm:w-48">
 
           {/* Cover with hover overlay */}
           <div className="relative group cursor-pointer"
@@ -1409,45 +1413,32 @@ export default function BookPage() {
             </div>
           )}
 
-          {/* Primary edition quick-ref metadata */}
-          {(() => {
-            const primary = editions.find(e => e.is_primary) ?? editions[0]
-            if (!primary) return null
-            const rows = [
-              primary.publisher    ? { label: 'Publisher', value: primary.publisher }                        : null,
-              primary.publish_date ? { label: 'Published', value: primary.publish_date }                     : null,
-              primary.language     ? { label: 'Language',  value: primary.language.toUpperCase() }           : null,
-              primary.isbn_13      ? { label: 'ISBN-13',   value: primary.isbn_13,   mono: true }            : null,
-              !primary.isbn_13 && primary.isbn_10
-                                   ? { label: 'ISBN-10',   value: primary.isbn_10,   mono: true }            : null,
-              primary.page_count != null
-                                   ? { label: 'Pages',     value: String(primary.page_count) }               : null,
-            ].filter(Boolean) as Array<{ label: string; value: string; mono?: boolean }>
-            if (rows.length === 0) return null
-            return (
-              <dl className="space-y-2.5">
-                {rows.map(row => (
-                  <div key={row.label}>
-                    <dt className="text-xs text-content-subtle">{row.label}</dt>
-                    <dd className={`text-sm text-content-secondary mt-0.5 ${row.mono ? 'font-mono text-xs' : ''}`}>
-                      {row.value}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-            )
-          })()}
+          {/* There was a "primary edition quick-ref" here: publisher, published,
+              language, ISBN and pages, read off whichever edition is primary.
+              It restated the primary edition's own panel a few hundred pixels
+              to the right, on the same screen without scrolling, so it saved
+              nobody a trip. Worse on a book with several: publisher and page
+              count are per-edition under FRBR, and printed here with no edition
+              named, Dune's four editions became one unqualified "Chilton, 618
+              pages" beside a list showing three different publishers. The
+              editions list already says all of it, attributed to the edition it
+              belongs to and badged for which one is primary. */}
         </div>
 
         {/* ── Right main column ── */}
         <div className="flex-1 min-w-0">
 
-          {/* Title row */}
-          <div className="flex items-start justify-between gap-3">
+          {/* Subtitle and actions.
+              The title was here too, as a second h1 forty-five pixels under the
+              one the sticky header already renders, so the page opened by
+              saying "Dune 1" twice — and two h1s meant a screen reader had to
+              pick which was the page heading. The header's is sticky, so it is
+              the one that survives scrolling and the one worth keeping; the
+              subtitle stays because nothing else shows it. */}
+          <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0">
-              <h1 className="text-2xl font-bold text-content leading-tight">{book.title}</h1>
               {book.subtitle && (
-                <p className="mt-0.5 text-base text-content-muted">{book.subtitle}</p>
+                <p className="text-base text-content-muted">{book.subtitle}</p>
               )}
             </div>
             <div className="flex items-center gap-1 flex-shrink-0">
