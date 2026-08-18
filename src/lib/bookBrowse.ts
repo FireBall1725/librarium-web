@@ -13,13 +13,15 @@
 // two people opening the same link should each get their own, and the link
 // should not change meaning when one of them switches to 200.
 
-export type FacetKey = 'ownership' | 'library' | 'shelf' | 'read_status' | 'media_type' | 'genre' | 'tag' | 'rating'
+export type FacetKey = 'ownership' | 'library' | 'shelf' | 'read_status' | 'media_type' | 'genre' | 'tag' | 'rating' | 'favourite'
 
 // Ownership leads: whether you have a book at all comes before anything else
 // about it, and it is the one facet that arrives with a default.
 // Shelf follows library because a shelf belongs to one, so the two read as a
 // pair: which library, then which shelf within it.
-export const FACET_ORDER: FacetKey[] = ['ownership', 'library', 'shelf', 'read_status', 'media_type', 'genre', 'tag', 'rating']
+// Favourite sits by read status: both are the reader's own verdict on a book,
+// as against what it is or where it lives.
+export const FACET_ORDER: FacetKey[] = ['ownership', 'library', 'shelf', 'read_status', 'favourite', 'media_type', 'genre', 'tag', 'rating']
 
 /** Query-string key for each facet. Short, because these end up in shared links. */
 export const PARAM: Record<FacetKey, string> = {
@@ -31,6 +33,7 @@ export const PARAM: Record<FacetKey, string> = {
   genre: 'genre',
   tag: 'tag',
   rating: 'rating',
+  favourite: 'fav',
 }
 
 export interface FacetValue {
@@ -63,7 +66,7 @@ export interface BrowseState {
 }
 
 export const emptySelection = (): Selection => ({
-  ownership: [], library: [], shelf: [], read_status: [], media_type: [], genre: [], tag: [], rating: [],
+  ownership: [], library: [], shelf: [], read_status: [], media_type: [], genre: [], tag: [], rating: [], favourite: [],
 })
 
 export const isDefaultOwnership = (vals: string[]): boolean =>

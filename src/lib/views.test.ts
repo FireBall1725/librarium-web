@@ -170,6 +170,7 @@ describe('viewCount', () => {
     genre: [],
     tag: [{ value: 'signed', label: 'signed', count: 12 }],
     rating: [{ value: '5', label: '5', count: 56 }],
+    favourite: [{ value: 'true', label: 'true', count: 8 }, { value: 'false', label: 'false', count: 271 }],
   }
 
   it('reads a status view out of the facet block', () => {
