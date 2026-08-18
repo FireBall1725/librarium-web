@@ -11,6 +11,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { announceCollectionChanged } from '../lib/collectionEvents'
 import { useAuth } from '../auth/AuthContext'
 import PageHeader from '../components/PageHeader'
 import { PromptDialog } from '../components/Dialog'
@@ -897,7 +898,7 @@ export default function BooksPage() {
                   // The rail's own counts live in the shell, which has no idea
                   // a write happened here. Without this the sidebar kept saying
                   // "Signed copies 10" beside a facet reading 11.
-                  window.dispatchEvent(new Event('librarium:collection-changed'))
+                  announceCollectionChanged()
                 }}
               />
             )}
@@ -1173,7 +1174,7 @@ export default function BooksPage() {
             // book that appears where it does not belong is worse than one
             // that needs a moment to show up.
             setLoadedKey(null)
-            window.dispatchEvent(new Event('librarium:collection-changed'))
+            announceCollectionChanged()
           }}
         />
       )}

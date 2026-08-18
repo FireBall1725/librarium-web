@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { announceCollectionChanged } from '../../lib/collectionEvents'
 import { useAuth, ApiError } from '../../auth/AuthContext'
 import { LIBRARY_SECTIONS } from '../../lib/librarySections'
 import type { Library } from '../../types'
@@ -40,6 +41,9 @@ function LibraryModal({ library, onClose, onSaved }: LibraryModalProps) {
         isEdit ? `/api/v1/libraries/${library.id}` : '/api/v1/libraries',
         { method: isEdit ? 'PUT' : 'POST', body: JSON.stringify(form) },
       )
+      // Same reason as shelves: the rail's library list is loaded once, so a
+      // library added or renamed here is stale in the sidebar until a reload.
+      announceCollectionChanged()
       onSaved(lib)
     } catch (err) {
       setError(err instanceof ApiError ? err.message : `Failed to ${isEdit ? 'update' : 'create'} library`)
@@ -141,6 +145,7 @@ function DeleteLibraryModal({ library, onClose, onDeleted }: DeleteLibraryModalP
     setIsLoading(true)
     try {
       await callApi(`/api/v1/libraries/${library.id}`, { method: 'DELETE' })
+      announceCollectionChanged()
       onDeleted(library.id)
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Failed to delete library')

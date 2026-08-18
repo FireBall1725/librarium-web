@@ -17,6 +17,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
 import { ApiError, useAuth } from '../../auth/AuthContext'
+import { announceCollectionChanged } from '../../lib/collectionEvents'
 import PageHeader from '../../components/PageHeader'
 import { SettingRow, SettingsBody } from '../../components/settings/SettingRow'
 import { ConfirmDialog } from '../../components/Dialog'
@@ -108,6 +109,10 @@ export default function ShelvesPage() {
       }
       reset()
       await load()
+      // The rail lists shelves across libraries and loads them once, so
+      // without this a shelf added here is missing from the sidebar until a
+      // reload — which reads as the shelf not having been created.
+      announceCollectionChanged()
     } catch (e) {
       setError(e instanceof ApiError ? e.message : String(e))
     } finally {
@@ -121,6 +126,7 @@ export default function ShelvesPage() {
       await callApi(`/api/v1/libraries/${libraryId}/shelves/${sh.id}`, { method: 'DELETE' })
       if (editingId === sh.id) reset()
       await load()
+      announceCollectionChanged()
     } catch (e) {
       setError(e instanceof ApiError ? e.message : String(e))
     }
