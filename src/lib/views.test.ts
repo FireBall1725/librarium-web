@@ -55,18 +55,25 @@ describe('seeding', () => {
   it('survives a corrupt entry rather than taking the page down', () => {
     store.setItem('librarium:views', '{not json')
     store.setItem('librarium:views_seeded', '1')
+    store.setItem('librarium:views_backfilled', JSON.stringify(['favourites']))
     expect(ordinary()).toEqual([])
   })
 
   it('drops entries that are not views', () => {
     store.setItem('librarium:views_seeded', '1')
+    store.setItem('librarium:views_backfilled', JSON.stringify(['favourites']))
     store.setItem('librarium:views', JSON.stringify([view(), { nope: true }, null]))
     expect(ordinary()).toHaveLength(1)
   })
 })
 
 describe('crud', () => {
-  beforeEach(() => { store.setItem('librarium:views_seeded', '1') })
+  // Seeded and already offered the later built-ins, so these assertions count
+  // only the views each test creates.
+  beforeEach(() => {
+    store.setItem('librarium:views_seeded', '1')
+    store.setItem('librarium:views_backfilled', JSON.stringify(['favourites']))
+  })
 
   it('adds, updates in place, and deletes', () => {
     saveView(view(), store)
@@ -271,5 +278,59 @@ describe('view icons', () => {
     saveView(view({ icon: 'star' }), store)
     renameView('v1', 'Renamed', undefined, store)
     expect(loadViews(store).find(v => v.id === 'v1')?.icon).toBe('star')
+  })
+})
+
+describe('later built-in views', () => {
+  /** A store that already has views, as an existing install does. */
+  const existingStore = (views: Partial<SavedView>[]) => {
+    const map = new Map<string, string>([
+      ['librarium:views_seeded', '1'],
+      ['librarium:views', JSON.stringify(views.map(v => view(v)))],
+    ])
+    return {
+      getItem: (k: string) => map.get(k) ?? null,
+      setItem: (k: string, v: string) => void map.set(k, v),
+      raw: map,
+    }
+  }
+
+  it('offers Favourites to a store that was seeded before it existed', () => {
+    // Seeding runs once, so without this an existing install never sees a
+    // built-in added later.
+    const store = existingStore([{ id: 'default' }, { id: 'reading' }])
+    const got = loadViews(store)
+    expect(got.map(v => v.id)).toContain('favourites')
+    expect(got.find(v => v.id === 'favourites')?.params).toBe('fav=true')
+  })
+
+  it('does not bring it back once the reader deletes it', () => {
+    // The point of the backfill record: offered once, not restored forever.
+    const store = existingStore([{ id: 'default' }])
+    expect(loadViews(store).map(v => v.id)).toContain('favourites')
+
+    const kept = loadViews(store).filter(v => v.id !== 'favourites')
+    store.setItem('librarium:views', JSON.stringify(kept))
+
+    expect(loadViews(store).map(v => v.id)).not.toContain('favourites')
+  })
+
+  it('does not duplicate one the store already has', () => {
+    const store = existingStore([{ id: 'default' }, { id: 'favourites' }])
+    const ids = loadViews(store).map(v => v.id).filter(id => id === 'favourites')
+    expect(ids).toHaveLength(1)
+  })
+
+  it('leaves the reader’s existing order alone, appending instead', () => {
+    const store = existingStore([{ id: 'default' }, { id: 'read' }, { id: 'reading' }])
+    const got = loadViews(store).map(v => v.id)
+    expect(got.slice(0, 3)).toEqual(['default', 'read', 'reading'])
+    expect(got[got.length - 1]).toBe('favourites')
+  })
+
+  it('a fresh store gets it from seeding, not the backfill', () => {
+    const map = new Map<string, string>()
+    const store = { getItem: (k: string) => map.get(k) ?? null, setItem: (k: string, v: string) => void map.set(k, v) }
+    expect(loadViews(store).map(v => v.id)).toContain('favourites')
   })
 })

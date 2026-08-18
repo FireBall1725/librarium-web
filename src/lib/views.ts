@@ -56,6 +56,21 @@ export const DEFAULT_VIEW_ID = 'default'
 
 const STORAGE_KEY = 'librarium:views'
 const SEEDED_KEY = 'librarium:views_seeded'
+const BACKFILL_KEY = 'librarium:views_backfilled'
+
+/**
+ * Built-ins that shipped after the first release.
+ *
+ * Seeding runs exactly once, so anyone who had already opened the app never
+ * receives a built-in added later — Favourites would have existed only for new
+ * installs. These are offered once each to existing stores.
+ *
+ * Offered, not restored. The id is recorded whether or not it was actually
+ * added, so deleting one afterwards sticks; restoring it on every read the way
+ * the Default is would make a built-in impossible to get rid of, which is the
+ * whole reason the seeded flag exists.
+ */
+const LATER_BUILT_IN_IDS = ['favourites']
 
 /**
  * The slice of Storage this module needs.
@@ -145,23 +160,66 @@ function write(store: ViewStore, views: SavedView[]) {
 export function loadViews(store: ViewStore = defaultStore()): SavedView[] {
   if (!store.getItem(SEEDED_KEY)) {
     store.setItem(SEEDED_KEY, '1')
+    // Seeding delivers the later built-ins too, so record them as offered.
+    // Without this the backfill would re-add one the reader deletes on a fresh
+    // install, which is the resurrection the seeded flag exists to prevent.
+    store.setItem(BACKFILL_KEY, JSON.stringify(LATER_BUILT_IN_IDS))
     const seeded = [...BUILT_IN_VIEWS]
     write(store, seeded)
     return seeded
   }
 
-  const views = read(store)
+  let views = read(store)
 
   // The Default is an invariant of the store, not part of seeding: seeding
   // runs once, so anyone who already had views when this shipped would never
   // receive it and Books would have nothing to open on. Restored on read,
   // which also covers a store edited by hand.
   if (!views.some(v => v.id === DEFAULT_VIEW_ID)) {
-    const restored = [BUILT_IN_VIEWS[0], ...views]
-    write(store, restored)
-    return restored
+    views = [BUILT_IN_VIEWS[0], ...views]
+    write(store, views)
+  }
+
+  const added = backfillLaterBuiltIns(store, views)
+  if (added) {
+    views = added
+    write(store, views)
   }
   return views
+}
+
+/**
+ * Offer each later built-in once, returning the new list or null if unchanged.
+ *
+ * Appended rather than slotted into their seed position: an existing store is
+ * the reader's own arrangement, and reordering it to match a fresh install
+ * would move rows they put where they wanted them.
+ */
+function backfillLaterBuiltIns(store: ViewStore, views: SavedView[]): SavedView[] | null {
+  const done = new Set(readBackfilled(store))
+  const pending = LATER_BUILT_IN_IDS.filter(id => !done.has(id))
+  if (pending.length === 0) return null
+
+  const missing = pending
+    .filter(id => !views.some(v => v.id === id))
+    .map(id => BUILT_IN_VIEWS.find(v => v.id === id))
+    .filter((v): v is SavedView => v !== undefined)
+
+  // Recorded even when nothing was added, so a view the reader deletes now
+  // stays deleted rather than returning on the next load.
+  store.setItem(BACKFILL_KEY, JSON.stringify([...done, ...pending]))
+  return missing.length > 0 ? [...views, ...missing] : null
+}
+
+function readBackfilled(store: ViewStore): string[] {
+  try {
+    const raw = store.getItem(BACKFILL_KEY)
+    if (!raw) return []
+    const parsed: unknown = JSON.parse(raw)
+    return Array.isArray(parsed) ? parsed.filter((v): v is string => typeof v === 'string') : []
+  } catch {
+    return []
+  }
 }
 
 export function saveView(view: SavedView, store: ViewStore = defaultStore()): SavedView[] {
