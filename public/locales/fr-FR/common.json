@@ -165,7 +165,8 @@
     "save_as_view": "Enregistrer comme vue",
     "default_hint": "ce que Livres ouvre",
     "rename": "Renommer",
-    "more": "Options de la vue"
+    "more": "Options de la vue",
+    "default_name": "Vue par défaut"
   },
   "index": {
     "all": "Tous"

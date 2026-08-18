@@ -714,7 +714,14 @@ export default function BooksPage() {
                   needs nothing done about it — the rail already highlights
                   which view is open. Modified is the case that deserves
                   attention, and that is the only case that now colours. */}
-              {activeView && (
+              {/* The Default is hidden while it is clean.
+                  It is what Books opens on, the rail leaves it out of Your
+                  views for the same reason, and there is nothing to leave: its
+                  × cleared the filters to reach a state it was already in, so
+                  the control did nothing at all. Modified is different — then
+                  it names what the unsaved changes are against, and × discards
+                  them, so it earns its place. */}
+              {activeView && (!isDefaultView || dirty) && (
                 <span className="flex items-center gap-1.5">
                   {/* inline-flex because the icon is an svg, and Tailwind's
                       preflight makes svg display:block — so it took its own
@@ -729,7 +736,11 @@ export default function BooksPage() {
                     onClick={leaveView}
                     title={t('views.leave', { defaultValue: 'Leave view' })}>
                     <Icon name={viewIcon(activeView)} size={13} className="flex-none" />
-                    {activeView.name} ×
+                    {/* "Default" on its own names a state rather than a
+                        thing, and reads oddly beside Up next or Favourites. */}
+                    {isDefaultView
+                      ? t('views.default_name', { defaultValue: 'Default view' })
+                      : activeView.name} ×
                   </button>
                   {dirty && (
                     <span className="text-xs text-warning-strong">
