@@ -22,7 +22,7 @@ import LibraryPickerDialog from '../components/LibraryPickerDialog'
 import BookCover, { BookCoverThumb } from '../components/BookCover'
 import { usePageTitle } from '../hooks/usePageTitle'
 import type { TFunction } from 'i18next'
-import type { IconName } from '../lib/icons'
+import { Icon, type IconName } from '../lib/icons'
 import { VIEW_ICONS, viewIcon } from '../lib/viewIcons'
 import type { Book, GroupedEntry, Library, MediaType, PagedGroupedBooks, SeriesGroupEntry } from '../types'
 import {
@@ -219,6 +219,10 @@ function chipLabel(key: FacetKey, value: string, facets: BookFacets | null, t: T
   if (key === 'ownership') return t(`ownership.${value}`, { defaultValue: value })
   if (key === 'read_status') return t(`read_status.${value}`, { defaultValue: value })
   if (key === 'rating') return t('facets.stars', { count: Number(value), defaultValue: `${value} stars` })
+  // Favourite is a boolean, so its facet value is the string "true". Falling
+  // through to the label the server sent put a chip reading TRUE beside the
+  // results, which says nothing about what was filtered.
+  if (key === 'favourite') return t('facets.favourited', { defaultValue: 'Favourited' })
   return facets?.[key]?.find(v => v.value === value)?.label ?? value
 }
 
@@ -278,6 +282,7 @@ export default function BooksPage() {
   const [views, setViews] = useState<SavedView[]>(() => loadViews())
   const [activeViewId, setActiveViewId] = useState<string | null>(null)
   const [naming, setNaming] = useState(false)
+  const [viewMenuAt, setViewMenuAt] = useState<{ x: number; y: number } | null>(null)
   const [adding, setAdding] = useState(false)
 
   // Fetched only when the modal opens. Books is a read surface; making every
@@ -635,6 +640,13 @@ export default function BooksPage() {
     announceViewsChanged()
   }
 
+  /** Close the view and go back to an unfiltered Books. */
+  const leaveView = useCallback(() => {
+    setActiveViewId(null)
+    setLayoutOverride(null)
+    setParams(new URLSearchParams(), { replace: true })
+  }, [setParams])
+
   const commitView = () => {
     if (!activeView) return
     setViews(saveView({ ...activeView, params: paramsNow, layout }))
@@ -695,62 +707,44 @@ export default function BooksPage() {
           </aside>
 
           <div>
-            {/* View bar. Present only when a view is open, so an unfiltered
-                browse is not cluttered by controls for a thing that does not
-                exist yet. */}
-            {activeView && (
-              <div className={`mb-4 flex flex-wrap items-center gap-2 rounded-lg border px-3 py-2 text-sm ${
-                dirty
-                  ? 'border-warning-line bg-warning-surface'
-                  : 'border-accent-line bg-accent-surface'
-              }`}>
-                <span className="font-medium text-content">{activeView.name}</span>
-                <span className={dirty ? 'text-warning-strong' : 'text-content-muted'}>
-                  {dirty
-                    ? t('views.modified', { defaultValue: 'modified' })
-                    : isDefaultView
-                      ? t('views.default_hint', { defaultValue: 'what Books opens on' })
-                      : t('views.saved', { defaultValue: 'saved view' })}
-                </span>
-                <span className="flex-1" />
-                {dirty ? (
-                  <>
-                    <button type="button" onClick={commitView}
-                      className="rounded-md bg-accent px-2.5 py-1 text-xs font-medium text-white hover:brightness-110">
-                      {t('views.save_changes', { defaultValue: 'Save changes' })}
-                    </button>
-                    <button type="button" onClick={() => openView(activeView)}
-                      className="rounded-md border border-line-strong px-2.5 py-1 text-xs text-content-secondary hover:bg-surface-inset">
-                      {t('views.revert', { defaultValue: 'Revert' })}
-                    </button>
-                    <button type="button"
-                      onClick={() => setNaming(true)}
-                      className="rounded-md border border-line-strong px-2.5 py-1 text-xs text-content-secondary hover:bg-surface-inset">
-                      {t('views.save_as_new', { defaultValue: 'Save as new' })}
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button type="button" onClick={() => { setActiveViewId(null); setLayoutOverride(null); setParams(new URLSearchParams(), { replace: true }) }}
-                      className="rounded-md border border-line-strong px-2.5 py-1 text-xs text-content-secondary hover:bg-surface-inset">
-                      {t('views.leave', { defaultValue: 'Leave view' })}
-                    </button>
-                    <button type="button" onClick={() => setRenaming(true)}
-                      className="rounded-md border border-line-strong px-2.5 py-1 text-xs text-content-secondary hover:bg-surface-inset">
-                      {t('views.rename', { defaultValue: 'Rename' })}
-                    </button>
-                    {!activeView.permanent && (
-                      <button type="button" onClick={() => removeView(activeView.id)}
-                        className="rounded-md border border-line-strong px-2.5 py-1 text-xs text-danger hover:bg-danger-surface">
-                        {t('views.delete', { defaultValue: 'Delete view' })}
-                      </button>
-                    )}
-                  </>
-                )}
-              </div>
-            )}
-
             <div className="mb-4 flex flex-wrap items-center gap-3 text-sm text-content-muted">
+              {/* The open view, as a chip in the row that already carries the
+                  count and every filter. It used to be a full-width tinted
+                  banner above all this, which shouted at a state that usually
+                  needs nothing done about it — the rail already highlights
+                  which view is open. Modified is the case that deserves
+                  attention, and that is the only case that now colours. */}
+              {activeView && (
+                <span className="flex items-center gap-1.5">
+                  {/* warn instead of on, not alongside it: .on paints an accent
+                      fill that .warn does not override, which would put amber
+                      text on an indigo chip. */}
+                  <button type="button" className={dirty ? 'lb-chip warn' : 'lb-chip on'}
+                    onClick={leaveView}
+                    title={t('views.leave', { defaultValue: 'Leave view' })}>
+                    <Icon name={viewIcon(activeView)} size={13} className="flex-none" />
+                    {activeView.name} ×
+                  </button>
+                  {dirty && (
+                    <span className="text-xs text-warning-strong">
+                      {t('views.modified', { defaultValue: 'modified' })}
+                    </span>
+                  )}
+                  {/* Beside the chip rather than out with the page's own
+                      buttons: these act on the view, and at the far end of the
+                      row they read as things that act on the books. */}
+                  <button type="button"
+                    onClick={e => {
+                      const r = e.currentTarget.getBoundingClientRect()
+                      setViewMenuAt(m => m ? null : { x: r.left, y: r.bottom + 6 })
+                    }}
+                    aria-haspopup="menu" aria-expanded={viewMenuAt !== null}
+                    className="rounded-md px-1.5 py-0.5 text-content-tertiary hover:bg-surface-inset hover:text-content"
+                    title={t('views.more', { defaultValue: 'View options' })}>
+                    ⋯
+                  </button>
+                </span>
+              )}
               <span className="tabular-nums">
                 {loading && !entries.length
                   ? t('common.loading', { defaultValue: 'Loading…' })
@@ -819,6 +813,22 @@ export default function BooksPage() {
               ))}
 
               <span className="flex-1" />
+
+              {/* Unsaved changes to an open view. The only view state worth a
+                  button in the reader's way, which is why it is the only one
+                  that gets one. */}
+              {activeView && dirty && (
+                <>
+                  <button type="button" onClick={commitView}
+                    className="rounded-md bg-accent px-2.5 py-1 text-xs font-medium text-white hover:brightness-110">
+                    {t('views.save_changes', { defaultValue: 'Save changes' })}
+                  </button>
+                  <button type="button" onClick={() => openView(activeView)}
+                    className="rounded-md border border-line-strong px-2.5 py-1 text-xs text-content-secondary hover:bg-surface-inset">
+                    {t('views.revert', { defaultValue: 'Revert' })}
+                  </button>
+                </>
+              )}
 
               {/* Offered only when there is something worth naming. */}
               {!activeView && (activeFilters > 0 || state.query) && (
@@ -1177,6 +1187,42 @@ export default function BooksPage() {
             announceCollectionChanged()
           }}
         />
+      )}
+
+      {/* Rename and Delete: real but rare, so they sit behind the ⋯ rather
+          than as two more buttons in the reader's way. Fixed-positioned, so
+          it is placed from the trigger's rect. */}
+      {activeView && viewMenuAt && (
+        <>
+          {/* Catches the click that dismisses, so the menu closes the way every
+              menu does rather than only via its own items. */}
+          <div className="fixed inset-0 z-[190]" onClick={() => setViewMenuAt(null)} />
+          <div className="lb-menu open" style={{ left: viewMenuAt.x, top: viewMenuAt.y }}
+            role="menu">
+            <div className="hd">
+              {activeView.name}
+              {isDefaultView && ` · ${t('views.default_hint', { defaultValue: 'what Books opens on' })}`}
+            </div>
+            <button type="button" role="menuitem"
+              onClick={() => { setViewMenuAt(null); setRenaming(true) }}>
+              {t('views.rename', { defaultValue: 'Rename' })}
+            </button>
+            <button type="button" role="menuitem"
+              onClick={() => { setViewMenuAt(null); setNaming(true) }}>
+              {t('views.save_as_new', { defaultValue: 'Save as new' })}
+            </button>
+            {/* The Default cannot go: Books has to open on something. */}
+            {!activeView.permanent && (
+              <>
+                <div className="sep" />
+                <button type="button" role="menuitem" className="danger"
+                  onClick={() => { setViewMenuAt(null); removeView(activeView.id) }}>
+                  {t('views.delete', { defaultValue: 'Delete view' })}
+                </button>
+              </>
+            )}
+          </div>
+        </>
       )}
 
       <PromptDialog

@@ -164,7 +164,8 @@
     "name_placeholder": "Premières éditions signées",
     "save_as_view": "Enregistrer comme vue",
     "default_hint": "ce que Livres ouvre",
-    "rename": "Renommer"
+    "rename": "Renommer",
+    "more": "Options de la vue"
   },
   "index": {
     "all": "Tous"
