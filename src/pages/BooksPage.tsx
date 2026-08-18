@@ -714,14 +714,16 @@ export default function BooksPage() {
                   needs nothing done about it — the rail already highlights
                   which view is open. Modified is the case that deserves
                   attention, and that is the only case that now colours. */}
-              {/* The Default is hidden while it is clean.
-                  It is what Books opens on, the rail leaves it out of Your
-                  views for the same reason, and there is nothing to leave: its
-                  × cleared the filters to reach a state it was already in, so
-                  the control did nothing at all. Modified is different — then
-                  it names what the unsaved changes are against, and × discards
-                  them, so it earns its place. */}
-              {activeView && (!isDefaultView || dirty) && (
+              {/* A clean Default is named but not offered as a chip.
+                  Its × cleared the filters to reach the state it was already
+                  in, so the control did nothing — but the name still says
+                  which view you are looking at, and the ⋯ beside it keeps
+                  Rename reachable. As a chip it read as something to dismiss;
+                  as quiet text it reads as a label, which is what it is.
+
+                  Any other view, and the Default once modified, gets the chip:
+                  then there is something to leave, and × does it. */}
+              {activeView && (
                 <span className="flex items-center gap-1.5">
                   {/* inline-flex because the icon is an svg, and Tailwind's
                       preflight makes svg display:block — so it took its own
@@ -731,17 +733,24 @@ export default function BooksPage() {
                       warn instead of on, not alongside it: .on paints an
                       accent fill that .warn does not override, which would put
                       amber text on an indigo chip. */}
-                  <button type="button"
-                    className={`inline-flex items-center gap-1.5 ${dirty ? 'lb-chip warn' : 'lb-chip on'}`}
-                    onClick={leaveView}
-                    title={t('views.leave', { defaultValue: 'Leave view' })}>
-                    <Icon name={viewIcon(activeView)} size={13} className="flex-none" />
-                    {/* "Default" on its own names a state rather than a
-                        thing, and reads oddly beside Up next or Favourites. */}
-                    {isDefaultView
-                      ? t('views.default_name', { defaultValue: 'Default view' })
-                      : activeView.name} ×
-                  </button>
+                  {isDefaultView && !dirty ? (
+                    <span className="inline-flex items-center gap-1.5 text-xs uppercase tracking-wide text-content-tertiary">
+                      <Icon name={viewIcon(activeView)} size={13} className="flex-none" />
+                      {t('views.default_name', { defaultValue: 'Default view' })}
+                    </span>
+                  ) : (
+                    <button type="button"
+                      className={`inline-flex items-center gap-1.5 ${dirty ? 'lb-chip warn' : 'lb-chip on'}`}
+                      onClick={leaveView}
+                      title={t('views.leave', { defaultValue: 'Leave view' })}>
+                      <Icon name={viewIcon(activeView)} size={13} className="flex-none" />
+                      {/* "Default" on its own names a state rather than a
+                          thing, and reads oddly beside Up next or Favourites. */}
+                      {isDefaultView
+                        ? t('views.default_name', { defaultValue: 'Default view' })
+                        : activeView.name} ×
+                    </button>
+                  )}
                   {dirty && (
                     <span className="text-xs text-warning-strong">
                       {t('views.modified', { defaultValue: 'modified' })}
