@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, NavLink, Outlet, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
@@ -9,8 +9,9 @@ import { applyTheme, readStoredTheme, storeTheme } from '../lib/theme'
 // is looking at Reading now.
 import { VIEWS_CHANGED, announceViewsChanged, defaultViewHref, loadViews, newViewId, normaliseParams, saveView, viewCount, visibleViews, type SavedView } from '../lib/views'
 import { SETTINGS_TREE } from '../lib/settingsTree'
+import { ambiguousShelfNames, shelfNameKey } from '../lib/shelves'
 import { attentionRoutes, useSettingsAttention } from '../lib/settingsAttention'
-import type { BookFacets, FacetValue } from '../lib/bookBrowse'
+import { DEFAULT_OWNERSHIP, PARAM, type BookFacets, type FacetValue } from '../lib/bookBrowse'
 import { Icon, type IconName } from '../lib/icons'
 import { shelfIcon } from '../lib/shelfIcons'
 import { VIEW_ICONS, viewIcon } from '../lib/viewIcons'
@@ -212,7 +213,19 @@ export default function Layout() {
       callApi<{ items: Shelf[] }>('/api/v1/me/shelves')
         .then(r => { if (!cancelled) setShelves(r.items ?? []) })
         .catch(() => { /* Same: the rail works without them. */ })
-      callApi<{ data: BookFacets }>('/api/v1/me/books/facets')
+      // Counted in the scope the rows open in.
+      //
+      // This asked for facets unfiltered, while every row it labels lands on
+      // Books, which opens on DEFAULT_OWNERSHIP. So the rail promised more
+      // than the page delivered: Up next read 1,455 against a collection of
+      // 1,425, the extra thirty being suggestions the reader does not own and
+      // would never see on the page they had just clicked.
+      //
+      // The ownership facet itself stays whole, because each dimension is
+      // counted with its own selection excluded — so this narrows the other
+      // dimensions without collapsing the one it sets.
+      callApi<{ data: BookFacets }>(
+        `/api/v1/me/books/facets?${PARAM.ownership}=${DEFAULT_OWNERSHIP.join(',')}`)
         .then(r => { if (!cancelled) setFacets(r.data ?? null) })
         .catch(() => { /* Counts are an enhancement, not the nav. */ })
     }
@@ -223,6 +236,13 @@ export default function Layout() {
       window.removeEventListener('librarium:collection-changed', load)
     }
   }, [callApi])
+
+  /** Library id to name, for qualifying a shelf whose name is not unique. */
+  const libraryNames = useMemo(
+    () => new Map(libraries.map(l => [l.id, l.name])),
+    [libraries])
+
+  const ambiguous = useMemo(() => ambiguousShelfNames(shelves), [shelves])
 
   /** Save the filter on screen as a new view, or go to Books to build one. */
   // Cmd-K anywhere, Ctrl-K off the Mac. Ignored while typing, so the shortcut
@@ -535,14 +555,28 @@ export default function Layout() {
                       location.pathname === '/books' && params.get('shelf') === sh.id ? 'on' : ''
                     }`
                   }
-                  title={sh.description || undefined}
+                  title={[sh.name, libraryNames.get(sh.library_id), sh.description]
+                    .filter(Boolean).join(' · ') || undefined}
                 >
                   {/* The app's own icon set, tinted with the shelf's colour.
                       Emoji here made shelves the one thing in the rail not
                       drawn from the same set as everything above it. */}
                   <Icon name={shelfIcon(sh.icon)}
                     style={sh.color ? { color: sh.color } : undefined} />
-                  {sh.name}
+                  <span className="min-w-0 flex-1 truncate">
+                    {sh.name}
+                    {/* Which library, but only when the name alone does not
+                        say. A shelf belongs to one library, so two called
+                        Favourites are two different shelves and the rail
+                        listed them as the same row twice. Qualifying every
+                        shelf would be noise for the usual case where the name
+                        is already unique. */}
+                    {ambiguous.has(shelfNameKey(sh.name)) && (
+                      <span className="ml-1.5 text-[11px] text-content-faint">
+                        {libraryNames.get(sh.library_id)}
+                      </span>
+                    )}
+                  </span>
                   <ViewCount value={facetCount(facets?.shelf, sh.id)} />
                 </NavLink>
               ))}
