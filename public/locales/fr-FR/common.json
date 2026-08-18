@@ -124,7 +124,9 @@
     "active": "{{count}} filtres",
     "ownership": "Possession",
     "remove": "Retirer le filtre",
-    "shelf": "Tablette"
+    "shelf": "Tablette",
+    "favourite": "Favori",
+    "favourited": "Mis en favori"
   },
   "common": {
     "loading": "Chargement…",

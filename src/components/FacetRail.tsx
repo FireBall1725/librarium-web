@@ -34,6 +34,7 @@ const LABEL_KEY: Record<FacetKey, string> = {
   genre: 'facets.genre',
   tag: 'facets.tag',
   rating: 'facets.rating',
+  favourite: 'facets.favourite',
 }
 
 type Translate = ReturnType<typeof useTranslation>['t']
@@ -43,7 +44,21 @@ function displayLabel(key: FacetKey, v: FacetValue, t: Translate): string {
   if (key === 'ownership') return t(`ownership.${v.value}`, { defaultValue: v.label })
   if (key === 'read_status') return t(`read_status.${v.value}`, { defaultValue: v.label })
   if (key === 'rating') return t('facets.stars', { count: Number(v.value), defaultValue: `${v.value} stars` })
+  if (key === 'favourite') return t('facets.favourited', { defaultValue: 'Favourited' })
   return v.label
+}
+
+/**
+ * The rows worth offering for a dimension.
+ *
+ * Favourite is a boolean, and both sides are counted so a Favourites view can
+ * still show a nought. Only the true side is a filter anyone wants: "not
+ * favourited" is the rest of the collection, and offering it as a checkbox
+ * alongside puts a row reading 1,674 next to one reading 8.
+ */
+function visibleValues(key: FacetKey, values: FacetValue[]): FacetValue[] {
+  if (key !== 'favourite') return values
+  return values.filter(v => v.value === 'true')
 }
 
 function FacetGroup({ facetKey, values, selection, onToggle }: {
@@ -119,7 +134,7 @@ export default function FacetRail({ facets, selection, onToggle, onClear, loadin
         <FacetGroup
           key={key}
           facetKey={key}
-          values={facets[key] ?? []}
+          values={visibleValues(key, facets[key] ?? [])}
           selection={selection[key]}
           onToggle={onToggle}
         />

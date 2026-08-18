@@ -103,6 +103,12 @@ export const BUILT_IN_VIEWS: SavedView[] = [
   { id: 'reading', name: 'Reading now', params: 'status=reading', layout: 'grid', builtIn: true },
   { id: 'unread', name: 'Up next', params: 'status=unread', layout: 'grid', builtIn: true },
   { id: 'read', name: 'Finished', params: 'status=read', layout: 'rows', builtIn: true },
+  // Favourites is a view, not a shelf. It is a rule over a per-book flag, and
+  // the rule is what separates a view from a shelf's hand-picked membership.
+  // A "Favourites" shelf used to be created with every library, which is a
+  // filing decision made on the reader's behalf and gave the rail the same
+  // name once per library.
+  { id: 'favourites', name: 'Favourites', params: 'fav=true', layout: 'grid', builtIn: true, icon: 'star' },
   { id: 'five-stars', name: 'Five stars', params: 'rating=5', layout: 'grid', builtIn: true },
   { id: 'signed', name: 'Signed copies', params: 'tag=signed', layout: 'rows', builtIn: true },
 ]
