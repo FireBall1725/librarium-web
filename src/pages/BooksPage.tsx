@@ -716,10 +716,16 @@ export default function BooksPage() {
                   attention, and that is the only case that now colours. */}
               {activeView && (
                 <span className="flex items-center gap-1.5">
-                  {/* warn instead of on, not alongside it: .on paints an accent
-                      fill that .warn does not override, which would put amber
-                      text on an indigo chip. */}
-                  <button type="button" className={dirty ? 'lb-chip warn' : 'lb-chip on'}
+                  {/* inline-flex because the icon is an svg, and Tailwind's
+                      preflight makes svg display:block — so it took its own
+                      line inside the chip and pushed the label underneath,
+                      which white-space:nowrap does nothing about.
+
+                      warn instead of on, not alongside it: .on paints an
+                      accent fill that .warn does not override, which would put
+                      amber text on an indigo chip. */}
+                  <button type="button"
+                    className={`inline-flex items-center gap-1.5 ${dirty ? 'lb-chip warn' : 'lb-chip on'}`}
                     onClick={leaveView}
                     title={t('views.leave', { defaultValue: 'Leave view' })}>
                     <Icon name={viewIcon(activeView)} size={13} className="flex-none" />
