@@ -10,6 +10,7 @@ import { applyTheme, readStoredTheme, storeTheme } from '../lib/theme'
 import { VIEWS_CHANGED, announceViewsChanged, defaultViewHref, loadViews, newViewId, normaliseParams, saveView, viewCount, visibleViews, type SavedView } from '../lib/views'
 import { SETTINGS_TREE } from '../lib/settingsTree'
 import { ambiguousShelfNames, shelfNameKey } from '../lib/shelves'
+import { COLLECTION_CHANGED } from '../lib/collectionEvents'
 import { attentionRoutes, useSettingsAttention } from '../lib/settingsAttention'
 import { DEFAULT_OWNERSHIP, PARAM, type BookFacets, type FacetValue } from '../lib/bookBrowse'
 import { Icon, type IconName } from '../lib/icons'
@@ -230,10 +231,10 @@ export default function Layout() {
         .catch(() => { /* Counts are an enhancement, not the nav. */ })
     }
     load()
-    window.addEventListener('librarium:collection-changed', load)
+    window.addEventListener(COLLECTION_CHANGED, load)
     return () => {
       cancelled = true
-      window.removeEventListener('librarium:collection-changed', load)
+      window.removeEventListener(COLLECTION_CHANGED, load)
     }
   }, [callApi])
 
@@ -291,10 +292,10 @@ export default function Layout() {
     load()
     // Adding or importing books changes the totals, and the nav is on screen
     // the whole time, so it listens rather than going stale until a reload.
-    window.addEventListener('librarium:collection-changed', load)
+    window.addEventListener(COLLECTION_CHANGED, load)
     return () => {
       cancelled = true
-      window.removeEventListener('librarium:collection-changed', load)
+      window.removeEventListener(COLLECTION_CHANGED, load)
     }
   }, [callApi])
 

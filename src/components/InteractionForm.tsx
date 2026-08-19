@@ -2,7 +2,7 @@
 // Copyright (C) 2026 fireball1725
 
 import { useEffect, useState } from 'react'
-import { useAuth } from '../auth/AuthContext'
+import { ApiError, useAuth } from '../auth/AuthContext'
 import type { UserBookInteraction } from '../types'
 
 export const READ_STATUSES = [
@@ -32,6 +32,7 @@ export default function InteractionForm({ libraryId, bookId, editionId }: Props)
   })
   const [isLoading, setIsLoading] = useState(false)
   const [isSaved, setIsSaved] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const baseUrl = `/api/v1/libraries/${libraryId}/books/${bookId}/editions/${editionId}/my-interaction`
 
   useEffect(() => {
@@ -69,9 +70,14 @@ export default function InteractionForm({ libraryId, bookId, editionId }: Props)
       const updated = await callApi<UserBookInteraction>(baseUrl, { method: 'PUT', body: JSON.stringify(body) })
       if (updated) setInteraction(updated)
       setIsSaved(true)
+      setError(null)
       setTimeout(() => setIsSaved(false), 2000)
-    } catch { /* ignore */ }
-    finally { setIsLoading(false) }
+    } catch (e) {
+      // Was swallowed. The server rejected every save through this form for
+      // thirteen days and the page said nothing, so it looked like the
+      // checkbox simply did not stick. A failed save has to be visible.
+      setError(e instanceof ApiError ? e.message : 'Could not save. Try again.')
+    } finally { setIsLoading(false) }
   }
 
   return (
@@ -123,6 +129,7 @@ export default function InteractionForm({ libraryId, bookId, editionId }: Props)
         </label>
         <div className="flex items-center gap-2">
           {isSaved && <span className="text-xs text-success">Saved!</span>}
+          {error && <span className="text-xs text-danger" role="alert">{error}</span>}
           {interaction && (
             <button onClick={async () => {
               if (!confirm('Remove your reading record for this edition?')) return

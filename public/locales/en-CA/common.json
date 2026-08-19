@@ -164,7 +164,9 @@
     "name_placeholder": "Signed first editions",
     "save_as_view": "Save as a view",
     "default_hint": "what Books opens on",
-    "rename": "Rename"
+    "rename": "Rename",
+    "more": "View options",
+    "default_name": "Default view"
   },
   "index": {
     "all": "All"

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate, Link, useOutletContext } from 'react-router-dom'
+import { announceCollectionChanged } from '../../lib/collectionEvents'
 import { useAuth, ApiError } from '../../auth/AuthContext'
 import type { Crumb, LibraryOutletContext } from '../../components/LibraryOutlet'
 import type { Book, BookEdition, EditionFile, Loan, UserBookInteraction, Shelf, BookSeriesRef, ContributorResult, MergedBookResult, MergedFieldResult, StorageLocation, BrowseEntry, ISBNLookupResult } from '../../types'
@@ -483,6 +484,8 @@ function EditionCard({ edition: initialEdition, libraryId, bookId, onEdit, onDel
   const [deleting, setDeleting] = useState(false)
   const [showReading, setShowReading] = useState(false)
   const [readStatus, setReadStatus] = useState<string>('unread')
+  const [interaction, setInteraction] = useState<UserBookInteraction | null>(null)
+  const [favouriteBusy, setFavouriteBusy] = useState(false)
   const [fileUploading, setFileUploading] = useState(false)
   const [fileRemoving, setFileRemoving] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
@@ -546,15 +549,52 @@ function EditionCard({ edition: initialEdition, libraryId, bookId, onEdit, onDel
     finally { setFileRemoving(false) }
   }
 
-  // Fetch read status eagerly so the pill shows without expanding the section
+  // Fetch the interaction eagerly so the read pill and the star show without
+  // expanding the section. The whole record is kept, not just the status,
+  // because toggling the star has to send the rest of it back untouched.
   useEffect(() => {
     callApi<UserBookInteraction>(
       `/api/v1/libraries/${libraryId}/books/${bookId}/editions/${edition.id}/my-interaction`
     )
-      .then(i => { if (i) setReadStatus(i.read_status) })
+      .then(i => { if (i) { setReadStatus(i.read_status); setInteraction(i) } })
       .catch(() => {})
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [edition.id])
+
+  /**
+   * Star or unstar this edition.
+   *
+   * Sends the whole record back with one field changed: the endpoint replaces
+   * what it is given, so posting the flag alone would clear the rating, notes,
+   * review and dates. Favouriting a book you had rated would quietly erase the
+   * rating.
+   */
+  const toggleFavourite = async () => {
+    const next = !(interaction?.is_favorite ?? false)
+    setFavouriteBusy(true)
+    try {
+      const updated = await callApi<UserBookInteraction>(
+        `/api/v1/libraries/${libraryId}/books/${bookId}/editions/${edition.id}/my-interaction`,
+        {
+          method: 'PUT',
+          body: JSON.stringify({
+            read_status: interaction?.read_status ?? 'unread',
+            rating: interaction?.rating ?? null,
+            notes: interaction?.notes ?? '',
+            review: interaction?.review ?? '',
+            date_started: interaction?.date_started ?? null,
+            date_finished: interaction?.date_finished ?? null,
+            is_favorite: next,
+          }),
+        })
+      if (updated) { setInteraction(updated); setReadStatus(updated.read_status) }
+      // The Favourites view and its count live in the rail.
+      announceCollectionChanged()
+    } catch {
+      // Left as it was rather than showing a star that did not take.
+      setInteraction(prev => prev)
+    } finally { setFavouriteBusy(false) }
+  }
 
   const formatBadgeCls = () => {
     if (edition.format === 'ebook' || edition.format === 'digital')
@@ -609,6 +649,26 @@ function EditionCard({ edition: initialEdition, libraryId, bookId, onEdit, onDel
           {edition.edition_name && <span className="text-sm font-medium text-content">{edition.edition_name}</span>}
         </div>
         <div className="flex items-center gap-1 flex-shrink-0">
+          {/* Starring is one click here rather than a checkbox buried in the
+              reading form behind a Save. It is the most common thing anyone
+              does to an edition, and it was the least reachable. */}
+          <button onClick={toggleFavourite} disabled={favouriteBusy}
+            aria-pressed={interaction?.is_favorite ?? false}
+            className={`p-1.5 rounded-md transition-colors disabled:opacity-50 hover:bg-surface-strong ${
+              interaction?.is_favorite
+                ? 'text-warning hover:text-warning-strong'
+                : 'text-gray-400 hover:text-warning'
+            }`}
+            title={interaction?.is_favorite ? 'Remove from favourites' : 'Add to favourites'}>
+            {/* Filled when starred, outlined when not: the state has to read at
+                a glance from the icon, not only from its colour. */}
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24"
+              fill={interaction?.is_favorite ? 'currentColor' : 'none'}
+              stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round"
+                d="M11.048 2.927c.3-.921 1.603-.921 1.902 0l1.83 5.63a1 1 0 00.95.69h5.92c.969 0 1.371 1.24.588 1.81l-4.79 3.48a1 1 0 00-.363 1.118l1.83 5.63c.3.921-.755 1.688-1.539 1.118l-4.788-3.48a1 1 0 00-1.176 0l-4.788 3.48c-.784.57-1.838-.197-1.539-1.118l1.83-5.63a1 1 0 00-.363-1.118l-4.79-3.48c-.783-.57-.38-1.81.588-1.81h5.92a1 1 0 00.951-.69l1.83-5.63z" />
+            </svg>
+          </button>
           <button onClick={() => onEdit(edition)}
             className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-surface-strong transition-colors"
             title="Edit edition">
