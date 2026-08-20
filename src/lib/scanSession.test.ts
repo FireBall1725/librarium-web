@@ -58,14 +58,23 @@ describe('shouldAccept', () => {
     expect(shouldAccept('9782277124047', items, null, 99_000)).toBe(false)
   })
 
-  it('ignores repeat fires while a book is still held up to the camera', () => {
+  it('ignores repeat fires of the code still held up to the camera', () => {
     // The detector reports on every frame, so without the cooldown one book
     // held steady would fill the list with itself.
-    expect(shouldAccept('9791036000263', [], 1_000, 1_000 + RESCAN_COOLDOWN_MS - 1)).toBe(false)
+    const last = { code: '9791036000263', at: 1_000 }
+    expect(shouldAccept('9791036000263', [], last, 1_000 + RESCAN_COOLDOWN_MS - 1)).toBe(false)
   })
 
-  it('accepts a different book once the cooldown has passed', () => {
-    expect(shouldAccept('9791036000263', [], 1_000, 1_000 + RESCAN_COOLDOWN_MS)).toBe(true)
+  it('accepts the same code again once its cooldown has passed', () => {
+    const last = { code: '9791036000263', at: 1_000 }
+    expect(shouldAccept('9791036000263', [], last, 1_000 + RESCAN_COOLDOWN_MS)).toBe(true)
+  })
+
+  it('does not throttle a different book presented straight after', () => {
+    // A sweep moves along the spines quickly. Throttling every scan for the
+    // cooldown would silently drop the second of two books shown in a row.
+    const last = { code: '9791036000263', at: 1_000 }
+    expect(shouldAccept('9782277124047', [], last, 1_050)).toBe(true)
   })
 })
 
@@ -89,6 +98,22 @@ describe('detectMediaTypeId', () => {
   it('returns undefined when the instance has no matching type', () => {
     // Media types are admin-configurable, so none of them are guaranteed.
     expect(detectMediaTypeId(result(), [])).toBeUndefined()
+  })
+})
+
+describe('bookBodyFromResult media type fallback', () => {
+  it('falls back to the first configured type on a custom instance', () => {
+    // An admin may have replaced novel/manga/comic entirely. Sending an empty
+    // id would fail every POST in the sweep rather than just guess less well.
+    const custom: MediaType[] = [
+      { id: 'roman-id', name: 'roman', display_name: 'Roman', book_count: 0 },
+      { id: 'bd-id', name: 'bande-dessinee', display_name: 'BD', book_count: 0 },
+    ]
+    expect(bookBodyFromResult(result(), custom).media_type_id).toBe('roman-id')
+  })
+
+  it('is empty only when the instance has no media types at all', () => {
+    expect(bookBodyFromResult(result(), []).media_type_id).toBe('')
   })
 })
 

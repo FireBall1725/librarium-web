@@ -18,7 +18,8 @@ import ContributorRow, { CONTRIBUTOR_ROLES } from './ContributorRow'
 import MediaTypeSelect from './MediaTypeSelect'
 import { TAG_COLORS } from '../lib/tagColours'
 import {
-  addableItems, bookBodyFromResult, shouldAccept, withItem, type ScannedItem,
+  addableItems, bookBodyFromResult, shouldAccept, withItem,
+  type LastAccepted, type ScannedItem,
 } from '../lib/scanSession'
 
 
@@ -114,10 +115,10 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
   const [chosenLibrary, setChosenLibrary] = useState(libraryId ?? libraries?.[0]?.id ?? '')
   const targetLibrary = libraryId ?? chosenLibrary
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') closeModalRef.current() }
     document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
-  }, [onClose])
+  }, [])
   const [form, setForm] = useState({
     title: '',
     subtitle: '',
@@ -203,7 +204,7 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
   // The detection loop is a closure created once per scan, so it cannot read
   // React state. These refs are what it looks at instead.
   const continuousRef = useRef(false)
-  const lastAcceptedAtRef = useRef<number | null>(null)
+  const lastAcceptedRef = useRef<LastAccepted | null>(null)
   const scannedRef = useRef<ScannedItem[]>([])
   useEffect(() => { scannedRef.current = scanned }, [scanned])
 
@@ -263,9 +264,12 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
       return
     }
     setIsbnError(null)
-    if (continuous) setScanned([])
+    // The session is NOT cleared here. "Scan more" resumes a sweep, and
+    // wiping the list on resume would throw away reviewed rows, rows already
+    // added, and any lookup still in flight. Starting fresh is the job of
+    // whoever opens a new session — see resetScanSession.
     continuousRef.current = continuous
-    lastAcceptedAtRef.current = null
+    lastAcceptedRef.current = null
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
       streamRef.current = stream
@@ -292,10 +296,18 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
               // session. shouldAccept filters the price barcode beside the
               // ISBN one, codes already queued, and the repeat fires that a
               // book held steady in frame produces on every animation frame.
-              if (shouldAccept(code, scannedRef.current, lastAcceptedAtRef.current, Date.now())) {
-                lastAcceptedAtRef.current = Date.now()
-                setScanned(prev => [...prev, { code, status: 'pending' }])
-                void lookupScanned(code)
+              // Every code in the frame is considered, not just the first.
+              // A back cover often shows the price barcode beside the ISBN
+              // one, and if the detector happens to return the price code
+              // first, looking only at codes[0] would reject the frame and
+              // never reach the ISBN sitting right behind it.
+              for (const detected of codes) {
+                const value = detected.rawValue
+                if (!shouldAccept(value, scannedRef.current, lastAcceptedRef.current, Date.now())) continue
+                lastAcceptedRef.current = { code: value, at: Date.now() }
+                setScanned(prev => [...prev, { code: value, status: 'pending' }])
+                void lookupScanned(value)
+                break
               }
             }
           } catch {
@@ -375,12 +387,32 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
     }
   }
 
-  /** Close the sweep, telling the caller to refresh only if something landed. */
-  const finishScanSession = () => {
+  /**
+   * Close the modal, telling the caller to refresh if a sweep created anything.
+   *
+   * Every exit has to go through here, not just the sweep's own Done button:
+   * Escape, the backdrop, the header X and the footer Cancel all used to call
+   * onClose directly, and callers like BooksPage only reload on onSaved. Books
+   * created by a sweep would then stay invisible until some later refresh —
+   * they were saved, but the shelf did not show them.
+   */
+  const closeModal = () => {
     stopScan()
     if (lastScanSaved) onSaved(lastScanSaved)
     else onClose()
   }
+
+  /** Clear a finished session so the next sweep starts from nothing. */
+  const resetScanSession = () => {
+    setScanned([])
+    setLastScanSaved(null)
+    lastAcceptedRef.current = null
+  }
+
+  // The Escape listener is bound once, so it would otherwise close over the
+  // first render's closeModal and never see a book the sweep saved later.
+  const closeModalRef = useRef(closeModal)
+  closeModalRef.current = closeModal
 
   // Auto-trigger lookup when modal opens with a pre-filled ISBN or title
   useEffect(() => {
@@ -634,7 +666,7 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
   const tagQueryMatchesExisting = libraryTags.some(t => t.name.toLowerCase() === tagQuery.trim().toLowerCase())
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={e => { if (e.target === e.currentTarget) closeModal() }}>
       <div className="w-full max-w-2xl rounded-2xl bg-surface shadow-2xl flex flex-col max-h-[92vh]">
 
         {/* Header */}
@@ -657,7 +689,7 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
                 </select>
               </label>
             )}
-            <button type="button" onClick={onClose}
+            <button type="button" onClick={closeModal}
               className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-surface-inset transition-colors"
               aria-label="Close">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -721,7 +753,7 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
                       className="rounded-lg border border-line-strong px-4 py-2 text-sm font-medium text-content-secondary hover:bg-surface-muted disabled:opacity-50 transition-colors">
                       {t('scan.resume', { defaultValue: 'Scan more' })}
                     </button>
-                    <button type="button" onClick={finishScanSession} disabled={addingScanned}
+                    <button type="button" onClick={closeModal} disabled={addingScanned}
                       className="rounded-lg border border-line-strong px-4 py-2 text-sm font-medium text-content-secondary hover:bg-surface-muted disabled:opacity-50 transition-colors">
                       {t('scan.done', { defaultValue: 'Done' })}
                     </button>
@@ -746,7 +778,7 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
                     {/* Sweeping a shelf is a different act from adding one
                         book, so it gets its own entry point rather than a
                         mode toggle hidden inside the camera view. */}
-                    <button type="button" onClick={() => void startScan(true)}
+                    <button type="button" onClick={() => { resetScanSession(); void startScan(true) }}
                       className="rounded-lg border border-line-strong px-3 py-2 text-sm text-content-tertiary hover:bg-surface-muted transition-colors"
                       title={t('scan.many', { defaultValue: 'Scan several books in a row' })}>📚</button>
                   </div>
@@ -1223,7 +1255,7 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
 
         {/* Footer */}
         <div className="px-6 py-4 border-t border-line flex justify-end gap-3 flex-shrink-0">
-          <button type="button" onClick={onClose}
+          <button type="button" onClick={closeModal}
             className="rounded-lg border border-line-strong px-5 py-2 text-sm font-medium text-content-secondary hover:bg-surface-muted transition-colors">
             Cancel
           </button>
