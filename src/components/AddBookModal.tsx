@@ -201,11 +201,25 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
       // Give React time to render the video element
       setTimeout(async () => {
         if (!videoRef.current) return
-        videoRef.current.srcObject = stream
-        await videoRef.current.play()
-        // Native where the browser has it, WebAssembly where it does not —
-        // which is every browser on iOS. See lib/barcodeDetector.
-        const detector = await getBarcodeReader(['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128'])
+        // This callback runs after the try/catch below has already returned,
+        // so it needs its own. Getting the detector can now fail on its own
+        // terms — the fallback is a dynamically imported chunk, and fetching
+        // it fails on a flaky connection, or on a page left open across a
+        // deployment that invalidated its asset URLs. Without this the
+        // rejection goes nowhere: the camera stays on and the modal sits in
+        // scanning mode with nothing to show for it.
+        let detector: Awaited<ReturnType<typeof getBarcodeReader>>
+        try {
+          videoRef.current.srcObject = stream
+          await videoRef.current.play()
+          // Native where the browser has it, WebAssembly where it does not —
+          // which is every browser on iOS. See lib/barcodeDetector.
+          detector = await getBarcodeReader(['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128'])
+        } catch {
+          stopScan()
+          setIsbnError('Could not start the barcode scanner.')
+          return
+        }
         const scan = async () => {
           if (!videoRef.current || !streamRef.current) return
           try {
