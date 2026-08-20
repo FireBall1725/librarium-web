@@ -11,6 +11,7 @@ import {
   isBooklandCode,
   shouldAccept,
   splitVolumeSuffix,
+  upsertItem,
   withItem,
   type ScannedItem,
 } from './scanSession'
@@ -167,5 +168,33 @@ describe('withItem', () => {
     const next = withItem(items, 'b', { status: 'added', bookId: 'xyz' })
     expect(next[0]).toBe(items[0])
     expect(next[1]).toEqual({ code: 'b', status: 'added', bookId: 'xyz' })
+  })
+})
+
+describe('retrying a failed scan', () => {
+  it('accepts a code again when its row failed', () => {
+    // Lookups and creations fail transiently; without this the only way past
+    // a blip was to throw the whole sweep away.
+    const items = [item('9782277124047', { status: 'error' })]
+    expect(shouldAccept('9782277124047', items, null, 99_000)).toBe(true)
+  })
+
+  it('still refuses a code that settled as a duplicate or not found', () => {
+    expect(shouldAccept('9782277124047', [item('9782277124047', { status: 'duplicate' })], null, 99_000)).toBe(false)
+    expect(shouldAccept('9782277124047', [item('9782277124047', { status: 'not_found' })], null, 99_000)).toBe(false)
+    expect(shouldAccept('9782277124047', [item('9782277124047', { status: 'added' })], null, 99_000)).toBe(false)
+  })
+})
+
+describe('upsertItem', () => {
+  it('appends a code the session has not seen', () => {
+    expect(upsertItem([item('a')], item('b')).map(i => i.code)).toEqual(['a', 'b'])
+  })
+
+  it('reuses the row of a code being retried, rather than listing it twice', () => {
+    const items = [item('a'), item('b', { status: 'error' })]
+    const next = upsertItem(items, item('b', { status: 'pending' }))
+    expect(next).toHaveLength(2)
+    expect(next[1].status).toBe('pending')
   })
 })

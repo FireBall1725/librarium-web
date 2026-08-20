@@ -82,10 +82,30 @@ export function shouldAccept(
   now: number,
 ): boolean {
   if (!isBooklandCode(code)) return false
-  if (items.some(i => i.code === code)) return false
+  // A row that failed is not settled, so scanning it again is how you retry.
+  // Lookups and creations fail transiently; without this the only way past a
+  // blip was to throw the whole sweep away, since addableItems skips errors
+  // and the code could never be queued a second time.
+  const existing = items.find(i => i.code === code)
+  if (existing && existing.status !== 'error') return false
   if (lastAccepted && lastAccepted.code === code
       && now - lastAccepted.at < RESCAN_COOLDOWN_MS) return false
   return true
+}
+
+/**
+ * Add a scanned code, or reset the row that is already there.
+ *
+ * Rescanning a failed row has to reuse its place rather than append a second
+ * one, otherwise the list would show the same book twice with two statuses.
+ */
+export function upsertItem(
+  items: readonly ScannedItem[],
+  item: ScannedItem,
+): ScannedItem[] {
+  return items.some(i => i.code === item.code)
+    ? items.map(i => (i.code === item.code ? item : i))
+    : [...items, item]
 }
 
 /**

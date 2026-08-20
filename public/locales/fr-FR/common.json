@@ -416,6 +416,7 @@
     "import": "Importer des livres"
   },
   "scan": {
+    "library_locked": "Termine ou vide la session de scan pour changer de bibliothèque.",
     "one": "Scanner un code-barres",
     "many": "Scanner plusieurs livres \u00e0 la suite",
     "hint": "Vise un code-barres avec la cam\u00e9ra\u2026",

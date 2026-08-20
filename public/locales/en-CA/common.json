@@ -416,6 +416,7 @@
     "import": "Import books"
   },
   "scan": {
+    "library_locked": "Finish or clear the scan session to change library.",
     "one": "Scan barcode",
     "many": "Scan several books in a row",
     "hint": "Point your camera at a barcode\u2026",
