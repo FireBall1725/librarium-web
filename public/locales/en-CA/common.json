@@ -414,5 +414,8 @@
     "new_loan": "Record a loan",
     "new_shelf": "Make a shelf",
     "import": "Import books"
+  },
+  "scan": {
+    "start_failed": "Could not start the barcode scanner."
   }
 }

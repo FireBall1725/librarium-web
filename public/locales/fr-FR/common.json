@@ -414,5 +414,8 @@
     "new_loan": "Enregistrer un prêt",
     "new_shelf": "Créer une tablette",
     "import": "Importer des livres"
+  },
+  "scan": {
+    "start_failed": "Impossible de d\u00e9marrer le scanner de codes-barres."
   }
 }

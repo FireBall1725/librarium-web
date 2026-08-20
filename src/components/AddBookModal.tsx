@@ -9,6 +9,7 @@
 // optional libraryId and asks which library when it has none.
 
 import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { useAuth, ApiError } from '../auth/AuthContext'
 import type { Book, ContributorResult, Genre, ISBNLookupResult, Library, MediaType, Shelf, Tag } from '../types'
@@ -60,6 +61,7 @@ interface AddBookModalProps {
 
 export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose, onSaved, onDuplicate, initialIsbn, initialTitle }: AddBookModalProps) {
   const { callApi } = useAuth()
+  const { t } = useTranslation()
 
   // When the caller supplies no library, the first one is preselected rather
   // than left blank: a modal that refuses to do anything until you notice a
@@ -217,7 +219,9 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
           detector = await getBarcodeReader(['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128'])
         } catch {
           stopScan()
-          setIsbnError('Could not start the barcode scanner.')
+          setIsbnError(t('scan.start_failed', {
+            defaultValue: 'Could not start the barcode scanner.',
+          }))
           return
         }
         const scan = async () => {
