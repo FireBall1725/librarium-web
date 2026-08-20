@@ -57,21 +57,34 @@ export function isBooklandCode(code: string): boolean {
   return digits.length === 13 && (digits.startsWith('978') || digits.startsWith('979'))
 }
 
+/** The code accepted most recently, and when — the cooldown's subject. */
+export interface LastAccepted {
+  code: string
+  at: number
+}
+
 /**
  * Should a freshly detected code be accepted into the session?
  *
  * Returns false for a non-book barcode, for a code already in the list, and
  * for the code that was just accepted while it is still in its cooldown.
+ *
+ * The cooldown deliberately applies to THAT code and no other. Throttling
+ * every scan for two seconds would silently drop the second of two different
+ * books held up in quick succession, which is exactly what a shelf sweep
+ * does. The list check already settles real duplicates; the cooldown only
+ * covers the window before the accepted code has landed in it.
  */
 export function shouldAccept(
   code: string,
   items: readonly ScannedItem[],
-  lastAcceptedAt: number | null,
+  lastAccepted: LastAccepted | null,
   now: number,
 ): boolean {
   if (!isBooklandCode(code)) return false
   if (items.some(i => i.code === code)) return false
-  if (lastAcceptedAt !== null && now - lastAcceptedAt < RESCAN_COOLDOWN_MS) return false
+  if (lastAccepted && lastAccepted.code === code
+      && now - lastAccepted.at < RESCAN_COOLDOWN_MS) return false
   return true
 }
 
@@ -123,6 +136,11 @@ export function splitVolumeSuffix(title: string, subtitle: string): { title: str
  * contributor id needs a round trip per name, and the enrichment job on the
  * server fills them in afterwards. A shelf sweep trades that detail for speed;
  * the single-book form still does the full resolution.
+ *
+ * The media type falls back to the first configured one, matching what the
+ * single-book form does. Media types are admin-configurable, so an instance
+ * may have none of novel/manga/comic; sending an empty id there would fail
+ * every POST in the sweep rather than just guessing less well.
  */
 export function bookBodyFromResult(
   result: ISBNLookupResult,
@@ -133,7 +151,7 @@ export function bookBodyFromResult(
     title: split.title,
     subtitle: split.subtitle,
     description: result.description ?? '',
-    media_type_id: detectMediaTypeId(result, mediaTypes) ?? '',
+    media_type_id: detectMediaTypeId(result, mediaTypes) ?? mediaTypes[0]?.id ?? '',
     contributors: [],
     tag_ids: [],
     genre_ids: [],
