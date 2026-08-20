@@ -414,5 +414,28 @@
     "new_loan": "Enregistrer un prêt",
     "new_shelf": "Créer une tablette",
     "import": "Importer des livres"
+  },
+  "scan": {
+    "library_locked": "Termine ou vide la session de scan pour changer de bibliothèque.",
+    "one": "Scanner un code-barres",
+    "many": "Scanner plusieurs livres \u00e0 la suite",
+    "hint": "Vise un code-barres avec la cam\u00e9ra\u2026",
+    "sweep_hint": "Continue \u00e0 scanner \u2014 chaque livre rejoint la liste ci-dessous.",
+    "stop": "Arr\u00eater le scan",
+    "resume": "Scanner d'autres livres",
+    "adding": "Ajout en cours\u2026",
+    "add_all_one": "Ajouter {{count}} livre",
+    "add_all_other": "Ajouter {{count}} livres",
+    "done": "Termin\u00e9",
+    "unsupported": "Ce navigateur ne g\u00e8re pas le scan de codes-barres.",
+    "camera_denied": "Acc\u00e8s \u00e0 la cam\u00e9ra refus\u00e9 ou indisponible.",
+    "status": {
+      "pending": "Recherche\u2026",
+      "found": "Pr\u00eat",
+      "duplicate": "D\u00e9j\u00e0 en rayon",
+      "not_found": "Introuvable",
+      "error": "\u00c9chec",
+      "added": "Ajout\u00e9"
+    }
   }
 }

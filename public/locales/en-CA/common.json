@@ -414,5 +414,28 @@
     "new_loan": "Record a loan",
     "new_shelf": "Make a shelf",
     "import": "Import books"
+  },
+  "scan": {
+    "library_locked": "Finish or clear the scan session to change library.",
+    "one": "Scan barcode",
+    "many": "Scan several books in a row",
+    "hint": "Point your camera at a barcode\u2026",
+    "sweep_hint": "Keep scanning \u2014 each book joins the list below.",
+    "stop": "Stop scanning",
+    "resume": "Scan more",
+    "adding": "Adding\u2026",
+    "add_all_one": "Add {{count}} book",
+    "add_all_other": "Add {{count}} books",
+    "done": "Done",
+    "unsupported": "Barcode scanning is not supported in this browser.",
+    "camera_denied": "Camera access denied or unavailable.",
+    "status": {
+      "pending": "Looking up\u2026",
+      "found": "Ready",
+      "duplicate": "Already shelved",
+      "not_found": "Not found",
+      "error": "Failed",
+      "added": "Added"
+    }
   }
 }

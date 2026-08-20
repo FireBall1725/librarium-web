@@ -9,6 +9,7 @@
 // optional libraryId and asks which library when it has none.
 
 import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { useAuth, ApiError } from '../auth/AuthContext'
 import type { Book, ContributorResult, Genre, ISBNLookupResult, Library, MediaType, Shelf, Tag } from '../types'
@@ -16,9 +17,11 @@ import { LANGUAGE_OPTIONS } from './AddEditionModal'
 import ContributorRow, { CONTRIBUTOR_ROLES } from './ContributorRow'
 import MediaTypeSelect from './MediaTypeSelect'
 import { TAG_COLORS } from '../lib/tagColours'
+import {
+  addableItems, bookBodyFromResult, detectMediaTypeId, shouldAccept, upsertItem, withItem,
+  type LastAccepted, type ScannedItem,
+} from '../lib/scanSession'
 
-
-const MANGA_PUBLISHERS = ['viz', 'yen press', 'kodansha', 'seven seas', 'tokyopop', 'square enix manga', 'dark horse manga', 'vertical', 'j-novel', 'cross infinite']
 
 // ─── ISBN result helpers ──────────────────────────────────────────────────────
 
@@ -35,6 +38,49 @@ function countISBNFields(r: ISBNLookupResult): number {
 interface BookFormContributor {
   contributor: ContributorResult | null
   role: string
+}
+
+/**
+ * What the camera has seen so far in a continuous sweep.
+ *
+ * Module-level rather than nested in the modal: a component declared inside
+ * another is a new type on every render, which would remount the list and
+ * lose its scroll position after every single scan.
+ */
+function ScanSessionList({ items }: { items: ScannedItem[] }) {
+  const { t } = useTranslation()
+  if (items.length === 0) return null
+
+  const label: Record<ScannedItem['status'], string> = {
+    pending:   t('scan.status.pending',   { defaultValue: 'Looking up…' }),
+    found:     t('scan.status.found',     { defaultValue: 'Ready' }),
+    duplicate: t('scan.status.duplicate', { defaultValue: 'Already shelved' }),
+    not_found: t('scan.status.not_found', { defaultValue: 'Not found' }),
+    error:     t('scan.status.error',     { defaultValue: 'Failed' }),
+    added:     t('scan.status.added',     { defaultValue: 'Added' }),
+  }
+  // Semantic tokens only, so both themes come for free.
+  const tone: Record<ScannedItem['status'], string> = {
+    pending:   'text-content-muted',
+    found:     'text-content-secondary',
+    duplicate: 'text-warning-strong',
+    not_found: 'text-content-muted',
+    error:     'text-danger',
+    added:     'text-success-strong',
+  }
+
+  return (
+    <ul className="max-h-56 overflow-y-auto rounded-lg border border-line divide-y divide-line">
+      {items.map(entry => (
+        <li key={entry.code} className="flex items-baseline gap-3 px-3 py-2 text-sm">
+          <span className="flex-1 truncate text-content-strong">
+            {entry.result?.title || entry.duplicateTitle || entry.code}
+          </span>
+          <span className={`shrink-0 text-xs ${tone[entry.status]}`}>{label[entry.status]}</span>
+        </li>
+      ))}
+    </ul>
+  )
 }
 
 interface AddBookModalProps {
@@ -59,6 +105,7 @@ interface AddBookModalProps {
 
 export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose, onSaved, onDuplicate, initialIsbn, initialTitle }: AddBookModalProps) {
   const { callApi } = useAuth()
+  const { t } = useTranslation()
 
   // When the caller supplies no library, the first one is preselected rather
   // than left blank: a modal that refuses to do anything until you notice a
@@ -66,10 +113,10 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
   const [chosenLibrary, setChosenLibrary] = useState(libraryId ?? libraries?.[0]?.id ?? '')
   const targetLibrary = libraryId ?? chosenLibrary
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') closeModalRef.current() }
     document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
-  }, [onClose])
+  }, [])
   const [form, setForm] = useState({
     title: '',
     subtitle: '',
@@ -144,6 +191,21 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
   const streamRef = useRef<MediaStream | null>(null)
   const isbnInputRef = useRef<HTMLInputElement>(null)
 
+  // ─── Continuous scan session ───────────────────────────────────────────────
+  // Sweeping a shelf rather than adding one book: the camera stays on and each
+  // ISBN it sees joins this list, which the user reviews before anything is
+  // written. Kept apart from the single-book form state on purpose — see
+  // lookupScanned for why.
+  const [scanned, setScanned] = useState<ScannedItem[]>([])
+  const [addingScanned, setAddingScanned] = useState(false)
+  const [lastScanSaved, setLastScanSaved] = useState<Book | null>(null)
+  // The detection loop is a closure created once per scan, so it cannot read
+  // React state. These refs are what it looks at instead.
+  const continuousRef = useRef(false)
+  const lastAcceptedRef = useRef<LastAccepted | null>(null)
+  const scannedRef = useRef<ScannedItem[]>([])
+  useEffect(() => { scannedRef.current = scanned }, [scanned])
+
   // ─── Freetext book search mode ─────────────────────────────────────────────
   const [searchInput, setSearchInput] = useState((!initialIsbn && initialTitle) ? initialTitle : '')
   const [searchResults, setSearchResults] = useState<ISBNLookupResult[]>([])
@@ -187,16 +249,25 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
 
   const stopScan = () => {
     setScanning(false)
+    continuousRef.current = false
     streamRef.current?.getTracks().forEach(t => t.stop())
     streamRef.current = null
   }
 
-  const startScan = async () => {
+  const startScan = async (continuous = false) => {
     if (!('BarcodeDetector' in window)) {
-      setIsbnError('Barcode scanning is not supported in this browser.')
+      setIsbnError(t('scan.unsupported', {
+        defaultValue: 'Barcode scanning is not supported in this browser.',
+      }))
       return
     }
     setIsbnError(null)
+    // The session is NOT cleared here. "Scan more" resumes a sweep, and
+    // wiping the list on resume would throw away reviewed rows, rows already
+    // added, and any lookup still in flight. Starting fresh is the job of
+    // whoever opens a new session — see resetScanSession.
+    continuousRef.current = continuous
+    lastAcceptedRef.current = null
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
       streamRef.current = stream
@@ -213,22 +284,133 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
             const codes = await detector.detect(videoRef.current)
             if (codes.length > 0) {
               const code = codes[0].rawValue
-              stopScan()
-              setIsbnInput(code)
-              doISBNLookup(code)
-            } else {
-              requestAnimationFrame(scan)
+              if (!continuousRef.current) {
+                stopScan()
+                setIsbnInput(code)
+                doISBNLookup(code)
+                return
+              }
+              // Continuous mode: the camera stays on and the code joins the
+              // session. shouldAccept filters the price barcode beside the
+              // ISBN one, codes already queued, and the repeat fires that a
+              // book held steady in frame produces on every animation frame.
+              // Every code in the frame is considered, not just the first.
+              // A back cover often shows the price barcode beside the ISBN
+              // one, and if the detector happens to return the price code
+              // first, looking only at codes[0] would reject the frame and
+              // never reach the ISBN sitting right behind it.
+              for (const detected of codes) {
+                const value = detected.rawValue
+                if (!shouldAccept(value, scannedRef.current, lastAcceptedRef.current, Date.now())) continue
+                lastAcceptedRef.current = { code: value, at: Date.now() }
+                setScanned(prev => upsertItem(prev, { code: value, status: 'pending' }))
+                void lookupScanned(value)
+                break
+              }
             }
           } catch {
-            requestAnimationFrame(scan)
+            // A detect() failure is transient — a frame arriving mid-resize,
+            // say. Keep the loop alive rather than dropping the session.
           }
+          requestAnimationFrame(scan)
         }
         scan()
       }, 100)
     } catch {
-      setIsbnError('Camera access denied or unavailable.')
+      setIsbnError(t('scan.camera_denied', { defaultValue: 'Camera access denied or unavailable.' }))
     }
   }
+
+  /**
+   * Resolve one scanned code without disturbing the single-book form.
+   *
+   * The form state machine is driven by importResult, which fills a dozen
+   * fields and resolves contributors over the network. Reusing it here would
+   * mean the last scan of a sweep silently decided what the form contained,
+   * so the session keeps its own lightweight record instead.
+   */
+  async function lookupScanned(code: string) {
+    try {
+      const [results, duplicate] = await Promise.all([
+        callApi<ISBNLookupResult[]>(`/api/v1/lookup/isbn/${encodeURIComponent(code)}`),
+        callApi<Book>(`/api/v1/libraries/${targetLibrary}/book-by-isbn/${encodeURIComponent(code)}`).catch(() => null),
+      ])
+      if (duplicate) {
+        setScanned(prev => withItem(prev, code, { status: 'duplicate', duplicateTitle: duplicate.title }))
+        return
+      }
+      const best = results?.[0]
+      setScanned(prev => withItem(prev, code, best
+        ? { status: 'found', result: best }
+        : { status: 'not_found' }))
+    } catch {
+      setScanned(prev => withItem(prev, code, { status: 'error' }))
+    }
+  }
+
+  /**
+   * Add every looked-up scan, one request at a time so failures stay isolated.
+   *
+   * onSaved is deliberately NOT called per book: callers treat it as "the
+   * modal is finished" and close it, which would end the sweep after the
+   * first success. The last created book is held instead and handed over
+   * once, when the user closes the session.
+   */
+  async function addScannedBooks() {
+    setAddingScanned(true)
+    let last: Book | null = null
+    try {
+      for (const entry of addableItems(scanned)) {
+        try {
+          const book = await callApi<Book>(`/api/v1/libraries/${targetLibrary}/books`, {
+            method: 'POST',
+            body: JSON.stringify(bookBodyFromResult(entry.result!, mediaTypes)),
+          })
+          if (entry.result!.cover_url) {
+            // Best-effort, exactly as the single-book path treats it.
+            callApi(`/api/v1/libraries/${targetLibrary}/books/${book!.id}/cover/fetch`, {
+              method: 'POST',
+              body: JSON.stringify({ url: entry.result!.cover_url }),
+            }).catch(() => {})
+          }
+          last = book
+          setScanned(prev => withItem(prev, entry.code, { status: 'added', bookId: book!.id }))
+        } catch {
+          setScanned(prev => withItem(prev, entry.code, { status: 'error' }))
+        }
+      }
+      if (last) setLastScanSaved(last)
+    } finally {
+      setAddingScanned(false)
+    }
+  }
+
+  /**
+   * Close the modal, telling the caller to refresh if a sweep created anything.
+   *
+   * Every exit has to go through here, not just the sweep's own Done button:
+   * Escape, the backdrop, the header X and the footer Cancel all used to call
+   * onClose directly, and callers like BooksPage only reload on onSaved. Books
+   * created by a sweep would then stay invisible until some later refresh —
+   * they were saved, but the shelf did not show them.
+   */
+  const closeModal = () => {
+    stopScan()
+    if (lastScanSaved) onSaved(lastScanSaved)
+    else onClose()
+  }
+
+  /** Clear a finished session so the next sweep starts from nothing. */
+  const resetScanSession = () => {
+    setScanned([])
+    setLastScanSaved(null)
+    lastAcceptedRef.current = null
+  }
+
+  // The Escape listener is bound once, so it would otherwise close over the
+  // first render's closeModal and never see a book the sweep saved later.
+  const closeModalRef = useRef(closeModal)
+  closeModalRef.current = closeModal
 
   // Auto-trigger lookup when modal opens with a pre-filled ISBN or title
   useEffect(() => {
@@ -279,19 +461,11 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
   }
 
   const importResult = async (result: ISBNLookupResult) => {
-    const novelId = mediaTypes.find(mt => mt.name === 'novel')?.id
-    const mangaId = mediaTypes.find(mt => mt.name === 'manga')?.id
-    const comicId = mediaTypes.find(mt => mt.name === 'comic')?.id
-
-    // Auto-detect media type from provider categories and publisher
-    const categories = (result.categories ?? []).map(c => c.toLowerCase())
-    const publisher = (result.publisher ?? '').toLowerCase()
-    const isMangaCategory = categories.some(c => /manga|manhwa|manhua/.test(c))
-    const isComicCategory = categories.some(c => /comic|graphic novel/.test(c))
-    const isMangaPublisher = MANGA_PUBLISHERS.some(p => publisher.includes(p))
-    let detectedTypeId = novelId
-    if ((isMangaCategory || isMangaPublisher) && mangaId) detectedTypeId = mangaId
-    else if (isComicCategory && comicId) detectedTypeId = comicId
+    // Media type detection is shared with the sweep rather than written twice.
+    // The heuristic itself is not new — it lived here — but two copies of it
+    // would drift, and a book added by sweeping should land on the same type
+    // it would have had when added one at a time.
+    const detectedTypeId = detectMediaTypeId(result, mediaTypes)
 
     // Extract "Vol. N" from title into subtitle when subtitle is absent
     let title = result.title || ''
@@ -482,7 +656,7 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
   const tagQueryMatchesExisting = libraryTags.some(t => t.name.toLowerCase() === tagQuery.trim().toLowerCase())
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={e => { if (e.target === e.currentTarget) closeModal() }}>
       <div className="w-full max-w-2xl rounded-2xl bg-surface shadow-2xl flex flex-col max-h-[92vh]">
 
         {/* Header */}
@@ -494,9 +668,20 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
             {!libraryId && (libraries?.length ?? 0) > 0 && (
               <label className="ml-auto mr-3 flex items-center gap-2 text-xs text-content-tertiary">
                 Library
+                {/* Locked while a sweep holds rows. The detection callback
+                    closes over the library it started with, so switching
+                    mid-sweep would check duplicates against one library and
+                    post the queued books to another. Freezing the choice is
+                    kinder than silently discarding what has been scanned. */}
                 <select
-                  className="lb-field w-auto"
+                  className="lb-field w-auto disabled:opacity-50"
                   value={chosenLibrary}
+                  disabled={scanned.length > 0}
+                  title={scanned.length > 0
+                    ? t('scan.library_locked', {
+                        defaultValue: 'Finish or clear the scan session to change library.',
+                      })
+                    : undefined}
                   onChange={e => setChosenLibrary(e.target.value)}
                 >
                   {libraries!.map(l => (
@@ -505,7 +690,7 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
                 </select>
               </label>
             )}
-            <button type="button" onClick={onClose}
+            <button type="button" onClick={closeModal}
               className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-surface-inset transition-colors"
               aria-label="Close">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -535,12 +720,45 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
             <div className="space-y-4">
               {scanning ? (
                 <div className="space-y-3">
-                  <p className="text-sm text-content-tertiary">Point your camera at a barcode…</p>
+                  <p className="text-sm text-content-tertiary">
+                    {continuousRef.current
+                      ? t('scan.sweep_hint', {
+                          defaultValue: 'Keep scanning — each book joins the list below.',
+                        })
+                      : t('scan.hint', { defaultValue: 'Point your camera at a barcode…' })}
+                  </p>
                   <video ref={videoRef} className="w-full rounded-lg bg-black aspect-video object-cover" playsInline />
+                  {continuousRef.current && <ScanSessionList items={scanned} />}
                   <button type="button" onClick={stopScan}
                     className="w-full rounded-lg border border-line-strong py-2 text-sm font-medium text-content-secondary hover:bg-surface-muted transition-colors">
-                    Cancel scan
+                    {t('scan.stop', { defaultValue: 'Stop scanning' })}
                   </button>
+                </div>
+              ) : scanned.length > 0 ? (
+                // The sweep is over but the session is still on screen: the
+                // user reviews what was found before anything is written.
+                <div className="space-y-3">
+                  <ScanSessionList items={scanned} />
+                  <div className="flex gap-2">
+                    <button type="button" onClick={() => void addScannedBooks()}
+                      disabled={addingScanned || addableItems(scanned).length === 0}
+                      className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
+                      {addingScanned
+                        ? t('scan.adding', { defaultValue: 'Adding…' })
+                        : t('scan.add_all', {
+                            count: addableItems(scanned).length,
+                            defaultValue: 'Add {{count}} books',
+                          })}
+                    </button>
+                    <button type="button" onClick={() => void startScan(true)} disabled={addingScanned}
+                      className="rounded-lg border border-line-strong px-4 py-2 text-sm font-medium text-content-secondary hover:bg-surface-muted disabled:opacity-50 transition-colors">
+                      {t('scan.resume', { defaultValue: 'Scan more' })}
+                    </button>
+                    <button type="button" onClick={closeModal} disabled={addingScanned}
+                      className="rounded-lg border border-line-strong px-4 py-2 text-sm font-medium text-content-secondary hover:bg-surface-muted disabled:opacity-50 transition-colors">
+                      {t('scan.done', { defaultValue: 'Done' })}
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <>
@@ -555,9 +773,15 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
                       className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
                       {isbnLoading ? '…' : 'Search'}
                     </button>
-                    <button type="button" onClick={startScan}
+                    <button type="button" onClick={() => void startScan(false)}
                       className="rounded-lg border border-line-strong px-3 py-2 text-sm text-content-tertiary hover:bg-surface-muted transition-colors"
-                      title="Scan barcode">📷</button>
+                      title={t('scan.one', { defaultValue: 'Scan barcode' })}>📷</button>
+                    {/* Sweeping a shelf is a different act from adding one
+                        book, so it gets its own entry point rather than a
+                        mode toggle hidden inside the camera view. */}
+                    <button type="button" onClick={() => { resetScanSession(); void startScan(true) }}
+                      className="rounded-lg border border-line-strong px-3 py-2 text-sm text-content-tertiary hover:bg-surface-muted transition-colors"
+                      title={t('scan.many', { defaultValue: 'Scan several books in a row' })}>📚</button>
                   </div>
                   {isbnError && <p className="text-sm text-danger">{isbnError}</p>}
                   {isbnLoading && <p className="text-sm text-content-muted">Searching providers…</p>}
@@ -1032,7 +1256,7 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
 
         {/* Footer */}
         <div className="px-6 py-4 border-t border-line flex justify-end gap-3 flex-shrink-0">
-          <button type="button" onClick={onClose}
+          <button type="button" onClick={closeModal}
             className="rounded-lg border border-line-strong px-5 py-2 text-sm font-medium text-content-secondary hover:bg-surface-muted transition-colors">
             Cancel
           </button>
