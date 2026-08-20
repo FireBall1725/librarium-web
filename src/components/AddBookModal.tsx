@@ -16,6 +16,7 @@ import { LANGUAGE_OPTIONS } from './AddEditionModal'
 import ContributorRow, { CONTRIBUTOR_ROLES } from './ContributorRow'
 import MediaTypeSelect from './MediaTypeSelect'
 import { TAG_COLORS } from '../lib/tagColours'
+import { getBarcodeReader } from '../lib/barcodeDetector'
 
 
 const MANGA_PUBLISHERS = ['viz', 'yen press', 'kodansha', 'seven seas', 'tokyopop', 'square enix manga', 'dark horse manga', 'vertical', 'j-novel', 'cross infinite']
@@ -192,10 +193,6 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
   }
 
   const startScan = async () => {
-    if (!('BarcodeDetector' in window)) {
-      setIsbnError('Barcode scanning is not supported in this browser.')
-      return
-    }
     setIsbnError(null)
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
@@ -206,7 +203,9 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
         if (!videoRef.current) return
         videoRef.current.srcObject = stream
         await videoRef.current.play()
-        const detector = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128'] })
+        // Native where the browser has it, WebAssembly where it does not —
+        // which is every browser on iOS. See lib/barcodeDetector.
+        const detector = await getBarcodeReader(['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128'])
         const scan = async () => {
           if (!videoRef.current || !streamRef.current) return
           try {
