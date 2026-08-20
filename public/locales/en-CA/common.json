@@ -582,6 +582,25 @@
     "pick_one": "Choose which spelling to keep"
   },
   "scan": {
-    "start_failed": "Could not start the barcode scanner."
+    "start_failed": "Could not start the barcode scanner.",
+    "one": "Scan barcode",
+    "many": "Scan several books in a row",
+    "hint": "Point your camera at a barcode…",
+    "sweep_hint": "Keep scanning — each book joins the list below.",
+    "stop": "Stop scanning",
+    "resume": "Scan more",
+    "adding": "Adding…",
+    "add_all_one": "Add {{count}} book",
+    "add_all_other": "Add {{count}} books",
+    "done": "Done",
+    "camera_denied": "Camera access denied or unavailable.",
+    "status": {
+      "pending": "Looking up…",
+      "found": "Ready",
+      "duplicate": "Already shelved",
+      "not_found": "Not found",
+      "error": "Failed",
+      "added": "Added"
+    }
   }
 }
