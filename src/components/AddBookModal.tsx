@@ -20,12 +20,10 @@ import MediaTypeSelect from './MediaTypeSelect'
 import { TAG_COLORS } from '../lib/tagColours'
 import { getBarcodeReader } from '../lib/barcodeDetector'
 import {
-  addableItems, bookBodyFromResult, shouldAccept, withItem,
+  addableItems, bookBodyFromResult, detectMediaTypeId, shouldAccept, upsertItem, withItem,
   type LastAccepted, type ScannedItem,
 } from '../lib/scanSession'
 
-
-const MANGA_PUBLISHERS = ['viz', 'yen press', 'kodansha', 'seven seas', 'tokyopop', 'square enix manga', 'dark horse manga', 'vertical', 'j-novel', 'cross infinite']
 
 // ─── ISBN result helpers ──────────────────────────────────────────────────────
 
@@ -322,7 +320,7 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
                 const value = detected.rawValue
                 if (!shouldAccept(value, scannedRef.current, lastAcceptedRef.current, Date.now())) continue
                 lastAcceptedRef.current = { code: value, at: Date.now() }
-                setScanned(prev => [...prev, { code: value, status: 'pending' }])
+                setScanned(prev => upsertItem(prev, { code: value, status: 'pending' }))
                 void lookupScanned(value)
                 break
               }
@@ -480,19 +478,11 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
   }
 
   const importResult = async (result: ISBNLookupResult) => {
-    const novelId = mediaTypes.find(mt => mt.name === 'novel')?.id
-    const mangaId = mediaTypes.find(mt => mt.name === 'manga')?.id
-    const comicId = mediaTypes.find(mt => mt.name === 'comic')?.id
-
-    // Auto-detect media type from provider categories and publisher
-    const categories = (result.categories ?? []).map(c => c.toLowerCase())
-    const publisher = (result.publisher ?? '').toLowerCase()
-    const isMangaCategory = categories.some(c => /manga|manhwa|manhua/.test(c))
-    const isComicCategory = categories.some(c => /comic|graphic novel/.test(c))
-    const isMangaPublisher = MANGA_PUBLISHERS.some(p => publisher.includes(p))
-    let detectedTypeId = novelId
-    if ((isMangaCategory || isMangaPublisher) && mangaId) detectedTypeId = mangaId
-    else if (isComicCategory && comicId) detectedTypeId = comicId
+    // Media type detection is shared with the sweep rather than written twice.
+    // The heuristic itself is not new — it lived here — but two copies of it
+    // would drift, and a book added by sweeping should land on the same type
+    // it would have had when added one at a time.
+    const detectedTypeId = detectMediaTypeId(result, mediaTypes)
 
     // Extract "Vol. N" from title into subtitle when subtitle is absent
     let title = result.title || ''
@@ -695,9 +685,20 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
             {!libraryId && (libraries?.length ?? 0) > 0 && (
               <label className="ml-auto mr-3 flex items-center gap-2 text-xs text-content-tertiary">
                 Library
+                {/* Locked while a sweep holds rows. The detection callback
+                    closes over the library it started with, so switching
+                    mid-sweep would check duplicates against one library and
+                    post the queued books to another. Freezing the choice is
+                    kinder than silently discarding what has been scanned. */}
                 <select
-                  className="lb-field w-auto"
+                  className="lb-field w-auto disabled:opacity-50"
                   value={chosenLibrary}
+                  disabled={scanned.length > 0}
+                  title={scanned.length > 0
+                    ? t('scan.library_locked', {
+                        defaultValue: 'Finish or clear the scan session to change library.',
+                      })
+                    : undefined}
                   onChange={e => setChosenLibrary(e.target.value)}
                 >
                   {libraries!.map(l => (

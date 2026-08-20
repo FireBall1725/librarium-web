@@ -601,6 +601,7 @@
       "not_found": "Introuvable",
       "error": "Échec",
       "added": "Ajouté"
-    }
+    },
+    "library_locked": "Termine ou vide la session de scan pour changer de bibliothèque."
   }
 }
