@@ -185,7 +185,9 @@ export async function importLegacyViews(
   if (typeof window === 'undefined') return 0
   if (window.localStorage.getItem(IMPORTED_KEY)) return 0
 
-  let legacy: LegacyView[] = []
+  // Declared without a value: the try assigns it and the catch returns, so an
+  // initialiser here is dead.
+  let legacy: LegacyView[]
   try {
     legacy = JSON.parse(window.localStorage.getItem(LEGACY_KEY) ?? '[]') as LegacyView[]
   } catch {
