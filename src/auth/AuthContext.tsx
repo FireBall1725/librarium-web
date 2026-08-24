@@ -165,6 +165,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
             ...(options.headers ?? {}),
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            // Who is asking, and which build. The server refuses first-party
+            // clients too old to understand the shapes it produces, and answers
+            // 426 with a readable message rather than letting them render blank
+            // panels that look like data loss.
+            //
+            // Spread after options.headers so a call site cannot override the
+            // client's identity: that is a property of the bundle, not of one
+            // request. Only callApi needs this, because the gate lives inside
+            // requireAuth and the login, refresh, logout and setup calls below
+            // deliberately sit outside it, so a gated client can still sign in.
+            'X-Librarium-Client': 'web',
+            'X-Librarium-Client-Version': __APP_VERSION__,
           },
         })
       } catch {
