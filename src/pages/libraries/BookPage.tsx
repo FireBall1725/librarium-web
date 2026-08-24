@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link, useOutletContext } from 'react-router-dom
 import { announceCollectionChanged } from '../../lib/collectionEvents'
 import { useAuth, ApiError } from '../../auth/AuthContext'
 import type { Crumb, LibraryOutletContext } from '../../components/LibraryOutlet'
-import type { Book, BookEdition, EditionFile, Loan, UserBookInteraction, Shelf, BookSeriesRef, ContributorResult, MergedBookResult, MergedFieldResult, StorageLocation, BrowseEntry, ISBNLookupResult } from '../../types'
+import type { Book, BookEdition, EditionFile, Loan, MyBook, ReadingSession, Shelf, BookSeriesRef, ContributorResult, MergedBookResult, MergedFieldResult, StorageLocation, BrowseEntry, ISBNLookupResult } from '../../types'
 import { AddEditionModal } from '../../components/AddEditionModal'
 import EditBookModal from '../../components/EditBookModal'
 import LoanFormModal from '../../components/LoanFormModal'
@@ -22,127 +22,272 @@ const READ_STATUSES = [
   { value: 'did_not_finish', label: 'Did not finish' },
 ]
 
-// ─── Interaction form ─────────────────────────────────────────────────────────
+// ─── Reading panel ────────────────────────────────────────────────────────────
 
-function InteractionForm({ libraryId, bookId, editionId, onStatusChange }: {
-  libraryId: string; bookId: string; editionId: string
-  onStatusChange?: (status: string) => void
-}) {
+/**
+ * The caller's reading state for this work.
+ *
+ * One panel for the book, not one per edition. Reading state used to hang off a
+ * printing, so a book with two editions had two answers to "have you read it"
+ * and the page asked the reader to pick which paperback they meant. An opinion
+ * is about the story.
+ *
+ * Dates live in reading sessions now, since a reread is another pass rather
+ * than a counter. This edits the most recent one, which is what the two date
+ * fields always meant; the full history is a later screen.
+ */
+function ReadingPanel({ bookId }: { bookId: string }) {
   const { callApi } = useAuth()
-  const [interaction, setInteraction] = useState<UserBookInteraction | null>(null)
+  const [state, setState] = useState<MyBook | null>(null)
+  const [session, setSession] = useState<ReadingSession | null>(null)
   const [form, setForm] = useState({
-    read_status: 'unread', rating: '', notes: '', review: '',
-    date_started: '', date_finished: '', is_favorite: false,
+    read_status: 'unread',
+    rating: '',
+    notes: '',
+    review: '',
+    date_started: '',
+    date_finished: '',
+    is_favorite: false,
   })
   const [isLoading, setIsLoading] = useState(false)
   const [isSaved, setIsSaved] = useState(false)
-  const baseUrl = `/api/v1/libraries/${libraryId}/books/${bookId}/editions/${editionId}/my-interaction`
+  const [error, setError] = useState<string | null>(null)
+  const [expanded, setExpanded] = useState(false)
+
+  /**
+   * A date input wants YYYY-MM-DD; the API sends an instant.
+   *
+   * Normalised through UTC rather than sliced off the front of the string. The
+   * API serialises with the server's offset, so a date stored as midnight UTC
+   * arrives as `2026-08-01T00:00:00-04:00` and the first ten characters read
+   * 2026-07-31. Every date in the form came back a day early.
+   */
+  const asDate = (v?: string | null) => {
+    if (!v) return ''
+    const d = new Date(v)
+    return Number.isNaN(d.getTime()) ? '' : d.toISOString().slice(0, 10)
+  }
 
   useEffect(() => {
-    callApi<UserBookInteraction>(baseUrl)
-      .then(i => {
-        if (i) {
-          setInteraction(i)
-          setForm({
-            read_status: i.read_status,
-            rating: i.rating != null ? String(i.rating) : '',
-            notes: i.notes ?? '',
-            review: i.review ?? '',
-            date_started: i.date_started ?? '',
-            date_finished: i.date_finished ?? '',
-            is_favorite: i.is_favorite,
-          })
-          onStatusChange?.(i.read_status)
-        }
+    let cancelled = false
+    const load = async () => {
+      const [mine, sessions] = await Promise.all([
+        callApi<MyBook>(`/api/v1/books/${bookId}/me`).catch(() => null),
+        callApi<{ items: ReadingSession[] }>(`/api/v1/books/${bookId}/sessions`).catch(() => null),
+      ])
+      if (cancelled) return
+      // Most recent first, so the first is the pass these fields describe.
+      const latest = sessions?.items?.[0] ?? null
+      setState(mine)
+      setSession(latest)
+      setForm({
+        read_status: mine?.read_status ?? 'unread',
+        rating: mine?.rating != null ? String(mine.rating) : '',
+        notes: mine?.notes ?? '',
+        review: mine?.review ?? '',
+        date_started: asDate(latest?.started_at),
+        date_finished: asDate(latest?.finished_at),
+        is_favorite: mine?.is_favorite ?? false,
       })
-      .catch(() => {})
+    }
+    void load()
+    return () => { cancelled = true }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editionId])
+  }, [bookId])
+
+  /** Writes the dates, creating the first session if there is none yet. */
+  const saveDates = async () => {
+    const started = form.date_started || null
+    const finished = form.date_finished || null
+    if (!started && !finished && !session) return null
+
+    if (session) {
+      // Sent explicitly, including as null: the API reads an omitted field as
+      // "no change", so clearing a date has to say so.
+      return callApi<ReadingSession>(`/api/v1/sessions/${session.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ started_at: started, finished_at: finished }),
+      })
+    }
+    return callApi<ReadingSession>(`/api/v1/books/${bookId}/sessions`, {
+      method: 'POST',
+      body: JSON.stringify({
+        started_at: started,
+        finished_at: finished,
+        status: finished ? 'finished' : 'reading',
+      }),
+    })
+  }
 
   const save = async () => {
     setIsLoading(true); setIsSaved(false)
     try {
-      const updated = await callApi<UserBookInteraction>(baseUrl, {
+      // Only the fields this panel owns. The endpoint is a partial update, so
+      // anything omitted keeps whatever another device last wrote.
+      const rating = form.rating ? Number(form.rating) : null
+      const updated = await callApi<MyBook>(`/api/v1/books/${bookId}/me`, {
         method: 'PUT',
         body: JSON.stringify({
           read_status: form.read_status,
-          rating: form.rating ? Number(form.rating) : null,
+          rating,
+          clear_rating: rating === null,
           notes: form.notes,
           review: form.review,
-          date_started: form.date_started || null,
-          date_finished: form.date_finished || null,
           is_favorite: form.is_favorite,
         }),
       })
-      if (updated) {
-        setInteraction(updated)
-        onStatusChange?.(updated.read_status)
-      }
+      const savedSession = await saveDates()
+      if (updated) setState(updated)
+      if (savedSession) setSession(savedSession)
       setIsSaved(true)
+      setError(null)
+      announceCollectionChanged()
       setTimeout(() => setIsSaved(false), 2000)
-    } catch { /* ignore */ }
-    finally { setIsLoading(false) }
+    } catch (e) {
+      // Was swallowed once. The server rejected every save through this form
+      // for thirteen days and the page said nothing, so it looked like the
+      // checkbox simply did not stick. A failed save has to be visible.
+      setError(e instanceof ApiError ? e.message : 'Could not save. Try again.')
+    } finally { setIsLoading(false) }
   }
 
-  const inputCls = 'w-full rounded border border-line-strong dark:bg-gray-800 dark:text-white px-2 py-1.5 text-xs focus:border-blue-500 focus:outline-none'
+  /** Star or unstar. One field, so the body carries one field. */
+  const toggleFavourite = async () => {
+    const next = !form.is_favorite
+    setForm(f => ({ ...f, is_favorite: next }))
+    try {
+      const updated = await callApi<MyBook>(`/api/v1/books/${bookId}/me`, {
+        method: 'PUT',
+        body: JSON.stringify({ is_favorite: next }),
+      })
+      if (updated) setState(updated)
+      // The Favourites list and its count live in the rail.
+      announceCollectionChanged()
+    } catch {
+      // Put the star back rather than showing one that did not take.
+      setForm(f => ({ ...f, is_favorite: !next }))
+    }
+  }
+
+  // Whether there is anything to remove. The API answers a book nobody has
+  // said anything about with a default row rather than a 404, since 404 would
+  // make every unread book look like a broken link, so a non-null response is
+  // not evidence that a record exists. Offering Remove on one would be a button
+  // whose only outcome is a 404 the page then swallows.
+  const hasRecord = Boolean(
+    state && !state.inherited && (
+      state.read_status !== 'unread' || state.rating != null || state.notes ||
+      state.review || state.is_favorite || session
+    )
+  )
+
+  const inputCls = 'w-full rounded border border-line-strong dark:bg-surface-raised dark:text-white px-2 py-1.5 text-xs focus:border-accent focus:outline-none'
 
   return (
-    <div>
-      <div className="grid grid-cols-2 gap-2">
-        <div>
-          <label className="block text-xs text-content-tertiary mb-1">Status</label>
-          <select value={form.read_status} onChange={e => setForm(f => ({ ...f, read_status: e.target.value }))} className={inputCls}>
-            {READ_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-          </select>
-        </div>
-        <div>
-          <label className="block text-xs text-content-tertiary mb-1">Rating (1–10)</label>
-          <input type="number" min="1" max="10" value={form.rating}
-            onChange={e => setForm(f => ({ ...f, rating: e.target.value }))}
-            placeholder="—" className={inputCls} />
-        </div>
-        <div>
-          <label className="block text-xs text-content-tertiary mb-1">Date started</label>
-          <input type="date" value={form.date_started} onChange={e => setForm(f => ({ ...f, date_started: e.target.value }))} className={inputCls} />
-        </div>
-        <div>
-          <label className="block text-xs text-content-tertiary mb-1">Date finished</label>
-          <input type="date" value={form.date_finished} onChange={e => setForm(f => ({ ...f, date_finished: e.target.value }))} className={inputCls} />
-        </div>
-      </div>
-      <div className="mt-2">
-        <label className="block text-xs text-content-tertiary mb-1">Notes <span className="text-content-subtle">(private)</span></label>
-        <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
-          rows={2} placeholder="Personal notes…" className={`${inputCls} resize-none`} />
-      </div>
-      <div className="mt-2">
-        <label className="block text-xs text-content-tertiary mb-1">Review <span className="text-content-subtle">(visible to members)</span></label>
-        <textarea value={form.review} onChange={e => setForm(f => ({ ...f, review: e.target.value }))}
-          rows={2} placeholder="Share your thoughts…" className={`${inputCls} resize-none`} />
-      </div>
-      <div className="mt-2 flex items-center justify-between">
-        <label className="flex items-center gap-1.5 text-xs text-content-tertiary">
-          <input type="checkbox" checked={form.is_favorite} onChange={e => setForm(f => ({ ...f, is_favorite: e.target.checked }))}
-            className="rounded border-line-strong" />
-          Favourite
-        </label>
-        <div className="flex items-center gap-2">
-          {isSaved && <span className="text-xs text-success">Saved!</span>}
-          {interaction && (
-            <button onClick={async () => {
-              if (!confirm('Remove your reading record for this edition?')) return
-              await callApi(baseUrl, { method: 'DELETE' }).catch(() => {})
-              setInteraction(null)
-              setForm({ read_status: 'unread', rating: '', notes: '', review: '', date_started: '', date_finished: '', is_favorite: false })
-              onStatusChange?.('unread')
-            }} className="text-xs text-danger hover:underline">Remove</button>
+    <div className="rounded-lg border border-line-subtle">
+      <div className="flex items-center justify-between px-3 py-2">
+        <div className="flex items-center gap-2 min-w-0">
+          {READ_STATUS_PILL[form.read_status] && (
+            <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ring-1 ${READ_STATUS_PILL[form.read_status].cls}`}>
+              {READ_STATUS_PILL[form.read_status].icon}
+              {READ_STATUS_PILL[form.read_status].label}
+            </span>
           )}
-          <button onClick={save} disabled={isLoading}
-            className="rounded bg-blue-600 px-3 py-1 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
-            {isLoading ? 'Saving…' : 'Save'}
-          </button>
+          {state?.inherited && (
+            // Worth saying out loud: the status came from an omnibus holding
+            // this volume, so nothing was ever recorded about this book itself,
+            // and saving here is what makes it explicit.
+            <span className="text-xs text-content-subtle" title="Read as part of a collection that contains this book">
+              via a collection
+            </span>
+          )}
         </div>
+        <button onClick={toggleFavourite}
+          aria-pressed={form.is_favorite}
+          className={`p-1 rounded transition-colors ${form.is_favorite ? 'text-warning' : 'text-content-subtle hover:text-content-tertiary'}`}
+          title={form.is_favorite ? 'Remove from favourites' : 'Add to favourites'}>
+          {/* Filled when starred, outlined when not: the state has to read at a
+              glance rather than by comparing shades. */}
+          <svg className="w-4 h-4" fill={form.is_favorite ? 'currentColor' : 'none'}
+            stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+              d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.783-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+          </svg>
+        </button>
       </div>
+
+      <button
+        type="button"
+        onClick={() => setExpanded(v => !v)}
+        className="w-full flex items-center justify-between px-3 py-2 border-t border-line-subtle text-xs font-medium text-content-muted hover:bg-surface-muted transition-colors"
+      >
+        <span>My reading</span>
+        <svg className={`w-4 h-4 transition-transform ${expanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {expanded && (
+        <div className="px-3 pb-3 space-y-2">
+          <div>
+            <label className="block text-xs text-content-tertiary mb-1">Status</label>
+            <select value={form.read_status} onChange={e => setForm(f => ({ ...f, read_status: e.target.value }))} className={inputCls}>
+              {READ_STATUSES.map(st => <option key={st.value} value={st.value}>{st.label}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs text-content-tertiary mb-1">Rating (1–10)</label>
+            <input type="number" min="1" max="10" value={form.rating} placeholder="—"
+              onChange={e => setForm(f => ({ ...f, rating: e.target.value }))} className={inputCls} />
+          </div>
+          <div>
+            <label className="block text-xs text-content-tertiary mb-1">Date started</label>
+            <input type="date" value={form.date_started}
+              onChange={e => setForm(f => ({ ...f, date_started: e.target.value }))} className={inputCls} />
+          </div>
+          <div>
+            <label className="block text-xs text-content-tertiary mb-1">Date finished</label>
+            <input type="date" value={form.date_finished}
+              onChange={e => setForm(f => ({ ...f, date_finished: e.target.value }))} className={inputCls} />
+          </div>
+          <div>
+            <label className="block text-xs text-content-tertiary mb-1">Notes <span className="text-content-subtle">(private)</span></label>
+            <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
+              rows={2} placeholder="Personal notes…" className={`${inputCls} resize-none`} />
+          </div>
+          <div>
+            <label className="block text-xs text-content-tertiary mb-1">Review <span className="text-content-subtle">(visible to members)</span></label>
+            <textarea value={form.review} onChange={e => setForm(f => ({ ...f, review: e.target.value }))}
+              rows={2} placeholder="Share your thoughts…" className={`${inputCls} resize-none`} />
+          </div>
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              {isSaved && <span className="text-xs text-success">Saved!</span>}
+              {error && <span className="text-xs text-danger" role="alert">{error}</span>}
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {hasRecord && (
+                <button onClick={async () => {
+                  if (!confirm('Remove your reading record for this book?')) return
+                  await callApi(`/api/v1/books/${bookId}/me`, { method: 'DELETE' }).catch(() => {})
+                  // The sessions go too: they are the dates this panel shows,
+                  // and leaving them would put a finish date under a status of
+                  // unread.
+                  if (session) await callApi(`/api/v1/sessions/${session.id}`, { method: 'DELETE' }).catch(() => {})
+                  setState(null)
+                  setSession(null)
+                  setForm({ read_status: 'unread', rating: '', notes: '', review: '', date_started: '', date_finished: '', is_favorite: false })
+                  announceCollectionChanged()
+                }} className="text-xs text-danger hover:underline">Remove</button>
+              )}
+              <button onClick={save} disabled={isLoading}
+                className="rounded bg-accent px-3 py-1 text-xs font-medium text-white hover:brightness-110 disabled:opacity-50 transition-colors">
+                {isLoading ? 'Saving…' : 'Save'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -482,10 +627,6 @@ function EditionCard({ edition: initialEdition, libraryId, bookId, onEdit, onDel
   const { callApi, getToken } = useAuth()
   const edition = initialEdition
   const [deleting, setDeleting] = useState(false)
-  const [showReading, setShowReading] = useState(false)
-  const [readStatus, setReadStatus] = useState<string>('unread')
-  const [interaction, setInteraction] = useState<UserBookInteraction | null>(null)
-  const [favouriteBusy, setFavouriteBusy] = useState(false)
   const [fileUploading, setFileUploading] = useState(false)
   const [fileRemoving, setFileRemoving] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
@@ -549,53 +690,6 @@ function EditionCard({ edition: initialEdition, libraryId, bookId, onEdit, onDel
     finally { setFileRemoving(false) }
   }
 
-  // Fetch the interaction eagerly so the read pill and the star show without
-  // expanding the section. The whole record is kept, not just the status,
-  // because toggling the star has to send the rest of it back untouched.
-  useEffect(() => {
-    callApi<UserBookInteraction>(
-      `/api/v1/libraries/${libraryId}/books/${bookId}/editions/${edition.id}/my-interaction`
-    )
-      .then(i => { if (i) { setReadStatus(i.read_status); setInteraction(i) } })
-      .catch(() => {})
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [edition.id])
-
-  /**
-   * Star or unstar this edition.
-   *
-   * Sends the whole record back with one field changed: the endpoint replaces
-   * what it is given, so posting the flag alone would clear the rating, notes,
-   * review and dates. Favouriting a book you had rated would quietly erase the
-   * rating.
-   */
-  const toggleFavourite = async () => {
-    const next = !(interaction?.is_favorite ?? false)
-    setFavouriteBusy(true)
-    try {
-      const updated = await callApi<UserBookInteraction>(
-        `/api/v1/libraries/${libraryId}/books/${bookId}/editions/${edition.id}/my-interaction`,
-        {
-          method: 'PUT',
-          body: JSON.stringify({
-            read_status: interaction?.read_status ?? 'unread',
-            rating: interaction?.rating ?? null,
-            notes: interaction?.notes ?? '',
-            review: interaction?.review ?? '',
-            date_started: interaction?.date_started ?? null,
-            date_finished: interaction?.date_finished ?? null,
-            is_favorite: next,
-          }),
-        })
-      if (updated) { setInteraction(updated); setReadStatus(updated.read_status) }
-      // The Favourites view and its count live in the rail.
-      announceCollectionChanged()
-    } catch {
-      // Left as it was rather than showing a star that did not take.
-      setInteraction(prev => prev)
-    } finally { setFavouriteBusy(false) }
-  }
-
   const formatBadgeCls = () => {
     if (edition.format === 'ebook' || edition.format === 'digital')
       return 'bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-400 ring-purple-200 dark:ring-purple-800'
@@ -640,35 +734,9 @@ function EditionCard({ edition: initialEdition, libraryId, bookId, onEdit, onDel
               Primary
             </span>
           )}
-          {READ_STATUS_PILL[readStatus] && (
-            <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ring-1 ${READ_STATUS_PILL[readStatus].cls}`}>
-              {READ_STATUS_PILL[readStatus].icon}
-              {READ_STATUS_PILL[readStatus].label}
-            </span>
-          )}
           {edition.edition_name && <span className="text-sm font-medium text-content">{edition.edition_name}</span>}
         </div>
         <div className="flex items-center gap-1 flex-shrink-0">
-          {/* Starring is one click here rather than a checkbox buried in the
-              reading form behind a Save. It is the most common thing anyone
-              does to an edition, and it was the least reachable. */}
-          <button onClick={toggleFavourite} disabled={favouriteBusy}
-            aria-pressed={interaction?.is_favorite ?? false}
-            className={`p-1.5 rounded-md transition-colors disabled:opacity-50 hover:bg-surface-strong ${
-              interaction?.is_favorite
-                ? 'text-warning hover:text-warning-strong'
-                : 'text-gray-400 hover:text-warning'
-            }`}
-            title={interaction?.is_favorite ? 'Remove from favourites' : 'Add to favourites'}>
-            {/* Filled when starred, outlined when not: the state has to read at
-                a glance from the icon, not only from its colour. */}
-            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24"
-              fill={interaction?.is_favorite ? 'currentColor' : 'none'}
-              stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round"
-                d="M11.048 2.927c.3-.921 1.603-.921 1.902 0l1.83 5.63a1 1 0 00.95.69h5.92c.969 0 1.371 1.24.588 1.81l-4.79 3.48a1 1 0 00-.363 1.118l1.83 5.63c.3.921-.755 1.688-1.539 1.118l-4.788-3.48a1 1 0 00-1.176 0l-4.788 3.48c-.784.57-1.838-.197-1.539-1.118l1.83-5.63a1 1 0 00-.363-1.118l-4.79-3.48c-.783-.57-.38-1.81.588-1.81h5.92a1 1 0 00.951-.69l1.83-5.63z" />
-            </svg>
-          </button>
           <button onClick={() => onEdit(edition)}
             className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-surface-strong transition-colors"
             title="Edit edition">
@@ -803,25 +871,6 @@ function EditionCard({ edition: initialEdition, libraryId, bookId, onEdit, onDel
           )}
         </>
       )}
-
-      {/* Collapsible reading section */}
-      <div className="border-t border-line-subtle">
-        <button
-          type="button"
-          onClick={() => setShowReading(v => !v)}
-          className="w-full flex items-center justify-between px-4 py-2.5 text-xs font-medium text-content-muted hover:bg-surface-muted transition-colors"
-        >
-          <span>My reading</span>
-          <svg className={`w-4 h-4 transition-transform ${showReading ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
-        {showReading && (
-          <div className="px-4 pb-4">
-            <InteractionForm libraryId={libraryId} bookId={bookId} editionId={edition.id} onStatusChange={setReadStatus} />
-          </div>
-        )}
-      </div>
     </div>
   )
 }
@@ -1431,6 +1480,12 @@ export default function BookPage() {
             </div>
           </div>
 
+
+          {/* Reading state sits with the book, not with a printing. It used to
+              live inside each edition card, so a book with two editions asked
+              which paperback you meant before it would let you say you had read
+              the story. */}
+          <ReadingPanel bookId={book.id} />
           {/* Media type + tags */}
           <div className="flex flex-wrap gap-1.5">
             <span className="inline-flex items-center rounded-full bg-surface-inset px-2.5 py-0.5 text-xs font-medium text-content-tertiary">

@@ -226,6 +226,43 @@ export interface UserBookInteraction {
   updated_at: string
 }
 
+/**
+ * What one person thinks of a work.
+ *
+ * Keyed to the book rather than to a printing: an opinion is about the story,
+ * not about which paperback it was read in, so it does not change when a second
+ * edition is added. UserBookInteraction was the per-edition shape and is gone.
+ */
+export interface MyBook {
+  book_id: string
+  read_status: string
+  rating: number | null
+  is_favorite: boolean
+  review: string
+  notes: string
+  wants: boolean
+  /**
+   * True when the status came from a container the caller has read, an omnibus
+   * holding this volume, rather than from anything said about this book. An
+   * inherited status carries no rating, because a rating is an opinion about
+   * the thing rated and never moves through containment.
+   */
+  inherited: boolean
+}
+
+/** One pass through a work. A reread is another session, not a counter. */
+export interface ReadingSession {
+  id: string
+  book_id: string
+  edition_id?: string | null
+  started_at?: string | null
+  finished_at?: string | null
+  status: string
+  progress_unit: string
+  progress_value?: number | null
+  created_at: string
+}
+
 export interface Library {
   id: string
   name: string
