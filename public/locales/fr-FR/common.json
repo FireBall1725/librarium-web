@@ -421,5 +421,30 @@
     "new_description": "Enregistre le filtre actuellement appliqué aux livres. Vous pourrez le modifier plus tard.",
     "name_label": "Nom",
     "name_placeholder": "Éditions originales dédicacées"
+  },
+  "copies": {
+    "title": "Exemplaires",
+    "add": "Ajouter un exemplaire",
+    "remove": "Retirer",
+    "none": "Aucun exemplaire enregistré. En ajouter un indique que vous avez ce livre sur une tablette, ce à quoi se rattachent un prêt et un emplacement.",
+    "no_location": "Aucun emplacement",
+    "signed": "Dédicacé",
+    "lent_to": "Prêté à {{name}}",
+    "elsewhere": "dans une autre bibliothèque",
+    "condition": "État",
+    "location": "Emplacement",
+    "save_failed": "Impossible d'enregistrer cette modification.",
+    "add_failed": "Impossible d'ajouter un exemplaire.",
+    "remove_failed": "Impossible de retirer cet exemplaire.",
+    "remove_confirm": "Retirer cet exemplaire ? Le livre reste dans la bibliothèque si vous en avez un autre.",
+    "conditions": {
+      "new": "Neuf",
+      "fine": "Excellent",
+      "very_good": "Très bon",
+      "good": "Bon",
+      "fair": "Passable",
+      "poor": "Mauvais",
+      "ex_library": "Ex-bibliothèque"
+    }
   }
 }
