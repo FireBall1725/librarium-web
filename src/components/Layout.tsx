@@ -2,20 +2,18 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, NavLink, Outlet, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
-import type { Library, Shelf, SuggestionQuotaView } from '../types'
+import type { Library, SuggestionQuotaView } from '../types'
 import { applyTheme, readStoredTheme, storeTheme } from '../lib/theme'
 // Params are compared normalised, not by substring: "status=read" is a prefix
 // of "status=reading", so a substring test lights up Finished while the reader
 // is looking at Reading now.
-import { VIEWS_CHANGED, announceViewsChanged, defaultViewHref, loadViews, newViewId, normaliseParams, saveView, viewCount, visibleViews, type SavedView } from '../lib/views'
+import { LISTS_CHANGED, announceListsChanged, ambiguousListNames, defaultListHref, importLegacyViews, listCount, listHref, listIcon, listNameKey, matchList, normaliseParams, visibleLists, type SavedList } from '../lib/lists'
 import { SETTINGS_TREE } from '../lib/settingsTree'
-import { ambiguousShelfNames, shelfNameKey } from '../lib/shelves'
 import { COLLECTION_CHANGED } from '../lib/collectionEvents'
 import { attentionRoutes, useSettingsAttention } from '../lib/settingsAttention'
 import { DEFAULT_OWNERSHIP, PARAM, type BookFacets, type FacetValue } from '../lib/bookBrowse'
 import { Icon, type IconName } from '../lib/icons'
-import { shelfIcon } from '../lib/shelfIcons'
-import { VIEW_ICONS, viewIcon } from '../lib/viewIcons'
+import { LIST_ICONS } from '../lib/listIcons'
 import AuthorAvatar from './AuthorAvatar'
 import { PromptDialog } from './Dialog'
 import CommandPalette from './CommandPalette'
@@ -161,10 +159,12 @@ export default function Layout() {
   // Libraries in the rail, so a library is one click away as a filter rather
   // than a folder you navigate into first.
   const [libraries, setLibraries] = useState<Library[]>([])
-  // Shelves in the rail for the same reason views are: a shelf is a named set
-  // of books you go to, and the only thing separating it from a view is that
-  // its membership is picked by hand rather than by rule.
-  const [shelves, setShelves] = useState<Shelf[]>([])
+  // Lists in the rail: a named set of books you go to. Shelves and saved views
+  // were two sections here, which asked the reader to know which of two
+  // features a name had been filed under before they could find it. The only
+  // difference is how membership is settled, and that is a badge on a row
+  // rather than a second heading.
+  const [lists, setLists] = useState<SavedList[]>([])
   // The rail's search box opens the palette rather than holding text of its
   // own: it said "Search everything" while submitting to /books?q=, which
   // searched titles. Now it is a button that looks like the field it replaced.
@@ -180,30 +180,13 @@ export default function Layout() {
   // page load, for numbers nobody waits on.
   const [facets, setFacets] = useState<BookFacets | null>(null)
 
-  // Views are read from storage on every render rather than held in state,
-  // which is what makes one saved on Books appear here without a reload.
-  //
-  // The counter's value is never read: setting it is the whole point, because
-  // saving a view from this component has to make it render again to re-read
-  // storage. A memo keyed on it would list dependencies its callback never
-  // touches, which is the thing the exhaustive-deps rule exists to catch.
-  const [, setViewsTick] = useState(0)
-  const [namingView, setNamingView] = useState(false)
+  const [namingList, setNamingList] = useState(false)
   // Fetched for admins everywhere, not only inside settings: the dot on the
   // Settings row exists to tell someone who is NOT in settings that something
   // in there is broken, so gating it on being in settings defeats it. The
   // endpoint is admin-only, hence the check rather than a swallowed 403.
   const attention = useSettingsAttention(callApi, user?.is_instance_admin === true)
   const needsAttention = attentionRoutes(attention)
-  const views: SavedView[] = loadViews()
-
-  // Views and the default live in storage and are read on render, so the rail
-  // needs a reason to render again when another page edits them.
-  useEffect(() => {
-    const bump = () => setViewsTick(n => n + 1)
-    window.addEventListener(VIEWS_CHANGED, bump)
-    return () => window.removeEventListener(VIEWS_CHANGED, bump)
-  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -211,8 +194,8 @@ export default function Layout() {
       callApi<Library[]>('/api/v1/libraries')
         .then(l => { if (!cancelled) setLibraries(l ?? []) })
         .catch(() => { /* The rail works without them. */ })
-      callApi<{ items: Shelf[] }>('/api/v1/me/shelves')
-        .then(r => { if (!cancelled) setShelves(r.items ?? []) })
+      callApi<{ items: SavedList[] }>('/api/v1/me/lists')
+        .then(r => { if (!cancelled) setLists(r.items ?? []) })
         .catch(() => { /* Same: the rail works without them. */ })
       // Counted in the scope the rows open in.
       //
@@ -232,10 +215,21 @@ export default function Layout() {
     }
     load()
     window.addEventListener(COLLECTION_CHANGED, load)
+    window.addEventListener(LISTS_CHANGED, load)
     return () => {
       cancelled = true
       window.removeEventListener(COLLECTION_CHANGED, load)
+      window.removeEventListener(LISTS_CHANGED, load)
     }
+  }, [callApi])
+
+  // Views used to live in this browser's localStorage, so they exist nowhere
+  // else and cannot be left behind. Runs once per browser and skips the
+  // built-ins, which the server seeds itself.
+  useEffect(() => {
+    void importLegacyViews(list =>
+      callApi('/api/v1/me/lists', { method: 'POST', body: JSON.stringify(list) }),
+    ).then(n => { if (n > 0) announceListsChanged() })
   }, [callApi])
 
   /** Library id to name, for qualifying a shelf whose name is not unique. */
@@ -243,7 +237,7 @@ export default function Layout() {
     () => new Map(libraries.map(l => [l.id, l.name])),
     [libraries])
 
-  const ambiguous = useMemo(() => ambiguousShelfNames(shelves), [shelves])
+  const ambiguous = useMemo(() => ambiguousListNames(lists), [lists])
 
   /** Save the filter on screen as a new view, or go to Books to build one. */
   // Cmd-K anywhere, Ctrl-K off the Mac. Ignored while typing, so the shortcut
@@ -262,23 +256,27 @@ export default function Layout() {
     return () => document.removeEventListener('keydown', onKey)
   }, [])
 
-  const newView = () => {
+  const newList = () => {
     if (location.pathname !== '/books' || !normaliseParams(location.search)) {
       navigate('/books')
       return
     }
-    setNamingView(true)
+    setNamingList(true)
   }
 
-  const saveNewView = (name: string, icon?: IconName) => {
-    setNamingView(false)
+  const saveNewList = async (name: string, icon?: IconName) => {
+    setNamingList(false)
     const params = normaliseParams(location.search)
-    saveView({ id: newViewId(), name, icon, params, layout: 'rows' })
-    announceViewsChanged()
-    // Views are read from storage on every render rather than held in state, so
-    // the rail needs a reason to render again. A counter, not setRailQuery with
-    // its own value: React bails out when the value is unchanged.
-    setViewsTick(n => n + 1)
+    // Smart, because this saves the filter on screen. A list filled by hand is
+    // made from the books page by selecting some, which is the other kind.
+    await callApi('/api/v1/me/lists', {
+      method: 'POST',
+      body: JSON.stringify({
+        name, icon: icon ?? '', kind: 'smart',
+        filter: { query: params }, visibility: 'private',
+      }),
+    }).catch(() => { /* Reported by the rail simply not gaining a row. */ })
+    announceListsChanged()
     navigate(`/books?${params}`)
   }
 
@@ -470,7 +468,7 @@ export default function Layout() {
           {/* Points at the default view when one is set, so Books opens on the
               shelf the reader actually wants. `end` still matches only /books
               itself, so the row highlights whatever the query string says. */}
-          <NavRow to={defaultViewHref(views)} icon="books" label={t('nav.books')} count={counts?.books} end />
+          <NavRow to={defaultListHref(lists)} icon="books" label={t('nav.books')} count={counts?.books} end />
           <NavRow to="/series" icon="series" label={t('nav.series')} count={counts?.series} />
           <NavRow to="/authors" icon="authors" label={t('nav.authors')} count={counts?.authors} />
           {/* Books still out, tinted when any of them are late. The count is
@@ -479,9 +477,9 @@ export default function Layout() {
           <NavRow to="/loans" icon="lent" label={t('nav.loans', { defaultValue: 'Loans' })}
             count={counts?.loans} countWarn={(counts?.loans_overdue ?? 0) > 0} />
 
-          {/* Beside the other collection surfaces rather than below the shelves.
+          {/* Beside the other collection surfaces rather than below the lists.
               A suggestion is something to act on, and at the bottom of the rail
-              it sat under the reader's own views and shelves, which is where
+              it sat under the reader's own lists, which is where
               you look for what you already have, not for what to do next.
 
               The count is every undismissed suggestion, so it agrees with the
@@ -493,30 +491,49 @@ export default function Layout() {
               count={counts?.suggestions} />
           )}
 
-          {visibleViews(views).length > 0 && (
+          {visibleLists(lists).length > 0 && (
             <>
               <div className="lb-eyebrow px-2 pb-1.5 pt-4">
-                {t('nav.your_views', { defaultValue: 'Your views' })}
+                {t('nav.lists', { defaultValue: 'Lists' })}
               </div>
-              {visibleViews(views).map(v => (
+              {visibleLists(lists).map(l => (
                 <NavLink
-                  key={v.id}
-                  to={`/books?${v.params}`}
-                  className={() =>
-                    `lb-navrow ${
-                      normaliseParams(location.search) === normaliseParams(v.params) &&
-                      location.pathname === '/books'
-                        ? 'on'
-                        : ''
-                    }`
-                  }
+                  key={l.id}
+                  to={listHref(l)}
+                  className={() => {
+                    // A smart list is its filter, so it is current when the
+                    // filter on screen is the one it stands for. A manual list
+                    // is addressed by id and has no filter to compare.
+                    const on = l.kind === 'smart'
+                      ? location.pathname === '/books' && matchList([l], location.search) !== null
+                      : location.pathname === '/books' && params.get('shelf') === l.id
+                    return `lb-navrow ${on ? 'on' : ''}`
+                  }}
+                  title={[l.name, l.shared_library_id ? libraryNames.get(l.shared_library_id) : null, l.description]
+                    .filter(Boolean).join(' · ') || undefined}
                 >
-                  <Icon name={viewIcon(v)} />
-                  {v.name}
-                  <ViewCount value={viewCount(v, facets)} />
+                  {/* Tinted with the list's own colour. The icon set is the
+                      app's own: a shelf used to store an arbitrary emoji,
+                      which made them the one thing in the rail not drawn from
+                      the same set as everything above. */}
+                  <Icon name={listIcon(l)} style={l.color ? { color: l.color } : undefined} />
+                  <span className="min-w-0 flex-1 truncate">
+                    {l.name}
+                    {/* Which library, but only when the name alone does not
+                        say. Two lists shared into different libraries and both
+                        called Favourites read as one row listed twice.
+                        Qualifying every list would be noise for the usual case
+                        where the name is already unique. */}
+                    {ambiguous.has(listNameKey(l.name)) && l.shared_library_id && (
+                      <span className="ml-1.5 text-[11px] text-content-faint">
+                        {libraryNames.get(l.shared_library_id)}
+                      </span>
+                    )}
+                  </span>
+                  <ViewCount value={listCount(l, facets)} />
                 </NavLink>
               ))}
-              <NavRow icon="newview" label={t('views.new', { defaultValue: 'New view' })} onClick={newView} />
+              <NavRow icon="newview" label={t('lists.new', { defaultValue: 'New list' })} onClick={newList} />
             </>
           )}
 
@@ -542,48 +559,6 @@ export default function Layout() {
               ))}
             </>
           )}
-          {shelves.length > 0 && (
-            <>
-              <div className="lb-eyebrow px-2 pb-1.5 pt-4">
-                {t('nav.shelves', { defaultValue: 'Shelves' })}
-              </div>
-              {shelves.map(sh => (
-                <NavLink
-                  key={sh.id}
-                  to={`/books?shelf=${sh.id}`}
-                  className={() =>
-                    `lb-navrow ${
-                      location.pathname === '/books' && params.get('shelf') === sh.id ? 'on' : ''
-                    }`
-                  }
-                  title={[sh.name, libraryNames.get(sh.library_id), sh.description]
-                    .filter(Boolean).join(' · ') || undefined}
-                >
-                  {/* The app's own icon set, tinted with the shelf's colour.
-                      Emoji here made shelves the one thing in the rail not
-                      drawn from the same set as everything above it. */}
-                  <Icon name={shelfIcon(sh.icon)}
-                    style={sh.color ? { color: sh.color } : undefined} />
-                  <span className="min-w-0 flex-1 truncate">
-                    {sh.name}
-                    {/* Which library, but only when the name alone does not
-                        say. A shelf belongs to one library, so two called
-                        Favourites are two different shelves and the rail
-                        listed them as the same row twice. Qualifying every
-                        shelf would be noise for the usual case where the name
-                        is already unique. */}
-                    {ambiguous.has(shelfNameKey(sh.name)) && (
-                      <span className="ml-1.5 text-[11px] text-content-faint">
-                        {libraryNames.get(sh.library_id)}
-                      </span>
-                    )}
-                  </span>
-                  <ViewCount value={facetCount(facets?.shelf, sh.id)} />
-                </NavLink>
-              ))}
-            </>
-          )}
-
           </>
           )}
         </nav>
@@ -635,18 +610,18 @@ export default function Layout() {
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
 
       <PromptDialog
-        open={namingView}
-        title={t('views.new', { defaultValue: 'New view' })}
-        description={t('views.new_description', {
+        open={namingList}
+        title={t('lists.new', { defaultValue: 'New list' })}
+        description={t('lists.new_description', {
           defaultValue: 'Saves the filter you have on Books right now. You can change it later.',
         })}
-        label={t('views.name_label', { defaultValue: 'Name' })}
-        placeholder={t('views.name_placeholder', { defaultValue: 'Signed first editions' })}
-        icons={VIEW_ICONS}
+        label={t('lists.name_label', { defaultValue: 'Name' })}
+        placeholder={t('lists.name_placeholder', { defaultValue: 'Signed first editions' })}
+        icons={LIST_ICONS}
         initialIcon="newview"
         iconLabel={t('common.icon', { defaultValue: 'Icon' })}
-        onCancel={() => setNamingView(false)}
-        onSubmit={saveNewView}
+        onCancel={() => setNamingList(false)}
+        onSubmit={saveNewList}
       />
 
       {/* Footer */}

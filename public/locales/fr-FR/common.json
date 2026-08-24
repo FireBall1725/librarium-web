@@ -32,7 +32,8 @@
     "authors": "Auteurs",
     "back_to_library": "Retour à la bibliothèque",
     "shelves": "Tablettes",
-    "loans": "Prêts"
+    "loans": "Prêts",
+    "lists": "Listes"
   },
   "library_nav": {
     "books": "Books",
@@ -124,7 +125,7 @@
     "active": "{{count}} filtres",
     "ownership": "Possession",
     "remove": "Retirer le filtre",
-    "shelf": "Tablette",
+    "shelf": "Liste",
     "favourite": "Favori",
     "favourited": "Mis en favori"
   },
@@ -414,5 +415,11 @@
     "new_loan": "Enregistrer un prêt",
     "new_shelf": "Créer une tablette",
     "import": "Importer des livres"
+  },
+  "lists": {
+    "new": "Nouvelle liste",
+    "new_description": "Enregistre le filtre actuellement appliqué aux livres. Vous pourrez le modifier plus tard.",
+    "name_label": "Nom",
+    "name_placeholder": "Éditions originales dédicacées"
   }
 }
