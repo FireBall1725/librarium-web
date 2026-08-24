@@ -177,11 +177,62 @@ export interface BookEdition {
   duration_seconds: number | null
   page_count: number | null
   is_primary: boolean
-  // copy_count and acquired_at used to live here; they're now per-library
-  // (tracked in library_book_editions). Future work: per-library copy UI.
+  // copy_count and acquired_at used to live here. A count could not say which
+  // of two copies was signed, lent, or in the office, so each object is its own
+  // row now; see Copy below.
   created_at: string
   updated_at: string
   files: EditionFile[]
+}
+
+/**
+ * One physical object on a shelf.
+ *
+ * Not a count. A number could say you owned two and nothing else: which one is
+ * signed, which is lent to a friend, which is in the office. Each object gets a
+ * row, and everything that is true of the object rather than of the work or the
+ * printing lives on it.
+ */
+export interface Copy {
+  id: string
+  library_id: string
+  book_id: string
+  /** Null when the printing was never recorded, which is a supported state. */
+  edition_id: string | null
+  acquired_at: string | null
+  acquired_from: string
+  /** Minor units plus an ISO 4217 code, so a collection can span currencies. */
+  price_minor: number | null
+  price_currency: string
+  condition: string
+  is_signed: boolean
+  notes: string
+  location_id: string | null
+  /** Filled by reads that join it; empty on a bare row. */
+  location_name: string
+  /** Names the borrower when this copy is out, empty otherwise. */
+  on_loan_to: string
+  created_at: string
+  updated_at: string
+}
+
+/** A place in a library where copies physically live. */
+export interface CopyLocation {
+  id: string
+  library_id: string
+  name: string
+  parent_id: string | null
+  copy_count: number
+  created_at: string
+}
+
+/** One row of a controlled vocabulary. Codes only: a label in the database
+ *  cannot be translated, so the name lives in the locale files. */
+export interface Vocabulary {
+  code: string
+  sort_order: number
+  is_active: boolean
+  applies_to?: string
 }
 
 export interface BrowseEntry {

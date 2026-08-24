@@ -421,5 +421,30 @@
     "new_description": "Saves the filter you have on Books right now. You can change it later.",
     "name_label": "Name",
     "name_placeholder": "Signed first editions"
+  },
+  "copies": {
+    "title": "Copies",
+    "add": "Add a copy",
+    "remove": "Remove",
+    "none": "No copies recorded. Adding one says you have this book on a shelf, which is what a loan and a location hang off.",
+    "no_location": "No location",
+    "signed": "Signed",
+    "lent_to": "Lent to {{name}}",
+    "elsewhere": "in another library",
+    "condition": "Condition",
+    "location": "Location",
+    "save_failed": "Could not save that change.",
+    "add_failed": "Could not add a copy.",
+    "remove_failed": "Could not remove that copy.",
+    "remove_confirm": "Remove this copy? The book stays in the library if you have another.",
+    "conditions": {
+      "new": "New",
+      "fine": "Fine",
+      "very_good": "Very good",
+      "good": "Good",
+      "fair": "Fair",
+      "poor": "Poor",
+      "ex_library": "Ex-library"
+    }
   }
 }

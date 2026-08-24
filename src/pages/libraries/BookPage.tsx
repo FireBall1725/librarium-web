@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useParams, useNavigate, Link, useOutletContext } from 'react-router-dom'
 import { announceCollectionChanged } from '../../lib/collectionEvents'
 import { useAuth, ApiError } from '../../auth/AuthContext'
 import type { Crumb, LibraryOutletContext } from '../../components/LibraryOutlet'
-import type { Book, BookEdition, EditionFile, Loan, MyBook, ReadingSession, Shelf, BookSeriesRef, ContributorResult, MergedBookResult, MergedFieldResult, StorageLocation, BrowseEntry, ISBNLookupResult } from '../../types'
+import type { Book, BookEdition, Copy, CopyLocation, Vocabulary, EditionFile, Loan, MyBook, ReadingSession, Shelf, BookSeriesRef, ContributorResult, MergedBookResult, MergedFieldResult, StorageLocation, BrowseEntry, ISBNLookupResult } from '../../types'
 import { AddEditionModal } from '../../components/AddEditionModal'
 import EditBookModal from '../../components/EditBookModal'
 import LoanFormModal from '../../components/LoanFormModal'
@@ -289,6 +290,183 @@ function ReadingPanel({ bookId }: { bookId: string }) {
         </div>
       )}
     </div>
+  )
+}
+
+// ─── Copies ───────────────────────────────────────────────────────────────────
+
+/**
+ * The physical objects on the shelf.
+ *
+ * A count used to live on the edition, which could say you owned two and
+ * nothing else: not which one is signed, which is lent, which is in the office.
+ * Each object is a row now, and this is the first screen that has ever shown
+ * them.
+ *
+ * Every library the reader can reach, not just this one. A copy in a shared
+ * library is still a copy of this book, and hiding it here would make the same
+ * book look unowned depending on which library page you arrived from.
+ */
+function CopiesPanel({ bookId, libraryId, onChanged }: {
+  bookId: string; libraryId: string; onChanged?: () => void
+}) {
+  const { callApi } = useAuth()
+  // The rest of this page is still hardcoded English. New copy goes through
+  // i18next because that is the rule; converting 1,900 lines around it is a
+  // separate change.
+  const { t } = useTranslation()
+
+  /** Condition codes are a server vocabulary, so the label lives here: a name
+   *  stored in the database cannot be translated. An unknown code shows itself
+   *  rather than an empty cell, which is what a newly added condition does
+   *  until the locale files catch up. */
+  const conditionLabel = (code: string) =>
+    t(`copies.conditions.${code}`, { defaultValue: code })
+  const [copies, setCopies] = useState<Copy[]>([])
+  const [conditions, setConditions] = useState<Vocabulary[]>([])
+  const [locations, setLocations] = useState<CopyLocation[]>([])
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchAll = useCallback(async () => {
+    const [c, v, l] = await Promise.all([
+      callApi<{ items: Copy[] }>(`/api/v1/books/${bookId}/copies`).catch(() => null),
+      callApi<{ items: Vocabulary[] }>('/api/v1/copy-conditions').catch(() => null),
+      callApi<{ items: CopyLocation[] }>(`/api/v1/libraries/${libraryId}/locations`).catch(() => null),
+    ])
+    return { copies: c?.items ?? [], conditions: v?.items ?? [], locations: l?.items ?? [] }
+  }, [callApi, bookId, libraryId])
+
+  const apply = (d: { copies: Copy[]; conditions: Vocabulary[]; locations: CopyLocation[] }) => {
+    setCopies(d.copies)
+    setConditions(d.conditions)
+    setLocations(d.locations)
+  }
+
+  // Reads, then writes only if this panel is still mounted. Navigating away
+  // mid-request would otherwise set state on a component that is gone.
+  useEffect(() => {
+    let cancelled = false
+    void fetchAll().then(d => { if (!cancelled) apply(d) })
+    return () => { cancelled = true }
+  }, [fetchAll])
+
+  const load = useCallback(async () => { apply(await fetchAll()) }, [fetchAll])
+
+  /** Writes one field. The endpoint is a partial update, so the body names
+   *  only what changed and leaves the rest of the copy alone. */
+  const patch = async (copy: Copy, body: Record<string, unknown>) => {
+    setBusy(true)
+    try {
+      await callApi(`/api/v1/copies/${copy.id}`, { method: 'PATCH', body: JSON.stringify(body) })
+      setError(null)
+      await load()
+      onChanged?.()
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : t('copies.save_failed'))
+    } finally { setBusy(false) }
+  }
+
+  const addCopy = async () => {
+    setBusy(true)
+    try {
+      await callApi(`/api/v1/libraries/${libraryId}/copies`, {
+        method: 'POST',
+        body: JSON.stringify({ book_id: bookId }),
+      })
+      setError(null)
+      await load()
+      onChanged?.()
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : t('copies.add_failed'))
+    } finally { setBusy(false) }
+  }
+
+  const removeCopy = async (copy: Copy) => {
+    if (!confirm(t('copies.remove_confirm'))) return
+    setBusy(true)
+    try {
+      await callApi(`/api/v1/copies/${copy.id}`, { method: 'DELETE' })
+      setError(null)
+      await load()
+      onChanged?.()
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : t('copies.remove_failed'))
+    } finally { setBusy(false) }
+  }
+
+  const selectCls = 'rounded border border-line-strong bg-surface dark:bg-surface-raised px-2 py-1 text-xs focus:border-accent focus:outline-none disabled:opacity-50'
+
+  return (
+    <Section
+      title={`${t('copies.title')}${copies.length > 0 ? ` (${copies.length})` : ''}`}
+      action={
+        <button onClick={addCopy} disabled={busy}
+          className="inline-flex items-center gap-1 rounded-md border border-line-strong px-2.5 py-1 text-xs font-medium text-content-tertiary hover:bg-surface-inset transition-colors disabled:opacity-50">
+          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          {t('copies.add')}
+        </button>
+      }
+    >
+      {error && <p className="mb-2 text-xs text-danger" role="alert">{error}</p>}
+      {copies.length === 0 ? (
+        <p className="text-sm text-content-subtle">{t('copies.none')}</p>
+      ) : (
+        <div className="space-y-2">
+          {copies.map(copy => (
+            <div key={copy.id}
+              className="flex flex-wrap items-center gap-2 rounded-lg border border-line bg-surface px-3 py-2">
+              <select value={copy.condition} disabled={busy} className={selectCls}
+                onChange={e => patch(copy, { condition: e.target.value })}
+                aria-label={t('copies.condition')}>
+                {/* The stored value first, even when the vocabulary no longer
+                    offers it: a retired condition is still what this copy is,
+                    and dropping it would silently change the row on the next
+                    save. */}
+                {!conditions.some(c => c.code === copy.condition) && copy.condition && (
+                  <option value={copy.condition}>{conditionLabel(copy.condition)}</option>
+                )}
+                {conditions.map(c => (
+                  <option key={c.code} value={c.code}>{conditionLabel(c.code)}</option>
+                ))}
+              </select>
+
+              <select value={copy.location_id ?? ''} disabled={busy} className={selectCls}
+                onChange={e => patch(copy, { location_id: e.target.value || null })}
+                aria-label={t('copies.location')}>
+                <option value="">{t('copies.no_location')}</option>
+                {locations.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
+              </select>
+
+              <label className="flex items-center gap-1.5 text-xs text-content-tertiary">
+                <input type="checkbox" checked={copy.is_signed} disabled={busy}
+                  onChange={e => patch(copy, { is_signed: e.target.checked })}
+                  className="rounded border-line-strong" />
+                {t('copies.signed')}
+              </label>
+
+              {copy.on_loan_to && (
+                <span className="inline-flex items-center rounded-full bg-warning-surface px-2 py-0.5 text-xs font-medium text-warning-strong ring-1 ring-warning-line">
+                  {t('copies.lent_to', { name: copy.on_loan_to })}
+                </span>
+              )}
+              {copy.library_id !== libraryId && (
+                // Which library, but only when it is not the one being looked
+                // at. Saying it every time would be noise for the usual case.
+                <span className="text-xs text-content-faint">{t('copies.elsewhere')}</span>
+              )}
+
+              <button onClick={() => removeCopy(copy)} disabled={busy}
+                className="ml-auto text-xs text-danger hover:underline disabled:opacity-50">
+                {t('copies.remove')}
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </Section>
   )
 }
 
@@ -1713,6 +1891,11 @@ export default function BookPage() {
               </div>
             </Section>
           )}
+
+          {/* Copies sit above editions: what you own is the more common
+              question than which printing it is, and a copy points at an
+              edition rather than the other way round. */}
+          <CopiesPanel bookId={book.id} libraryId={libraryId!} onChanged={load} />
 
           {/* Editions */}
           <Section
