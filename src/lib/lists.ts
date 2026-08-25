@@ -22,6 +22,8 @@ export type ListLayout = 'grid' | 'list' | 'compact'
 
 export interface SavedList {
   id: string
+  /** Who made it. A shared view is readable by a library but owned by one person. */
+  owner_user_id: string
   name: string
   description: string
   icon: string
@@ -186,18 +188,30 @@ export function reorderLists(lists: SavedList[], fromId: string, toId: string): 
  * The hidden default is left where it is: it is not in the rail, so it has no
  * position a reader could have meant to change.
  */
-export function saveListOrder(
-  callApi: CallApi, before: SavedList[], after: SavedList[],
-): Promise<unknown[]> {
-  const was = new Map(before.map(l => [l.id, l.display_order]))
-  return Promise.all(
-    after
-      .filter(l => was.get(l.id) !== l.display_order)
-      .map(l => callApi(`/api/v1/me/lists/${l.id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ display_order: l.display_order }),
-      }).catch(() => null)),
-  )
+export function saveListOrder(callApi: CallApi, after: SavedList[]): Promise<unknown> {
+  return callApi('/api/v1/me/lists/order', {
+    method: 'PUT',
+    body: JSON.stringify({ ids: after.map(l => l.id) }),
+  })
+}
+
+/**
+ * Split the rail into the views someone owns and the views a library shares
+ * with them.
+ *
+ * Two sections rather than one flat list with a marker, because the difference
+ * is not decoration: deleting a shared view takes it away from everybody, and a
+ * section boundary says that without a dialog having to ask.
+ */
+export function splitLists(lists: SavedList[]): { mine: SavedList[]; shared: SavedList[] } {
+  const shown = visibleLists(lists)
+  return {
+    mine: shown.filter(l => l.visibility !== 'library'),
+    // Including ones this person shared themselves. It is where the view now
+    // lives, and its ordering and deletion behave the shared way regardless of
+    // who made it.
+    shared: shown.filter(l => l.visibility === 'library'),
+  }
 }
 
 /** Icon for a list: its own, then the built-in's, then one for the kind. */
@@ -259,6 +273,20 @@ export function adoptedList(
 ): string | null {
   if (editedInPlace || !matched) return open
   return matched.id
+}
+
+/**
+ * Whether a view is the one on screen.
+ *
+ * A smart view is its filter, so it is current when the filter on screen is the
+ * one it stands for. A manual view is addressed by id and has no filter to
+ * compare, so it is current when the page names it.
+ */
+export function viewIsCurrent(
+  l: SavedList, pathname: string, search: string, shelfParam: string | null,
+): boolean {
+  if (pathname !== '/books') return false
+  return l.kind === 'smart' ? matchList([l], search) !== null : shelfParam === l.id
 }
 
 /** Where the books nav row points: the default list's filter. */

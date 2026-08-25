@@ -33,7 +33,7 @@
     "back_to_library": "Retour à la bibliothèque",
     "shelves": "Tablettes",
     "loans": "Prêts",
-    "lists": "Listes"
+    "shared_views": "Vues partagées"
   },
   "library_nav": {
     "books": "Books",
@@ -71,8 +71,7 @@
     "licences": "Licences",
     "tokens": "Jetons API",
     "ai_privacy": "IA et confidentialité",
-    "members": "Membres",
-    "shelves": "Listes partagées"
+    "members": "Membres"
   },
   "theme": {
     "light": "☀ Light",
@@ -138,7 +137,8 @@
     "planned": "Prévu",
     "delete": "Supprimer",
     "edit": "Modifier",
-    "icon": "Icône"
+    "icon": "Icône",
+    "colour": "Couleur"
   },
   "read_status": {
     "read": "Lu",
@@ -166,7 +166,16 @@
     "default_hint": "ce que Livres ouvre",
     "rename": "Renommer",
     "more": "Options de la vue",
-    "default_name": "Vue par défaut"
+    "default_name": "Vue par défaut",
+    "drop_to_delete": "Déposer ici pour supprimer",
+    "deleted": "{{name}} supprimée",
+    "delete_confirm": "Supprimer {{name}} ? Les {{count}} livres qu'elle contient restent dans votre bibliothèque.",
+    "builtin_kept": "{{name}} est fournie avec Librarium et réapparaît si elle est supprimée",
+    "moved": "{{name}} déplacée en position {{position}} sur {{total}}",
+    "empty": "Aucune pour l'instant. Filtrez la page Livres et enregistrez la vue.",
+    "share_with": "Partager avec",
+    "share_none": "Moi seulement",
+    "not_yours": "{{name}} est partagée par quelqu'un d'autre ; elle ne peut être supprimée que par cette personne"
   },
   "index": {
     "all": "Tous"
@@ -277,7 +286,7 @@
     "read_badges": "Afficher les badges de lecture",
     "read_badges_note": "Un coin coloré sur les couvertures des livres lus et en cours.",
     "typeface": "Police",
-    "typeface_note": "OpenDyslexic alourdit le bas de chaque lettre et donne des formes distinctes aux caractères qui se ressemblent, ce que certaines personnes dyslexiques trouvent plus lisible. Cela ne convient pas à tout le monde : la police est proposée, jamais imposée.",
+    "typeface_note": "OpenDyslexic alourdit le bas de chaque lettre et donne des formes distinctes aux caractères qui se ressemblent, ce que certaines personnes dyslexiques trouvent plus lisible.",
     "typeface_sample": "Quelques livres"
   },
   "settings_account": {
@@ -356,22 +365,6 @@
       "library_viewer": "Lecteur"
     }
   },
-  "shelves_settings": {
-    "description": "Une liste partagée appartient à une bibliothèque, donc tous ceux qui y ont accès la voient. Vos listes privées se trouvent dans la barre latérale et se créent depuis la page Livres.",
-    "library": "Bibliothèque",
-    "library_hint": "Une liste partagée appartient à une seule bibliothèque. Choisissez celle dont vous modifiez les listes.",
-    "new": "Nouvelle liste partagée",
-    "editing": "Modification de {{name}}",
-    "name": "Nom",
-    "note": "Ce qu'elle contient (facultatif)",
-    "colour": "Couleur",
-    "create": "Créer la liste",
-    "empty": "Aucune liste partagée dans cette bibliothèque.",
-    "count_one": "{{count}} livre",
-    "count_other": "{{count}} livres",
-    "delete_title": "Supprimer {{name}} ?",
-    "delete_note": "La liste disparaît ; les livres qu'elle contient restent dans la bibliothèque."
-  },
   "loans": {
     "description": "Les livres sortis de la maison, toutes bibliothèques confondues.",
     "search": "Emprunteur ou titre…",
@@ -417,18 +410,6 @@
     "new_loan": "Enregistrer un prêt",
     "new_shelf": "Créer une tablette",
     "import": "Importer des livres"
-  },
-  "lists": {
-    "new": "Nouvelle liste",
-    "new_description": "Enregistre le filtre actuellement appliqué aux livres. Vous pourrez le modifier plus tard.",
-    "name_label": "Nom",
-    "name_placeholder": "Éditions originales dédicacées",
-    "drop_to_delete": "Déposer ici pour supprimer",
-    "deleted": "{{name}} supprimée",
-    "delete_confirm": "Supprimer {{name}} ? Les {{count}} livres qu'elle contient restent dans votre bibliothèque.",
-    "builtin_kept": "{{name}} est fournie avec Librarium et réapparaît si elle est supprimée",
-    "moved": "{{name}} déplacée en position {{position}} sur {{total}}",
-    "empty": "Aucune pour l'instant. Filtrez la page Livres et enregistrez le filtre."
   },
   "copies": {
     "title": "Exemplaires",

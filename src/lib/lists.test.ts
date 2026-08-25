@@ -14,7 +14,9 @@ import {
   listNameKey,
   listQuery,
   matchList,
+  splitLists,
   normaliseParams,
+  viewIsCurrent,
   visibleLists,
   type LegacyStore,
   type SavedList,
@@ -31,6 +33,7 @@ import type { BookFacets } from './bookBrowse'
 
 const list = (over: Partial<SavedList> = {}): SavedList => ({
   id: 'l1',
+  owner_user_id: 'u1',
   name: 'Untitled',
   description: '',
   icon: '',
@@ -128,6 +131,53 @@ describe('matching the filter on screen', () => {
   it('never matches a manual list, whose membership is not a filter', () => {
     const manual = list({ id: 'm', kind: 'manual', filter: null })
     expect(matchList([manual], '')).toBeNull()
+  })
+})
+
+describe('whether a row is the one on screen', () => {
+  const smart = list({ id: 's', filter: { query: 'tag=manga' } })
+  const manual = list({ id: 'm', kind: 'manual', filter: null })
+
+  it('matches a smart view against the filter, not the path', () => {
+    expect(viewIsCurrent(smart, '/books', '?tag=manga', null)).toBe(true)
+    expect(viewIsCurrent(smart, '/books', '?tag=comedy', null)).toBe(false)
+  })
+
+  it('matches a manual view by the id the page names', () => {
+    // It has no filter, so the filter can never say it is open.
+    expect(viewIsCurrent(manual, '/books', '', 'm')).toBe(true)
+    expect(viewIsCurrent(manual, '/books', '', 'other')).toBe(false)
+  })
+
+  it('is never current away from the books page', () => {
+    expect(viewIsCurrent(smart, '/authors', '?tag=manga', null)).toBe(false)
+  })
+})
+
+describe('splitting the rail', () => {
+  it('sends a view shared with a library to its own section', () => {
+    const { mine, shared } = splitLists([
+      list({ id: 'a', visibility: 'private' }),
+      list({ id: 'b', visibility: 'library', shared_library_id: 'lib' }),
+    ])
+    expect(mine.map(l => l.id)).toEqual(['a'])
+    expect(shared.map(l => l.id)).toEqual(['b'])
+  })
+
+  it('puts a view you shared yourself in the shared section', () => {
+    // Where it lives, not who made it: its ordering and its deletion behave the
+    // shared way whoever owns it.
+    const { mine, shared } = splitLists([
+      list({ id: 'b', owner_user_id: 'me', visibility: 'library', shared_library_id: 'lib' }),
+    ])
+    expect(mine).toEqual([])
+    expect(shared.map(l => l.id)).toEqual(['b'])
+  })
+
+  it('leaves the hidden default out of both', () => {
+    const { mine, shared } = splitLists([list({ id: 'd', hidden: true })])
+    expect(mine).toEqual([])
+    expect(shared).toEqual([])
   })
 })
 

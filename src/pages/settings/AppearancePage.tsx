@@ -119,7 +119,7 @@ export default function AppearancePage() {
         <SettingSection title={t('settings_appearance.typeface', { defaultValue: 'Typeface' })}>
           <p className="pb-1 text-[13px] text-content-tertiary">
             {t('settings_appearance.typeface_note', {
-              defaultValue: 'OpenDyslexic weights the bottom of each letter and gives similar characters distinct shapes, which some readers with dyslexia find easier. It does not suit everyone, so it is offered rather than assumed.',
+              defaultValue: 'OpenDyslexic weights the bottom of each letter and gives similar characters distinct shapes, which some readers with dyslexia find easier.',
             })}
           </p>
           <div className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-3 pt-1">

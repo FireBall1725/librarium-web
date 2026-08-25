@@ -14,7 +14,6 @@ import LoansPage from './pages/LoansPage'
 import SettingsIndexPage from './pages/settings/SettingsIndexPage'
 import LicencesPage from './pages/settings/LicencesPage'
 import MembersPage from './pages/settings/MembersPage'
-import ShelvesPage from './pages/settings/ShelvesPage'
 import AppearancePage from './pages/settings/AppearancePage'
 import LegacySettingsRedirect from './pages/settings/LegacySettingsRedirect'
 import AuthorsPage from './pages/AuthorsPage'
@@ -98,7 +97,6 @@ function AppRoutes() {
                   <Route path="ai"                element={<AIPage />} />
                   <Route path="media-management"  element={<MediaManagementPage />} />
                   <Route path="tags"               element={<TagsPage />} />
-                  <Route path="shelves"           element={<ShelvesPage />} />
                   <Route path="genres"             element={<GenresPage />} />
                   <Route path="media-types"       element={<MediaTypesPage />} />
                   <Route path="profiles"          element={<ProfilesPage />} />

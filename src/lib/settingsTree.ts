@@ -66,7 +66,6 @@ export const SETTINGS_TREE: SettingsSection[] = [
       { id: 'tags', to: '/settings/tags', labelKey: 'settings_nav.tags', labelFallback: 'Tags' },
       // Beside Tags because they are the same shape: a named, per-library set
       // of books. A shelf is a tag with an icon and a description.
-      { id: 'shelves', to: '/settings/shelves', labelKey: 'settings_nav.shelves', labelFallback: 'Shared lists' },
       { id: 'profiles', to: '/settings/profiles', labelKey: 'settings_nav.profiles', labelFallback: 'Profiles' },
     ],
   },

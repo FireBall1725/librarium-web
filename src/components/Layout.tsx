@@ -8,7 +8,8 @@ import { applyReadingFont, readStoredReadingFont } from '../lib/readingFont'
 // Params are compared normalised, not by substring: "status=read" is a prefix
 // of "status=reading", so a substring test lights up Finished while the reader
 // is looking at Reading now.
-import { LISTS_CHANGED, announceListsChanged, ambiguousListNames, defaultListHref, fetchMissingCounts, importLegacyViews, listCount, listHref, listIcon, listNameKey, matchList, normaliseParams, deleteList, reorderLists, saveListOrder, visibleLists, type SavedList } from '../lib/lists'
+import { LISTS_CHANGED, announceListsChanged, ambiguousListNames, defaultListHref, fetchMissingCounts, importLegacyViews, listCount, listNameKey, normaliseParams, viewIsCurrent, deleteList, reorderLists, saveListOrder, splitLists, visibleLists, type SavedList } from '../lib/lists'
+import ViewRow from './ViewRow'
 import { SETTINGS_TREE } from '../lib/settingsTree'
 import { COLLECTION_CHANGED } from '../lib/collectionEvents'
 import { attentionRoutes, useSettingsAttention } from '../lib/settingsAttention'
@@ -16,7 +17,8 @@ import { DEFAULT_OWNERSHIP, PARAM, type BookFacets, type FacetValue } from '../l
 import { Icon, type IconName } from '../lib/icons'
 import { LIST_ICONS } from '../lib/listIcons'
 import AuthorAvatar from './AuthorAvatar'
-import { PromptDialog } from './Dialog'
+import { PromptDialog, type PromptExtras } from './Dialog'
+import { TAG_COLORS } from '../lib/tagColours'
 import CommandPalette from './CommandPalette'
 import { libraryColour } from '../lib/libraryColour'
 
@@ -262,6 +264,10 @@ export default function Layout() {
 
   const ambiguous = useMemo(() => ambiguousListNames(lists), [lists])
 
+  // Yours, and the ones a library shares with you. Computed once: the sections
+  // draw from it, and a drag resolves against the section it started in.
+  const { mine, shared } = useMemo(() => splitLists(lists), [lists])
+
   /** Save the filter on screen as a new view, or go to Books to build one. */
   // Cmd-K anywhere, Ctrl-K off the Mac. Ignored while typing, so the shortcut
   // cannot steal a keystroke from a field the reader is already in.
@@ -290,7 +296,12 @@ export default function Layout() {
     setLists(before => {
       const after = reorderLists(before, fromId, toId)
       if (after === before) return before
-      void saveListOrder(callApi, before, after).then(() => announceListsChanged())
+      // The whole rail, in one request, to the caller's own order rather than
+      // to the views themselves. Reordering used to PATCH display_order on each
+      // list, which is a column you may not own, so dragging a view shared with
+      // you 404ed and the client swallowed it: the row moved, said nothing, and
+      // sprang back on the next load.
+      void saveListOrder(callApi, visibleLists(after)).then(() => announceListsChanged())
       return after
     })
   }, [callApi])
@@ -303,12 +314,16 @@ export default function Layout() {
    * moves the focused row; the arrows alone still walk the list.
    */
   const nudgeList = useCallback((id: string, delta: -1 | 1) => {
-    const shown = visibleLists(lists)
+    // Within its own section. The rail draws two, and a keyboard move that
+    // could cross the boundary would do by arrow what the drag deliberately
+    // refuses to do by mouse.
+    const { mine: a, shared: b } = splitLists(lists)
+    const shown = a.some(l => l.id === id) ? a : b
     const at = shown.findIndex(l => l.id === id)
     const to = at + delta
     if (at < 0 || to < 0 || to >= shown.length) return
     moveList(id, shown[to].id)
-    setOrderSaid(t('lists.moved', {
+    setOrderSaid(t('views.moved', {
       name: shown[at].name,
       position: to + 1,
       total: shown.length,
@@ -329,11 +344,23 @@ export default function Layout() {
   const dropDelete = useCallback(async (id: string) => {
     const l = lists.find(x => x.id === id)
     if (!l) return
-    // Asked only where something would actually be lost. A smart list is a
+
+    // A shared view belongs to whoever made it. Dropping someone else's on the
+    // bin used to 404 and be swallowed, so the row vanished and came back on
+    // the next load; saying so is the least a destructive gesture owes.
+    if (l.owner_user_id !== user?.id) {
+      setOrderSaid(t('views.not_yours', {
+        name: l.name,
+        defaultValue: `${l.name} is shared by someone else and only they can delete it`,
+      }))
+      return
+    }
+
+    // Asked only where something would actually be lost. A smart view is a
     // saved filter and costs a moment to rebuild; a manual one holds books
     // somebody put there by hand.
     if (l.kind === 'manual' && l.book_count > 0 &&
-        !confirm(t('lists.delete_confirm', {
+        !confirm(t('views.delete_confirm', {
           name: l.name, count: l.book_count,
           defaultValue: `Delete ${l.name}? The ${l.book_count} books on it stay in your library.`,
         }))) return
@@ -341,8 +368,8 @@ export default function Layout() {
     await deleteList(callApi, id).catch(() => null)
     setLists(prev => prev.filter(x => x.id !== id))
     announceListsChanged()
-    setOrderSaid(t('lists.deleted', { name: l.name, defaultValue: `${l.name} deleted` }))
-  }, [lists, callApi, t])
+    setOrderSaid(t('views.deleted', { name: l.name, defaultValue: `${l.name} deleted` }))
+  }, [lists, callApi, t, user])
 
   const newList = () => {
     if (location.pathname !== '/books' || !normaliseParams(location.search)) {
@@ -352,16 +379,22 @@ export default function Layout() {
     setNamingList(true)
   }
 
-  const saveNewList = async (name: string, icon?: IconName) => {
+  const saveNewList = async (name: string, icon?: IconName, extras?: PromptExtras) => {
     setNamingList(false)
     const params = normaliseParams(location.search)
-    // Smart, because this saves the filter on screen. A list filled by hand is
+    const sharedWith = extras?.sharedLibraryId ?? null
+    // Smart, because this saves the filter on screen. A view filled by hand is
     // made from the books page by selecting some, which is the other kind.
     await callApi('/api/v1/me/lists', {
       method: 'POST',
       body: JSON.stringify({
-        name, icon: icon ?? '', kind: 'smart',
-        filter: { query: params }, visibility: 'private',
+        name, icon: icon ?? '', color: extras?.color ?? '', kind: 'smart',
+        filter: { query: params },
+        // A shared view has to name its library; the server refuses it
+        // otherwise, and 'library' with nothing to share into is not a state
+        // worth being able to express.
+        visibility: sharedWith ? 'library' : 'private',
+        shared_library_id: sharedWith,
       }),
     }).catch(() => { /* Reported by the rail simply not gaining a row. */ })
     announceListsChanged()
@@ -585,113 +618,39 @@ export default function Layout() {
           )}
 
           {/* Always rendered, rows or not. Making the section conditional on
-              having lists took New list away with the last one, so deleting
+              having views took New view away with the last one, so deleting
               everything left no way to make another. */}
           <>
               <div className="lb-eyebrow px-2 pb-1.5 pt-4">
-                {t('nav.lists', { defaultValue: 'Lists' })}
+                {t('nav.views', { defaultValue: 'Views' })}
               </div>
-              {visibleLists(lists).length === 0 && (
+              {mine.length === 0 && (
                 <p className="px-2 pb-1 text-[11.5px] leading-snug text-content-faint">
-                  {t('lists.empty', {
+                  {t('views.empty', {
                     defaultValue: 'None yet. Filter the books page and save it as one.',
                   })}
                 </p>
               )}
-              {visibleLists(lists).map(l => (
-                <NavLink
+              {mine.map(l => (
+                <ViewRow
                   key={l.id}
-                  to={listHref(l)}
-                  draggable
-                  onDragStart={e => {
-                    setDragging(l.id)
-                    e.dataTransfer.effectAllowed = 'move'
-                    // Firefox starts no drag at all without payload.
-                    e.dataTransfer.setData('text/plain', l.id)
-                  }}
+                  list={l}
+                  shown={mine}
+                  dragging={dragging}
+                  dragOver={dragOver}
+                  current={viewIsCurrent(l, location.pathname, location.search, params.get('shelf'))}
+                  count={listCount(l, facets, listCounts)}
+                  qualifier={ambiguous.has(listNameKey(l.name)) && l.shared_library_id
+                    ? libraryNames.get(l.shared_library_id) : undefined}
+                  onDragStart={setDragging}
                   onDragEnd={() => { setDragging(null); setDragOver(null) }}
-                  onDragOver={e => {
-                    if (!dragging || dragging === l.id) return
-                    // Without this the drop never fires: the default is to
-                    // refuse.
-                    e.preventDefault()
-                    e.dataTransfer.dropEffect = 'move'
-                    setDragOver(l.id)
-                  }}
-                  onDragLeave={() => setDragOver(prev => (prev === l.id ? null : prev))}
-                  onDrop={e => {
-                    e.preventDefault()
-                    const from = dragging ?? e.dataTransfer.getData('text/plain')
-                    if (from && from !== l.id) moveList(from, l.id)
-                    setDragging(null)
-                    setDragOver(null)
-                  }}
-                  onKeyDown={e => {
-                    // Alt, so the bare arrows still walk the rail.
-                    if (!e.altKey) return
-                    if (e.key === 'ArrowUp') { e.preventDefault(); nudgeList(l.id, -1) }
-                    if (e.key === 'ArrowDown') { e.preventDefault(); nudgeList(l.id, 1) }
-                  }}
-                  className={() => {
-                    // A smart list is its filter, so it is current when the
-                    // filter on screen is the one it stands for. A manual list
-                    // is addressed by id and has no filter to compare.
-                    const on = l.kind === 'smart'
-                      ? location.pathname === '/books' && matchList([l], location.search) !== null
-                      : location.pathname === '/books' && params.get('shelf') === l.id
-                    const dropping = dragOver === l.id && dragging !== l.id
-                    // Which side of this row the line goes on: dragging
-                    // downwards, the row lands after the one it is over.
-                    const shown = visibleLists(lists)
-                    const fromAt = shown.findIndex(x => x.id === dragging)
-                    const overAt = shown.findIndex(x => x.id === l.id)
-                    const after = fromAt >= 0 && overAt > fromAt
-                    return [
-                      'lb-navrow lb-draggable',
-                      on ? 'on' : '',
-                      dragging === l.id ? 'lb-dragging' : '',
-                      // A line where the row would land, rather than moving
-                      // everything under the cursor: the rail is short enough
-                      // that a live reshuffle reads as flicker.
-                      dropping ? `lb-drop-line ${after ? 'lb-drop-after' : 'lb-drop-before'}` : '',
-                    ].filter(Boolean).join(' ')
-                  }}
-                  title={[l.name, l.shared_library_id ? libraryNames.get(l.shared_library_id) : null, l.description]
-                    .filter(Boolean).join(' · ') || undefined}
-                >
-                  {/* Tinted with the list's own colour. The icon set is the
-                      app's own: a shelf used to store an arbitrary emoji,
-                      which made them the one thing in the rail not drawn from
-                      the same set as everything above. */}
-                  {/* The universal six-dot grip, so a row reads as grabbable
-                      without having to be dragged to find out. Absolutely
-                      positioned in the row's existing padding, so the icon
-                      below stays in line with the nav icons above. */}
-                  <span className="lb-drag-grip" aria-hidden="true">
-                    <svg width="6" height="12" viewBox="0 0 6 12" fill="currentColor">
-                      <circle cx="1.5" cy="2" r="1" /><circle cx="4.5" cy="2" r="1" />
-                      <circle cx="1.5" cy="6" r="1" /><circle cx="4.5" cy="6" r="1" />
-                      <circle cx="1.5" cy="10" r="1" /><circle cx="4.5" cy="10" r="1" />
-                    </svg>
-                  </span>
-                  <Icon name={listIcon(l)} style={l.color ? { color: l.color } : undefined} />
-                  <span className="min-w-0 flex-1 truncate">
-                    {l.name}
-                    {/* Which library, but only when the name alone does not
-                        say. Two lists shared into different libraries and both
-                        called Favourites read as one row listed twice.
-                        Qualifying every list would be noise for the usual case
-                        where the name is already unique. */}
-                    {ambiguous.has(listNameKey(l.name)) && l.shared_library_id && (
-                      <span className="ml-1.5 text-[11px] text-content-faint">
-                        {libraryNames.get(l.shared_library_id)}
-                      </span>
-                    )}
-                  </span>
-                  <ViewCount value={listCount(l, facets, listCounts)} />
-                </NavLink>
+                  onDragOver={setDragOver}
+                  onDragLeave={id => setDragOver(prev => (prev === id ? null : prev))}
+                  onDrop={from => { moveList(from, l.id); setDragging(null); setDragOver(null) }}
+                  onNudge={nudgeList}
+                />
               ))}
-              <NavRow icon="newview" label={t('lists.new', { defaultValue: 'New list' })} onClick={newList} />
+              <NavRow icon="newview" label={t('views.new', { defaultValue: 'New view' })} onClick={newList} />
 
               {/* Only while something is being dragged. A bin sitting there
                   permanently is a thing to hit by accident on a rail people
@@ -717,7 +676,7 @@ export default function Layout() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                       d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                   </svg>
-                  {t('lists.drop_to_delete', { defaultValue: 'Drop here to delete' })}
+                  {t('views.drop_to_delete', { defaultValue: 'Drop here to delete' })}
                 </div>
               )}
 
@@ -725,6 +684,38 @@ export default function Layout() {
                   the new position is said out loud instead. */}
               <span aria-live="polite" className="sr-only">{orderSaid}</span>
           </>
+
+          {/* Views a library shares, in their own section rather than mixed in
+              with a badge. The boundary is what says a row here belongs to
+              everyone: deleting one takes it from the whole library, and the
+              order you put them in is yours alone. Both of those are easier to
+              believe from a heading than from a dialog asking after the fact. */}
+          {shared.length > 0 && (
+            <>
+              <div className="lb-eyebrow px-2 pb-1.5 pt-4">
+                {t('nav.shared_views', { defaultValue: 'Shared views' })}
+              </div>
+              {shared.map(l => (
+                <ViewRow
+                  key={l.id}
+                  list={l}
+                  shown={shared}
+                  dragging={dragging}
+                  dragOver={dragOver}
+                  current={viewIsCurrent(l, location.pathname, location.search, params.get('shelf'))}
+                  count={listCount(l, facets, listCounts)}
+                  qualifier={ambiguous.has(listNameKey(l.name)) && l.shared_library_id
+                    ? libraryNames.get(l.shared_library_id) : undefined}
+                  onDragStart={setDragging}
+                  onDragEnd={() => { setDragging(null); setDragOver(null) }}
+                  onDragOver={setDragOver}
+                  onDragLeave={id => setDragOver(prev => (prev === id ? null : prev))}
+                  onDrop={from => { moveList(from, l.id); setDragging(null); setDragOver(null) }}
+                  onNudge={nudgeList}
+                />
+              ))}
+            </>
+          )}
 
           {libraries.length > 0 && (
             <>
@@ -800,15 +791,20 @@ export default function Layout() {
 
       <PromptDialog
         open={namingList}
-        title={t('lists.new', { defaultValue: 'New list' })}
-        description={t('lists.new_description', {
+        title={t('views.new', { defaultValue: 'New view' })}
+        description={t('views.new_description', {
           defaultValue: 'Saves the filter you have on Books right now. You can change it later.',
         })}
-        label={t('lists.name_label', { defaultValue: 'Name' })}
-        placeholder={t('lists.name_placeholder', { defaultValue: 'Signed first editions' })}
+        label={t('views.name_label', { defaultValue: 'Name' })}
+        placeholder={t('views.name_placeholder', { defaultValue: 'Signed first editions' })}
         icons={LIST_ICONS}
         initialIcon="newview"
         iconLabel={t('common.icon', { defaultValue: 'Icon' })}
+        colors={TAG_COLORS}
+        colorLabel={t('common.colour', { defaultValue: 'Colour' })}
+        shareOptions={libraries.map(l => ({ id: l.id, name: l.name }))}
+        shareLabel={t('views.share_with', { defaultValue: 'Share with' })}
+        shareNoneLabel={t('views.share_none', { defaultValue: 'Only me' })}
         onCancel={() => setNamingList(false)}
         onSubmit={saveNewList}
       />
