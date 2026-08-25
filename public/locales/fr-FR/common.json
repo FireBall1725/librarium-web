@@ -31,14 +31,12 @@
     "series": "Séries",
     "authors": "Auteurs",
     "back_to_library": "Retour à la bibliothèque",
-    "shelves": "Tablettes",
     "loans": "Prêts",
     "shared_views": "Vues partagées"
   },
   "library_nav": {
     "books": "Books",
     "contributors": "Contributors",
-    "shelves": "Shelves",
     "series": "Series",
     "loans": "Loans",
     "members": "Members"
@@ -123,9 +121,9 @@
     "active": "{{count}} filtres",
     "ownership": "Possession",
     "remove": "Retirer le filtre",
-    "shelf": "Liste",
     "favourite": "Favori",
-    "favourited": "Mis en favori"
+    "favourited": "Mis en favori",
+    "shelf": "Vue"
   },
   "common": {
     "loading": "Chargement…",
@@ -295,7 +293,7 @@
     "ai_description": "Ce qu un fournisseur d IA peut voir de vos lectures. Désactivé sauf si vous l activez."
   },
   "ownership": {
-    "shelf": "Sur l étagère",
+    "shelf": "Sur l'étagère",
     "wishlist": "Liste de souhaits",
     "suggested": "Suggéré",
     "gap": "Volume manquant"
@@ -335,10 +333,10 @@
     "which_library": "Dans quelle bibliothèque appliquer l'action ? Les livres d'une seule bibliothèque ne sont pas touchés.",
     "no_common_library": "Ces livres n'ont aucune bibliothèque en commun. Réduisez la sélection et réessayez.",
     "tags_need_unambiguous": "Les étiquettes appartiennent à une bibliothèque, et certains de ces livres sont dans plusieurs. Filtrez par bibliothèque pour les modifier.",
-    "add_shelf": "Ajouter à une tablette",
-    "remove_shelf": "Retirer d'une tablette",
-    "shelved": "Ajoutés à la tablette",
-    "unshelved": "Retirés de la tablette"
+    "add_view": "Ajouter à une vue",
+    "remove_view": "Retirer d'une vue",
+    "added_to_view": "Ajouté à la vue",
+    "removed_from_view": "Retiré de la vue"
   },
   "library_picker": {
     "title_one": "Dans {{count}} bibliothèque",
@@ -402,14 +400,13 @@
     "series": "Séries",
     "authors": "Auteurs",
     "views": "Vues",
-    "shelves": "Tablettes",
     "libraries": "Bibliothèques",
     "loans": "Prêts",
     "pages": "Pages",
     "add_book": "Ajouter un livre",
     "new_loan": "Enregistrer un prêt",
-    "new_shelf": "Créer une tablette",
-    "import": "Importer des livres"
+    "import": "Importer des livres",
+    "new_view": "Nouvelle vue"
   },
   "copies": {
     "title": "Exemplaires",

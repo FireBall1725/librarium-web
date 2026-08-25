@@ -371,17 +371,56 @@ export default function Layout() {
     setOrderSaid(t('views.deleted', { name: l.name, defaultValue: `${l.name} deleted` }))
   }, [lists, callApi, t, user])
 
-  const newList = () => {
-    if (location.pathname !== '/books' || !normaliseParams(location.search)) {
-      navigate('/books')
+  /**
+   * Start naming a new view.
+   *
+   * A view is the filter on Books, so this belongs on Books. From anywhere else
+   * it goes there first and asks on arrival, which is why the request travels
+   * as a parameter: navigation is asynchronous, and opening the dialog here
+   * would put it over the page being left.
+   *
+   * It used to refuse when nothing was filtered, and refuse by navigating to a
+   * page you were probably already on, so the button did nothing at all. An
+   * unfiltered view is everything, which is a fine thing to name and then
+   * narrow.
+   */
+  const newList = useCallback(() => {
+    if (location.pathname !== '/books') {
+      navigate('/books?new=view')
       return
     }
     setNamingList(true)
-  }
+  }, [location.pathname, navigate])
+
+  // The command palette can only navigate, so it asks for the dialog through
+  // the URL. Read rather than copied into state: syncing it would be a second
+  // source of truth for one question, and the effect that did the syncing ran
+  // after the first paint.
+  const askedByUrl = params.get('new') === 'view'
+
+  /**
+   * Close the dialog, and take the request out of the URL with it.
+   *
+   * On close rather than on open: the parameter is the request, so it stops
+   * being true once the request has been dealt with. Leaving it would reopen
+   * the dialog on every reload and, worse, fold `new=view` into the filter the
+   * view saves.
+   */
+  const closeNaming = useCallback(() => {
+    setNamingList(false)
+    if (!askedByUrl) return
+    const rest = new URLSearchParams(params)
+    rest.delete('new')
+    navigate({ pathname: '/books', search: rest.toString() }, { replace: true })
+  }, [askedByUrl, params, navigate])
 
   const saveNewList = async (name: string, icon?: IconName, extras?: PromptExtras) => {
-    setNamingList(false)
-    const params = normaliseParams(location.search)
+    // The request parameter is not part of the filter, so it comes off before
+    // the filter is read rather than after.
+    const asked = new URLSearchParams(location.search)
+    asked.delete('new')
+    closeNaming()
+    const params = normaliseParams(asked.toString())
     const sharedWith = extras?.sharedLibraryId ?? null
     // Smart, because this saves the filter on screen. A view filled by hand is
     // made from the books page by selecting some, which is the other kind.
@@ -790,7 +829,7 @@ export default function Layout() {
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
 
       <PromptDialog
-        open={namingList}
+        open={namingList || askedByUrl}
         title={t('views.new', { defaultValue: 'New view' })}
         description={t('views.new_description', {
           defaultValue: 'Saves the filter you have on Books right now. You can change it later.',
@@ -805,7 +844,7 @@ export default function Layout() {
         shareOptions={libraries.map(l => ({ id: l.id, name: l.name }))}
         shareLabel={t('views.share_with', { defaultValue: 'Share with' })}
         shareNoneLabel={t('views.share_none', { defaultValue: 'Only me' })}
-        onCancel={() => setNamingList(false)}
+        onCancel={closeNaming}
         onSubmit={saveNewList}
       />
 

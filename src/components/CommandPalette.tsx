@@ -124,8 +124,8 @@ export default function CommandPalette({
       label: t('palette.add_book', { defaultValue: 'Add a book' }) },
     { kind: 'action', id: 'act:new-loan', icon: 'lent', to: '/loans',
       label: t('palette.new_loan', { defaultValue: 'Record a loan' }) },
-    { kind: 'action', id: 'act:new-list', icon: 'tag', to: '/settings/shelves',
-      label: t('palette.new_shelf', { defaultValue: 'Make a shelf' }) },
+    { kind: 'action', id: 'act:new-view', icon: 'newview', to: '/books?new=view',
+      label: t('palette.new_view', { defaultValue: 'New view' }) },
     { kind: 'action', id: 'act:import', icon: 'import', to: '/import',
       label: t('palette.import', { defaultValue: 'Import books' }) },
   ], [t])

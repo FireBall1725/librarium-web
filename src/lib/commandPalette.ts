@@ -31,7 +31,6 @@ export type ItemKind =
   | 'series'
   | 'author'
   | 'view'
-  | 'shelf'
   | 'library'
   | 'loan'
   | 'page'
@@ -106,12 +105,12 @@ export function pageItems(t: (k: string, o?: Record<string, unknown>) => string)
 }
 
 /**
- * Lists, as palette rows.
+ * Views, as palette rows.
  *
  * One source, not two. The palette used to read saved views out of this
  * browser's localStorage and shelves off the API, listing them under separate
  * headings, which put the two halves of one concept in two places and meant a
- * list made anywhere else never appeared here at all.
+ * view made anywhere else never appeared here at all.
  */
 export function viewItems(lists: SavedList[]): CommandItem[] {
   return lists
@@ -162,8 +161,7 @@ export const KIND_LABEL: Record<ItemKind, string> = {
   book: 'palette.books',
   series: 'palette.series',
   author: 'palette.authors',
-  view: 'palette.lists',
-  shelf: 'palette.shelves',
+  view: 'palette.views',
   library: 'palette.libraries',
   loan: 'palette.loans',
   page: 'palette.pages',
@@ -177,5 +175,5 @@ export const KIND_LABEL: Record<ItemKind, string> = {
  * match something, so they would otherwise crowd out the collection.
  */
 export const KIND_ORDER: ItemKind[] = [
-  'action', 'book', 'series', 'author', 'view', 'shelf', 'library', 'loan', 'page',
+  'action', 'book', 'series', 'author', 'view', 'library', 'loan', 'page',
 ]

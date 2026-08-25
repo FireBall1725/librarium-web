@@ -118,7 +118,10 @@ function AppRoutes() {
                     sensible instead of on the dashboard. */}
                 <Route path="/libraries/:libraryId" element={<LegacyLibraryRedirect to="/books" />} />
                 <Route path="/libraries/:libraryId/books" element={<LegacyLibraryRedirect to="/books" />} />
-                <Route path="/libraries/:libraryId/shelves" element={<LegacyLibraryRedirect to="/settings/shelves" />} />
+                {/* Shelves became views, which live in the rail rather than
+                    on a page of their own, so the old per-library URL lands on
+                    Books with the rail beside it. */}
+                <Route path="/libraries/:libraryId/shelves" element={<LegacyLibraryRedirect to="/books" />} />
                 <Route path="/libraries/:libraryId/series" element={<LibraryPage section="series" />} />
                 <Route path="/libraries/:libraryId/series/:seriesId" element={<LibraryPage section="series" />} />
                 <Route path="/libraries/:libraryId/loans" element={<LegacyLibraryRedirect to="/loans" />} />

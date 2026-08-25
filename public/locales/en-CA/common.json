@@ -31,14 +31,12 @@
     "series": "Series",
     "authors": "Authors",
     "back_to_library": "Back to library",
-    "shelves": "Shelves",
     "loans": "Loans",
     "shared_views": "Shared views"
   },
   "library_nav": {
     "books": "Books",
     "contributors": "Contributors",
-    "shelves": "Shelves",
     "series": "Series",
     "loans": "Loans",
     "members": "Members"
@@ -123,9 +121,9 @@
     "active": "{{count}} filters",
     "ownership": "Ownership",
     "remove": "Remove filter",
-    "shelf": "List",
     "favourite": "Favourite",
-    "favourited": "Favourited"
+    "favourited": "Favourited",
+    "shelf": "View"
   },
   "common": {
     "loading": "Loading…",
@@ -335,10 +333,10 @@
     "which_library": "Which library should this act in? Books in only one library are unaffected.",
     "no_common_library": "These books share no common library. Narrow the selection and try again.",
     "tags_need_unambiguous": "Tags belong to a library, and some of these are in more than one. Filter by a library to edit tags.",
-    "add_shelf": "Add to shelf",
-    "remove_shelf": "Remove from shelf",
-    "shelved": "Added to shelf",
-    "unshelved": "Removed from shelf"
+    "add_view": "Add to view",
+    "remove_view": "Remove from view",
+    "added_to_view": "Added to view",
+    "removed_from_view": "Removed from view"
   },
   "library_picker": {
     "title_one": "In {{count}} library",
@@ -402,14 +400,13 @@
     "series": "Series",
     "authors": "Authors",
     "views": "Views",
-    "shelves": "Shelves",
     "libraries": "Libraries",
     "loans": "Loans",
     "pages": "Pages",
     "add_book": "Add a book",
     "new_loan": "Record a loan",
-    "new_shelf": "Make a shelf",
-    "import": "Import books"
+    "import": "Import books",
+    "new_view": "New view"
   },
   "copies": {
     "title": "Copies",
