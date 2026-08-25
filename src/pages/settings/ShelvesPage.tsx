@@ -23,7 +23,7 @@ import { SettingRow, SettingsBody } from '../../components/settings/SettingRow'
 import { ConfirmDialog } from '../../components/Dialog'
 import { usePageTitle } from '../../hooks/usePageTitle'
 import { Icon } from '../../lib/icons'
-import { SHELF_ICONS, shelfIcon } from '../../lib/shelfIcons'
+import { LIST_ICONS as SHELF_ICONS, listIconName } from '../../lib/listIcons'
 import { TAG_COLORS } from '../../lib/tagColours'
 import { NO_AUTOFILL } from '../../lib/formHints'
 import type { Library, Shelf } from '../../types'
@@ -138,7 +138,7 @@ export default function ShelvesPage() {
       name: sh.name,
       description: sh.description ?? '',
       color: sh.color ?? '',
-      icon: shelfIcon(sh.icon),
+      icon: listIconName(sh.icon),
       displayOrder: sh.display_order,
     })
   }
@@ -276,7 +276,7 @@ export default function ShelvesPage() {
                     {/* Sized explicitly. The default `ic` class takes its
                         dimensions from CSS scoped to .lb-navrow, so outside the
                         rail the svg falls back to filling its container. */}
-                    <Icon name={shelfIcon(sh.icon)} size={18} className="flex-none"
+                    <Icon name={listIconName(sh.icon)} size={18} className="flex-none"
                       style={sh.color ? { color: sh.color } : undefined} />
                     <span className="min-w-0 flex-1 basis-[60%] sm:basis-auto">
                       <span className="block truncate text-[14px] text-content">{sh.name}</span>

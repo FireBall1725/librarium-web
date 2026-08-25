@@ -155,6 +155,59 @@ export function announceListsChanged(): void {
   if (typeof window !== 'undefined') window.dispatchEvent(new Event(LISTS_CHANGED))
 }
 
+// ─── Writing ──────────────────────────────────────────────────────────────────
+
+/**
+ * The shape a caller needs to reach the API.
+ *
+ * Passed in rather than imported so this file stays testable without a React
+ * tree, and so it cannot accidentally reach a different server than the one the
+ * caller is signed in to.
+ */
+export type CallApi = <T>(path: string, init?: RequestInit) => Promise<T>
+
+/** Every list the caller can see. */
+export const fetchLists = (callApi: CallApi): Promise<SavedList[]> =>
+  callApi<{ items: SavedList[] }>('/api/v1/me/lists').then(r => r.items ?? [])
+
+/** Saves the filter on screen as a new smart list. */
+export function createSmartList(
+  callApi: CallApi, name: string, query: string, icon?: string,
+): Promise<SavedList> {
+  return callApi<SavedList>('/api/v1/me/lists', {
+    method: 'POST',
+    body: JSON.stringify({
+      name, icon: icon ?? '', kind: 'smart',
+      filter: { query }, visibility: 'private',
+    }),
+  })
+}
+
+/**
+ * Changes a list in place.
+ *
+ * Only the keys given are sent, because the endpoint is a partial update and
+ * sending the whole row back would overwrite whatever another device changed in
+ * the meantime.
+ */
+export function updateList(
+  callApi: CallApi, id: string,
+  changes: { name?: string; icon?: string; query?: string; layout?: ListLayout },
+): Promise<SavedList> {
+  const body: Record<string, unknown> = {}
+  if (changes.name !== undefined) body.name = changes.name
+  if (changes.icon !== undefined) body.icon = changes.icon
+  if (changes.layout !== undefined) body.layout = changes.layout
+  if (changes.query !== undefined) body.filter = { query: changes.query }
+  return callApi<SavedList>(`/api/v1/me/lists/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(body),
+  })
+}
+
+export const deleteList = (callApi: CallApi, id: string): Promise<unknown> =>
+  callApi(`/api/v1/me/lists/${id}`, { method: 'DELETE' })
+
 // ─── One-time import of views saved in this browser ───────────────────────────
 
 const LEGACY_KEY = 'librarium:views'
@@ -169,6 +222,20 @@ interface LegacyView {
 }
 
 /**
+ * The bit of storage this needs, and nothing more.
+ *
+ * Injected rather than reaching for `window.localStorage`, so the import can be
+ * tested without a browser and cannot be pointed at the wrong store by accident.
+ */
+export interface LegacyStore {
+  getItem(key: string): string | null
+  setItem(key: string, value: string): void
+}
+
+const browserStore = (): LegacyStore | null =>
+  typeof window === 'undefined' ? null : window.localStorage
+
+/**
  * Move views saved in this browser onto the server, once.
  *
  * Views were per-browser, so this is the only copy of them and it cannot be
@@ -181,19 +248,24 @@ interface LegacyView {
  */
 export async function importLegacyViews(
   post: (list: Partial<SavedList> & { filter?: unknown }) => Promise<unknown>,
+  store: LegacyStore | null = browserStore(),
 ): Promise<number> {
-  if (typeof window === 'undefined') return 0
-  if (window.localStorage.getItem(IMPORTED_KEY)) return 0
+  if (!store) return 0
+  if (store.getItem(IMPORTED_KEY)) return 0
 
   // Declared without a value: the try assigns it and the catch returns, so an
   // initialiser here is dead.
   let legacy: LegacyView[]
   try {
-    legacy = JSON.parse(window.localStorage.getItem(LEGACY_KEY) ?? '[]') as LegacyView[]
+    legacy = JSON.parse(store.getItem(LEGACY_KEY) ?? '[]') as LegacyView[]
   } catch {
     // Unreadable is the same as nothing to import, and marking it done stops
     // this parsing the same broken value on every load.
-    window.localStorage.setItem(IMPORTED_KEY, '1')
+    store.setItem(IMPORTED_KEY, '1')
+    return 0
+  }
+  if (!Array.isArray(legacy)) {
+    store.setItem(IMPORTED_KEY, '1')
     return 0
   }
 
@@ -214,6 +286,6 @@ export async function importLegacyViews(
       // retrying every load would repost the ones that already landed.
     }
   }
-  window.localStorage.setItem(IMPORTED_KEY, '1')
+  store.setItem(IMPORTED_KEY, '1')
   return imported
 }

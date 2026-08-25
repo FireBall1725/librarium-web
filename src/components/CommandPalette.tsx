@@ -21,7 +21,6 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { Icon } from '../lib/icons'
 import { libraryColour } from '../lib/libraryColour'
-import { shelfIcon } from '../lib/shelfIcons'
 import { NO_AUTOFILL } from '../lib/formHints'
 import {
   KIND_LABEL,
@@ -33,8 +32,8 @@ import {
   type CommandItem,
   type ItemKind,
 } from '../lib/commandPalette'
-import { loadViews } from '../lib/views'
-import type { Book, Library, Loan, MeSeriesResult, Shelf } from '../types'
+import { fetchLists, type SavedList } from '../lib/lists'
+import type { Book, Library, Loan, MeSeriesResult } from '../types'
 
 /** How many rows a single remote source may contribute. */
 const PER_SOURCE = 5
@@ -57,7 +56,7 @@ export default function CommandPalette({
 
   // Cheap sources, held while the palette is open and filtered locally.
   const [libraries, setLibraries] = useState<Library[]>([])
-  const [shelves, setShelves] = useState<Shelf[]>([])
+  const [lists, setLists] = useState<SavedList[]>([])
 
   // Searched server-side on a debounce.
   const [books, setBooks] = useState<Book[]>([])
@@ -77,8 +76,8 @@ export default function CommandPalette({
     let cancelled = false
     callApi<Library[]>('/api/v1/libraries')
       .then(r => { if (!cancelled) setLibraries(r ?? []) }).catch(() => {})
-    callApi<{ items: Shelf[] }>('/api/v1/me/shelves')
-      .then(r => { if (!cancelled) setShelves(r.items ?? []) }).catch(() => {})
+    fetchLists(callApi)
+      .then(r => { if (!cancelled) setLists(r) }).catch(() => {})
     return () => { cancelled = true }
   }, [open, callApi])
 
@@ -125,7 +124,7 @@ export default function CommandPalette({
       label: t('palette.add_book', { defaultValue: 'Add a book' }) },
     { kind: 'action', id: 'act:new-loan', icon: 'lent', to: '/loans',
       label: t('palette.new_loan', { defaultValue: 'Record a loan' }) },
-    { kind: 'action', id: 'act:new-shelf', icon: 'tag', to: '/settings/shelves',
+    { kind: 'action', id: 'act:new-list', icon: 'tag', to: '/settings/shelves',
       label: t('palette.new_shelf', { defaultValue: 'Make a shelf' }) },
     { kind: 'action', id: 'act:import', icon: 'import', to: '/import',
       label: t('palette.import', { defaultValue: 'Import books' }) },
@@ -136,14 +135,10 @@ export default function CommandPalette({
 
     const local: CommandItem[] = [
       ...actions,
-      ...viewItems(loadViews()),
+      ...viewItems(lists),
       ...libraries.map<CommandItem>(l => ({
         kind: 'library', id: `lib:${l.id}`, label: l.name, icon: 'libraries',
         tint: libraryColour(l.id), to: `/books?lib=${l.id}`,
-      })),
-      ...shelves.map<CommandItem>(s => ({
-        kind: 'shelf', id: `shelf:${s.id}`, label: s.name, sublabel: s.description || undefined,
-        icon: shelfIcon(s.icon), tint: s.color || undefined, to: `/books?shelf=${s.id}`,
       })),
       ...pageItems(t),
     ].filter(i => !q || matches(i.label, q) || (i.sublabel ? matches(i.sublabel, q) : false))
@@ -174,7 +169,7 @@ export default function CommandPalette({
     // books/series/authors/loans are set asynchronously and MUST be listed:
     // omitting them computes the rows once against empty arrays and never
     // again, which reads as "the API returned nothing" rather than as a bug.
-  }, [query, actions, libraries, shelves, books, series, authors, loans, t])
+  }, [query, actions, libraries, lists, books, series, authors, loans, t])
 
   /** Grouped for rendering, in section order, from whatever is present. */
   const groups = useMemo(() => {
