@@ -2742,7 +2742,7 @@ function SeriesVolumeCover({
   isGhost?: boolean
 }) {
   const [imgError, setImgError] = useState(false)
-  const src = useAuthenticatedImage(coverUrl)
+  const { ref, src } = useAuthenticatedImage(coverUrl)
   const showImage = !!src && !imgError && !isGhost
 
   const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark')
@@ -2761,7 +2761,7 @@ function SeriesVolumeCover({
 
   return (
     <div className={`w-12 flex-shrink-0 rounded ${isGhost ? 'opacity-50' : ''}`} style={glow}>
-      <div className="relative aspect-[2/3] rounded overflow-hidden">
+      <div ref={ref} className="relative aspect-[2/3] rounded overflow-hidden">
         {showImage ? (
           <img src={src} alt="" className="w-full h-full object-cover" onError={() => setImgError(true)} />
         ) : (
@@ -3767,9 +3767,11 @@ function SeriesMosaic({ series, size = 'md' }: { series: Series; size?: 'sm' | '
 
 function SeriesMosaicTile({ p, fallbackTitle }: { p: SeriesPreviewBook; fallbackTitle: string }) {
   const [imgError, setImgError] = useState(false)
-  const src = useAuthenticatedImage(p.cover_url)
-  if (!src || imgError) return <SeriesMosaicGradient title={p.title || fallbackTitle} idx={0} />
-  return <img src={src} alt="" className="w-full h-full object-cover" onError={() => setImgError(true)} />
+  const { ref, src } = useAuthenticatedImage(p.cover_url)
+  if (!src || imgError) {
+    return <span ref={ref}><SeriesMosaicGradient title={p.title || fallbackTitle} idx={0} /></span>
+  }
+  return <img ref={ref} src={src} alt="" className="w-full h-full object-cover" onError={() => setImgError(true)} />
 }
 
 const MOSAIC_GRADIENTS = [

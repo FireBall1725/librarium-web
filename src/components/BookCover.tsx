@@ -75,19 +75,35 @@ export default function BookCover({
   hideLabel = false,
 }: BookCoverProps) {
   const [imgError, setImgError] = useState(false)
-  const src = useAuthenticatedImage(coverUrl)
+  const { ref, src, status } = useAuthenticatedImage(coverUrl)
   const showImage = !!src && !imgError
   const flag = flagClass(readStatus)
 
+  /**
+   * Waiting on a cover that exists, rather than knowing there is none.
+   *
+   * These used to look identical: a book whose cover had not arrived rendered
+   * the same tinted title card as a book with no cover, then swapped to the
+   * photograph. That reads as the wrong answer being shown and corrected. A
+   * skeleton says "coming" instead.
+   */
+  const pending = !showImage && !imgError && (status === 'idle' || status === 'loading')
+
   return (
-    <div className={`${className} flex-shrink-0`}>
-      <div className={`lb-cover ${hideLabel ? 'mini' : ''} ${showImage ? '' : tintFor(seed || title)} ${innerClassName}`}>
+    <div className={`${className} flex-shrink-0`} ref={ref}>
+      <div className={`lb-cover ${hideLabel ? 'mini' : ''} ${showImage || pending ? '' : tintFor(seed || title)} ${innerClassName}`}>
         {showImage ? (
           <img
             src={src}
             alt={title}
             className="h-full w-full object-cover"
             onError={() => setImgError(true)}
+          />
+        ) : pending ? (
+          <span
+            className="block h-full w-full animate-pulse bg-surface-strong"
+            aria-label={title}
+            role="img"
           />
         ) : (
           !hideLabel && <span className="lbl">{title}</span>
