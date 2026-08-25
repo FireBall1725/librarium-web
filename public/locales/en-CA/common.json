@@ -428,7 +428,8 @@
     "deleted": "{{name}} deleted",
     "delete_confirm": "Delete {{name}}? The {{count}} books on it stay in your library.",
     "builtin_kept": "{{name}} ships with Librarium and comes back if removed",
-    "moved": "{{name}} moved to position {{position}} of {{total}}"
+    "moved": "{{name}} moved to position {{position}} of {{total}}",
+    "empty": "None yet. Filter the books page and save it as one."
   },
   "copies": {
     "title": "Copies",

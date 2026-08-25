@@ -296,6 +296,8 @@ export default function BooksPage() {
     return () => { cancelled = true }
   }, [callApi])
   const [activeViewId, setActiveViewId] = useState<string | null>(null)
+  /** The list the filter arrived from, kept while the filter is edited. */
+  const [adopted, setAdopted] = useState<string | null>(null)
   const [naming, setNaming] = useState(false)
   const [viewMenuAt, setViewMenuAt] = useState<{ x: number; y: number } | null>(null)
   const [adding, setAdding] = useState(false)
@@ -605,9 +607,28 @@ export default function BooksPage() {
   // editing the Default drops the bar the moment the filter changes — which is
   // precisely when "Save changes" needs to be on screen, since saving is how
   // you set what Books opens on.
+  /**
+   * Which list is open, and it has to survive the filter being edited.
+   *
+   * Arriving from the rail sets no id: the page worked out which list it was on
+   * by matching the filter. So the first keystroke broke the match, the page
+   * fell back to the default, and Save changes pointed at the wrong list. The
+   * one thing you cannot do with a list is edit it.
+   *
+   * An exact match adopts the list; from then on it stays open while the filter
+   * drifts, which is what makes the edit saveable. Opening a different one
+   * matches again and takes over.
+   */
+  const matchedNow = matchList(views, paramsNow)
+  // Adjusted during render rather than in an effect: React re-runs this
+  // component before touching the DOM, so the list is already adopted by the
+  // time anything is drawn and there is no frame showing the wrong one.
+  if (matchedNow && adopted !== matchedNow.id) setAdopted(matchedNow.id)
+
   const activeView =
     views.find(v => v.id === activeViewId) ??
-    matchList(views, paramsNow) ??
+    matchedNow ??
+    views.find(v => v.id === adopted) ??
     views.find(v => v.builtin_key === DEFAULT_LIST_KEY) ??
     null
 
@@ -659,6 +680,8 @@ export default function BooksPage() {
 
   /** Close the view and go back to an unfiltered Books. */
   const leaveView = useCallback(() => {
+    // Forget the adopted list too, or leaving would land back on it.
+    setAdopted(null)
     setActiveViewId(null)
     setLayoutOverride(null)
     setParams(new URLSearchParams(), { replace: true })
@@ -680,6 +703,7 @@ export default function BooksPage() {
     await reloadLists()
     announceListsChanged()
     if (activeViewId === id) setActiveViewId(null)
+    if (adopted === id) setAdopted(null)
     setLayoutOverride(null)
   }
 

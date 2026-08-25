@@ -584,11 +584,20 @@ export default function Layout() {
               count={counts?.suggestions} />
           )}
 
-          {visibleLists(lists).length > 0 && (
-            <>
+          {/* Always rendered, rows or not. Making the section conditional on
+              having lists took New list away with the last one, so deleting
+              everything left no way to make another. */}
+          <>
               <div className="lb-eyebrow px-2 pb-1.5 pt-4">
                 {t('nav.lists', { defaultValue: 'Lists' })}
               </div>
+              {visibleLists(lists).length === 0 && (
+                <p className="px-2 pb-1 text-[11.5px] leading-snug text-content-faint">
+                  {t('lists.empty', {
+                    defaultValue: 'None yet. Filter the books page and save it as one.',
+                  })}
+                </p>
+              )}
               {visibleLists(lists).map(l => (
                 <NavLink
                   key={l.id}
@@ -715,8 +724,7 @@ export default function Layout() {
               {/* A keyboard move has no equivalent of watching a row slide, so
                   the new position is said out loud instead. */}
               <span aria-live="polite" className="sr-only">{orderSaid}</span>
-            </>
-          )}
+          </>
 
           {libraries.length > 0 && (
             <>

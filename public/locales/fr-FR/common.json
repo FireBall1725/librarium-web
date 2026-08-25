@@ -428,7 +428,8 @@
     "deleted": "{{name}} supprimée",
     "delete_confirm": "Supprimer {{name}} ? Les {{count}} livres qu'elle contient restent dans votre bibliothèque.",
     "builtin_kept": "{{name}} est fournie avec Librarium et réapparaît si elle est supprimée",
-    "moved": "{{name}} déplacée en position {{position}} sur {{total}}"
+    "moved": "{{name}} déplacée en position {{position}} sur {{total}}",
+    "empty": "Aucune pour l'instant. Filtrez la page Livres et enregistrez le filtre."
   },
   "copies": {
     "title": "Exemplaires",
