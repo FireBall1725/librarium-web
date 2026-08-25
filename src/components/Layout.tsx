@@ -114,6 +114,45 @@ function facetCount(values: FacetValue[] | undefined, value: string): number | u
   return values.find(v => v.value === value)?.count ?? 0
 }
 
+/**
+ * Drop a view here to delete it.
+ *
+ * Drawn at the foot of whichever section is being dragged in, below that
+ * section's New row, so the thing you reach for often is never one slip past a
+ * destructive target and the rows above it never move while you are aiming.
+ */
+function DeleteZone({
+  active, label, dragging, onOver, onLeave, onDrop,
+}: {
+  active: boolean
+  label: string
+  dragging: string | null
+  onOver: () => void
+  onLeave: () => void
+  onDrop: (id: string) => void
+}) {
+  return (
+    <div
+      onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; onOver() }}
+      onDragLeave={onLeave}
+      onDrop={e => {
+        e.preventDefault()
+        const from = dragging ?? e.dataTransfer.getData('text/plain')
+        if (from) onDrop(from)
+      }}
+      className={`mt-1 flex items-center gap-2 rounded-md px-2 py-2 text-xs font-medium transition-colors ${
+        active ? 'bg-danger text-white' : 'border border-dashed border-danger-line text-danger'
+      }`}
+    >
+      <svg className="w-3.5 h-3.5 flex-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+      </svg>
+      {label}
+    </div>
+  )
+}
+
 function ViewCount({ value }: { value: number | undefined }) {
   if (value === undefined) return null
   return <span className="count">{value.toLocaleString()}</span>
@@ -275,6 +314,12 @@ export default function Layout() {
   // Yours, and the ones a library shares with you. Computed once: the sections
   // draw from it, and a drag resolves against the section it started in.
   const { mine, shared } = useMemo(() => splitLists(lists), [lists])
+
+  // Which section the drag started in, so the bin can be drawn at the foot of
+  // that one rather than always at the foot of the first.
+  const draggingFrom = !dragging
+    ? null
+    : mine.some(l => l.id === dragging) ? 'mine' : 'shared'
 
   /** Save the filter on screen as a new view, or go to Books to build one. */
   // Cmd-K anywhere, Ctrl-K off the Mac. Ignored while typing, so the shortcut
@@ -705,32 +750,21 @@ export default function Layout() {
               ))}
               <NavRow icon="newview" label={t('views.new', { defaultValue: 'New view' })} onClick={() => newList()} />
 
-              {/* Only while something is being dragged. A bin sitting there
-                  permanently is a thing to hit by accident on a rail people
-                  click through all day. */}
-              {dragging && (
-                <div
-                  onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setDragOver('__delete__') }}
-                  onDragLeave={() => setDragOver(prev => (prev === '__delete__' ? null : prev))}
-                  onDrop={e => {
-                    e.preventDefault()
-                    const from = dragging ?? e.dataTransfer.getData('text/plain')
-                    setDragging(null)
-                    setDragOver(null)
-                    if (from) void dropDelete(from)
-                  }}
-                  className={`mt-1 flex items-center gap-2 rounded-md px-2 py-2 text-xs font-medium transition-colors ${
-                    dragOver === '__delete__'
-                      ? 'bg-danger text-white'
-                      : 'border border-dashed border-danger-line text-danger'
-                  }`}
-                >
-                  <svg className="w-3.5 h-3.5 flex-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                  {t('views.drop_to_delete', { defaultValue: 'Drop here to delete' })}
-                </div>
+              {/* Only while something is being dragged, and only in the
+                  section the drag started in. A bin sitting there permanently
+                  is a thing to hit by accident on a rail people click through
+                  all day; a bin appearing above the rows being dragged pushed
+                  them down mid-drag, so the row you were aiming at slid out
+                  from under the cursor and the drop landed nowhere. */}
+              {draggingFrom === 'mine' && (
+                <DeleteZone
+                  active={dragOver === '__delete__'}
+                  label={t('views.drop_to_delete', { defaultValue: 'Drop here to delete' })}
+                  onOver={() => setDragOver('__delete__')}
+                  onLeave={() => setDragOver(prev => (prev === '__delete__' ? null : prev))}
+                  onDrop={id => { setDragging(null); setDragOver(null); void dropDelete(id) }}
+                  dragging={dragging}
+                />
               )}
 
               {/* A keyboard move has no equivalent of watching a row slide, so
@@ -786,6 +820,16 @@ export default function Layout() {
                 label={t('views.new_shared', { defaultValue: 'New shared view' })}
                 onClick={() => newList(libraries[0].id)}
               />
+              {draggingFrom === 'shared' && (
+                <DeleteZone
+                  active={dragOver === '__delete__'}
+                  label={t('views.drop_to_delete', { defaultValue: 'Drop here to delete' })}
+                  onOver={() => setDragOver('__delete__')}
+                  onLeave={() => setDragOver(prev => (prev === '__delete__' ? null : prev))}
+                  onDrop={id => { setDragging(null); setDragOver(null); void dropDelete(id) }}
+                  dragging={dragging}
+                />
+              )}
             </>
           )}
 
