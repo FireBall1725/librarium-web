@@ -72,7 +72,7 @@
     "tokens": "API tokens",
     "ai_privacy": "AI and privacy",
     "members": "Members",
-    "shelves": "Shelves"
+    "shelves": "Shared lists"
   },
   "theme": {
     "light": "☀ Light",
@@ -355,20 +355,20 @@
     }
   },
   "shelves_settings": {
-    "description": "Shelves belong to a library, not to the instance, so each library keeps its own set.",
+    "description": "A shared list belongs to a library, so everyone who can reach that library sees it. Your own private lists live in the rail and are made from the Books page.",
     "library": "Library",
-    "library_hint": "Shelves are per-library. Pick which set you are editing.",
-    "new": "New shelf",
+    "library_hint": "A shared list belongs to one library. Pick which library's lists you are editing.",
+    "new": "New shared list",
     "editing": "Editing {{name}}",
     "name": "Name",
     "note": "What goes on it (optional)",
     "colour": "Colour",
-    "create": "Create shelf",
-    "empty": "No shelves in this library yet.",
+    "create": "Create list",
+    "empty": "No shared lists in this library yet.",
     "count_one": "{{count}} book",
     "count_other": "{{count}} books",
     "delete_title": "Delete {{name}}?",
-    "delete_note": "The shelf goes; the books on it stay in the library."
+    "delete_note": "The list goes; the books on it stay in the library."
   },
   "loans": {
     "description": "Books that are out of the house, across every library.",

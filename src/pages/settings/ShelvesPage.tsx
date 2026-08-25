@@ -49,7 +49,7 @@ const emptyDraft = (): Draft => ({ name: '', description: '', color: '', icon: '
 export default function ShelvesPage() {
   const { t } = useTranslation()
   const { callApi } = useAuth()
-  usePageTitle(t('settings_nav.shelves', { defaultValue: 'Shelves' }))
+  usePageTitle(t('settings_nav.shelves', { defaultValue: 'Shared lists' }))
 
   const [params, setParams] = useSearchParams()
   const [libraries, setLibraries] = useState<Library[]>([])
@@ -146,13 +146,13 @@ export default function ShelvesPage() {
   return (
     <>
       <PageHeader
-        title={t('settings_nav.shelves', { defaultValue: 'Shelves' })}
+        title={t('settings_nav.shelves', { defaultValue: 'Shared lists' })}
         description={t('shelves_settings.description', {
           defaultValue: 'Shelves belong to a library, not to the instance, so each library keeps its own set.',
         })}
         breadcrumbs={[
           { label: t('nav.settings', { defaultValue: 'Settings' }), to: '/settings' },
-          { label: t('settings_nav.shelves', { defaultValue: 'Shelves' }) },
+          { label: t('settings_nav.shelves', { defaultValue: 'Shared lists' }) },
         ]}
       />
 
@@ -191,7 +191,7 @@ export default function ShelvesPage() {
               <h2 className="mb-3 text-sm font-semibold text-content">
                 {editingId
                   ? t('shelves_settings.editing', { name: draft.name, defaultValue: `Editing ${draft.name}` })
-                  : t('shelves_settings.new', { defaultValue: 'New shelf' })}
+                  : t('shelves_settings.new', { defaultValue: 'New shared list' })}
               </h2>
 
               <div className="flex flex-wrap items-start gap-3">
@@ -251,7 +251,7 @@ export default function ShelvesPage() {
                   disabled={busy || !draft.name.trim()} onClick={() => void save()}>
                   {editingId
                     ? t('common.save', { defaultValue: 'Save' })
-                    : t('shelves_settings.create', { defaultValue: 'Create shelf' })}
+                    : t('shelves_settings.create', { defaultValue: 'Create list' })}
                 </button>
                 {editingId && (
                   <button type="button" className="lb-btn ghost sm" onClick={reset}>
@@ -267,7 +267,7 @@ export default function ShelvesPage() {
               </p>
             ) : shelves.length === 0 ? (
               <p className="mt-5 text-sm text-content-muted">
-                {t('shelves_settings.empty', { defaultValue: 'No shelves in this library yet.' })}
+                {t('shelves_settings.empty', { defaultValue: 'No shared lists in this library yet.' })}
               </p>
             ) : (
               <ul className="mt-5">
@@ -316,7 +316,7 @@ export default function ShelvesPage() {
         })}
         description={t('shelves_settings.delete_note', {
           count: confirmDelete?.book_count ?? 0,
-          defaultValue: 'The shelf goes; the books on it stay in the library.',
+          defaultValue: 'The list goes; the books on it stay in the library.',
         })}
         confirmLabel={t('common.delete', { defaultValue: 'Delete' })}
         destructive

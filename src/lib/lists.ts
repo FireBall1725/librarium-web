@@ -112,9 +112,20 @@ export function normaliseParams(params: string): string {
 export const isDirty = (l: SavedList, params: string): boolean =>
   normaliseParams(listQuery(l)) !== normaliseParams(params)
 
-/** The list matching a filter exactly, if there is one. */
-export const matchList = (lists: SavedList[], params: string): SavedList | null =>
-  lists.find(l => l.kind === 'smart' && !isDirty(l, params)) ?? null
+/**
+ * The list standing for a filter, if one does.
+ *
+ * The default wins a tie. On Books with nothing filtered, every list holding an
+ * empty filter matches, the one Books opens on among them, and taking the first
+ * the server happened to return meant Books opened on whichever list sorted
+ * earliest. A reader with a saved list and no filter got sent somewhere they
+ * had not asked to go.
+ */
+export function matchList(lists: SavedList[], params: string): SavedList | null {
+  const matching = lists.filter(l => l.kind === 'smart' && !isDirty(l, params))
+  if (matching.length === 0) return null
+  return matching.find(l => l.builtin_key === DEFAULT_LIST_KEY) ?? matching[0]
+}
 
 /** Where the books nav row points: the default list's filter. */
 export function defaultListHref(lists: SavedList[]): string {

@@ -72,7 +72,7 @@
     "tokens": "Jetons API",
     "ai_privacy": "IA et confidentialité",
     "members": "Membres",
-    "shelves": "Tablettes"
+    "shelves": "Listes partagées"
   },
   "theme": {
     "light": "☀ Light",
@@ -355,20 +355,20 @@
     }
   },
   "shelves_settings": {
-    "description": "Les tablettes appartiennent à une bibliothèque, pas à l'instance : chacune garde les siennes.",
+    "description": "Une liste partagée appartient à une bibliothèque, donc tous ceux qui y ont accès la voient. Vos listes privées se trouvent dans la barre latérale et se créent depuis la page Livres.",
     "library": "Bibliothèque",
-    "library_hint": "Les tablettes sont propres à une bibliothèque. Choisissez celle que vous modifiez.",
-    "new": "Nouvelle tablette",
+    "library_hint": "Une liste partagée appartient à une seule bibliothèque. Choisissez celle dont vous modifiez les listes.",
+    "new": "Nouvelle liste partagée",
     "editing": "Modification de {{name}}",
     "name": "Nom",
-    "note": "Ce qu'on y range (facultatif)",
+    "note": "Ce qu'elle contient (facultatif)",
     "colour": "Couleur",
-    "create": "Créer la tablette",
-    "empty": "Aucune tablette dans cette bibliothèque.",
+    "create": "Créer la liste",
+    "empty": "Aucune liste partagée dans cette bibliothèque.",
     "count_one": "{{count}} livre",
     "count_other": "{{count}} livres",
     "delete_title": "Supprimer {{name}} ?",
-    "delete_note": "La tablette disparaît ; les livres restent dans la bibliothèque."
+    "delete_note": "La liste disparaît ; les livres qu'elle contient restent dans la bibliothèque."
   },
   "loans": {
     "description": "Les livres sortis de la maison, toutes bibliothèques confondues.",

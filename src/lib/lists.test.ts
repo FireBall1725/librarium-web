@@ -95,6 +95,20 @@ describe('matching the filter on screen', () => {
     expect(matchList([reading], 'status=reading')?.id).toBe('r')
   })
 
+  it('gives the tie to the list Books opens on', () => {
+    // Nothing filtered, so every list holding an empty filter matches. Taking
+    // the first the server returned sent Books to whichever sorted earliest.
+    const mine = list({ id: 'manga', name: 'Manga', filter: { query: '' } })
+    const dflt = list({ id: 'd', name: 'Default', builtin_key: 'default', filter: { query: '' } })
+    expect(matchList([mine, dflt], '')?.id).toBe('d')
+  })
+
+  it('still matches an ordinary list when the filter is its own', () => {
+    const mine = list({ id: 'manga', filter: { query: 'tag=manga' } })
+    const dflt = list({ id: 'd', builtin_key: 'default', filter: { query: '' } })
+    expect(matchList([mine, dflt], 'tag=manga')?.id).toBe('manga')
+  })
+
   it('never matches a manual list, whose membership is not a filter', () => {
     const manual = list({ id: 'm', kind: 'manual', filter: null })
     expect(matchList([manual], '')).toBeNull()
