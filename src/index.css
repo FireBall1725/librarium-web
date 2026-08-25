@@ -36,6 +36,41 @@
   font-display: swap;
 }
 
+/* OpenDyslexic, offered in Appearance for readers the faces above do not serve.
+   Weighted bottoms and distinct letterforms make characters harder to rotate or
+   transpose. It does not help everyone with dyslexia, which is why it is a
+   choice rather than a default.
+
+   SIL OFL 1.1, Abbie Gonzalez, with Reserved Font Name OpenDyslexic. Self
+   hosted for the same reason as the faces above: a font CDN is a third party
+   watching every page load. Not subset, because the shapes are the point and
+   guessing at a reader's alphabet is how an accessibility feature stops
+   working for the person who needed it. */
+
+@font-face {
+  font-family: "OpenDyslexic";
+  src: url("/fonts/OpenDyslexic-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "OpenDyslexic";
+  src: url("/fonts/OpenDyslexic-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "OpenDyslexic";
+  src: url("/fonts/OpenDyslexic-Italic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* ---------------------------------------------------------------------------
@@ -61,6 +96,7 @@
      font-sans, so the system stack stays the default for UI chrome. */
   --font-display: "Cormorant Garamond", Georgia, "Times New Roman", serif;
   --font-read: "Crimson Pro", Georgia, "Times New Roman", serif;
+  --font-ui: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 
   /* Surfaces, back to front */
   --color-surface:          var(--t-surface);
@@ -358,4 +394,40 @@
       translate: 0 0 !important;
     }
   }
+}
+
+/* ---------------------------------------------------------------------------
+   Reading font override
+   ---------------------------------------------------------------------------
+   Last in the file on purpose. Base rules declared later win over earlier ones
+   at equal specificity, and this has to beat the token defaults and every
+   component that names a family of its own.
+
+   Both display and reading tokens move, and so does the UI stack: a reader who
+   needs this face needs it on the labels and the numbers too, not only on the
+   prose. The fallbacks stay so a failed font load degrades to the old look
+   rather than to Times.
+--------------------------------------------------------------------------- */
+
+:root[data-reading-font="dyslexic"] {
+  --font-display: "OpenDyslexic", Georgia, "Times New Roman", serif;
+  --font-read: "OpenDyslexic", Georgia, "Times New Roman", serif;
+  --font-ui: "OpenDyslexic", ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Everything, rather than a list of classes.
+   reference.css names "Cormorant Garamond" directly in nineteen rules, so a
+   body-level family loses to every one of them and the headings keep the serif
+   the reader just turned off. The :not() arms carry enough specificity to win
+   and keep code on a monospace face, where the shapes are load-bearing for a
+   different reason. */
+:root[data-reading-font="dyslexic"] *:not(code):not(pre):not(kbd):not(samp) {
+  font-family: "OpenDyslexic", ui-sans-serif, system-ui, sans-serif;
+}
+
+/* The face runs large for its point size, so lines set for the default faces
+   crowd. A little more leading rather than a smaller size, which would undo
+   the reason for choosing it. */
+:root[data-reading-font="dyslexic"] body {
+  line-height: 1.7;
 }

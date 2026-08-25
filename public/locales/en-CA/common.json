@@ -276,7 +276,10 @@
     "language": "Interface language",
     "language_note": "Switches the language throughout the web interface.",
     "read_badges": "Show read status badges",
-    "read_badges_note": "A coloured corner on covers for read and in-progress books."
+    "read_badges_note": "A coloured corner on covers for read and in-progress books.",
+    "typeface": "Typeface",
+    "typeface_note": "OpenDyslexic weights the bottom of each letter and gives similar characters distinct shapes, which some readers with dyslexia find easier. It does not suit everyone, so it is offered rather than assumed.",
+    "typeface_sample": "Handful of books"
   },
   "settings_account": {
     "profile_description": "Your account on this instance.",

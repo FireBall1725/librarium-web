@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import type { Library, SuggestionQuotaView } from '../types'
 import { applyTheme, readStoredTheme, storeTheme } from '../lib/theme'
+import { applyReadingFont, readStoredReadingFont } from '../lib/readingFont'
 // Params are compared normalised, not by substring: "status=read" is a prefix
 // of "status=reading", so a substring test lights up Finished while the reader
 // is looking at Reading now.
@@ -134,6 +135,7 @@ export default function Layout() {
   // changes it; this only has to put the stored choice on screen at startup
   // and keep the system option following the OS.
   const [theme] = useState(readStoredTheme)
+  const [readingFont] = useState(readStoredReadingFont)
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   // Views live in the sidebar because they are how you actually get to a
@@ -331,6 +333,11 @@ export default function Layout() {
       window.removeEventListener('librarium:ai-prefs-changed', onRefresh)
     }
   }, [callApi])
+
+  // Applied on every mount, not only when it changes: a full page load starts
+  // with a bare <html> and the choice lives in storage until something writes
+  // it back onto the element.
+  useEffect(() => { applyReadingFont(readingFont) }, [readingFont])
 
   useEffect(() => {
     applyTheme(theme)

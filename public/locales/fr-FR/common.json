@@ -276,7 +276,10 @@
     "language": "Langue de l interface",
     "language_note": "Change la langue dans toute l interface web.",
     "read_badges": "Afficher les badges de lecture",
-    "read_badges_note": "Un coin coloré sur les couvertures des livres lus et en cours."
+    "read_badges_note": "Un coin coloré sur les couvertures des livres lus et en cours.",
+    "typeface": "Police",
+    "typeface_note": "OpenDyslexic alourdit le bas de chaque lettre et donne des formes distinctes aux caractères qui se ressemblent, ce que certaines personnes dyslexiques trouvent plus lisible. Cela ne convient pas à tout le monde : la police est proposée, jamais imposée.",
+    "typeface_sample": "Quelques livres"
   },
   "settings_account": {
     "profile_description": "Votre compte sur cette instance.",
