@@ -173,7 +173,9 @@
     "empty": "Aucune pour l'instant. Filtrez la page Livres et enregistrez la vue.",
     "share_with": "Partager avec",
     "share_none": "Moi seulement",
-    "not_yours": "{{name}} est partagée par quelqu'un d'autre ; elle ne peut être supprimée que par cette personne"
+    "not_yours": "{{name}} est partagée par quelqu'un d'autre ; elle ne peut être supprimée que par cette personne",
+    "new_shared": "Nouvelle vue partagée",
+    "shared_empty": "Aucune pour l'instant. Une vue créée ici est visible par tous ceux qui ont accès à la bibliothèque."
   },
   "index": {
     "all": "Tous"

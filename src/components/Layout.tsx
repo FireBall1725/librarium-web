@@ -195,6 +195,14 @@ export default function Layout() {
   const [facets, setFacets] = useState<BookFacets | null>(null)
 
   const [namingList, setNamingList] = useState(false)
+  /**
+   * Which library the New view dialog opens shared with, empty for private.
+   *
+   * The two rows in the rail are the same dialog with a different starting
+   * point rather than two dialogs, because naming a view and deciding who sees
+   * it is one act either way.
+   */
+  const [namingShare, setNamingShare] = useState('')
   // Fetched for admins everywhere, not only inside settings: the dot on the
   // Settings row exists to tell someone who is NOT in settings that something
   // in there is broken, so gating it on being in settings defeats it. The
@@ -384,9 +392,10 @@ export default function Layout() {
    * unfiltered view is everything, which is a fine thing to name and then
    * narrow.
    */
-  const newList = useCallback(() => {
+  const newList = useCallback((sharedWith = '') => {
+    setNamingShare(sharedWith)
     if (location.pathname !== '/books') {
-      navigate('/books?new=view')
+      navigate(sharedWith ? `/books?new=view&share=${sharedWith}` : '/books?new=view')
       return
     }
     setNamingList(true)
@@ -397,6 +406,9 @@ export default function Layout() {
   // source of truth for one question, and the effect that did the syncing ran
   // after the first paint.
   const askedByUrl = params.get('new') === 'view'
+  // Carried through the navigation, so New shared view still knows which
+  // library it meant after landing on Books from somewhere else.
+  const askedShare = params.get('share') ?? ''
 
   /**
    * Close the dialog, and take the request out of the URL with it.
@@ -411,6 +423,7 @@ export default function Layout() {
     if (!askedByUrl) return
     const rest = new URLSearchParams(params)
     rest.delete('new')
+    rest.delete('share')
     navigate({ pathname: '/books', search: rest.toString() }, { replace: true })
   }, [askedByUrl, params, navigate])
 
@@ -419,6 +432,7 @@ export default function Layout() {
     // the filter is read rather than after.
     const asked = new URLSearchParams(location.search)
     asked.delete('new')
+    asked.delete('share')
     closeNaming()
     const params = normaliseParams(asked.toString())
     const sharedWith = extras?.sharedLibraryId ?? null
@@ -689,7 +703,7 @@ export default function Layout() {
                   onNudge={nudgeList}
                 />
               ))}
-              <NavRow icon="newview" label={t('views.new', { defaultValue: 'New view' })} onClick={newList} />
+              <NavRow icon="newview" label={t('views.new', { defaultValue: 'New view' })} onClick={() => newList()} />
 
               {/* Only while something is being dragged. A bin sitting there
                   permanently is a thing to hit by accident on a rail people
@@ -729,11 +743,22 @@ export default function Layout() {
               everyone: deleting one takes it from the whole library, and the
               order you put them in is yours alone. Both of those are easier to
               believe from a heading than from a dialog asking after the fact. */}
-          {shared.length > 0 && (
+          {/* Rendered whenever there is a library to share into, rows or not.
+              Hiding the section until something was in it took the only way to
+              make one away with it, which is the same trap the Views section
+              above already carries a comment about. */}
+          {libraries.length > 0 && (
             <>
               <div className="lb-eyebrow px-2 pb-1.5 pt-4">
                 {t('nav.shared_views', { defaultValue: 'Shared views' })}
               </div>
+              {shared.length === 0 && (
+                <p className="px-2 pb-1 text-[11.5px] leading-snug text-content-faint">
+                  {t('views.shared_empty', {
+                    defaultValue: 'None yet. One made here is visible to everyone who can reach the library.',
+                  })}
+                </p>
+              )}
               {shared.map(l => (
                 <ViewRow
                   key={l.id}
@@ -753,6 +778,14 @@ export default function Layout() {
                   onNudge={nudgeList}
                 />
               ))}
+              {/* Its own row rather than only the picker inside New view: a
+                  setting you cannot see until you have opened a dialog is not
+                  a way in, and the section it belongs to had no door at all. */}
+              <NavRow
+                icon="newview"
+                label={t('views.new_shared', { defaultValue: 'New shared view' })}
+                onClick={() => newList(libraries[0].id)}
+              />
             </>
           )}
 
@@ -842,6 +875,7 @@ export default function Layout() {
         colors={TAG_COLORS}
         colorLabel={t('common.colour', { defaultValue: 'Colour' })}
         shareOptions={libraries.map(l => ({ id: l.id, name: l.name }))}
+        initialShare={askedShare || namingShare}
         shareLabel={t('views.share_with', { defaultValue: 'Share with' })}
         shareNoneLabel={t('views.share_none', { defaultValue: 'Only me' })}
         onCancel={closeNaming}

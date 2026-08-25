@@ -173,7 +173,9 @@
     "empty": "None yet. Filter the books page and save it as one.",
     "share_with": "Share with",
     "share_none": "Only me",
-    "not_yours": "{{name}} is shared by someone else and only they can delete it"
+    "not_yours": "{{name}} is shared by someone else and only they can delete it",
+    "new_shared": "New shared view",
+    "shared_empty": "None yet. One made here is visible to everyone who can reach the library."
   },
   "index": {
     "all": "All"

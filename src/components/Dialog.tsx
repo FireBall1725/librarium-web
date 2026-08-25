@@ -170,6 +170,7 @@ export function PromptDialog({
   initialColor,
   colorLabel,
   shareOptions,
+  initialShare,
   shareLabel,
   shareNoneLabel,
   onCancel,
@@ -202,6 +203,8 @@ export function PromptDialog({
    * time there.
    */
   shareOptions?: Array<{ id: string; name: string }>
+  /** Which library it starts shared with. Empty means private. */
+  initialShare?: string
   shareLabel?: string
   shareNoneLabel?: string
   onCancel: () => void
@@ -213,16 +216,19 @@ export function PromptDialog({
   const [icon, setIcon] = useState<IconName | undefined>(initialIcon)
   const [color, setColor] = useState(initialColor ?? '')
   /** Empty means private, which is what a view is unless someone says otherwise. */
-  const [share, setShare] = useState('')
+  const [share, setShare] = useState(initialShare ?? '')
 
   // The dialog is not unmounted between opens, so without this the second
   // thing you name arrives wearing the first one's icon.
-  const [syncedInitial, setSyncedInitial] = useState(initialIcon)
-  if (initialIcon !== syncedInitial) {
-    setSyncedInitial(initialIcon)
+  // Keyed on both, because the rail opens this dialog two ways with the same
+  // icon and only the library differing. Watching the icon alone meant the
+  // second way in arrived carrying the first one's library.
+  const [syncedInitial, setSyncedInitial] = useState(`${initialIcon}:${initialShare ?? ''}`)
+  if (`${initialIcon}:${initialShare ?? ''}` !== syncedInitial) {
+    setSyncedInitial(`${initialIcon}:${initialShare ?? ''}`)
     setIcon(initialIcon)
     setColor(initialColor ?? '')
-    setShare('')
+    setShare(initialShare ?? '')
   }
 
   const submit = (e: React.FormEvent) => {
