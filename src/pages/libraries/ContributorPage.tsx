@@ -18,18 +18,21 @@ import type {
 // ─── ContributorAvatar (exported for ContributorsPage) ────────────────────────
 
 function ContributorAvatar({ photoUrl, name, size }: { photoUrl: string | null; name: string; size?: 'sm' | 'lg' }) {
-  const src = useAuthenticatedImage(photoUrl)
+  const { ref, src } = useAuthenticatedImage(photoUrl)
   const [error, setError] = useState(false)
   const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
   const lg = size === 'lg'
   if (src && !error) {
     return (
-      <img src={src} alt={name} onError={() => setError(true)}
+      <img ref={ref} src={src} alt={name} onError={() => setError(true)}
         className={`rounded-full object-cover flex-shrink-0 ${lg ? 'w-16 h-16' : 'w-8 h-8'}`} />
     )
   }
+  // The ref rides the initials too. It gates the fetch on coming into view, so
+  // hanging it only on the <img> would mean the element carrying it appears
+  // only after the load it is supposed to trigger.
   return (
-    <div className={`rounded-full flex-shrink-0 flex items-center justify-center bg-blue-100 dark:bg-blue-900/40 text-accent-strong font-semibold ${lg ? 'w-16 h-16 text-xl' : 'w-8 h-8 text-xs'}`}>
+    <div ref={ref} className={`rounded-full flex-shrink-0 flex items-center justify-center bg-blue-100 dark:bg-blue-900/40 text-accent-strong font-semibold ${lg ? 'w-16 h-16 text-xl' : 'w-8 h-8 text-xs'}`}>
       {initials || '?'}
     </div>
   )
@@ -566,7 +569,7 @@ export default function ContributorPage() {
   const [photoUploading, setPhotoUploading] = useState(false)
   const [showRename, setShowRename] = useState(false)
   const [showMetaModal, setShowMetaModal] = useState(false)
-  const sidebarPhotoSrc = useAuthenticatedImage(contributor?.photo_url ?? null)
+  const { ref: sidebarPhotoRef, src: sidebarPhotoSrc } = useAuthenticatedImage(contributor?.photo_url ?? null)
 
   const photoInputRef = useRef<HTMLInputElement>(null)
 
@@ -658,7 +661,7 @@ export default function ContributorPage() {
  <div className="w-48 flex-shrink-0 sticky top-8 space-y-5">
 
  {/* Photo with upload overlay */}
- <div className="relative group cursor-pointer"
+ <div ref={sidebarPhotoRef} className="relative group cursor-pointer"
  onClick={() => !photoUploading && photoInputRef.current?.click()}>
  <input ref={photoInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
  {sidebarPhotoSrc ? (

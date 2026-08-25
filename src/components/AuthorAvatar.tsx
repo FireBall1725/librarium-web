@@ -62,11 +62,12 @@ export default function AuthorAvatar({
   size?: number
 }) {
   const [imgError, setImgError] = useState(false)
-  const src = useAuthenticatedImage(photoUrl)
+  const { ref, src } = useAuthenticatedImage(photoUrl)
 
   if (src && !imgError) {
     return (
       <img
+        ref={ref}
         src={src}
         alt=""
         onError={() => setImgError(true)}
@@ -76,6 +77,10 @@ export default function AuthorAvatar({
     )
   }
 
+  // The generated avatar is not a placeholder for a photo, it is the answer for
+  // an author who has none, so it renders straight away rather than after a
+  // skeleton. The ref rides on it so a photo that does exist starts loading
+  // once this scrolls into view.
   const h = hash(name)
   const [c1, c2] = PAIRS[h % PAIRS.length]
   // Angle off the higher bits, so two authors sharing a pair still differ.
@@ -83,6 +88,7 @@ export default function AuthorAvatar({
 
   return (
     <span
+      ref={ref}
       aria-hidden="true"
       style={{
         width: size,

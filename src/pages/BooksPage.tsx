@@ -9,7 +9,7 @@
 // tranches replace it.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useNavigationType, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { announceCollectionChanged } from '../lib/collectionEvents'
 import { useAuth } from '../auth/AuthContext'
@@ -17,13 +17,15 @@ import PageHeader from '../components/PageHeader'
 import { PromptDialog } from '../components/Dialog'
 import AddBookModal from '../components/AddBookModal'
 import FacetRail from '../components/FacetRail'
+import FilterSearch from '../components/FilterSearch'
 import BookBulkBar from '../components/BookBulkBar'
 import LibraryPickerDialog from '../components/LibraryPickerDialog'
 import BookCover, { BookCoverThumb } from '../components/BookCover'
 import { usePageTitle } from '../hooks/usePageTitle'
+import { useContributorNames } from '../hooks/useContributorNames'
 import type { TFunction } from 'i18next'
 import { Icon, type IconName } from '../lib/icons'
-import { VIEW_ICONS, viewIcon } from '../lib/viewIcons'
+import { LIST_ICONS } from '../lib/listIcons'
 import type { Book, GroupedEntry, Library, MediaType, PagedGroupedBooks, SeriesGroupEntry } from '../types'
 import {
   DEFAULT_PAGE_SIZE,
@@ -43,19 +45,20 @@ import {
   type FacetKey,
 } from '../lib/bookBrowse'
 import {
-  announceViewsChanged,
-  deleteView,
-  renameView,
+  announceListsChanged,
+  createSmartList,
+  deleteList,
+  fetchLists,
   isDirty as viewIsDirty,
-  loadViews,
-  matchView,
-  DEFAULT_VIEW_ID,
-  findDefaultView,
-  newViewId,
-  saveView,
-  type SavedView,
-  type ViewLayout,
-} from '../lib/views'
+  listIcon,
+  listQuery,
+  adoptedList,
+  matchList,
+  updateList,
+  DEFAULT_LIST_KEY,
+  type SavedList,
+  type ListLayout,
+} from '../lib/lists'
 
 /**
  * Colour a whole series alike, so twenty volumes read as one run on the shelf.
@@ -279,8 +282,25 @@ export default function BooksPage() {
   // from the sidebar, which only navigates, so the layout has to follow from the
   // filter rather than from having gone through openView; without the key, the
   // toggle you flipped on one view would follow you onto the next one.
-  const [views, setViews] = useState<SavedView[]>(() => loadViews())
+  // Server-backed, not localStorage. Views used to live in this browser, which
+  // meant one saved on a laptop did not exist on a phone; worse, after the rail
+  // moved to /me/lists a view saved here went somewhere the rail never looked.
+  const [views, setViews] = useState<SavedList[]>([])
+
+  const reloadLists = useCallback(async () => {
+    setViews(await fetchLists(callApi).catch(() => []))
+  }, [callApi])
+
+  useEffect(() => {
+    let cancelled = false
+    void fetchLists(callApi)
+      .then(l => { if (!cancelled) setViews(l) })
+      .catch(() => { /* The page works unfiltered without them. */ })
+    return () => { cancelled = true }
+  }, [callApi])
   const [activeViewId, setActiveViewId] = useState<string | null>(null)
+  /** The list the filter arrived from, kept while the filter is edited. */
+  const [adopted, setAdopted] = useState<string | null>(null)
   const [naming, setNaming] = useState(false)
   const [viewMenuAt, setViewMenuAt] = useState<{ x: number; y: number } | null>(null)
   const [adding, setAdding] = useState(false)
@@ -302,7 +322,7 @@ export default function BooksPage() {
       .catch(() => { if (!cancelled) setAddData({ libraries: [], mediaTypes: [] }) })
     return () => { cancelled = true }
   }, [adding, addData, callApi])
-  const [layoutOverride, setLayoutOverride] = useState<{ viewId: string | null; layout: ViewLayout } | null>(null)
+  const [layoutOverride, setLayoutOverride] = useState<{ viewId: string | null; layout: ListLayout } | null>(null)
 
   // Entries, not books, even when grouping is off.
   //
@@ -493,11 +513,12 @@ export default function BooksPage() {
     setParams(writeState(next), { replace: true })
   }, [setParams])
 
+  // Emptying the box clears the search. Text is otherwise committed on Enter
+  // rather than as it is typed: the box now offers suggestions, and searching
+  // for each half-typed name reflowed the page under the dropdown and, when a
+  // list was open, reported it modified against a filter nobody had chosen yet.
   useEffect(() => {
-    const handle = setTimeout(() => {
-      if (draftQuery !== state.query) apply({ ...state, query: draftQuery, page: 1 })
-    }, 300)
-    return () => clearTimeout(handle)
+    if (draftQuery === '' && state.query !== '') apply({ ...state, query: '', page: 1 })
   }, [draftQuery, state, apply])
 
   // Results and counts are two requests but one logical fetch. A stale-response
@@ -577,7 +598,13 @@ export default function BooksPage() {
     return null
   }, [entries, state.series])
 
-  const activeFilters = selectionCount(state.selection)
+  // Contributors filter like a facet but are not one, so they are counted and
+  // chipped alongside rather than inside the selection.
+  const contributorNames = useContributorNames(state.contributors)
+  const activeFilters = selectionCount(state.selection) + state.contributors.length
+
+  const dropContributor = (id: string) =>
+    apply({ ...state, contributors: state.contributors.filter(c => c !== id), page: 1 })
 
   // A view is "open" either because it was clicked, or because the filter on
   // screen describes it. The second case is not a nicety: the sidebar links only
@@ -590,10 +617,46 @@ export default function BooksPage() {
   // editing the Default drops the bar the moment the filter changes — which is
   // precisely when "Save changes" needs to be on screen, since saving is how
   // you set what Books opens on.
+  /**
+   * Which list is open, and it has to survive the filter being edited.
+   *
+   * Arriving from the rail sets no id: the page worked out which list it was on
+   * by matching the filter. So the first keystroke broke the match, the page
+   * fell back to the default, and Save changes pointed at the wrong list. The
+   * one thing you cannot do with a list is edit it.
+   *
+   * An exact match adopts the list; from then on it stays open while the filter
+   * drifts, which is what makes the edit saveable. Opening a different one
+   * matches again and takes over.
+   */
+  const matchedNow = matchList(views, paramsNow)
+
+  // Only a real navigation changes which list is open. Editing a list's filter
+  // can drift it into looking like another one: clear the search on Bleach and
+  // what is left is the Default's empty filter, so matching alone jumped to the
+  // Default and Bleach could not be edited at all. The two cases are identical
+  // in the URL, so the history action is what tells them apart. The rail links
+  // push; apply() replaces.
+  const editedInPlace = useNavigationType() === 'REPLACE'
+  const adoptedNow = adoptedList(matchedNow, adopted, editedInPlace)
+
+  // Adjusted during render rather than in an effect: React re-runs this
+  // component before touching the DOM, so the list is already adopted by the
+  // time anything is drawn and there is no frame showing the wrong one. The
+  // value is computed above rather than read back from state, so this render
+  // uses it too.
+  if (adoptedNow !== adopted) setAdopted(adoptedNow)
+  // Navigating to a different list drops a pinned one, or Revert would leave
+  // the old list open while the rail said otherwise.
+  if (!editedInPlace && matchedNow && activeViewId && activeViewId !== matchedNow.id) {
+    setActiveViewId(null)
+  }
+
   const activeView =
     views.find(v => v.id === activeViewId) ??
-    matchView(views, paramsNow) ??
-    findDefaultView(views) ??
+    views.find(v => v.id === adoptedNow) ??
+    matchedNow ??
+    views.find(v => v.builtin_key === DEFAULT_LIST_KEY) ??
     null
 
   // Layout belongs to the view, so it follows from whichever view is open
@@ -601,28 +664,29 @@ export default function BooksPage() {
   // switch. An override is remembered against the view it was made on, which
   // means flipping to rows inside one view survives editing that view's filter
   // but does not leak onto the next one.
-  const layout: ViewLayout =
+  const layout: ListLayout =
     layoutOverride && layoutOverride.viewId === (activeView?.id ?? null)
       ? layoutOverride.layout
-      : activeView?.layout ?? 'rows'
+      : activeView?.layout ?? 'list'
   const dirty = activeView ? viewIsDirty(activeView, paramsNow, layout) : false
-  const isDefaultView = activeView?.id === DEFAULT_VIEW_ID
+  const isDefaultView = activeView?.builtin_key === DEFAULT_LIST_KEY
 
-  const chooseLayout = (next: ViewLayout) =>
+  const chooseLayout = (next: ListLayout) =>
     setLayoutOverride({ viewId: activeView?.id ?? null, layout: next })
 
-  const openView = (v: SavedView) => {
+  const openView = (v: SavedList) => {
     setActiveViewId(v.id)
     setLayoutOverride(null)
-    setParams(new URLSearchParams(v.params), { replace: true })
+    setParams(new URLSearchParams(listQuery(v)), { replace: true })
   }
 
-  const saveCurrentAs = (name: string, icon?: IconName) => {
+  const saveCurrentAs = async (name: string, icon?: IconName) => {
     setNaming(false)
-    const v: SavedView = { id: newViewId(), name, icon, params: paramsNow, layout }
-    setViews(saveView(v))
-    setActiveViewId(v.id)
-    announceViewsChanged()
+    const created = await createSmartList(callApi, name, paramsNow, icon)
+      .catch(() => null)
+    await reloadLists()
+    if (created) setActiveViewId(created.id)
+    announceListsChanged()
   }
 
   /**
@@ -633,33 +697,40 @@ export default function BooksPage() {
    * does both, because from the reader's side it is one edit.
    */
   const [renaming, setRenaming] = useState(false)
-  const applyRename = (name: string, icon?: IconName) => {
+  const applyRename = async (name: string, icon?: IconName) => {
     setRenaming(false)
     if (!activeView) return
-    setViews(renameView(activeView.id, name, icon))
-    announceViewsChanged()
+    await updateList(callApi, activeView.id, { name, icon }).catch(() => {})
+    await reloadLists()
+    announceListsChanged()
   }
 
   /** Close the view and go back to an unfiltered Books. */
   const leaveView = useCallback(() => {
+    // Forget the adopted list too, or leaving would land back on it.
+    setAdopted(null)
     setActiveViewId(null)
     setLayoutOverride(null)
     setParams(new URLSearchParams(), { replace: true })
   }, [setParams])
 
-  const commitView = () => {
+  const commitView = async () => {
     if (!activeView) return
-    setViews(saveView({ ...activeView, params: paramsNow, layout }))
-    announceViewsChanged()
+    await updateList(callApi, activeView.id, { query: paramsNow, layout })
+      .catch(() => {})
+    await reloadLists()
+    announceListsChanged()
     // The layout is part of the view now, so the override has nothing left to
     // override; leaving it would keep the bar reading "modified" after a save.
     setLayoutOverride(null)
   }
 
-  const removeView = (id: string) => {
-    setViews(deleteView(id))
-    announceViewsChanged()
+  const removeView = async (id: string) => {
+    await deleteList(callApi, id).catch(() => {})
+    await reloadLists()
+    announceListsChanged()
     if (activeViewId === id) setActiveViewId(null)
+    if (adopted === id) setAdopted(null)
     setLayoutOverride(null)
   }
 
@@ -685,14 +756,18 @@ export default function BooksPage() {
       />
 
       <div className="px-8 py-6">
-        <input
-          type="search"
+        <FilterSearch
           value={draftQuery}
-          onChange={e => setDraftQuery(e.target.value)}
-          placeholder={t('books.search_placeholder', {
-            defaultValue: 'Title, author, series, ISBN…',
-          })}
-          className="mb-6 w-full max-w-lg rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm text-content placeholder:text-content-muted focus:border-accent focus:outline-none"
+          onChange={setDraftQuery}
+          onCommitText={text => { setDraftQuery(text); apply({ ...state, query: text, page: 1 }) }}
+          facets={facets}
+          lists={views}
+          selection={state.selection}
+          onToggleFacet={(key, value) => apply(toggle(state, key, value))}
+          onPickContributor={id => {
+            if (state.contributors.includes(id)) return
+            apply({ ...state, contributors: [...state.contributors, id], page: 1 })
+          }}
         />
 
         <div className="grid gap-7 lg:grid-cols-[13rem_1fr]">
@@ -735,7 +810,7 @@ export default function BooksPage() {
                       amber text on an indigo chip. */}
                   {isDefaultView && !dirty ? (
                     <span className="inline-flex items-center gap-1.5 text-xs uppercase tracking-wide text-content-tertiary">
-                      <Icon name={viewIcon(activeView)} size={13} className="flex-none" />
+                      <Icon name={listIcon(activeView)} size={13} className="flex-none" />
                       {t('views.default_name', { defaultValue: 'Default view' })}
                     </span>
                   ) : (
@@ -743,7 +818,7 @@ export default function BooksPage() {
                       className={`inline-flex items-center gap-1.5 ${dirty ? 'lb-chip warn' : 'lb-chip on'}`}
                       onClick={leaveView}
                       title={t('views.leave', { defaultValue: 'Leave view' })}>
-                      <Icon name={viewIcon(activeView)} size={13} className="flex-none" />
+                      <Icon name={listIcon(activeView)} size={13} className="flex-none" />
                       {/* "Default" on its own names a state rather than a
                           thing, and reads oddly beside Up next or Favourites. */}
                       {isDefaultView
@@ -826,6 +901,21 @@ export default function BooksPage() {
                 </button>
               )}
 
+              {state.contributors.map(id => (
+                <button
+                  key={`contributor:${id}`}
+                  type="button"
+                  onClick={() => dropContributor(id)}
+                  className="lb-chip on"
+                  title={t('facets.remove', { defaultValue: 'Remove filter' })}
+                >
+                  {/* Named once the lookup lands. Until then the chip still has
+                      to be here and still has to be removable, so it says what
+                      it is rather than sitting blank. */}
+                  {contributorNames[id] ?? t('search.author', { defaultValue: 'Author' })} ×
+                </button>
+              ))}
+
               {activeChips.map(chip => (
                 <button
                   key={`${chip.key}:${chip.value}`}
@@ -901,13 +991,13 @@ export default function BooksPage() {
               )}
 
               <div className="flex overflow-hidden rounded-md border border-line-strong">
-                {(['rows', 'grid'] as ViewLayout[]).map(opt => (
+                {(['list', 'grid'] as ListLayout[]).map(opt => (
                   <button key={opt} type="button" onClick={() => chooseLayout(opt)}
                     aria-pressed={layout === opt}
                     className={`px-2.5 py-1 text-xs font-medium transition-colors ${
                       layout === opt ? 'bg-accent text-white' : 'text-content-secondary hover:bg-surface-inset'
                     }`}>
-                    {t(`views.layout_${opt}`, { defaultValue: opt === 'rows' ? 'Rows' : 'Grid' })}
+                    {t(`views.layout_${opt}`, { defaultValue: opt === 'list' ? 'Rows' : 'Grid' })}
                   </button>
                 ))}
               </div>
@@ -964,7 +1054,7 @@ export default function BooksPage() {
               </div>
             )}
 
-            {entries.length > 0 && layout === 'rows' && (
+            {entries.length > 0 && layout === 'list' && (
               <ul>
                 {entries.map(entry => entry.kind === 'series' ? (
                   <li key={`s:${entry.series_id}`}>
@@ -1259,7 +1349,7 @@ export default function BooksPage() {
         })}
         label={t('views.name_label', { defaultValue: 'Name' })}
         placeholder={t('views.name_placeholder', { defaultValue: 'Signed first editions' })}
-        icons={VIEW_ICONS}
+        icons={LIST_ICONS}
         initialIcon="newview"
         iconLabel={t('common.icon', { defaultValue: 'Icon' })}
         onCancel={() => setNaming(false)}
@@ -1271,8 +1361,8 @@ export default function BooksPage() {
         title={t('views.rename', { defaultValue: 'Rename' })}
         label={t('views.name_label', { defaultValue: 'Name' })}
         initialValue={activeView?.name ?? ''}
-        icons={VIEW_ICONS}
-        initialIcon={activeView ? viewIcon(activeView) : undefined}
+        icons={LIST_ICONS}
+        initialIcon={activeView ? listIcon(activeView) : undefined}
         iconLabel={t('common.icon', { defaultValue: 'Icon' })}
         onCancel={() => setRenaming(false)}
         onSubmit={applyRename}

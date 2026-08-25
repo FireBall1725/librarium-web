@@ -202,11 +202,11 @@ export default function BookBulkBar({
       }), lib))
 
   const putOnShelf = (id: string) =>
-    run(t('bulk.shelved', { defaultValue: 'Added to shelf' }), () =>
+    run(t('bulk.added_to_view', { defaultValue: 'Added to view' }), () =>
       addToShelf(callApi, selected, library!, id))
 
   const takeOffShelf = (id: string) =>
-    run(t('bulk.unshelved', { defaultValue: 'Removed from shelf' }), () =>
+    run(t('bulk.removed_from_view', { defaultValue: 'Removed from view' }), () =>
       removeFromShelf(callApi, selected, library!, id))
 
   const refreshCovers = () =>
@@ -270,9 +270,9 @@ export default function BookBulkBar({
                 emoji means typing "Fav" finds nothing. The icon is decoration
                 and belongs on the rail row, not in a control someone drives
                 from the keyboard. */}
-            <ActionSelect label={t('bulk.add_shelf', { defaultValue: 'Add to shelf' })}
+            <ActionSelect label={t('bulk.add_view', { defaultValue: 'Add to view' })}
               options={shelves} disabled={busy} onPick={putOnShelf} />
-            <ActionSelect label={t('bulk.remove_shelf', { defaultValue: 'Remove from shelf' })}
+            <ActionSelect label={t('bulk.remove_view', { defaultValue: 'Remove from view' })}
               options={shelves} disabled={busy} onPick={takeOffShelf} />
           </>
         ) : (

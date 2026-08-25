@@ -31,14 +31,12 @@
     "series": "Séries",
     "authors": "Auteurs",
     "back_to_library": "Retour à la bibliothèque",
-    "shelves": "Tablettes",
     "loans": "Prêts",
-    "lists": "Listes"
+    "shared_views": "Vues partagées"
   },
   "library_nav": {
     "books": "Books",
     "contributors": "Contributors",
-    "shelves": "Shelves",
     "series": "Series",
     "loans": "Loans",
     "members": "Members"
@@ -71,8 +69,7 @@
     "licences": "Licences",
     "tokens": "Jetons API",
     "ai_privacy": "IA et confidentialité",
-    "members": "Membres",
-    "shelves": "Tablettes"
+    "members": "Membres"
   },
   "theme": {
     "light": "☀ Light",
@@ -92,7 +89,6 @@
   "books": {
     "title": "Livres",
     "description": "Tout dans les bibliothèques auxquelles vous avez accès.",
-    "search_placeholder": "Titre, auteur, série, ISBN…",
     "count": "{{total}} livres",
     "empty_title": "Aucun résultat",
     "empty_filtered": "Assouplissez un filtre ou effacez-les tous.",
@@ -125,9 +121,9 @@
     "active": "{{count}} filtres",
     "ownership": "Possession",
     "remove": "Retirer le filtre",
-    "shelf": "Liste",
     "favourite": "Favori",
-    "favourited": "Mis en favori"
+    "favourited": "Mis en favori",
+    "shelf": "Vue"
   },
   "common": {
     "loading": "Chargement…",
@@ -139,7 +135,8 @@
     "planned": "Prévu",
     "delete": "Supprimer",
     "edit": "Modifier",
-    "icon": "Icône"
+    "icon": "Icône",
+    "colour": "Couleur"
   },
   "read_status": {
     "read": "Lu",
@@ -167,7 +164,18 @@
     "default_hint": "ce que Livres ouvre",
     "rename": "Renommer",
     "more": "Options de la vue",
-    "default_name": "Vue par défaut"
+    "default_name": "Vue par défaut",
+    "drop_to_delete": "Déposer ici pour supprimer",
+    "deleted": "{{name}} supprimée",
+    "delete_confirm": "Supprimer {{name}} ? Les {{count}} livres qu'elle contient restent dans votre bibliothèque.",
+    "builtin_kept": "{{name}} est fournie avec Librarium et réapparaît si elle est supprimée",
+    "moved": "{{name}} déplacée en position {{position}} sur {{total}}",
+    "empty": "Aucune pour l'instant. Filtrez la page Livres et enregistrez la vue.",
+    "share_with": "Partager avec",
+    "share_none": "Moi seulement",
+    "not_yours": "{{name}} est partagée par quelqu'un d'autre ; elle ne peut être supprimée que par cette personne",
+    "new_shared": "Nouvelle vue partagée",
+    "shared_empty": "Aucune pour l'instant. Une vue créée ici est visible par tous ceux qui ont accès à la bibliothèque."
   },
   "index": {
     "all": "Tous"
@@ -276,7 +284,10 @@
     "language": "Langue de l interface",
     "language_note": "Change la langue dans toute l interface web.",
     "read_badges": "Afficher les badges de lecture",
-    "read_badges_note": "Un coin coloré sur les couvertures des livres lus et en cours."
+    "read_badges_note": "Un coin coloré sur les couvertures des livres lus et en cours.",
+    "typeface": "Police",
+    "typeface_note": "OpenDyslexic alourdit le bas de chaque lettre et donne des formes distinctes aux caractères qui se ressemblent, ce que certaines personnes dyslexiques trouvent plus lisible.",
+    "typeface_sample": "Quelques livres"
   },
   "settings_account": {
     "profile_description": "Votre compte sur cette instance.",
@@ -284,7 +295,7 @@
     "ai_description": "Ce qu un fournisseur d IA peut voir de vos lectures. Désactivé sauf si vous l activez."
   },
   "ownership": {
-    "shelf": "Sur l étagère",
+    "shelf": "Sur l'étagère",
     "wishlist": "Liste de souhaits",
     "suggested": "Suggéré",
     "gap": "Volume manquant"
@@ -324,10 +335,10 @@
     "which_library": "Dans quelle bibliothèque appliquer l'action ? Les livres d'une seule bibliothèque ne sont pas touchés.",
     "no_common_library": "Ces livres n'ont aucune bibliothèque en commun. Réduisez la sélection et réessayez.",
     "tags_need_unambiguous": "Les étiquettes appartiennent à une bibliothèque, et certains de ces livres sont dans plusieurs. Filtrez par bibliothèque pour les modifier.",
-    "add_shelf": "Ajouter à une tablette",
-    "remove_shelf": "Retirer d'une tablette",
-    "shelved": "Ajoutés à la tablette",
-    "unshelved": "Retirés de la tablette"
+    "add_view": "Ajouter à une vue",
+    "remove_view": "Retirer d'une vue",
+    "added_to_view": "Ajouté à la vue",
+    "removed_from_view": "Retiré de la vue"
   },
   "library_picker": {
     "title_one": "Dans {{count}} bibliothèque",
@@ -353,22 +364,6 @@
       "library_editor": "Éditeur",
       "library_viewer": "Lecteur"
     }
-  },
-  "shelves_settings": {
-    "description": "Les tablettes appartiennent à une bibliothèque, pas à l'instance : chacune garde les siennes.",
-    "library": "Bibliothèque",
-    "library_hint": "Les tablettes sont propres à une bibliothèque. Choisissez celle que vous modifiez.",
-    "new": "Nouvelle tablette",
-    "editing": "Modification de {{name}}",
-    "name": "Nom",
-    "note": "Ce qu'on y range (facultatif)",
-    "colour": "Couleur",
-    "create": "Créer la tablette",
-    "empty": "Aucune tablette dans cette bibliothèque.",
-    "count_one": "{{count}} livre",
-    "count_other": "{{count}} livres",
-    "delete_title": "Supprimer {{name}} ?",
-    "delete_note": "La tablette disparaît ; les livres restent dans la bibliothèque."
   },
   "loans": {
     "description": "Les livres sortis de la maison, toutes bibliothèques confondues.",
@@ -407,20 +402,13 @@
     "series": "Séries",
     "authors": "Auteurs",
     "views": "Vues",
-    "shelves": "Tablettes",
     "libraries": "Bibliothèques",
     "loans": "Prêts",
     "pages": "Pages",
     "add_book": "Ajouter un livre",
     "new_loan": "Enregistrer un prêt",
-    "new_shelf": "Créer une tablette",
-    "import": "Importer des livres"
-  },
-  "lists": {
-    "new": "Nouvelle liste",
-    "new_description": "Enregistre le filtre actuellement appliqué aux livres. Vous pourrez le modifier plus tard.",
-    "name_label": "Nom",
-    "name_placeholder": "Éditions originales dédicacées"
+    "import": "Importer des livres",
+    "new_view": "Nouvelle vue"
   },
   "copies": {
     "title": "Exemplaires",
@@ -446,5 +434,9 @@
       "poor": "Mauvais",
       "ex_library": "Ex-bibliothèque"
     }
+  },
+  "search": {
+    "placeholder": "Rechercher, ou nommer un auteur, une étiquette ou une bibliothèque…",
+    "author": "Auteur"
   }
 }

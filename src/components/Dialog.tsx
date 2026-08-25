@@ -148,6 +148,13 @@ export function ConfirmDialog({
  * A form rather than a pair of buttons, so Enter submits and Escape cancels the
  * way a reader expects, without either being wired by hand.
  */
+/** What a prompt collected besides the name and the icon. */
+export interface PromptExtras {
+  color: string
+  /** A library id when the thing is being shared with one, null when private. */
+  sharedLibraryId: string | null
+}
+
 export function PromptDialog({
   open,
   title,
@@ -159,6 +166,13 @@ export function PromptDialog({
   icons,
   initialIcon,
   iconLabel,
+  colors,
+  initialColor,
+  colorLabel,
+  shareOptions,
+  initialShare,
+  shareLabel,
+  shareNoneLabel,
   onCancel,
   onSubmit,
 }: {
@@ -177,20 +191,44 @@ export function PromptDialog({
   icons?: IconName[]
   initialIcon?: IconName
   iconLabel?: string
+  /** Offer a colour too. Same reasoning as the icon: it is part of naming. */
+  colors?: Array<{ value: string; label: string }>
+  initialColor?: string
+  colorLabel?: string
+  /**
+   * Offer to share the thing with a library as it is made.
+   *
+   * Sharing used to live on its own settings page, so making something everyone
+   * could see meant knowing that page existed and building the thing a second
+   * time there.
+   */
+  shareOptions?: Array<{ id: string; name: string }>
+  /** Which library it starts shared with. Empty means private. */
+  initialShare?: string
+  shareLabel?: string
+  shareNoneLabel?: string
   onCancel: () => void
-  onSubmit: (value: string, icon?: IconName) => void
+  onSubmit: (value: string, icon?: IconName, extras?: PromptExtras) => void
 }) {
   const { t } = useTranslation()
   const inputId = useId()
   const input = useRef<HTMLInputElement>(null)
   const [icon, setIcon] = useState<IconName | undefined>(initialIcon)
+  const [color, setColor] = useState(initialColor ?? '')
+  /** Empty means private, which is what a view is unless someone says otherwise. */
+  const [share, setShare] = useState(initialShare ?? '')
 
   // The dialog is not unmounted between opens, so without this the second
   // thing you name arrives wearing the first one's icon.
-  const [syncedInitial, setSyncedInitial] = useState(initialIcon)
-  if (initialIcon !== syncedInitial) {
-    setSyncedInitial(initialIcon)
+  // Keyed on both, because the rail opens this dialog two ways with the same
+  // icon and only the library differing. Watching the icon alone meant the
+  // second way in arrived carrying the first one's library.
+  const [syncedInitial, setSyncedInitial] = useState(`${initialIcon}:${initialShare ?? ''}`)
+  if (`${initialIcon}:${initialShare ?? ''}` !== syncedInitial) {
+    setSyncedInitial(`${initialIcon}:${initialShare ?? ''}`)
     setIcon(initialIcon)
+    setColor(initialColor ?? '')
+    setShare(initialShare ?? '')
   }
 
   const submit = (e: React.FormEvent) => {
@@ -198,7 +236,7 @@ export function PromptDialog({
     const value = input.current?.value.trim() ?? ''
     // An empty name is a cancel, not an error to scold the reader about.
     if (!value) { onCancel(); return }
-    onSubmit(value, icon)
+    onSubmit(value, icon, { color, sharedLibraryId: share || null })
   }
 
   return (
@@ -254,6 +292,60 @@ export function PromptDialog({
                 </button>
               ))}
             </div>
+          </>
+        )}
+
+        {colors && colors.length > 0 && (
+          <>
+            <span className="lb-eyebrow mb-1.5 mt-4 block">
+              {colorLabel ?? t('common.colour', { defaultValue: 'Colour' })}
+            </span>
+            <div className="flex flex-wrap gap-1">
+              {colors.map(c => (
+                <button
+                  key={c.value || 'none'}
+                  type="button"
+                  onClick={() => setColor(c.value)}
+                  aria-label={c.label}
+                  aria-pressed={color === c.value}
+                  title={c.label}
+                  className={`h-7 w-7 rounded-md border transition-colors ${
+                    color === c.value ? 'border-accent' : 'border-line-strong hover:bg-surface-inset'
+                  }`}
+                >
+                  {/* Swatches rather than a dropdown: the colour is the label,
+                      and a menu of colour names makes you read to see one. */}
+                  <span
+                    className="mx-auto block h-3.5 w-3.5 rounded-full border border-line"
+                    style={c.value ? { backgroundColor: c.value, borderColor: c.value } : undefined}
+                  />
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+
+        {shareOptions && shareOptions.length > 0 && (
+          <>
+            <label htmlFor={`${inputId}-share`} className="lb-eyebrow mb-1.5 mt-4 block">
+              {shareLabel ?? t('common.share_with', { defaultValue: 'Share with' })}
+            </label>
+            <select
+              id={`${inputId}-share`}
+              className="lb-field"
+              value={share}
+              onChange={e => setShare(e.target.value)}
+            >
+              {/* A picker, not a checkbox. A shared view belongs to one
+                  library, so "shared" is not a yes-or-no question wherever
+                  there is more than one to choose between. */}
+              <option value="">
+                {shareNoneLabel ?? t('common.share_none', { defaultValue: 'Only me' })}
+              </option>
+              {shareOptions.map(o => (
+                <option key={o.id} value={o.id}>{o.name}</option>
+              ))}
+            </select>
           </>
         )}
       </form>
