@@ -431,3 +431,55 @@
 :root[data-reading-font="dyslexic"] body {
   line-height: 1.7;
 }
+
+/* ---------------------------------------------------------------------------
+   Draggable rail rows
+   ---------------------------------------------------------------------------
+   Both the grip and the drop line are taken out of flow on purpose. A grip that
+   occupied a flex slot, or a border that added two pixels, would push the row's
+   icon out of line with the nav icons above it, and the rail would visibly
+   shift the moment a drag started.
+--------------------------------------------------------------------------- */
+
+.lb-navrow.lb-draggable {
+  position: relative;
+}
+
+/* Sits in the row's existing left padding rather than taking a column. Shown on
+   hover and on keyboard focus, so it is discoverable without a mouse hovering
+   and without adding permanent clutter to every row. */
+.lb-drag-grip {
+  position: absolute;
+  left: 1px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  opacity: 0;
+  transition: opacity 120ms ease;
+  cursor: grab;
+  pointer-events: none;
+}
+
+.lb-navrow.lb-draggable:hover .lb-drag-grip,
+.lb-navrow.lb-draggable:focus-visible .lb-drag-grip,
+.lb-navrow.lb-dragging .lb-drag-grip {
+  opacity: 0.45;
+}
+
+/* Where the row would land. Drawn over the boundary rather than between the
+   rows, so nothing moves until the drop actually happens. */
+.lb-drop-line::after {
+  content: "";
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--accent);
+  pointer-events: none;
+}
+
+.lb-drop-line.lb-drop-before::after { top: -1px; }
+.lb-drop-line.lb-drop-after::after { bottom: -1px; }
+
+.lb-navrow.lb-dragging { opacity: 0.4; }

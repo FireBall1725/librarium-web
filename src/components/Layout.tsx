@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, NavLink, Outlet, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
@@ -8,7 +8,7 @@ import { applyReadingFont, readStoredReadingFont } from '../lib/readingFont'
 // Params are compared normalised, not by substring: "status=read" is a prefix
 // of "status=reading", so a substring test lights up Finished while the reader
 // is looking at Reading now.
-import { LISTS_CHANGED, announceListsChanged, ambiguousListNames, defaultListHref, fetchMissingCounts, importLegacyViews, listCount, listHref, listIcon, listNameKey, matchList, normaliseParams, visibleLists, type SavedList } from '../lib/lists'
+import { LISTS_CHANGED, announceListsChanged, ambiguousListNames, defaultListHref, fetchMissingCounts, importLegacyViews, listCount, listHref, listIcon, listNameKey, matchList, normaliseParams, deleteList, reorderLists, saveListOrder, visibleLists, type SavedList } from '../lib/lists'
 import { SETTINGS_TREE } from '../lib/settingsTree'
 import { COLLECTION_CHANGED } from '../lib/collectionEvents'
 import { attentionRoutes, useSettingsAttention } from '../lib/settingsAttention'
@@ -171,6 +171,12 @@ export default function Layout() {
   // filters at once. Those showed no number at all, which reads as broken
   // rather than as unknown.
   const [listCounts, setListCounts] = useState<Record<string, number>>({})
+  /** The row being dragged, and the one it is currently over. */
+  const [dragging, setDragging] = useState<string | null>(null)
+  const [dragOver, setDragOver] = useState<string | null>(null)
+  /** Announced to a screen reader after a keyboard move, which has no visual
+   *  equivalent of watching a row slide. */
+  const [orderSaid, setOrderSaid] = useState('')
   // The rail's search box opens the palette rather than holding text of its
   // own: it said "Search everything" while submitting to /books?q=, which
   // searched titles. Now it is a button that looks like the field it replaced.
@@ -272,6 +278,71 @@ export default function Layout() {
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
   }, [])
+
+  /**
+   * Move a row and persist it.
+   *
+   * The rail shows the new order immediately and the writes follow, because a
+   * list that snaps back while the server thinks about it reads as a failed
+   * drag. Only the rows whose position changed are written.
+   */
+  const moveList = useCallback((fromId: string, toId: string) => {
+    setLists(before => {
+      const after = reorderLists(before, fromId, toId)
+      if (after === before) return before
+      void saveListOrder(callApi, before, after).then(() => announceListsChanged())
+      return after
+    })
+  }, [callApi])
+
+  /**
+   * Reorder from the keyboard.
+   *
+   * A drag-only control cannot be reached without a mouse, which would make
+   * this the one part of the rail some readers could not use. Alt with an arrow
+   * moves the focused row; the arrows alone still walk the list.
+   */
+  const nudgeList = useCallback((id: string, delta: -1 | 1) => {
+    const shown = visibleLists(lists)
+    const at = shown.findIndex(l => l.id === id)
+    const to = at + delta
+    if (at < 0 || to < 0 || to >= shown.length) return
+    moveList(id, shown[to].id)
+    setOrderSaid(t('lists.moved', {
+      name: shown[at].name,
+      position: to + 1,
+      total: shown.length,
+      defaultValue: `${shown[at].name} moved to position ${to + 1} of ${shown.length}`,
+    }))
+  }, [lists, moveList, t])
+
+  /**
+   * Drop a list here to delete it.
+   *
+   * Sits below "New list" so the thing you reach for often is never the thing
+   * one slip past a destructive target.
+   *
+   * A list the product ships is refused rather than deleted. Built-ins are
+   * re-seeded on the next read, so deleting one would remove it and put it
+   * straight back, which reads as the drop having failed.
+   */
+  const dropDelete = useCallback(async (id: string) => {
+    const l = lists.find(x => x.id === id)
+    if (!l) return
+    // Asked only where something would actually be lost. A smart list is a
+    // saved filter and costs a moment to rebuild; a manual one holds books
+    // somebody put there by hand.
+    if (l.kind === 'manual' && l.book_count > 0 &&
+        !confirm(t('lists.delete_confirm', {
+          name: l.name, count: l.book_count,
+          defaultValue: `Delete ${l.name}? The ${l.book_count} books on it stay in your library.`,
+        }))) return
+
+    await deleteList(callApi, id).catch(() => null)
+    setLists(prev => prev.filter(x => x.id !== id))
+    announceListsChanged()
+    setOrderSaid(t('lists.deleted', { name: l.name, defaultValue: `${l.name} deleted` }))
+  }, [lists, callApi, t])
 
   const newList = () => {
     if (location.pathname !== '/books' || !normaliseParams(location.search)) {
@@ -522,6 +593,36 @@ export default function Layout() {
                 <NavLink
                   key={l.id}
                   to={listHref(l)}
+                  draggable
+                  onDragStart={e => {
+                    setDragging(l.id)
+                    e.dataTransfer.effectAllowed = 'move'
+                    // Firefox starts no drag at all without payload.
+                    e.dataTransfer.setData('text/plain', l.id)
+                  }}
+                  onDragEnd={() => { setDragging(null); setDragOver(null) }}
+                  onDragOver={e => {
+                    if (!dragging || dragging === l.id) return
+                    // Without this the drop never fires: the default is to
+                    // refuse.
+                    e.preventDefault()
+                    e.dataTransfer.dropEffect = 'move'
+                    setDragOver(l.id)
+                  }}
+                  onDragLeave={() => setDragOver(prev => (prev === l.id ? null : prev))}
+                  onDrop={e => {
+                    e.preventDefault()
+                    const from = dragging ?? e.dataTransfer.getData('text/plain')
+                    if (from && from !== l.id) moveList(from, l.id)
+                    setDragging(null)
+                    setDragOver(null)
+                  }}
+                  onKeyDown={e => {
+                    // Alt, so the bare arrows still walk the rail.
+                    if (!e.altKey) return
+                    if (e.key === 'ArrowUp') { e.preventDefault(); nudgeList(l.id, -1) }
+                    if (e.key === 'ArrowDown') { e.preventDefault(); nudgeList(l.id, 1) }
+                  }}
                   className={() => {
                     // A smart list is its filter, so it is current when the
                     // filter on screen is the one it stands for. A manual list
@@ -529,7 +630,22 @@ export default function Layout() {
                     const on = l.kind === 'smart'
                       ? location.pathname === '/books' && matchList([l], location.search) !== null
                       : location.pathname === '/books' && params.get('shelf') === l.id
-                    return `lb-navrow ${on ? 'on' : ''}`
+                    const dropping = dragOver === l.id && dragging !== l.id
+                    // Which side of this row the line goes on: dragging
+                    // downwards, the row lands after the one it is over.
+                    const shown = visibleLists(lists)
+                    const fromAt = shown.findIndex(x => x.id === dragging)
+                    const overAt = shown.findIndex(x => x.id === l.id)
+                    const after = fromAt >= 0 && overAt > fromAt
+                    return [
+                      'lb-navrow lb-draggable',
+                      on ? 'on' : '',
+                      dragging === l.id ? 'lb-dragging' : '',
+                      // A line where the row would land, rather than moving
+                      // everything under the cursor: the rail is short enough
+                      // that a live reshuffle reads as flicker.
+                      dropping ? `lb-drop-line ${after ? 'lb-drop-after' : 'lb-drop-before'}` : '',
+                    ].filter(Boolean).join(' ')
                   }}
                   title={[l.name, l.shared_library_id ? libraryNames.get(l.shared_library_id) : null, l.description]
                     .filter(Boolean).join(' · ') || undefined}
@@ -538,6 +654,17 @@ export default function Layout() {
                       app's own: a shelf used to store an arbitrary emoji,
                       which made them the one thing in the rail not drawn from
                       the same set as everything above. */}
+                  {/* The universal six-dot grip, so a row reads as grabbable
+                      without having to be dragged to find out. Absolutely
+                      positioned in the row's existing padding, so the icon
+                      below stays in line with the nav icons above. */}
+                  <span className="lb-drag-grip" aria-hidden="true">
+                    <svg width="6" height="12" viewBox="0 0 6 12" fill="currentColor">
+                      <circle cx="1.5" cy="2" r="1" /><circle cx="4.5" cy="2" r="1" />
+                      <circle cx="1.5" cy="6" r="1" /><circle cx="4.5" cy="6" r="1" />
+                      <circle cx="1.5" cy="10" r="1" /><circle cx="4.5" cy="10" r="1" />
+                    </svg>
+                  </span>
                   <Icon name={listIcon(l)} style={l.color ? { color: l.color } : undefined} />
                   <span className="min-w-0 flex-1 truncate">
                     {l.name}
@@ -556,6 +683,38 @@ export default function Layout() {
                 </NavLink>
               ))}
               <NavRow icon="newview" label={t('lists.new', { defaultValue: 'New list' })} onClick={newList} />
+
+              {/* Only while something is being dragged. A bin sitting there
+                  permanently is a thing to hit by accident on a rail people
+                  click through all day. */}
+              {dragging && (
+                <div
+                  onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setDragOver('__delete__') }}
+                  onDragLeave={() => setDragOver(prev => (prev === '__delete__' ? null : prev))}
+                  onDrop={e => {
+                    e.preventDefault()
+                    const from = dragging ?? e.dataTransfer.getData('text/plain')
+                    setDragging(null)
+                    setDragOver(null)
+                    if (from) void dropDelete(from)
+                  }}
+                  className={`mt-1 flex items-center gap-2 rounded-md px-2 py-2 text-xs font-medium transition-colors ${
+                    dragOver === '__delete__'
+                      ? 'bg-danger text-white'
+                      : 'border border-dashed border-danger-line text-danger'
+                  }`}
+                >
+                  <svg className="w-3.5 h-3.5 flex-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  {t('lists.drop_to_delete', { defaultValue: 'Drop here to delete' })}
+                </div>
+              )}
+
+              {/* A keyboard move has no equivalent of watching a row slide, so
+                  the new position is said out loud instead. */}
+              <span aria-live="polite" className="sr-only">{orderSaid}</span>
             </>
           )}
 

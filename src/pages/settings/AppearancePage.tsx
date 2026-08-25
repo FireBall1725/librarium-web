@@ -136,12 +136,22 @@ export default function AppearancePage() {
                 }`}
               >
                 {/* Set in the face it offers, so the choice is made by reading
-                    it rather than by reading its name. */}
+                    it rather than by reading its name.
+
+                    Both cards name their family, not just the dyslexic one.
+                    The override that applies the choice is deliberately broad
+                    enough to beat the nineteen places reference.css names a
+                    family, which means it also reaches into this card: with
+                    OpenDyslexic on, the Default sample rendered in
+                    OpenDyslexic and the picker showed the same face twice. An
+                    inline style outranks it. */}
                 <span
                   className="block text-lg text-content"
-                  style={meta.id === 'dyslexic'
-                    ? { fontFamily: '"OpenDyslexic", sans-serif' }
-                    : undefined}
+                  style={{
+                    fontFamily: meta.id === 'dyslexic'
+                      ? '"OpenDyslexic", sans-serif'
+                      : '"Cormorant Garamond", Georgia, serif',
+                  }}
                 >
                   {t('settings_appearance.typeface_sample', { defaultValue: 'Handful of books' })}
                 </span>

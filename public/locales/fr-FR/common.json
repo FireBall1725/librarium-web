@@ -423,7 +423,12 @@
     "new": "Nouvelle liste",
     "new_description": "Enregistre le filtre actuellement appliqué aux livres. Vous pourrez le modifier plus tard.",
     "name_label": "Nom",
-    "name_placeholder": "Éditions originales dédicacées"
+    "name_placeholder": "Éditions originales dédicacées",
+    "drop_to_delete": "Déposer ici pour supprimer",
+    "deleted": "{{name}} supprimée",
+    "delete_confirm": "Supprimer {{name}} ? Les {{count}} livres qu'elle contient restent dans votre bibliothèque.",
+    "builtin_kept": "{{name}} est fournie avec Librarium et réapparaît si elle est supprimée",
+    "moved": "{{name}} déplacée en position {{position}} sur {{total}}"
   },
   "copies": {
     "title": "Exemplaires",

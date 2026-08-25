@@ -150,6 +150,56 @@ export async function fetchMissingCounts(
   return out
 }
 
+/**
+ * Move one list to another position, returning the whole set renumbered.
+ *
+ * Pure, so the rail can show the result before the server has agreed and the
+ * reader never watches a row snap back and forth.
+ *
+ * Every visible row is renumbered from zero rather than only the ones that
+ * moved. Positions arrive from a seed that gave several lists the same number,
+ * so nudging one and leaving the rest would order the ties by name and shuffle
+ * rows nobody touched.
+ */
+export function reorderLists(lists: SavedList[], fromId: string, toId: string): SavedList[] {
+  const shown = visibleLists(lists)
+  const from = shown.findIndex(l => l.id === fromId)
+  const to = shown.findIndex(l => l.id === toId)
+  if (from < 0 || to < 0 || from === to) return lists
+
+  const moved = [...shown]
+  const [row] = moved.splice(from, 1)
+  moved.splice(to, 0, row)
+
+  const positions = new Map(moved.map((l, i) => [l.id, i]))
+  return lists.map(l => {
+    const next = positions.get(l.id)
+    return next === undefined || next === l.display_order
+      ? l
+      : { ...l, display_order: next }
+  })
+}
+
+/**
+ * Persist an order, writing only the rows whose position actually changed.
+ *
+ * The hidden default is left where it is: it is not in the rail, so it has no
+ * position a reader could have meant to change.
+ */
+export function saveListOrder(
+  callApi: CallApi, before: SavedList[], after: SavedList[],
+): Promise<unknown[]> {
+  const was = new Map(before.map(l => [l.id, l.display_order]))
+  return Promise.all(
+    after
+      .filter(l => was.get(l.id) !== l.display_order)
+      .map(l => callApi(`/api/v1/me/lists/${l.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ display_order: l.display_order }),
+      }).catch(() => null)),
+  )
+}
+
 /** Icon for a list: its own, then the built-in's, then one for the kind. */
 export const listIcon = (l: SavedList): IconName =>
   listIconName(l.icon, l.builtin_key, l.kind)

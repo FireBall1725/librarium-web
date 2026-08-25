@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from 'vitest'
 import {
   ambiguousListNames,
   defaultListHref,
+  reorderLists,
   importLegacyViews,
   isDirty,
   listCount,
@@ -260,5 +261,59 @@ describe('importing views saved in this browser', () => {
       .mockResolvedValueOnce({})
     expect(await importLegacyViews(post, s)).toBe(1)
     expect(post).toHaveBeenCalledTimes(2)
+  })
+})
+
+describe('reordering', () => {
+  const rail = () => [
+    list({ id: 'a', name: 'A', display_order: 0 }),
+    list({ id: 'b', name: 'B', display_order: 1 }),
+    list({ id: 'c', name: 'C', display_order: 2 }),
+  ]
+
+  const order = (ls: ReturnType<typeof rail>) =>
+    visibleLists(ls).map(l => l.id).join('')
+
+  it('moves a row down', () => {
+    expect(order(reorderLists(rail(), 'a', 'c'))).toBe('bca')
+  })
+
+  it('moves a row up', () => {
+    expect(order(reorderLists(rail(), 'c', 'a'))).toBe('cab')
+  })
+
+  it('renumbers from zero rather than nudging one row', () => {
+    // Positions arrive from a seed that gave several lists the same number, so
+    // moving one and leaving the rest would order the ties by name and shuffle
+    // rows nobody touched.
+    const tied = [
+      list({ id: 'a', name: 'A', display_order: 0 }),
+      list({ id: 'b', name: 'B', display_order: 0 }),
+      list({ id: 'c', name: 'C', display_order: 0 }),
+    ]
+    const after = reorderLists(tied, 'c', 'a')
+    expect(after.map(l => l.display_order).sort()).toEqual([0, 1, 2])
+    expect(order(after)).toBe('cab')
+  })
+
+  it('leaves everything alone when the row lands where it started', () => {
+    const before = rail()
+    expect(reorderLists(before, 'b', 'b')).toBe(before)
+  })
+
+  it('ignores a row that is not in the rail', () => {
+    const before = rail()
+    expect(reorderLists(before, 'ghost', 'a')).toBe(before)
+  })
+
+  it('does not move the hidden default, which has no position in the rail', () => {
+    const withDefault = [
+      list({ id: 'd', name: 'Default', builtin_key: 'default', hidden: true, display_order: 0 }),
+      list({ id: 'a', name: 'A', display_order: 1 }),
+      list({ id: 'b', name: 'B', display_order: 2 }),
+    ]
+    const after = reorderLists(withDefault, 'b', 'a')
+    expect(after.find(l => l.id === 'd')?.display_order).toBe(0)
+    expect(order(after)).toBe('ba')
   })
 })

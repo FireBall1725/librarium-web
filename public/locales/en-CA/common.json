@@ -423,7 +423,12 @@
     "new": "New list",
     "new_description": "Saves the filter you have on Books right now. You can change it later.",
     "name_label": "Name",
-    "name_placeholder": "Signed first editions"
+    "name_placeholder": "Signed first editions",
+    "drop_to_delete": "Drop here to delete",
+    "deleted": "{{name}} deleted",
+    "delete_confirm": "Delete {{name}}? The {{count}} books on it stay in your library.",
+    "builtin_kept": "{{name}} ships with Librarium and comes back if removed",
+    "moved": "{{name}} moved to position {{position}} of {{total}}"
   },
   "copies": {
     "title": "Copies",
