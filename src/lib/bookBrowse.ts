@@ -63,6 +63,15 @@ export interface BrowseState {
    * series id; empty means no drill-in.
    */
   series: string
+  /**
+   * Contributor ids to narrow to.
+   *
+   * Not a facet, though it filters like one. A collection has hundreds of
+   * contributors, so the rail would be a wall rather than a list, and the
+   * counted-dimension machinery a facet carries would have to count all of
+   * them on every request. Reached by typing a name instead.
+   */
+  contributors: string[]
 }
 
 export const emptySelection = (): Selection => ({
@@ -124,6 +133,7 @@ export function readState(params: URLSearchParams): BrowseState {
     // everything on screen.
     grouped: params.get('group') === 'series' && !params.get('series'),
     series: params.get('series') ?? '',
+    contributors: (params.get('contributor') ?? '').split(',').filter(Boolean),
   }
 }
 
@@ -143,6 +153,7 @@ export function writeState(state: BrowseState): URLSearchParams {
     if (vals.length) params.set(PARAM[key], vals.join(','))
   }
   if (state.query) params.set('q', state.query)
+  if (state.contributors.length) params.set('contributor', state.contributors.join(','))
   if (state.series) params.set('series', state.series)
   if (state.grouped && !state.series) params.set('group', 'series')
   if (state.page > 1) params.set('page', String(state.page))
@@ -181,6 +192,10 @@ export function toApiQuery(state: BrowseState, perPage: number, forFacets = fals
   // The drill-in narrows the facet counts too, so the rail describes the
   // series you opened rather than the whole shelf.
   if (state.series) params.set('series', state.series)
+
+  // Sent for the facet request as well, so choosing an author leaves the rail
+  // describing that author's books rather than the whole shelf.
+  if (state.contributors.length) params.set('contributor', state.contributors.join(','))
 
   if (!forFacets) {
     params.set('page', String(state.page))

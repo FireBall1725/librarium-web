@@ -17,10 +17,12 @@ import PageHeader from '../components/PageHeader'
 import { PromptDialog } from '../components/Dialog'
 import AddBookModal from '../components/AddBookModal'
 import FacetRail from '../components/FacetRail'
+import FilterSearch from '../components/FilterSearch'
 import BookBulkBar from '../components/BookBulkBar'
 import LibraryPickerDialog from '../components/LibraryPickerDialog'
 import BookCover, { BookCoverThumb } from '../components/BookCover'
 import { usePageTitle } from '../hooks/usePageTitle'
+import { useContributorNames } from '../hooks/useContributorNames'
 import type { TFunction } from 'i18next'
 import { Icon, type IconName } from '../lib/icons'
 import { LIST_ICONS } from '../lib/listIcons'
@@ -510,11 +512,12 @@ export default function BooksPage() {
     setParams(writeState(next), { replace: true })
   }, [setParams])
 
+  // Emptying the box clears the search. Text is otherwise committed on Enter
+  // rather than as it is typed: the box now offers suggestions, and searching
+  // for each half-typed name reflowed the page under the dropdown and, when a
+  // list was open, reported it modified against a filter nobody had chosen yet.
   useEffect(() => {
-    const handle = setTimeout(() => {
-      if (draftQuery !== state.query) apply({ ...state, query: draftQuery, page: 1 })
-    }, 300)
-    return () => clearTimeout(handle)
+    if (draftQuery === '' && state.query !== '') apply({ ...state, query: '', page: 1 })
   }, [draftQuery, state, apply])
 
   // Results and counts are two requests but one logical fetch. A stale-response
@@ -594,7 +597,13 @@ export default function BooksPage() {
     return null
   }, [entries, state.series])
 
-  const activeFilters = selectionCount(state.selection)
+  // Contributors filter like a facet but are not one, so they are counted and
+  // chipped alongside rather than inside the selection.
+  const contributorNames = useContributorNames(state.contributors)
+  const activeFilters = selectionCount(state.selection) + state.contributors.length
+
+  const dropContributor = (id: string) =>
+    apply({ ...state, contributors: state.contributors.filter(c => c !== id), page: 1 })
 
   // A view is "open" either because it was clicked, or because the filter on
   // screen describes it. The second case is not a nicety: the sidebar links only
@@ -729,14 +738,18 @@ export default function BooksPage() {
       />
 
       <div className="px-8 py-6">
-        <input
-          type="search"
+        <FilterSearch
           value={draftQuery}
-          onChange={e => setDraftQuery(e.target.value)}
-          placeholder={t('books.search_placeholder', {
-            defaultValue: 'Title, author, series, ISBN…',
-          })}
-          className="mb-6 w-full max-w-lg rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm text-content placeholder:text-content-muted focus:border-accent focus:outline-none"
+          onChange={setDraftQuery}
+          onCommitText={text => { setDraftQuery(text); apply({ ...state, query: text, page: 1 }) }}
+          facets={facets}
+          lists={views}
+          selection={state.selection}
+          onToggleFacet={(key, value) => apply(toggle(state, key, value))}
+          onPickContributor={id => {
+            if (state.contributors.includes(id)) return
+            apply({ ...state, contributors: [...state.contributors, id], page: 1 })
+          }}
         />
 
         <div className="grid gap-7 lg:grid-cols-[13rem_1fr]">
@@ -869,6 +882,21 @@ export default function BooksPage() {
                   {seriesLabel ?? t('books.one_series', { defaultValue: 'One series' })} ×
                 </button>
               )}
+
+              {state.contributors.map(id => (
+                <button
+                  key={`contributor:${id}`}
+                  type="button"
+                  onClick={() => dropContributor(id)}
+                  className="lb-chip on"
+                  title={t('facets.remove', { defaultValue: 'Remove filter' })}
+                >
+                  {/* Named once the lookup lands. Until then the chip still has
+                      to be here and still has to be removable, so it says what
+                      it is rather than sitting blank. */}
+                  {contributorNames[id] ?? t('search.author', { defaultValue: 'Author' })} ×
+                </button>
+              ))}
 
               {activeChips.map(chip => (
                 <button

@@ -92,7 +92,6 @@
   "books": {
     "title": "Books",
     "description": "Everything across the libraries you can read.",
-    "search_placeholder": "Title, author, series, ISBN…",
     "count": "{{total}} books",
     "empty_title": "Nothing matches",
     "empty_filtered": "Loosen a filter, or clear them all.",
@@ -455,5 +454,9 @@
       "poor": "Poor",
       "ex_library": "Ex-library"
     }
+  },
+  "search": {
+    "placeholder": "Search, or name an author, tag or library…",
+    "author": "Author"
   }
 }

@@ -24,6 +24,7 @@ const base = (over: Partial<BrowseState> = {}): BrowseState => ({
   page: 1,
   grouped: false,
   series: '',
+  contributors: [],
   ...over,
 })
 
@@ -40,6 +41,19 @@ describe('URL round trip', () => {
       page: 4,
     })
     expect(readState(writeState(state))).toEqual(state)
+  })
+
+  it('carries contributors, which filter without being a facet', () => {
+    const state = base({ contributors: ['c1', 'c2'] })
+    expect(writeState(state).get('contributor')).toBe('c1,c2')
+    expect(readState(writeState(state))).toEqual(state)
+  })
+
+  it('sends contributors to the facet request as well', () => {
+    // Otherwise the rail would count the whole shelf while the rows showed one
+    // author's books, which is the count-disagrees-with-its-rows failure again.
+    const q = toApiQuery(base({ contributors: ['c1'] }), 50, true)
+    expect(new URLSearchParams(q).get('contributor')).toBe('c1')
   })
 
   it('omits defaults so a plain link stays clean', () => {

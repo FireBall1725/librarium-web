@@ -92,7 +92,6 @@
   "books": {
     "title": "Livres",
     "description": "Tout dans les bibliothèques auxquelles vous avez accès.",
-    "search_placeholder": "Titre, auteur, série, ISBN…",
     "count": "{{total}} livres",
     "empty_title": "Aucun résultat",
     "empty_filtered": "Assouplissez un filtre ou effacez-les tous.",
@@ -455,5 +454,9 @@
       "poor": "Mauvais",
       "ex_library": "Ex-bibliothèque"
     }
+  },
+  "search": {
+    "placeholder": "Rechercher, ou nommer un auteur, une étiquette ou une bibliothèque…",
+    "author": "Auteur"
   }
 }
