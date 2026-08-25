@@ -239,6 +239,28 @@ export function matchList(lists: SavedList[], params: string): SavedList | null 
   return matching.find(l => l.builtin_key === DEFAULT_LIST_KEY) ?? matching[0]
 }
 
+/**
+ * Which list is open, given what the filter matches and what was open before.
+ *
+ * Matching alone is not enough. A list's filter can be edited into looking like
+ * another list's: clear the search on a list whose filter is only a search, and
+ * what is left is the default's empty filter. Matching then jumped to the
+ * default, so the list could not be edited at all, which is the one thing a
+ * list is for.
+ *
+ * The two cases are identical in the URL, so the caller passes what the URL
+ * cannot say: whether this was a navigation or an edit in place. Editing keeps
+ * whatever was open; navigating adopts whatever the new filter matches.
+ */
+export function adoptedList(
+  matched: SavedList | null,
+  open: string | null,
+  editedInPlace: boolean,
+): string | null {
+  if (editedInPlace || !matched) return open
+  return matched.id
+}
+
 /** Where the books nav row points: the default list's filter. */
 export function defaultListHref(lists: SavedList[]): string {
   const d = lists.find(l => l.builtin_key === DEFAULT_LIST_KEY)

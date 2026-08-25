@@ -9,7 +9,7 @@
 // tranches replace it.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useNavigationType, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { announceCollectionChanged } from '../lib/collectionEvents'
 import { useAuth } from '../auth/AuthContext'
@@ -52,6 +52,7 @@ import {
   isDirty as viewIsDirty,
   listIcon,
   listQuery,
+  adoptedList,
   matchList,
   updateList,
   DEFAULT_LIST_KEY,
@@ -629,15 +630,32 @@ export default function BooksPage() {
    * matches again and takes over.
    */
   const matchedNow = matchList(views, paramsNow)
+
+  // Only a real navigation changes which list is open. Editing a list's filter
+  // can drift it into looking like another one: clear the search on Bleach and
+  // what is left is the Default's empty filter, so matching alone jumped to the
+  // Default and Bleach could not be edited at all. The two cases are identical
+  // in the URL, so the history action is what tells them apart. The rail links
+  // push; apply() replaces.
+  const editedInPlace = useNavigationType() === 'REPLACE'
+  const adoptedNow = adoptedList(matchedNow, adopted, editedInPlace)
+
   // Adjusted during render rather than in an effect: React re-runs this
   // component before touching the DOM, so the list is already adopted by the
-  // time anything is drawn and there is no frame showing the wrong one.
-  if (matchedNow && adopted !== matchedNow.id) setAdopted(matchedNow.id)
+  // time anything is drawn and there is no frame showing the wrong one. The
+  // value is computed above rather than read back from state, so this render
+  // uses it too.
+  if (adoptedNow !== adopted) setAdopted(adoptedNow)
+  // Navigating to a different list drops a pinned one, or Revert would leave
+  // the old list open while the rail said otherwise.
+  if (!editedInPlace && matchedNow && activeViewId && activeViewId !== matchedNow.id) {
+    setActiveViewId(null)
+  }
 
   const activeView =
     views.find(v => v.id === activeViewId) ??
+    views.find(v => v.id === adoptedNow) ??
     matchedNow ??
-    views.find(v => v.id === adopted) ??
     views.find(v => v.builtin_key === DEFAULT_LIST_KEY) ??
     null
 

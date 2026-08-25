@@ -3,6 +3,7 @@
 
 import { describe, expect, it, vi } from 'vitest'
 import {
+  adoptedList,
   ambiguousListNames,
   defaultListHref,
   reorderLists,
@@ -127,6 +128,36 @@ describe('matching the filter on screen', () => {
   it('never matches a manual list, whose membership is not a filter', () => {
     const manual = list({ id: 'm', kind: 'manual', filter: null })
     expect(matchList([manual], '')).toBeNull()
+  })
+})
+
+describe('which list stays open', () => {
+  const bleach = list({ id: 'bleach', filter: { query: 'q=bleach' } })
+  const dflt = list({ id: 'd', builtin_key: 'default', filter: { query: '' } })
+
+  it('keeps the open list when an edit makes the filter match another', () => {
+    // Clearing the search on Bleach leaves the default's empty filter. Adopting
+    // the match here is how Bleach became uneditable: the first change to it
+    // switched the page to the default and Save changes pointed elsewhere.
+    expect(adoptedList(dflt, 'bleach', true)).toBe('bleach')
+  })
+
+  it('adopts the match when the reader navigated to it', () => {
+    expect(adoptedList(dflt, 'bleach', false)).toBe('d')
+  })
+
+  it('keeps the open list when an edit matches nothing', () => {
+    expect(adoptedList(null, 'bleach', true)).toBe('bleach')
+  })
+
+  it('keeps it when a navigation matches nothing either', () => {
+    // Drilling into a series is a navigation to a filter no list stands for.
+    // Forgetting the list there would leave the edit with nowhere to save to.
+    expect(adoptedList(null, 'bleach', false)).toBe('bleach')
+  })
+
+  it('adopts on a first arrival, when nothing was open', () => {
+    expect(adoptedList(bleach, null, false)).toBe('bleach')
   })
 })
 
