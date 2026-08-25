@@ -73,8 +73,16 @@ export const visibleLists = (lists: SavedList[]): SavedList[] =>
  * the facet rail knows that. A filter naming more than one thing has no single
  * facet to read, so it gets no number rather than a wrong one.
  */
-export function listCount(l: SavedList, facets: BookFacets | null): number | undefined {
+export function listCount(
+  l: SavedList,
+  facets: BookFacets | null,
+  fetched?: Record<string, number>,
+): number | undefined {
   if (l.kind === 'manual') return l.book_count
+  // A count asked for directly wins: it answers the whole filter, where the
+  // facet block can only answer one dimension of it.
+  const direct = fetched?.[listQuery(l)]
+  if (direct !== undefined) return direct
   if (!facets) return undefined
 
   const params = new URLSearchParams(listQuery(l))
@@ -94,6 +102,52 @@ export function listCount(l: SavedList, facets: BookFacets | null): number | und
   // lists values something matched, so a list whose answer is zero had no row
   // and rendered no number at all, which reads as broken rather than as empty.
   return values.find(v => v.value === value)?.count ?? 0
+}
+
+/**
+ * Counts for lists the facet block cannot answer.
+ *
+ * The rail draws every number from one unfiltered facet request, which can only
+ * answer a filter that maps to exactly one facet: `status=read`, `tag=signed`.
+ * A list built on a search, or on two filters at once, has no facet to read and
+ * used to show no number at all, which reads as broken rather than as unknown.
+ *
+ * These ask the books endpoint instead, one small request each, for one page of
+ * one item so only the total comes back. Keyed by query rather than by list, so
+ * two lists standing for the same filter cost one request.
+ */
+export async function fetchMissingCounts(
+  callApi: CallApi,
+  lists: SavedList[],
+  facets: BookFacets | null,
+  /**
+   * The scope the rows open in.
+   *
+   * Counted in the same scope the facet block is, or the rail promises more
+   * than the page delivers: an unscoped count includes suggestions the reader
+   * does not own and would never see on the page they just clicked.
+   */
+  scope = '',
+): Promise<Record<string, number>> {
+  const queries = new Set(
+    lists
+      .filter(l => l.kind === 'smart' && listCount(l, facets) === undefined)
+      .map(l => listQuery(l))
+      .filter(q => q.length > 0),
+  )
+
+  const out: Record<string, number> = {}
+  await Promise.all([...queries].map(async query => {
+    try {
+      const res = await callApi<{ total: number }>(
+        `/api/v1/me/books?${query}${scope ? `&${scope}` : ''}&page=1&per_page=1`)
+      if (typeof res?.total === 'number') out[query] = res.total
+    } catch {
+      // A count is an enhancement, not the nav. A list that cannot be counted
+      // shows no number, which is what it did before this existed.
+    }
+  }))
+  return out
 }
 
 /** Icon for a list: its own, then the built-in's, then one for the kind. */

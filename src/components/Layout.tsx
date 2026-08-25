@@ -7,7 +7,7 @@ import { applyTheme, readStoredTheme, storeTheme } from '../lib/theme'
 // Params are compared normalised, not by substring: "status=read" is a prefix
 // of "status=reading", so a substring test lights up Finished while the reader
 // is looking at Reading now.
-import { LISTS_CHANGED, announceListsChanged, ambiguousListNames, defaultListHref, importLegacyViews, listCount, listHref, listIcon, listNameKey, matchList, normaliseParams, visibleLists, type SavedList } from '../lib/lists'
+import { LISTS_CHANGED, announceListsChanged, ambiguousListNames, defaultListHref, fetchMissingCounts, importLegacyViews, listCount, listHref, listIcon, listNameKey, matchList, normaliseParams, visibleLists, type SavedList } from '../lib/lists'
 import { SETTINGS_TREE } from '../lib/settingsTree'
 import { COLLECTION_CHANGED } from '../lib/collectionEvents'
 import { attentionRoutes, useSettingsAttention } from '../lib/settingsAttention'
@@ -165,6 +165,10 @@ export default function Layout() {
   // difference is how membership is settled, and that is a badge on a row
   // rather than a second heading.
   const [lists, setLists] = useState<SavedList[]>([])
+  // Counts for the lists the facet block cannot answer: a search, or two
+  // filters at once. Those showed no number at all, which reads as broken
+  // rather than as unknown.
+  const [listCounts, setListCounts] = useState<Record<string, number>>({})
   // The rail's search box opens the palette rather than holding text of its
   // own: it said "Search everything" while submitting to /books?q=, which
   // searched titles. Now it is a button that looks like the field it replaced.
@@ -222,6 +226,17 @@ export default function Layout() {
       window.removeEventListener(LISTS_CHANGED, load)
     }
   }, [callApi])
+
+  // Asked once the lists and the facets are both in hand, since which lists
+  // need asking about depends on what the facets already answered.
+  useEffect(() => {
+    if (lists.length === 0) return
+    let cancelled = false
+    void fetchMissingCounts(callApi, lists, facets,
+      `${PARAM.ownership}=${DEFAULT_OWNERSHIP.join(',')}`)
+      .then(c => { if (!cancelled) setListCounts(c) })
+    return () => { cancelled = true }
+  }, [callApi, lists, facets])
 
   // Views used to live in this browser's localStorage, so they exist nowhere
   // else and cannot be left behind. Runs once per browser and skips the
@@ -530,7 +545,7 @@ export default function Layout() {
                       </span>
                     )}
                   </span>
-                  <ViewCount value={listCount(l, facets)} />
+                  <ViewCount value={listCount(l, facets, listCounts)} />
                 </NavLink>
               ))}
               <NavRow icon="newview" label={t('lists.new', { defaultValue: 'New list' })} onClick={newList} />

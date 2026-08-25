@@ -152,6 +152,19 @@ describe('the number beside a row', () => {
     expect(listCount(list({ filter: { query: 'tag=signed&page=2' } }), facets)).toBe(7)
   })
 
+  it('prefers a count asked for directly over the facet block', () => {
+    // The direct count answers the whole filter; the facet block can only
+    // answer one dimension of it.
+    const l = list({ filter: { query: 'status=read' } })
+    expect(listCount(l, facets, { 'status=read': 99 })).toBe(99)
+  })
+
+  it('answers a search list, which no facet covers', () => {
+    const l = list({ filter: { query: 'q=bleach' } })
+    expect(listCount(l, facets)).toBeUndefined()
+    expect(listCount(l, facets, { 'q=bleach': 12 })).toBe(12)
+  })
+
   it('declines a two-facet list rather than guessing', () => {
     expect(listCount(list({ filter: { query: 'status=read&rating=5' } }), facets)).toBeUndefined()
   })
