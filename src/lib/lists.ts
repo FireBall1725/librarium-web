@@ -108,9 +108,17 @@ export function normaliseParams(params: string): string {
   return new URLSearchParams(entries).toString()
 }
 
-/** Whether the current filter differs from what the list stores. */
-export const isDirty = (l: SavedList, params: string): boolean =>
-  normaliseParams(listQuery(l)) !== normaliseParams(params)
+/**
+ * Whether what is on screen differs from what the list stores.
+ *
+ * Layout counts. It is part of the list rather than a separate toggle the
+ * reader resets on every switch, so flipping rows to grid is an edit to the
+ * list and the bar has to offer to save it. Comparing only the filter meant
+ * that edit could not be saved at all.
+ */
+export const isDirty = (l: SavedList, params: string, layout?: ListLayout): boolean =>
+  normaliseParams(listQuery(l)) !== normaliseParams(params) ||
+  (layout !== undefined && layout !== l.layout)
 
 /**
  * The list standing for a filter, if one does.

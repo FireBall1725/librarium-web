@@ -84,6 +84,20 @@ describe('dirty tracking', () => {
     expect(isDirty(l, 'status=unread')).toBe(true)
   })
 
+  it('notices a changed layout, since layout belongs to the list', () => {
+    // Not decoration: layout is stored on the list, so flipping rows to grid is
+    // an edit. Leaving it out of the comparison meant the bar never offered to
+    // save it and the change could not be kept.
+    const l = list({ filter: { query: 'status=read' }, layout: 'list' })
+    expect(isDirty(l, 'status=read', 'grid')).toBe(true)
+    expect(isDirty(l, 'status=read', 'list')).toBe(false)
+  })
+
+  it('ignores layout when the caller does not track one', () => {
+    const l = list({ filter: { query: 'status=read' }, layout: 'list' })
+    expect(isDirty(l, 'status=read')).toBe(false)
+  })
+
   it('normalises to a stable spelling', () => {
     expect(normaliseParams('b=2&a=1&page=9')).toBe(normaliseParams('a=1&b=2'))
   })

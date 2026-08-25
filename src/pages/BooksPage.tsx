@@ -620,10 +620,7 @@ export default function BooksPage() {
     layoutOverride && layoutOverride.viewId === (activeView?.id ?? null)
       ? layoutOverride.layout
       : activeView?.layout ?? 'list'
-  // Layout is no longer part of the comparison: it is a property of the list
-  // rather than of the filter, and a layout flip used to make the bar claim the
-  // filter had changed.
-  const dirty = activeView ? viewIsDirty(activeView, paramsNow) : false
+  const dirty = activeView ? viewIsDirty(activeView, paramsNow, layout) : false
   const isDefaultView = activeView?.builtin_key === DEFAULT_LIST_KEY
 
   const chooseLayout = (next: ListLayout) =>
