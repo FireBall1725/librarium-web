@@ -346,18 +346,33 @@ export default function Layout() {
    * drag. Only the rows whose position changed are written.
    */
   const moveList = useCallback((fromId: string, toId: string) => {
-    setLists(before => {
-      const after = reorderLists(before, fromId, toId)
-      if (after === before) return before
-      // The whole rail, in one request, to the caller's own order rather than
-      // to the views themselves. Reordering used to PATCH display_order on each
-      // list, which is a column you may not own, so dragging a view shared with
-      // you 404ed and the client swallowed it: the row moved, said nothing, and
-      // sprang back on the next load.
-      void saveListOrder(callApi, visibleLists(after)).then(() => announceListsChanged())
-      return after
-    })
-  }, [callApi])
+    // Computed outside the updater rather than inside it. A state updater has to
+    // be pure, and React calls it twice in development, so a request fired from
+    // in there goes twice.
+    const before = lists
+    const after = reorderLists(before, fromId, toId)
+    if (after === before) return
+
+    // The rail shows the new order immediately and the write follows, because a
+    // row that snaps back while the server thinks about it reads as a failed
+    // drag.
+    setLists(after)
+
+    // The whole rail, in one request, against the caller rather than against
+    // the views. Reordering used to PATCH display_order on each list, which is
+    // a column you may not own, so dragging a view shared with you 404ed.
+    void saveListOrder(callApi, visibleLists(after))
+      .then(() => announceListsChanged())
+      .catch(() => {
+        // Put it back, and say so. Swallowing this is what made the old bug so
+        // hard to see: the row moved, nothing was said, and it sprang back on
+        // the next load with no explanation.
+        setLists(before)
+        setOrderSaid(t('views.order_failed', {
+          defaultValue: 'Could not save the new order',
+        }))
+      })
+  }, [lists, callApi, t])
 
   /**
    * Reorder from the keyboard.
