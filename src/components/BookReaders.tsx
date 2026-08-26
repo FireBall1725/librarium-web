@@ -91,36 +91,48 @@ export default function BookReaders({ bookId }: { bookId: string }) {
       <ul className="divide-y divide-line">
         {readers.map(r => {
           const isMe = r.user_id === user?.id
+          const finished = when(r.finished_at)
           return (
-            <li key={r.user_id} className="flex gap-3 py-3">
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                  <span className="text-sm font-medium text-content">
-                    {isMe
-                      ? t('readers.you', { defaultValue: 'You' })
-                      : (r.display_name || r.username)}
-                  </span>
-                  {r.rating != null && <Stars rating={r.rating} size={13} />}
-                  {r.rating != null && (
-                    <span className="text-xs tabular-nums text-content-faint">
-                      {formatStars(r.rating)}
+            <li key={r.user_id} className="py-3">
+              {/* Stacked rather than crammed onto one line: name, then what
+                  they did with it, then what they said. A review is prose and
+                  wants a line of its own to be read as prose. */}
+              <div className="text-sm font-medium text-content">
+                {isMe ? t('readers.you', { defaultValue: 'You' }) : (r.display_name || r.username)}
+              </div>
+
+              <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-content-tertiary">
+                <span>
+                  {finished
+                    ? t('readers.finished', {
+                        date: finished, defaultValue: `Finished ${finished}`,
+                      })
+                    : t(`read_status.${r.read_status}`, { defaultValue: r.read_status })}
+                </span>
+                {r.rating != null && (
+                  <>
+                    <span aria-hidden="true">·</span>
+                    <span className="flex items-center gap-1.5">
+                      <Stars rating={r.rating} size={13} />
+                      <span className="tabular-nums text-content-faint">{formatStars(r.rating)}</span>
                     </span>
-                  )}
-                  <span className="text-xs text-content-tertiary">
-                    {t(`read_status.${r.read_status}`, { defaultValue: r.read_status })}
-                    {when(r.finished_at) && ` · ${t('readers.finished', {
-                      date: when(r.finished_at), defaultValue: `finished ${when(r.finished_at)}`,
-                    })}`}
-                  </span>
-                </div>
-                {/* Quoted, because on a page otherwise full of the reader's own
-                    fields these are somebody's words. */}
-                {r.review && (
-                  <blockquote className="font-read mt-1.5 border-l-2 border-line pl-3 text-sm text-content-secondary">
-                    {r.review}
-                  </blockquote>
+                  </>
+                )}
+                {r.is_favorite && (
+                  <>
+                    <span aria-hidden="true">·</span>
+                    <span className="text-warning">
+                      {t('readers.favourite', { defaultValue: 'Favourite' })}
+                    </span>
+                  </>
                 )}
               </div>
+
+              {r.review && (
+                <blockquote className="font-read mt-2 border-l-2 border-line py-0.5 pl-3 text-sm leading-relaxed text-content-secondary">
+                  {r.review}
+                </blockquote>
+              )}
             </li>
           )
         })}

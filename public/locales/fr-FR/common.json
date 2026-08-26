@@ -488,10 +488,11 @@
     "top": "À la racine"
   },
   "readers": {
-    "finished": "terminé le {{date}}",
+    "finished": "Terminé le {{date}}",
     "title": "Activité de lecture",
     "you": "Vous",
     "from_one": "sur 1 note",
-    "from_other": "sur {{count}} notes"
+    "from_other": "sur {{count}} notes",
+    "favourite": "Coup de cœur"
   }
 }

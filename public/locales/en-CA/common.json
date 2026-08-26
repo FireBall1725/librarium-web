@@ -488,10 +488,11 @@
     "top": "Not inside anything"
   },
   "readers": {
-    "finished": "finished {{date}}",
+    "finished": "Finished {{date}}",
     "title": "Reading activity",
     "you": "You",
     "from_one": "from 1 rating",
-    "from_other": "from {{count}} ratings"
+    "from_other": "from {{count}} ratings",
+    "favourite": "Favourite"
   }
 }
