@@ -193,18 +193,19 @@
     "all": "Tous"
   },
   "authors": {
-    "sort_name": "A–Z",
-    "sort_count": "Plus de livres",
-    "none": "Aucun auteur",
-    "none_under": "Aucun auteur sous {{letter}}",
-    "count_one": "{{count}} sur vos étagères",
-    "count_other": "{{count}} sur vos étagères",
     "books_count_one": "{{count}} livre",
     "books_count_other": "{{count}} livres",
+    "clear_library": "Afficher toutes les bibliothèques",
+    "count_one": "{{count}} sur vos étagères",
+    "count_other": "{{count}} sur vos étagères",
+    "none": "Aucun auteur",
+    "none_under": "Aucun auteur sous {{letter}}",
+    "one_library": "Une bibliothèque",
     "read_count_one": "{{count}} lu",
     "read_count_other": "{{count}} lus",
-    "clear_library": "Afficher toutes les bibliothèques",
-    "one_library": "Une bibliothèque"
+    "search": "Rechercher des auteurs…",
+    "sort_count": "Plus de livres",
+    "sort_name": "A–Z"
   },
   "series": {
     "all_libraries": "Toutes les bibliothèques",
@@ -557,5 +558,13 @@
     "remove": "Retirer de cette série",
     "remove_named": "Retirer de {{name}}",
     "volume": "Vol. {{position}}"
+  },
+  "contributor_role": {
+    "author": "Auteurs",
+    "contributor": "Contributeurs",
+    "editor": "Éditeurs",
+    "illustrator": "Illustrateurs",
+    "narrator": "Narrateurs",
+    "translator": "Traducteurs"
   }
 }

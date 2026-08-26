@@ -247,6 +247,18 @@ export interface CopyLocation {
   created_at: string
 }
 
+/**
+ * How many people hold one contributor role, over the libraries in scope.
+ *
+ * From the index rather than the vocabulary: the vocabulary defines every role
+ * this server knows, and a collection uses a handful of them. Offering the rest
+ * is offering a filter that returns nothing.
+ */
+export interface RoleCount {
+  code: string
+  count: number
+}
+
 /** One row of a controlled vocabulary. Codes only: a label in the database
  *  cannot be translated, so the name lives in the locale files. */
 export interface Vocabulary {

@@ -9,15 +9,16 @@
 // browsable rather than scrolled.
 
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import PageHeader from '../components/PageHeader'
 import AlphabetBar from '../components/AlphabetBar'
 import AuthorAvatar from '../components/AuthorAvatar'
 import BookCover from '../components/BookCover'
+import SuggestBox, { type SuggestItem } from '../components/SuggestBox'
 import { usePageTitle } from '../hooks/usePageTitle'
-import type { AuthorIndexEntry } from '../types'
+import type { AuthorIndexEntry, RoleCount } from '../types'
 
 type SortMode = 'name' | 'count'
 
@@ -26,6 +27,7 @@ export default function AuthorsPage() {
   const { callApi } = useAuth()
   usePageTitle(t('nav.authors', { defaultValue: 'Authors' }))
 
+  const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
   const letter = params.get('letter')
   const sort: SortMode = params.get('sort') === 'count' ? 'count' : 'name'
@@ -33,18 +35,37 @@ export default function AuthorsPage() {
   // narrowing, because filtering here would print a count for authors the
   // caller was never sent.
   const lib = params.get('lib')
+  // The endpoint has taken a role since it was written and nothing ever passed
+  // one, so 47 illustrators and 7 translators have never appeared on this page.
+  // Empty means what it always meant: authors.
+  const role = params.get('role') ?? ''
 
   const [authors, setAuthors] = useState<AuthorIndexEntry[] | null>(null)
   const [error, setError] = useState<string | null>(null)
+  // Which roles have somebody behind them, from the index rather than the
+  // vocabulary. The vocabulary defines seven and this collection uses three;
+  // offering the other four is offering a filter that returns nothing.
+  const [roles, setRoles] = useState<RoleCount[]>([])
+  const [draft, setDraft] = useState('')
 
   useEffect(() => {
     let cancelled = false
-    const query = lib ? `?lib=${encodeURIComponent(lib)}` : ''
-    callApi<{ items: AuthorIndexEntry[] }>(`/api/v1/me/authors/index${query}`)
-      .then(res => { if (!cancelled) setAuthors(res.items ?? []) })
+    const q = new URLSearchParams()
+    if (lib) q.set('lib', lib)
+    if (role) q.set('role', role)
+    const query = q.toString()
+    callApi<{ items: AuthorIndexEntry[]; roles?: RoleCount[] }>(
+      `/api/v1/me/authors/index${query ? `?${query}` : ''}`)
+      .then(res => {
+        if (cancelled) return
+        setAuthors(res.items ?? [])
+        setRoles(res.roles ?? [])
+      })
       .catch((e: Error) => { if (!cancelled) { setError(e.message); setAuthors([]) } })
     return () => { cancelled = true }
-  }, [callApi, lib])
+  }, [callApi, lib, role])
+
+
 
   // Derived, not stored. The letters the bar can offer are a property of the
   // data, so recomputing them beats holding a second copy that can go stale.
@@ -77,6 +98,35 @@ export default function AuthorsPage() {
     return null
   }, [authors, lib])
 
+  /**
+   * What the search box offers, which is a person rather than a filter.
+   *
+   * This is the one difference from the boxes on Books and Series. There a
+   * suggestion narrows a list, because the reader is deciding what to look at.
+   * Here they already know the name and want to be somewhere else, so picking
+   * one goes to that author instead of ticking anything.
+   *
+   * Matched on both names: someone typing "le guin" and someone typing "ursula"
+   * are both looking for the same person, and only one of those is how the
+   * index files her.
+   */
+  const suggestions = useMemo(() => {
+    const needle = draft.trim().toLowerCase()
+    if (!needle) return []
+    return (authors ?? [])
+      .filter(a =>
+        a.name.toLowerCase().includes(needle) ||
+        a.sort_name.toLowerCase().includes(needle))
+      .slice(0, 8)
+  }, [draft, authors])
+
+  const suggestionItems: SuggestItem[] = suggestions.map(a => ({
+    key: a.id,
+    group: t('nav.authors', { defaultValue: 'Authors' }),
+    label: a.name,
+    count: a.book_count,
+  }))
+
   const setParam = (key: string, value: string | null) => {
     const next = new URLSearchParams(params)
     if (value === null) next.delete(key)
@@ -106,6 +156,59 @@ export default function AuthorsPage() {
       />
 
       <div className="px-8 py-6">
+        {/* Search first, because this page is a lookup rather than a browse:
+            people arrive knowing the name. The A-Z bar stays for the other
+            case, and it earns its place here in a way it did not on Series,
+            where it was filtering titles that search handles better. An index
+            of names is what an alphabet is for. */}
+        <div className="mb-6 flex flex-wrap items-center gap-2">
+          <SuggestBox
+            className="min-w-[14rem] max-w-lg flex-1"
+            value={draft}
+            onChange={setDraft}
+            // Enter with nothing highlighted goes to the closest match rather
+            // than doing nothing, which is what a name search means.
+            // Where the card goes, so picking a name from the box and clicking
+            // the same name on the page do the same thing. There is no author
+            // detail route; an author is their books.
+            onCommitText={() => {
+              const first = suggestions[0]
+              if (first) navigate(booksHref(first))
+            }}
+            placeholder={t('authors.search', { defaultValue: 'Search authors…' })}
+            ariaLabel={t('authors.search', { defaultValue: 'Search authors' })}
+            items={suggestionItems}
+            onPick={i => navigate(booksHref(suggestions[i]))}
+          />
+
+          <span className="flex-1" />
+
+          {/* Role, which has been a parameter since this endpoint was written
+              and was reachable from nowhere. Data-driven rather than a list
+              spelled out here, so a role added later arrives on its own. */}
+          {roles.length > 1 && (
+            <div className="flex overflow-hidden rounded-md border border-line-strong">
+              {roles.map(r => {
+                // Author is what the page means with no role asked for, so its
+                // button clears the parameter rather than setting it. Both
+                // spellings light it up, or arriving on ?role=author would
+                // leave nothing looking selected.
+                const on = r.code === 'author' ? role === '' || role === 'author' : role === r.code
+                return (
+                  <button key={r.code} type="button" aria-pressed={on}
+                    onClick={() => setParam('role', r.code === 'author' ? null : r.code)}
+                    className={`px-2.5 py-1 text-xs font-medium transition-colors ${
+                      on ? 'bg-accent text-white' : 'text-content-secondary hover:bg-surface-inset'
+                    }`}>
+                    {t(`contributor_role.${r.code}`, { defaultValue: r.code })}
+                    <span className="ml-1.5 text-[10px] tabular-nums opacity-70">{r.count}</span>
+                  </button>
+                )
+              })}
+            </div>
+          )}
+        </div>
+
       <div className="flex flex-wrap items-center gap-3">
         {/* A scoped page that looks unscoped is the bug worth avoiding here:
             arriving from the retired per-library page shows 33 where the rail
