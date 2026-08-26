@@ -489,6 +489,9 @@
   },
   "readers": {
     "finished": "finished {{date}}",
-    "title": "Reading activity"
+    "title": "Reading activity",
+    "you": "You",
+    "from_one": "from 1 rating",
+    "from_other": "from {{count}} ratings"
   }
 }

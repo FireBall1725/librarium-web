@@ -489,6 +489,9 @@
   },
   "readers": {
     "finished": "terminé le {{date}}",
-    "title": "Activité de lecture"
+    "title": "Activité de lecture",
+    "you": "Vous",
+    "from_one": "sur 1 note",
+    "from_other": "sur {{count}} notes"
   }
 }
