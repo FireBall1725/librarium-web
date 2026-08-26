@@ -126,7 +126,12 @@ function AppRoutes() {
                     on a page of their own, so the old per-library URL lands on
                     Books with the rail beside it. */}
                 <Route path="/libraries/:libraryId/shelves" element={<LegacyLibraryRedirect to="/books" />} />
-                <Route path="/libraries/:libraryId/series" element={<LibraryPage section="series" />} />
+                {/* The list is retired; /series does the same job across every
+                    library, with filters, a sort and a create button the old
+                    section never had. The detail view is still the only place
+                    arcs, volume sync and the metadata merge live, so it stays
+                    on its own URL until that moves too. */}
+                <Route path="/libraries/:libraryId/series" element={<LegacyLibraryRedirect to="/series" />} />
                 <Route path="/libraries/:libraryId/series/:seriesId" element={<LibraryPage section="series" />} />
                 <Route path="/libraries/:libraryId/loans" element={<LegacyLibraryRedirect to="/loans" />} />
                 <Route path="/libraries/:libraryId/members" element={<LegacyLibraryRedirect to="/settings/members" />} />
