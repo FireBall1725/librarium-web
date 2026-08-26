@@ -13,6 +13,8 @@ import SeriesPage from './pages/SeriesPage'
 import LoansPage from './pages/LoansPage'
 import SettingsIndexPage from './pages/settings/SettingsIndexPage'
 import LicencesPage from './pages/settings/LicencesPage'
+import ListsPage from './pages/settings/ListsPage'
+import ShelvesPage from './pages/settings/ShelvesPage'
 import MembersPage from './pages/settings/MembersPage'
 import AppearancePage from './pages/settings/AppearancePage'
 import LegacySettingsRedirect from './pages/settings/LegacySettingsRedirect'
@@ -32,6 +34,7 @@ import MetadataPage from './pages/admin/settings/MetadataPage'
 import MediaManagementPage from './pages/admin/settings/MediaManagementPage'
 import TagsPage from './pages/admin/settings/TagsPage'
 import GenresPage from './pages/admin/settings/GenresPage'
+import DuplicateAuthorsPage from './pages/settings/DuplicateAuthorsPage'
 import MediaTypesPage from './pages/admin/settings/MediaTypesPage'
 import ProfilesPage from './pages/admin/settings/ProfilesPage'
 import GeneralPage from './pages/admin/settings/GeneralPage'
@@ -98,8 +101,11 @@ function AppRoutes() {
                   <Route path="media-management"  element={<MediaManagementPage />} />
                   <Route path="tags"               element={<TagsPage />} />
                   <Route path="genres"             element={<GenresPage />} />
+                  <Route path="duplicate-authors"  element={<DuplicateAuthorsPage />} />
                   <Route path="media-types"       element={<MediaTypesPage />} />
                   <Route path="profiles"          element={<ProfilesPage />} />
+                  <Route path="lists"             element={<ListsPage />} />
+                  <Route path="shelves"           element={<ShelvesPage />} />
                   <Route path="members"           element={<MembersPage />} />
                   <Route path="general"           element={<GeneralPage />} />
                   <Route path="jobs"              element={<JobsPage />} />
@@ -122,7 +128,12 @@ function AppRoutes() {
                     on a page of their own, so the old per-library URL lands on
                     Books with the rail beside it. */}
                 <Route path="/libraries/:libraryId/shelves" element={<LegacyLibraryRedirect to="/books" />} />
-                <Route path="/libraries/:libraryId/series" element={<LibraryPage section="series" />} />
+                {/* The list is retired; /series does the same job across every
+                    library, with filters, a sort and a create button the old
+                    section never had. The detail view is still the only place
+                    arcs, volume sync and the metadata merge live, so it stays
+                    on its own URL until that moves too. */}
+                <Route path="/libraries/:libraryId/series" element={<LegacyLibraryRedirect to="/series" />} />
                 <Route path="/libraries/:libraryId/series/:seriesId" element={<LibraryPage section="series" />} />
                 <Route path="/libraries/:libraryId/loans" element={<LegacyLibraryRedirect to="/loans" />} />
                 <Route path="/libraries/:libraryId/members" element={<LegacyLibraryRedirect to="/settings/members" />} />

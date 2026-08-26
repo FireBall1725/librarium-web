@@ -12,6 +12,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useNavigationType, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { announceCollectionChanged } from '../lib/collectionEvents'
+import { formatStars, starsOf } from '../lib/rating'
 import { useAuth } from '../auth/AuthContext'
 import PageHeader from '../components/PageHeader'
 import { PromptDialog } from '../components/Dialog'
@@ -24,8 +25,9 @@ import BookCover, { BookCoverThumb } from '../components/BookCover'
 import { usePageTitle } from '../hooks/usePageTitle'
 import { useContributorNames } from '../hooks/useContributorNames'
 import type { TFunction } from 'i18next'
-import { Icon, type IconName } from '../lib/icons'
+import { type IconName } from '../lib/icons'
 import { LIST_ICONS } from '../lib/listIcons'
+import ViewChip from '../components/ViewChip'
 import type { Book, GroupedEntry, Library, MediaType, PagedGroupedBooks, SeriesGroupEntry } from '../types'
 import {
   DEFAULT_PAGE_SIZE,
@@ -221,12 +223,46 @@ function SelectBox({ book, picked, onToggle, t }: {
 function chipLabel(key: FacetKey, value: string, facets: BookFacets | null, t: TFunction): string {
   if (key === 'ownership') return t(`ownership.${value}`, { defaultValue: value })
   if (key === 'read_status') return t(`read_status.${value}`, { defaultValue: value })
-  if (key === 'rating') return t('facets.stars', { count: Number(value), defaultValue: `${value} stars` })
+  if (key === 'rating' || key === 'my_rating') {
+    return t('facets.stars', {
+      count: starsOf(Number(value)), stars: formatStars(Number(value)),
+      defaultValue: `${formatStars(Number(value))} stars`,
+    })
+  }
   // Favourite is a boolean, so its facet value is the string "true". Falling
   // through to the label the server sent put a chip reading TRUE beside the
   // results, which says nothing about what was filtered.
   if (key === 'favourite') return t('facets.favourited', { defaultValue: 'Favourited' })
   return facets?.[key]?.find(v => v.value === value)?.label ?? value
+}
+
+/** A bare id, which is never something to show a reader. */
+const looksLikeAnID = (s: string) =>
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s)
+
+/**
+ * chipLabel, plus the views the reader can see.
+ *
+ * A view's chip is keyed by id, and the facet block only lists values something
+ * matched, so an empty view had no entry to read a name from and the chip
+ * rendered a raw UUID.
+ */
+function chipLabelWithViews(
+  key: FacetKey, value: string, facets: BookFacets | null, views: SavedList[], t: TFunction,
+): string {
+  if (key === 'shelf') {
+    const named = views.find(v => v.id === value)
+    if (named) return named.name
+  }
+  const label = chipLabel(key, value, facets, t)
+  // Never a raw id. An id-keyed facet reads its name out of the facet block,
+  // and the block only carries values something matched, so a filter matching
+  // nothing had nothing to read and fell through to the UUID. The dimension's
+  // own name says more than forty hex digits ever will.
+  if (looksLikeAnID(label)) {
+    return t(`facets.${key}`, { defaultValue: key })
+  }
+  return label
 }
 
 /** Book detail still lives under a library, so link via the first one holding it. */
@@ -302,7 +338,6 @@ export default function BooksPage() {
   /** The list the filter arrived from, kept while the filter is edited. */
   const [adopted, setAdopted] = useState<string | null>(null)
   const [naming, setNaming] = useState(false)
-  const [viewMenuAt, setViewMenuAt] = useState<{ x: number; y: number } | null>(null)
   const [adding, setAdding] = useState(false)
 
   // Fetched only when the modal opens. Books is a read surface; making every
@@ -574,6 +609,8 @@ export default function BooksPage() {
 
   // Chips for what is actually applied. Ownership at its default is not a
   // choice the reader made, so it gets no chip to remove.
+  // all, so matching on the filter is the only thing that covers every route in.
+  const paramsNow = params.toString()
   const activeChips = FACET_ORDER.flatMap(key =>
     (key === 'ownership' &&
       (isDefaultOwnership(state.selection[key]) || state.selection[key].includes(OWNERSHIP_ANY))
@@ -582,7 +619,7 @@ export default function BooksPage() {
     ).map(value => ({
       key,
       value,
-      label: chipLabel(key, value, facets, t),
+      label: chipLabelWithViews(key, value, facets, views, t),
     }))
   )
   // The drilled-into series' name, read off the books on screen rather than
@@ -609,8 +646,6 @@ export default function BooksPage() {
   // A view is "open" either because it was clicked, or because the filter on
   // screen describes it. The second case is not a nicety: the sidebar links only
   // navigate, and a bookmarked URL or the back button arrive with no click at
-  // all, so matching on the filter is the only thing that covers every route in.
-  const paramsNow = params.toString()
   // Falls back to the Default view rather than to nothing. Books is always
   // showing *something*, and that something is the Default unless a real view
   // was opened or the filter happens to describe one. Without the fallback,
@@ -682,7 +717,7 @@ export default function BooksPage() {
 
   const saveCurrentAs = async (name: string, icon?: IconName) => {
     setNaming(false)
-    const created = await createSmartList(callApi, name, paramsNow, icon)
+    const created = await createSmartList(callApi, name, paramsNow, icon, 'books', layout)
       .catch(() => null)
     await reloadLists()
     if (created) setActiveViewId(created.id)
@@ -756,7 +791,15 @@ export default function BooksPage() {
       />
 
       <div className="px-8 py-6">
+        {/* Search on the left, the page's own actions on the right, one line.
+            They used to sit in the row below with the view chip, the count and
+            a chip per filter, which is a row that grows: every filter ticked
+            and every unsaved change pushed the buttons onto a second line and
+            then a third. Nothing here depends on which view is open, so
+            nothing here belongs in that row. */}
+        <div className="mb-6 flex flex-wrap items-center gap-2">
         <FilterSearch
+          className="min-w-[14rem] max-w-lg flex-1"
           value={draftQuery}
           onChange={setDraftQuery}
           onCommitText={text => { setDraftQuery(text); apply({ ...state, query: text, page: 1 }) }}
@@ -764,11 +807,65 @@ export default function BooksPage() {
           lists={views}
           selection={state.selection}
           onToggleFacet={(key, value) => apply(toggle(state, key, value))}
+          onPickRating={values => apply({
+            ...state,
+            selection: { ...state.selection, rating: values },
+            page: 1,
+          })}
           onPickContributor={id => {
             if (state.contributors.includes(id)) return
             apply({ ...state, contributors: [...state.contributors, id], page: 1 })
           }}
         />
+
+          <span className="flex-1" />
+          <button type="button" onClick={() => setAdding(true)}
+            className="lb-btn sm">
+            {t('books.add', { defaultValue: 'Add book' })}
+          </button>
+
+          <button type="button"
+            onClick={() => (selecting ? stopSelecting() : setSelecting(true))}
+            aria-pressed={selecting}
+            className={`rounded-md border px-2.5 py-1 text-xs font-medium transition-colors ${
+              selecting
+                ? 'border-accent bg-accent text-white'
+                : 'border-line-strong text-content-secondary hover:bg-surface-inset'
+            }`}>
+            {selecting
+              ? t('books.done_selecting', { defaultValue: 'Done' })
+              : t('books.select', { defaultValue: 'Select' })}
+          </button>
+
+          {/* Not in the layout toggle beside it: layout is how the same
+              rows are drawn, grouping changes what a row is. Hidden while
+              drilled into a series, where there is nothing left to
+              collapse. */}
+          {!state.series && (
+            <button type="button"
+              onClick={() => apply({ ...state, grouped: !state.grouped, page: 1 })}
+              aria-pressed={state.grouped}
+              className={`rounded-md border px-2.5 py-1 text-xs font-medium transition-colors ${
+                state.grouped
+                  ? 'border-accent bg-accent text-white'
+                  : 'border-line-strong text-content-secondary hover:bg-surface-inset'
+              }`}>
+              {t('books.group_series', { defaultValue: 'Group series' })}
+            </button>
+          )}
+
+          <div className="flex overflow-hidden rounded-md border border-line-strong">
+            {(['list', 'grid'] as ListLayout[]).map(opt => (
+              <button key={opt} type="button" onClick={() => chooseLayout(opt)}
+                aria-pressed={layout === opt}
+                className={`px-2.5 py-1 text-xs font-medium transition-colors ${
+                  layout === opt ? 'bg-accent text-white' : 'text-content-secondary hover:bg-surface-inset'
+                }`}>
+                {t(`views.layout_${opt}`, { defaultValue: opt === 'list' ? 'Rows' : 'Grid' })}
+              </button>
+            ))}
+          </div>
+        </div>
 
         <div className="grid gap-7 lg:grid-cols-[13rem_1fr]">
           <aside>
@@ -800,50 +897,18 @@ export default function BooksPage() {
                   then there is something to leave, and × does it. */}
               {activeView && (
                 <span className="flex items-center gap-1.5">
-                  {/* inline-flex because the icon is an svg, and Tailwind's
-                      preflight makes svg display:block — so it took its own
-                      line inside the chip and pushed the label underneath,
-                      which white-space:nowrap does nothing about.
-
-                      warn instead of on, not alongside it: .on paints an
-                      accent fill that .warn does not override, which would put
-                      amber text on an indigo chip. */}
-                  {isDefaultView && !dirty ? (
-                    <span className="inline-flex items-center gap-1.5 text-xs uppercase tracking-wide text-content-tertiary">
-                      <Icon name={listIcon(activeView)} size={13} className="flex-none" />
-                      {t('views.default_name', { defaultValue: 'Default view' })}
-                    </span>
-                  ) : (
-                    <button type="button"
-                      className={`inline-flex items-center gap-1.5 ${dirty ? 'lb-chip warn' : 'lb-chip on'}`}
-                      onClick={leaveView}
-                      title={t('views.leave', { defaultValue: 'Leave view' })}>
-                      <Icon name={listIcon(activeView)} size={13} className="flex-none" />
-                      {/* "Default" on its own names a state rather than a
-                          thing, and reads oddly beside Up next or Favourites. */}
-                      {isDefaultView
-                        ? t('views.default_name', { defaultValue: 'Default view' })
-                        : activeView.name} ×
-                    </button>
-                  )}
-                  {dirty && (
-                    <span className="text-xs text-warning-strong">
-                      {t('views.modified', { defaultValue: 'modified' })}
-                    </span>
-                  )}
-                  {/* Beside the chip rather than out with the page's own
-                      buttons: these act on the view, and at the far end of the
-                      row they read as things that act on the books. */}
-                  <button type="button"
-                    onClick={e => {
-                      const r = e.currentTarget.getBoundingClientRect()
-                      setViewMenuAt(m => m ? null : { x: r.left, y: r.bottom + 6 })
-                    }}
-                    aria-haspopup="menu" aria-expanded={viewMenuAt !== null}
-                    className="rounded-md px-1.5 py-0.5 text-content-tertiary hover:bg-surface-inset hover:text-content"
-                    title={t('views.more', { defaultValue: 'View options' })}>
-                    ⋯
-                  </button>
+                                    <ViewChip
+                    view={activeView}
+                    dirty={dirty}
+                    isDefault={isDefaultView}
+                    defaultHint={t('views.default_hint', {
+                      defaultValue: 'what Books opens on',
+                    })}
+                    onLeave={leaveView}
+                    onRename={() => setRenaming(true)}
+                    onSaveAsNew={() => setNaming(true)}
+                    onDelete={() => removeView(activeView.id)}
+                  />
                 </span>
               )}
               <span className="tabular-nums">
@@ -955,52 +1020,6 @@ export default function BooksPage() {
                 </button>
               )}
 
-              <button type="button" onClick={() => setAdding(true)}
-                className="lb-btn sm">
-                {t('books.add', { defaultValue: 'Add book' })}
-              </button>
-
-              <button type="button"
-                onClick={() => (selecting ? stopSelecting() : setSelecting(true))}
-                aria-pressed={selecting}
-                className={`rounded-md border px-2.5 py-1 text-xs font-medium transition-colors ${
-                  selecting
-                    ? 'border-accent bg-accent text-white'
-                    : 'border-line-strong text-content-secondary hover:bg-surface-inset'
-                }`}>
-                {selecting
-                  ? t('books.done_selecting', { defaultValue: 'Done' })
-                  : t('books.select', { defaultValue: 'Select' })}
-              </button>
-
-              {/* Not in the layout toggle beside it: layout is how the same
-                  rows are drawn, grouping changes what a row is. Hidden while
-                  drilled into a series, where there is nothing left to
-                  collapse. */}
-              {!state.series && (
-                <button type="button"
-                  onClick={() => apply({ ...state, grouped: !state.grouped, page: 1 })}
-                  aria-pressed={state.grouped}
-                  className={`rounded-md border px-2.5 py-1 text-xs font-medium transition-colors ${
-                    state.grouped
-                      ? 'border-accent bg-accent text-white'
-                      : 'border-line-strong text-content-secondary hover:bg-surface-inset'
-                  }`}>
-                  {t('books.group_series', { defaultValue: 'Group series' })}
-                </button>
-              )}
-
-              <div className="flex overflow-hidden rounded-md border border-line-strong">
-                {(['list', 'grid'] as ListLayout[]).map(opt => (
-                  <button key={opt} type="button" onClick={() => chooseLayout(opt)}
-                    aria-pressed={layout === opt}
-                    className={`px-2.5 py-1 text-xs font-medium transition-colors ${
-                      layout === opt ? 'bg-accent text-white' : 'text-content-secondary hover:bg-surface-inset'
-                    }`}>
-                    {t(`views.layout_${opt}`, { defaultValue: opt === 'list' ? 'Rows' : 'Grid' })}
-                  </button>
-                ))}
-              </div>
             </div>
 
             {selected.length > 0 && (
@@ -1111,6 +1130,7 @@ export default function BooksPage() {
                         title={entry.book.title}
                         coverUrl={entry.book.cover_url}
                         readStatus={entry.book.user_read_status}
+                        ownership={entry.book.ownership}
                         seed={coverSeed(entry.book)}
                       />
                       <span className="min-w-0 flex-1">
@@ -1199,6 +1219,7 @@ export default function BooksPage() {
                         title={entry.book.title}
                         coverUrl={entry.book.cover_url}
                         readStatus={entry.book.user_read_status}
+                        ownership={entry.book.ownership}
                         seed={coverSeed(entry.book)}
                         className="w-full"
                       />
@@ -1303,42 +1324,6 @@ export default function BooksPage() {
             announceCollectionChanged()
           }}
         />
-      )}
-
-      {/* Rename and Delete: real but rare, so they sit behind the ⋯ rather
-          than as two more buttons in the reader's way. Fixed-positioned, so
-          it is placed from the trigger's rect. */}
-      {activeView && viewMenuAt && (
-        <>
-          {/* Catches the click that dismisses, so the menu closes the way every
-              menu does rather than only via its own items. */}
-          <div className="fixed inset-0 z-[190]" onClick={() => setViewMenuAt(null)} />
-          <div className="lb-menu open" style={{ left: viewMenuAt.x, top: viewMenuAt.y }}
-            role="menu">
-            <div className="hd">
-              {activeView.name}
-              {isDefaultView && ` · ${t('views.default_hint', { defaultValue: 'what Books opens on' })}`}
-            </div>
-            <button type="button" role="menuitem"
-              onClick={() => { setViewMenuAt(null); setRenaming(true) }}>
-              {t('views.rename', { defaultValue: 'Rename' })}
-            </button>
-            <button type="button" role="menuitem"
-              onClick={() => { setViewMenuAt(null); setNaming(true) }}>
-              {t('views.save_as_new', { defaultValue: 'Save as new' })}
-            </button>
-            {/* The Default cannot go: Books has to open on something. */}
-            {!activeView.permanent && (
-              <>
-                <div className="sep" />
-                <button type="button" role="menuitem" className="danger"
-                  onClick={() => { setViewMenuAt(null); removeView(activeView.id) }}>
-                  {t('views.delete', { defaultValue: 'Delete view' })}
-                </button>
-              </>
-            )}
-          </div>
-        </>
       )}
 
       <PromptDialog

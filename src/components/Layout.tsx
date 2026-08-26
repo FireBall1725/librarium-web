@@ -708,7 +708,7 @@ export default function Layout() {
               shelf the reader actually wants. `end` still matches only /books
               itself, so the row highlights whatever the query string says. */}
           <NavRow to={defaultListHref(lists)} icon="books" label={t('nav.books')} count={counts?.books} end />
-          <NavRow to="/series" icon="series" label={t('nav.series')} count={counts?.series} />
+          <NavRow to={defaultListHref(lists, 'series')} icon="series" label={t('nav.series')} count={counts?.series} />
           <NavRow to="/authors" icon="authors" label={t('nav.authors')} count={counts?.authors} />
           {/* Books still out, tinted when any of them are late. The count is
               what is outstanding rather than every loan ever recorded, which

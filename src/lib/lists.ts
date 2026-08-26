@@ -29,6 +29,11 @@ export interface SavedList {
   icon: string
   color: string
   kind: ListKind
+  /**
+   * Which page the view lands on. Absent means books: every view that predates
+   * a second surface is a book view, which is what the column defaults to.
+   */
+  surface?: ListSurface
   /** Present on a smart list. Version 1 is `{ query: "<query string>" }`. */
   filter: { query?: string } | null
   filter_version?: number | null
@@ -45,7 +50,19 @@ export interface SavedList {
   permanent?: boolean
 }
 
-/** The list the books page opens on. */
+/** The pages a view can land on. */
+export type ListSurface = 'books' | 'series'
+
+/** Where a view goes. Absent is books, matching the column's default. */
+export const surfaceOf = (l: SavedList): ListSurface => l.surface ?? 'books'
+
+/** The page each surface lives at. */
+export const SURFACE_PATH: Record<ListSurface, string> = {
+  books: '/books',
+  series: '/series',
+}
+
+/** The view a page opens on. One per surface, hidden from the rail. */
 export const DEFAULT_LIST_KEY = 'default'
 
 /** The query string a smart list stands for, empty for a manual one. */
@@ -59,8 +76,12 @@ export const listQuery = (l: SavedList): string =>
  * the rail fills in behind it: you can always see why a list contains what it
  * contains. A manual list has no filter to show, so it is addressed by id.
  */
-export const listHref = (l: SavedList): string =>
-  l.kind === 'smart' ? `/books?${listQuery(l)}` : `/books?shelf=${l.id}`
+export const listHref = (l: SavedList): string => {
+  const path = SURFACE_PATH[surfaceOf(l)]
+  // A manual view is a hand-picked set of books and there is no list_series to
+  // match, so it is addressed by id on the books page whatever else it claims.
+  return l.kind === 'smart' ? `${path}?${listQuery(l)}` : `/books?list=${l.id}`
+}
 
 /** Rail rows, in display order. The default list is not somewhere you go. */
 export const visibleLists = (lists: SavedList[]): SavedList[] =>
@@ -81,6 +102,13 @@ export function listCount(
   fetched?: Record<string, number>,
 ): number | undefined {
   if (l.kind === 'manual') return l.book_count
+  // A series view counts series, and every number reachable from here is a
+  // number of books. Answering with the wrong unit is worse than answering
+  // with nothing: the count is the part of a rail people trust.
+  //
+  // fetched is keyed by query and is filled by whichever page is open, so a
+  // series view picks up its own total once /series has loaded once.
+  if (surfaceOf(l) !== 'books') return fetched?.[listQuery(l)]
   // A count asked for directly wins: it answers the whole filter, where the
   // facet block can only answer one dimension of it.
   const direct = fetched?.[listQuery(l)]
@@ -131,24 +159,38 @@ export async function fetchMissingCounts(
    */
   scope = '',
 ): Promise<Record<string, number>> {
-  const queries = new Set(
-    lists
-      .filter(l => l.kind === 'smart' && listCount(l, facets) === undefined)
-      .map(l => listQuery(l))
-      .filter(q => q.length > 0),
+  // Per surface, because the endpoint differs and so does the unit. A series
+  // view counted against /me/books would come back with a plausible number
+  // describing the wrong thing.
+  const wanted = lists.filter(l => l.kind === 'smart' && listCount(l, facets) === undefined)
+  const bookQueries = new Set(
+    wanted.filter(l => surfaceOf(l) === 'books').map(listQuery).filter(q => q.length > 0),
+  )
+  const seriesQueries = new Set(
+    wanted.filter(l => surfaceOf(l) === 'series').map(listQuery),
   )
 
   const out: Record<string, number> = {}
-  await Promise.all([...queries].map(async query => {
+  const count = async (query: string, url: string) => {
     try {
-      const res = await callApi<{ total: number }>(
-        `/api/v1/me/books?${query}${scope ? `&${scope}` : ''}&page=1&per_page=1`)
+      const res = await callApi<{ total: number }>(url)
       if (typeof res?.total === 'number') out[query] = res.total
     } catch {
       // A count is an enhancement, not the nav. A list that cannot be counted
       // shows no number, which is what it did before this existed.
     }
-  }))
+  }
+
+  await Promise.all([
+    ...[...bookQueries].map(q =>
+      count(q, `/api/v1/me/books?${q}${scope ? `&${scope}` : ''}&page=1&per_page=1`)),
+    // The series index is unpaged, so there is no per_page to shrink it with;
+    // one preview volume per row is the smallest it can be asked for. The
+    // empty query is included rather than skipped, because "every series" is
+    // exactly what the Default view stands for and it needs a number too.
+    ...[...seriesQueries].map(q =>
+      count(q, `/api/v1/me/series/index${q ? `?${q}&` : '?'}volumes=1`)),
+  ])
   return out
 }
 
@@ -204,7 +246,14 @@ export function saveListOrder(callApi: CallApi, after: SavedList[]): Promise<unk
  * section boundary says that without a dialog having to ask.
  */
 export function splitLists(lists: SavedList[]): { mine: SavedList[]; shared: SavedList[] } {
-  const shown = visibleLists(lists)
+  // Views only. A list is a hand-picked set of books, which is a property of the
+  // books rather than somewhere to navigate, so it belongs in the filter rail as
+  // a checkbox. Putting both in the nav is what made one word cover two objects
+  // and sent a shared list to the wrong page.
+  //
+  // A list still reaches the nav by being saved as a view over it, which also
+  // buys a combination the list alone cannot express: this list AND unread.
+  const shown = visibleLists(lists).filter(l => l.kind === 'smart')
   return {
     mine: shown.filter(l => l.visibility !== 'library'),
     // Including ones this person shared themselves. It is where the view now
@@ -222,6 +271,14 @@ export const listIcon = (l: SavedList): IconName =>
 export function normaliseParams(params: string): string {
   const p = new URLSearchParams(params)
   p.delete('page')
+  // A filter saved before the facet was renamed still says shelf. Folding it to
+  // the current spelling is what keeps a migrated view from reading as modified
+  // against its own URL, without rewriting what is stored.
+  const shelf = p.get('shelf')
+  if (shelf !== null) {
+    p.delete('shelf')
+    if (!p.has('list')) p.set('list', shelf)
+  }
   const entries = [...p.entries()].sort(([a], [b]) => a.localeCompare(b))
   return new URLSearchParams(entries).toString()
 }
@@ -234,9 +291,15 @@ export function normaliseParams(params: string): string {
  * list and the bar has to offer to save it. Comparing only the filter meant
  * that edit could not be saved at all.
  */
-export const isDirty = (l: SavedList, params: string, layout?: ListLayout): boolean =>
-  normaliseParams(listQuery(l)) !== normaliseParams(params) ||
-  (layout !== undefined && layout !== l.layout)
+export const isDirty = (l: SavedList, params: string, layout?: ListLayout): boolean => {
+  const layoutMoved = layout !== undefined && layout !== l.layout
+  // A manual view holds books, not a filter, so nothing about the filter on
+  // screen can drift from it and nothing about it can be saved from here.
+  // Comparing anyway made it permanently modified against its own URL, and the
+  // save it offered would have been refused by the server.
+  if (l.kind === 'manual') return layoutMoved
+  return normaliseParams(listQuery(l)) !== normaliseParams(params) || layoutMoved
+}
 
 /**
  * The list standing for a filter, if one does.
@@ -247,8 +310,15 @@ export const isDirty = (l: SavedList, params: string, layout?: ListLayout): bool
  * earliest. A reader with a saved list and no filter got sent somewhere they
  * had not asked to go.
  */
-export function matchList(lists: SavedList[], params: string): SavedList | null {
-  const matching = lists.filter(l => l.kind === 'smart' && !isDirty(l, params))
+export function matchList(
+  lists: SavedList[], params: string, surface: ListSurface = 'books',
+): SavedList | null {
+  // Same surface only. Two Default views both stand for an empty filter, so
+  // without this an unfiltered Series page matched the books Default and every
+  // page thought it had the other page's view open.
+  const matching = lists.filter(
+    l => l.kind === 'smart' && surfaceOf(l) === surface && !isDirty(l, params),
+  )
   if (matching.length === 0) return null
   return matching.find(l => l.builtin_key === DEFAULT_LIST_KEY) ?? matching[0]
 }
@@ -285,15 +355,23 @@ export function adoptedList(
 export function viewIsCurrent(
   l: SavedList, pathname: string, search: string, shelfParam: string | null,
 ): boolean {
-  if (pathname !== '/books') return false
-  return l.kind === 'smart' ? matchList([l], search) !== null : shelfParam === l.id
+  // Its own surface, not just any page. Without this every series view lit up
+  // on Books whenever the query strings happened to agree, which for two views
+  // that both filter on nothing is always.
+  if (pathname !== SURFACE_PATH[surfaceOf(l)]) return false
+  return l.kind === 'smart' ? matchList([l], search, surfaceOf(l)) !== null : shelfParam === l.id
 }
 
-/** Where the books nav row points: the default list's filter. */
-export function defaultListHref(lists: SavedList[]): string {
-  const d = lists.find(l => l.builtin_key === DEFAULT_LIST_KEY)
+/** The view a surface opens on, if the caller has one. */
+export const defaultListFor = (lists: SavedList[], surface: ListSurface = 'books') =>
+  lists.find(l => l.builtin_key === DEFAULT_LIST_KEY && surfaceOf(l) === surface)
+
+/** Where a nav row points: that surface's default view, filters and all. */
+export function defaultListHref(lists: SavedList[], surface: ListSurface = 'books'): string {
+  const d = defaultListFor(lists, surface)
   const q = d ? listQuery(d) : ''
-  return q ? `/books?${q}` : '/books'
+  const path = SURFACE_PATH[surface]
+  return q ? `${path}?${q}` : path
 }
 
 /**
@@ -343,15 +421,19 @@ export type CallApi = <T>(path: string, init?: RequestInit) => Promise<T>
 export const fetchLists = (callApi: CallApi): Promise<SavedList[]> =>
   callApi<{ items: SavedList[] }>('/api/v1/me/lists').then(r => r.items ?? [])
 
-/** Saves the filter on screen as a new smart list. */
+/** Saves the filter on screen as a new smart list, on the page it was made on. */
 export function createSmartList(
   callApi: CallApi, name: string, query: string, icon?: string,
+  surface: ListSurface = 'books', layout?: ListLayout,
 ): Promise<SavedList> {
   return callApi<SavedList>('/api/v1/me/lists', {
     method: 'POST',
     body: JSON.stringify({
-      name, icon: icon ?? '', kind: 'smart',
-      filter: { query }, visibility: 'private',
+      name, icon: icon ?? '', kind: 'smart', surface,
+      // The layout on screen, not the column's default. Saving a view is
+      // saying "keep this", and dropping the layout meant saving from Rows
+      // handed back a view that opened in Grid.
+      filter: { query }, layout: layout ?? 'list', visibility: 'private',
     }),
   })
 }

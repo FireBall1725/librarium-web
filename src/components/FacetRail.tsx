@@ -8,6 +8,7 @@
 // a filter would return nothing before spending a click on it.
 
 import { useTranslation } from 'react-i18next'
+import { formatStars, starsOf } from '../lib/rating'
 import {
   FACET_ORDER,
   selectionCount,
@@ -29,11 +30,13 @@ const LABEL_KEY: Record<FacetKey, string> = {
   ownership: 'facets.ownership',
   library: 'facets.library',
   shelf: 'facets.shelf',
+  location: 'facets.location',
   read_status: 'facets.read_status',
   media_type: 'facets.media_type',
   genre: 'facets.genre',
   tag: 'facets.tag',
   rating: 'facets.rating',
+  my_rating: 'facets.my_rating',
   favourite: 'facets.favourite',
 }
 
@@ -43,7 +46,14 @@ type Translate = ReturnType<typeof useTranslation>['t']
 function displayLabel(key: FacetKey, v: FacetValue, t: Translate): string {
   if (key === 'ownership') return t(`ownership.${v.value}`, { defaultValue: v.label })
   if (key === 'read_status') return t(`read_status.${v.value}`, { defaultValue: v.label })
-  if (key === 'rating') return t('facets.stars', { count: Number(v.value), defaultValue: `${v.value} stars` })
+  // Halves, because the column holds ten points and the reader counts five
+  // stars. Printing the stored number said "8 stars" for four.
+  if (key === 'rating' || key === 'my_rating') {
+    return t('facets.stars', {
+      count: starsOf(Number(v.value)), stars: formatStars(Number(v.value)),
+      defaultValue: `${formatStars(Number(v.value))} stars`,
+    })
+  }
   if (key === 'favourite') return t('facets.favourited', { defaultValue: 'Favourited' })
   return v.label
 }
@@ -146,7 +156,11 @@ export default function FacetRail({ facets, selection, onToggle, onClear, loadin
           onClick={onClear}
           className="w-full rounded-md border border-line-strong px-3 py-1.5 text-xs font-medium text-content-secondary transition-colors hover:bg-surface-inset hover:text-content"
         >
-          {t('facets.clear', { count: active, defaultValue: `Clear ${active} filters` })}
+          {t('facets.clear', {
+            count: active,
+            defaultValue: 'Clear 1 filter',
+            defaultValue_other: `Clear ${active} filters`,
+          })}
         </button>
       )}
     </div>

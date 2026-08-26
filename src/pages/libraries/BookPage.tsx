@@ -9,14 +9,17 @@ import { AddEditionModal } from '../../components/AddEditionModal'
 import EditBookModal from '../../components/EditBookModal'
 import LoanFormModal from '../../components/LoanFormModal'
 import BookCover from '../../components/BookCover'
-import { Icon } from '../../lib/icons'
-import { listHref, listIcon, type SavedList } from '../../lib/lists'
+import BookContents from '../../components/BookContents'
+import BookLists from '../../components/BookLists'
+import BookReaders from '../../components/BookReaders'
+import BookSeries from '../../components/BookSeries'
+import StarRating from '../../components/StarRating'
+import { type SavedList } from '../../lib/lists'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const formatPosition = (pos: number) => pos % 1 === 0 ? pos.toFixed(0) : pos.toFixed(1)
 
 const READ_STATUSES = [
   { value: 'unread', label: 'Unread' },
@@ -239,9 +242,15 @@ function ReadingPanel({ bookId }: { bookId: string }) {
             </select>
           </div>
           <div>
-            <label className="block text-xs text-content-tertiary mb-1">Rating (1–10)</label>
-            <input type="number" min="1" max="10" value={form.rating} placeholder="—"
-              onChange={e => setForm(f => ({ ...f, rating: e.target.value }))} className={inputCls} />
+            <label className="block text-xs text-content-tertiary mb-1">Rating</label>
+            {/* Stars rather than a number box labelled 1-10. The column holds
+                ten points, which is five stars of two, so the reader is no
+                longer asked to convert in their head against a rail that talks
+                about stars. */}
+            <StarRating
+              value={form.rating === '' ? null : Number(form.rating)}
+              onChange={r => setForm(f => ({ ...f, rating: r === null ? '' : String(r) }))}
+            />
           </div>
           <div>
             <label className="block text-xs text-content-tertiary mb-1">Date started</label>
@@ -1866,52 +1875,36 @@ export default function BookPage() {
             </Section>
           )}
 
-          {/* Series */}
-          {seriesRefs.length > 0 && (
-            <Section title="Series">
-              <div className="space-y-2">
-                {seriesRefs.map(ref => (
-                  <Link key={ref.series_id} to={`/libraries/${libraryId}/series`}
-                    className="group flex items-center justify-between rounded-xl border border-line bg-surface px-4 py-3 hover:border-accent-line hover:bg-blue-50/30 dark:hover:bg-blue-950/20 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center">
-                        <svg className="w-4 h-4 text-indigo-500 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                        </svg>
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-content">{ref.series_name}</p>
-                        <p className="text-xs text-content-muted">Vol. {formatPosition(ref.position)}</p>
-                      </div>
-                    </div>
-                    <svg className="w-4 h-4 text-content-subtle group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </Link>
-                ))}
-              </div>
-            </Section>
-          )}
+          {/* Always rendered, in a series or not. Hiding it when the book was
+              in none meant the only way to put it in one was the per-library
+              page, which is what librarium-web#85 calls a different part of the
+              app. */}
+          <Section title="Series">
+            <BookSeries
+              bookId={bookId ?? ''}
+              libraryId={libraryId ?? ''}
+              refs={seriesRefs}
+              onChanged={() => void load()}
+            />
+          </Section>
 
-          {/* Shelves */}
-          {bookLists.length > 0 && (
-            <Section title="On lists">
-              <div className="flex flex-wrap gap-2">
-                {bookLists.map(l => (
-                  <Link key={l.id} to={listHref(l)}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-surface px-3 py-1.5 text-sm text-content-secondary hover:bg-surface-inset transition-colors">
-                    {/* Drawn from the icon set rather than printed. This pill
-                        rendered the field as text, which was right while it
-                        held an emoji and drew the literal word "libraries" once
-                        the picker moved to named icons. */}
-                    <Icon name={listIcon(l)} size={14}
-                      style={l.color ? { color: l.color } : undefined} />
-                    {l.name}
-                  </Link>
-                ))}
-              </div>
-            </Section>
-          )}
+          {/* Always rendered, whether or not anything is recorded. The table
+              has been empty since it shipped because there was no surface to
+              write a row from, so an empty-hides rule would keep it that way. */}
+          <Section title="Contains">
+            <BookContents bookId={bookId ?? ''} libraryId={libraryId ?? ''} />
+          </Section>
+
+          {/* Always rendered, pills or not. Hiding it when the book was on
+              nothing meant the first list could never be added from here. */}
+          <Section title="On lists">
+            <BookLists bookId={bookId ?? ''} lists={bookLists} onChanged={() => void load()} />
+          </Section>
+
+          {/* What everyone else thought. The component owns its heading and
+              renders nothing at all when there is nobody else, so a one-person
+              library never meets an empty section. */}
+          <BookReaders bookId={bookId ?? ''} />
 
           {/* Editions */}
           <Section
