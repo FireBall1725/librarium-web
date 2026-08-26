@@ -495,5 +495,16 @@
     "from_other": "sur {{count}} notes",
     "favourite": "Coup de cœur",
     "rating": "Note"
+  },
+  "book_series": {
+    "add": "+ Ajouter à une série",
+    "failed": "Échec de l'enregistrement",
+    "name_placeholder": "Nommer la série…",
+    "new": "Nouvelle série…",
+    "pick": "Série",
+    "position": "Vol.",
+    "remove": "Retirer de cette série",
+    "remove_named": "Retirer de {{name}}",
+    "volume": "Vol. {{position}}"
   }
 }

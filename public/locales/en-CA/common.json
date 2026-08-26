@@ -495,5 +495,16 @@
     "from_other": "from {{count}} ratings",
     "favourite": "Favourite",
     "rating": "Rating"
+  },
+  "book_series": {
+    "add": "+ Add to a series",
+    "failed": "That did not save",
+    "name_placeholder": "Name the series…",
+    "new": "New series…",
+    "pick": "Series",
+    "position": "Vol.",
+    "remove": "Take out of this series",
+    "remove_named": "Take out of {{name}}",
+    "volume": "Vol. {{position}}"
   }
 }
