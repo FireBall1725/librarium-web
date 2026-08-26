@@ -368,6 +368,17 @@ export interface Series {
   // Caller-relative reading state — number of books in the series whose
   // effective user_read_status is 'read' / 'reading'. Both 0 when not authed
   // or no progress recorded. UI gates display behind show_read_badges.
+  /**
+   * What the run is worth, averaged from the volumes anyone has rated.
+   *
+   * Null when nothing in it is rated, which is a different thing from a rating
+   * of nought. rated_books says how many volumes it came from, because a 4
+   * from one volume of twenty and a 4 from all twenty are not the same claim.
+   */
+  rating?: number | null
+  rated_books?: number
+  /** The caller's own average over the run, null when they have rated none. */
+  my_rating?: number | null
   read_count: number
   reading_count: number
   preview_books: SeriesPreviewBook[]

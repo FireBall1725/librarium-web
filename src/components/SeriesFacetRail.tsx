@@ -16,11 +16,14 @@
 
 import { useTranslation } from 'react-i18next'
 import type { FacetValue } from '../lib/bookBrowse'
+import { formatStars, starsOf } from '../lib/rating'
 
 export interface SeriesFacets {
   library: FacetValue[]
   media_type: FacetValue[]
   genre: FacetValue[]
+  rating: FacetValue[]
+  my_rating: FacetValue[]
   status: FacetValue[]
   arcs: FacetValue[]
   reading: FacetValue[]
@@ -32,6 +35,7 @@ export type SeriesFacetKey = keyof SeriesFacets
 /** URL parameter per dimension. Library is plural because it multi-selects. */
 export const SERIES_PARAM: Record<SeriesFacetKey, string> = {
   library: 'lib', media_type: 'type', genre: 'genre',
+  rating: 'rating', my_rating: 'my_rating',
   status: 'status', arcs: 'arcs', reading: 'reading', tag: 'tag',
 }
 
@@ -43,17 +47,34 @@ export const SERIES_PARAM: Record<SeriesFacetKey, string> = {
  * through the run you are, which is what a series page is actually about.
  */
 export const SERIES_FACET_ORDER: SeriesFacetKey[] = [
-  'library', 'media_type', 'reading', 'status', 'genre', 'arcs', 'tag',
+  'library', 'media_type', 'reading', 'rating', 'my_rating', 'status',
+  'genre', 'arcs', 'tag',
 ]
 
-const LABEL_KEY: Record<SeriesFacetKey, string> = {
+/**
+ * The heading each dimension gets, in the rail and beside a suggestion.
+ *
+ * Exported because the search box says the same words: a suggestion reading
+ * "Manga" is ambiguous until the kind is in front of it, and the kind has to be
+ * the one the rail uses or the two disagree about what a dimension is called.
+ */
+export const SERIES_GROUP_KEY: Record<SeriesFacetKey, string> = {
   library: 'facets.library',
   media_type: 'facets.media_type',
   genre: 'facets.genre',
+  rating: 'facets.rating',
+  my_rating: 'facets.my_rating',
   reading: 'series.reading',
   status: 'series.status',
   arcs: 'series.arcs',
   tag: 'facets.tag',
+}
+
+/** What each heading says when nothing has translated it. */
+export const SERIES_GROUP_FALLBACK: Record<SeriesFacetKey, string> = {
+  library: 'Library', media_type: 'Type', genre: 'Genre',
+  rating: 'Rating', my_rating: 'My rating', status: 'Status',
+  arcs: 'Arcs', reading: 'Reading', tag: 'Tag',
 }
 
 type Translate = ReturnType<typeof useTranslation>['t']
@@ -69,6 +90,14 @@ export function seriesFacetLabel(
   if (key === 'status') return t(`series.status_${value}`, { defaultValue: fallback })
   if (key === 'arcs') return t(`series.arcs_${value}`, { defaultValue: fallback })
   if (key === 'reading') return t(`series.reading_${value}`, { defaultValue: fallback })
+  // Halves, because the column holds ten points and the reader counts five
+  // stars. Printing the stored number said "8 stars" for four.
+  if (key === 'rating' || key === 'my_rating') {
+    return t('facets.stars', {
+      count: starsOf(Number(value)), stars: formatStars(Number(value)),
+      defaultValue: `${formatStars(Number(value))} stars`,
+    })
+  }
   return fallback
 }
 
@@ -87,7 +116,7 @@ function Group({ facetKey, values, selection, onToggle }: {
   return (
     <div className="mb-5">
       <h3 className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-content-muted">
-        {t(LABEL_KEY[facetKey])}
+        {t(SERIES_GROUP_KEY[facetKey], { defaultValue: SERIES_GROUP_FALLBACK[facetKey] })}
       </h3>
       <ul>
         {values.map(v => {

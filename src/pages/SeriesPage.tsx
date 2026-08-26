@@ -21,15 +21,19 @@ import { useTranslation } from 'react-i18next'
 import { useAuth, ApiError } from '../auth/AuthContext'
 import PageHeader from '../components/PageHeader'
 import BookCover from '../components/BookCover'
+import { Stars } from '../components/StarRating'
+import SuggestBox, { type SuggestItem } from '../components/SuggestBox'
 import { PromptDialog } from '../components/Dialog'
 import SeriesFormModal from '../components/SeriesFormModal'
 import SuggestSeriesModal from '../components/SuggestSeriesModal'
 import ViewChip from '../components/ViewChip'
 import SeriesFacetRail, {
-  SERIES_FACET_ORDER, SERIES_PARAM, seriesFacetLabel,
+  SERIES_FACET_ORDER, SERIES_GROUP_FALLBACK, SERIES_GROUP_KEY, SERIES_PARAM,
+  seriesFacetLabel,
   type SeriesFacetKey, type SeriesFacets,
 } from '../components/SeriesFacetRail'
 import { usePageTitle } from '../hooks/usePageTitle'
+import { formatStars } from '../lib/rating'
 import {
   DEFAULT_LIST_KEY, LISTS_CHANGED, announceListsChanged, createSmartList,
   adoptedList, defaultListFor, deleteList, fetchLists, isDirty as viewIsDirty,
@@ -39,7 +43,7 @@ import { LIST_ICONS } from '../lib/listIcons'
 import type { IconName } from '../lib/icons'
 import type { Library, Series } from '../types'
 
-const SORTS = ['name', 'volumes', 'missing', 'read', 'recent'] as const
+const SORTS = ['name', 'volumes', 'missing', 'read', 'rating', 'recent'] as const
 
 /** Which parameters are filters, so a chip row and a count can tell them apart. */
 const FILTER_PARAMS = SERIES_FACET_ORDER.map(k => SERIES_PARAM[k])
@@ -208,17 +212,25 @@ export default function SeriesPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [views, landed])
 
-  // Typing into the search box should not fire a request per keystroke, and it
-  // should not push a history entry per keystroke either. Held locally, pushed
-  // to the URL on a pause.
+  /**
+   * What is typed, which is not yet what is searched.
+   *
+   * It committed on a pause at first, and that broke the suggestions it feeds:
+   * typing "action" searched series names, matched none, collapsed every facet
+   * to empty, and took the Action genre suggestion down with it. Reaching a
+   * filter by typing its name is the one thing the box exists for.
+   *
+   * So the text commits on Enter or on picking a suggestion, the way the Books
+   * box does, and the facets stay describing what is actually on screen.
+   * Clearing is the exception: an empty field means "show me everything again"
+   * and waiting for Enter to honour that reads as a stuck filter.
+   */
   const [draft, setDraft] = useState(query)
   useEffect(() => { setDraft(query) }, [query])
-  useEffect(() => {
-    if (draft === query) return
-    const timer = setTimeout(() => set({ q: draft }), 250)
-    return () => clearTimeout(timer)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draft])
+  const typeSearch = (next: string) => {
+    setDraft(next)
+    if (next === '' && query !== '') set({ q: null })
+  }
 
   /** Tick or untick one value of one dimension. */
   const toggleFacet = (key: SeriesFacetKey, value: string) => {
@@ -303,6 +315,50 @@ export default function SeriesPage() {
    * act on. A value the facets do not know about still gets a chip, so a filter
    * can always be removed even when nothing matches it.
    */
+  /**
+   * What the search box offers as you type.
+   *
+   * Every filter in the rail was mouse-only, the same gap the Books search was
+   * built to close: you could see a genre in the rail but not reach it from the
+   * keyboard. A suggestion resolves to the same toggle the checkbox calls, so
+   * picking one ticks that box and the chip is the box's own rendering.
+   *
+   * Read off the facets already loaded rather than a second request, which also
+   * means a suggestion can only offer a filter that would return something.
+   */
+  const suggestions = useMemo(() => {
+    const needle = draft.trim().toLowerCase()
+    if (!needle || !facets) return []
+    const out: { key: SeriesFacetKey; value: string; item: SuggestItem }[] = []
+    for (const key of SERIES_FACET_ORDER) {
+      const group = t(SERIES_GROUP_KEY[key], { defaultValue: SERIES_GROUP_FALLBACK[key] })
+      for (const v of facets[key] ?? []) {
+        if (selection[key]?.includes(v.value)) continue
+        const label = seriesFacetLabel(key, v.value, t, v.label)
+        if (!label.toLowerCase().includes(needle)) continue
+        out.push({
+          key, value: v.value,
+          item: {
+            key: `${key}:${v.value}`, group, label, count: v.count,
+            // A rating is drawn rather than described. Reading "four stars" is
+            // slower than seeing four stars.
+            render: key === 'rating' || key === 'my_rating'
+              ? (
+                <span className="flex min-w-0 flex-1 items-center gap-1.5">
+                  <Stars rating={Number(v.value)} />
+                  <span className="truncate text-content-tertiary">{label}</span>
+                </span>
+              )
+              : undefined,
+          },
+        })
+      }
+    }
+    // Eight, like the Books box. A list longer than the eye takes in at once is
+    // a list nobody reads to the end of.
+    return out.slice(0, 8)
+  }, [draft, facets, selection, t])
+
   const activeChips = useMemo(() => {
     const out: { key: SeriesFacetKey; value: string; label: string }[] = []
     for (const key of SERIES_FACET_ORDER) {
@@ -334,16 +390,19 @@ export default function SeriesPage() {
         {/* Above the grid and on its own, the way Books has it: a search box is
             the widest control on the page and the first thing anyone reaches
             for, so it does not belong in a row competing with five buttons. */}
-        <div className="relative mb-6 w-full max-w-lg">
-          <input
-            type="search"
-            value={draft}
-            onChange={e => setDraft(e.target.value)}
-            placeholder={t('series.search', { defaultValue: 'Search series…' })}
-            aria-label={t('series.search', { defaultValue: 'Search series' })}
-            className="w-full rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm text-content placeholder:text-content-muted focus:border-accent focus:outline-none"
-          />
-        </div>
+        <SuggestBox
+          value={draft}
+          onChange={typeSearch}
+          onCommitText={text => set({ q: text })}
+          placeholder={t('series.search', { defaultValue: 'Search series…' })}
+          ariaLabel={t('series.search', { defaultValue: 'Search series' })}
+          items={suggestions.map(s => s.item)}
+          onPick={i => {
+            const picked = suggestions[i]
+            toggleFacet(picked.key, picked.value)
+            setDraft('')
+          }}
+        />
 
         <div className="grid gap-7 lg:grid-cols-[13rem_1fr]">
           <aside>
@@ -595,13 +654,13 @@ export default function SeriesPage() {
 /** What each order means, for the tooltip. */
 const SORT_FALLBACK: Record<string, string> = {
   name: 'Name', volumes: 'Volumes held', missing: 'Missing volumes',
-  read: 'Volumes read', recent: 'Recently changed',
+  read: 'Volumes read', rating: 'Rating', recent: 'Recently changed',
 }
 
 /** What fits on a button. The tooltip carries the rest. */
 const SORT_SHORT: Record<string, string> = {
   name: 'Name', volumes: 'Volumes', missing: 'Missing',
-  read: 'Read', recent: 'Recent',
+  read: 'Read', rating: 'Rating', recent: 'Recent',
 }
 
 type Translate = (k: string, o?: Record<string, unknown>) => string
@@ -624,6 +683,32 @@ function CompleteBadge({ series: s, t }: { series: Series; t: Translate }) {
   ) : (
     <span className="rounded-full border border-success-line px-2.5 py-[3px] text-[11px] text-success">
       {t('series.complete', { defaultValue: 'complete' })}
+    </span>
+  )
+}
+
+/**
+ * The run's rating, in stars.
+ *
+ * Only when something in it is rated. A run nobody has an opinion on gets no
+ * stars rather than an empty five, which reads as nought out of five.
+ *
+ * The volume count comes with it, because a 4 averaged from one volume of
+ * twenty and a 4 averaged from all twenty are not the same claim and the number
+ * alone cannot say which it is.
+ */
+function SeriesRating({ series: s, t }: { series: Series; t: Translate }) {
+  if (s.rating == null) return null
+  return (
+    <span className="inline-flex items-center gap-1.5" title={t('series.rated_from', {
+      count: s.rated_books ?? 0,
+      defaultValue: 'averaged from 1 rated volume',
+      defaultValue_other: `averaged from ${s.rated_books ?? 0} rated volumes`,
+    })}>
+      <Stars rating={s.rating} size={12} />
+      <span className="text-[11px] tabular-nums text-content-tertiary">
+        {formatStars(s.rating)}
+      </span>
     </span>
   )
 }
@@ -660,6 +745,7 @@ function SeriesRow({ series: s, libraryName, showLibrary, busy, t, onEdit, onDel
           {s.name}
         </Link>
         <CompleteBadge series={s} t={t} />
+        <SeriesRating series={s} t={t} />
         {/* Which library's row this is. A series held by two libraries is two
             rows by design, so without this the list looks like a duplicate. */}
         {showLibrary && libraryName && (
@@ -753,6 +839,7 @@ function SeriesTile({ series: s, libraryName, showLibrary, t }: {
       </Link>
       <p className="mt-0.5 text-[11px] tabular-nums text-content-muted">{summary(s, t)}</p>
       <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+        <SeriesRating series={s} t={t} />
         <CompleteBadge series={s} t={t} />
         {showLibrary && libraryName && (
           <span className="rounded-full border border-line px-2 py-[2px] text-[10px] text-content-tertiary">
