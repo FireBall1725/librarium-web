@@ -791,7 +791,15 @@ export default function BooksPage() {
       />
 
       <div className="px-8 py-6">
+        {/* Search on the left, the page's own actions on the right, one line.
+            They used to sit in the row below with the view chip, the count and
+            a chip per filter, which is a row that grows: every filter ticked
+            and every unsaved change pushed the buttons onto a second line and
+            then a third. Nothing here depends on which view is open, so
+            nothing here belongs in that row. */}
+        <div className="mb-6 flex flex-wrap items-center gap-2">
         <FilterSearch
+          className="min-w-[14rem] max-w-lg flex-1"
           value={draftQuery}
           onChange={setDraftQuery}
           onCommitText={text => { setDraftQuery(text); apply({ ...state, query: text, page: 1 }) }}
@@ -809,6 +817,55 @@ export default function BooksPage() {
             apply({ ...state, contributors: [...state.contributors, id], page: 1 })
           }}
         />
+
+          <span className="flex-1" />
+          <button type="button" onClick={() => setAdding(true)}
+            className="lb-btn sm">
+            {t('books.add', { defaultValue: 'Add book' })}
+          </button>
+
+          <button type="button"
+            onClick={() => (selecting ? stopSelecting() : setSelecting(true))}
+            aria-pressed={selecting}
+            className={`rounded-md border px-2.5 py-1 text-xs font-medium transition-colors ${
+              selecting
+                ? 'border-accent bg-accent text-white'
+                : 'border-line-strong text-content-secondary hover:bg-surface-inset'
+            }`}>
+            {selecting
+              ? t('books.done_selecting', { defaultValue: 'Done' })
+              : t('books.select', { defaultValue: 'Select' })}
+          </button>
+
+          {/* Not in the layout toggle beside it: layout is how the same
+              rows are drawn, grouping changes what a row is. Hidden while
+              drilled into a series, where there is nothing left to
+              collapse. */}
+          {!state.series && (
+            <button type="button"
+              onClick={() => apply({ ...state, grouped: !state.grouped, page: 1 })}
+              aria-pressed={state.grouped}
+              className={`rounded-md border px-2.5 py-1 text-xs font-medium transition-colors ${
+                state.grouped
+                  ? 'border-accent bg-accent text-white'
+                  : 'border-line-strong text-content-secondary hover:bg-surface-inset'
+              }`}>
+              {t('books.group_series', { defaultValue: 'Group series' })}
+            </button>
+          )}
+
+          <div className="flex overflow-hidden rounded-md border border-line-strong">
+            {(['list', 'grid'] as ListLayout[]).map(opt => (
+              <button key={opt} type="button" onClick={() => chooseLayout(opt)}
+                aria-pressed={layout === opt}
+                className={`px-2.5 py-1 text-xs font-medium transition-colors ${
+                  layout === opt ? 'bg-accent text-white' : 'text-content-secondary hover:bg-surface-inset'
+                }`}>
+                {t(`views.layout_${opt}`, { defaultValue: opt === 'list' ? 'Rows' : 'Grid' })}
+              </button>
+            ))}
+          </div>
+        </div>
 
         <div className="grid gap-7 lg:grid-cols-[13rem_1fr]">
           <aside>
@@ -963,52 +1020,6 @@ export default function BooksPage() {
                 </button>
               )}
 
-              <button type="button" onClick={() => setAdding(true)}
-                className="lb-btn sm">
-                {t('books.add', { defaultValue: 'Add book' })}
-              </button>
-
-              <button type="button"
-                onClick={() => (selecting ? stopSelecting() : setSelecting(true))}
-                aria-pressed={selecting}
-                className={`rounded-md border px-2.5 py-1 text-xs font-medium transition-colors ${
-                  selecting
-                    ? 'border-accent bg-accent text-white'
-                    : 'border-line-strong text-content-secondary hover:bg-surface-inset'
-                }`}>
-                {selecting
-                  ? t('books.done_selecting', { defaultValue: 'Done' })
-                  : t('books.select', { defaultValue: 'Select' })}
-              </button>
-
-              {/* Not in the layout toggle beside it: layout is how the same
-                  rows are drawn, grouping changes what a row is. Hidden while
-                  drilled into a series, where there is nothing left to
-                  collapse. */}
-              {!state.series && (
-                <button type="button"
-                  onClick={() => apply({ ...state, grouped: !state.grouped, page: 1 })}
-                  aria-pressed={state.grouped}
-                  className={`rounded-md border px-2.5 py-1 text-xs font-medium transition-colors ${
-                    state.grouped
-                      ? 'border-accent bg-accent text-white'
-                      : 'border-line-strong text-content-secondary hover:bg-surface-inset'
-                  }`}>
-                  {t('books.group_series', { defaultValue: 'Group series' })}
-                </button>
-              )}
-
-              <div className="flex overflow-hidden rounded-md border border-line-strong">
-                {(['list', 'grid'] as ListLayout[]).map(opt => (
-                  <button key={opt} type="button" onClick={() => chooseLayout(opt)}
-                    aria-pressed={layout === opt}
-                    className={`px-2.5 py-1 text-xs font-medium transition-colors ${
-                      layout === opt ? 'bg-accent text-white' : 'text-content-secondary hover:bg-surface-inset'
-                    }`}>
-                    {t(`views.layout_${opt}`, { defaultValue: opt === 'list' ? 'Rows' : 'Grid' })}
-                  </button>
-                ))}
-              </div>
             </div>
 
             {selected.length > 0 && (

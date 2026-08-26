@@ -27,6 +27,7 @@ import type { ContributorResult } from '../types'
 export default function FilterSearch({
   value, onChange, onCommitText, facets, lists, selection,
   onToggleFacet, onPickContributor, onPickRating,
+  className = 'mb-6 w-full max-w-lg',
 }: {
   value: string
   onChange: (next: string) => void
@@ -39,6 +40,13 @@ export default function FilterSearch({
   onPickContributor: (id: string, name: string) => void
   /** Replace the rating selection outright: a comparison is a set, not one tick. */
   onPickRating: (values: string[]) => void
+  /**
+   * The wrapper's classes, when the caller needs it to share a row.
+   *
+   * The dropdown is positioned against this element, so it cannot be wrapped in
+   * another div without the list detaching from the input.
+   */
+  className?: string
 }) {
   const { t } = useTranslation()
   const { callApi } = useAuth()
@@ -119,7 +127,7 @@ export default function FilterSearch({
   }
 
   return (
-    <div ref={boxRef} className="relative mb-6 w-full max-w-lg">
+    <div ref={boxRef} className={`relative ${className}`}>
       <input
         type="search"
         value={value}

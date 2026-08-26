@@ -390,19 +390,84 @@ export default function SeriesPage() {
         {/* Above the grid and on its own, the way Books has it: a search box is
             the widest control on the page and the first thing anyone reaches
             for, so it does not belong in a row competing with five buttons. */}
-        <SuggestBox
-          value={draft}
-          onChange={typeSearch}
-          onCommitText={text => set({ q: text })}
-          placeholder={t('series.search', { defaultValue: 'Search series…' })}
-          ariaLabel={t('series.search', { defaultValue: 'Search series' })}
-          items={suggestions.map(s => s.item)}
-          onPick={i => {
-            const picked = suggestions[i]
-            toggleFacet(picked.key, picked.value)
-            setDraft('')
-          }}
-        />
+        {/* Search on the left, the page's own actions on the right, one line.
+            They used to sit in the row below with the view chip, the count and
+            a chip per filter, which is a row that grows: every filter ticked
+            and every unsaved change pushed the buttons onto a second line and
+            then a third. Nothing here depends on which view is open, so
+            nothing here belongs in that row. */}
+        <div className="mb-6 flex flex-wrap items-center gap-2">
+          <SuggestBox
+            className="min-w-[14rem] max-w-lg flex-1"
+            value={draft}
+            onChange={typeSearch}
+            onCommitText={text => set({ q: text })}
+            placeholder={t('series.search', { defaultValue: 'Search series…' })}
+            ariaLabel={t('series.search', { defaultValue: 'Search series' })}
+            items={suggestions.map(s => s.item)}
+            onPick={i => {
+              const picked = suggestions[i]
+              toggleFacet(picked.key, picked.value)
+              setDraft('')
+            }}
+          />
+
+          <span className="flex-1" />
+
+          <button type="button" className="lb-btn ghost sm"
+            onClick={() => setSuggesting(true)}
+            disabled={libraries.length > 1 && selection.library.length !== 1}
+            title={libraries.length > 1 && selection.library.length !== 1
+              ? t('series.pick_library_first', {
+                  defaultValue: 'Pick one library first: a series belongs to one',
+                })
+              : undefined}>
+            {t('series.suggest', { defaultValue: 'Find series' })}
+          </button>
+
+          <button type="button" className="lb-btn sm" onClick={() => setCreating(true)}>
+            {t('series.new', { defaultValue: 'New series' })}
+          </button>
+
+          {/* A segmented group, not a dropdown. Five sort orders is a
+              comparison, and a comparison you have to open a menu to see is one
+              nobody makes. Clicking the one already active flips the direction,
+              the way a table header does. */}
+          <div className="flex overflow-hidden rounded-md border border-line-strong">
+            {SORTS.map(o => {
+              const on = sort === o
+              return (
+                <button key={o} type="button" aria-pressed={on}
+                  title={t(`series.sort_${o}`, { defaultValue: SORT_FALLBACK[o] })}
+                  onClick={() => set(on
+                    // Already sorting by this, so the click means the other
+                    // direction. Name defaults to ascending and everything else
+                    // to descending: nobody looks for the run with the fewest
+                    // volumes missing.
+                    ? { dir: dir === 'asc' ? 'desc' : 'asc' }
+                    : { sort: o === 'name' ? null : o, dir: o === 'name' ? null : 'desc' })}
+                  className={`px-2.5 py-1 text-xs font-medium transition-colors ${
+                    on ? 'bg-accent text-white' : 'text-content-secondary hover:bg-surface-inset'
+                  }`}>
+                  {t(`series.sort_short_${o}`, { defaultValue: SORT_SHORT[o] })}
+                  {on && <span aria-hidden="true" className="ml-1">{dir === 'asc' ? '↑' : '↓'}</span>}
+                </button>
+              )
+            })}
+          </div>
+
+          <div className="flex overflow-hidden rounded-md border border-line-strong">
+            {(['list', 'grid'] as ListLayout[]).map(opt => (
+              <button key={opt} type="button" onClick={() => chooseLayout(opt)}
+                aria-pressed={layout === opt}
+                className={`px-2.5 py-1 text-xs font-medium transition-colors ${
+                  layout === opt ? 'bg-accent text-white' : 'text-content-secondary hover:bg-surface-inset'
+                }`}>
+                {t(`views.layout_${opt}`, { defaultValue: opt === 'list' ? 'Rows' : 'Grid' })}
+              </button>
+            ))}
+          </div>
+        </div>
 
         <div className="grid gap-7 lg:grid-cols-[13rem_1fr]">
           <aside>
@@ -495,67 +560,6 @@ export default function SeriesPage() {
                 </button>
               )}
 
-              {/* Finds runs hiding in loose titles. A collection imported from
-                  a spreadsheet arrives as a thousand books and no series at
-                  all, and this is the only thing that fixes that in one pass.
-
-                  One library at a time, because the books it files belong to
-                  one. With several it acts on the one being filtered, and asks
-                  for one when nothing is. */}
-              <button type="button" className="lb-btn ghost sm"
-                onClick={() => setSuggesting(true)}
-                disabled={libraries.length > 1 && selection.library.length !== 1}
-                title={libraries.length > 1 && selection.library.length !== 1
-                  ? t('series.pick_library_first', {
-                      defaultValue: 'Pick one library first: a series belongs to one',
-                    })
-                  : undefined}>
-                {t('series.suggest', { defaultValue: 'Find series' })}
-              </button>
-
-              <button type="button" className="lb-btn sm" onClick={() => setCreating(true)}>
-                {t('series.new', { defaultValue: 'New series' })}
-              </button>
-
-              {/* A segmented group, not a dropdown. Five sort orders is a
-                  comparison, and a comparison you have to open a menu to see
-                  is one nobody makes. Clicking the one already active flips
-                  the direction, the way a table header does, which is also
-                  what retired the separate arrow button beside it. */}
-              <div className="flex overflow-hidden rounded-md border border-line-strong">
-                {SORTS.map(o => {
-                  const on = sort === o
-                  return (
-                    <button key={o} type="button" aria-pressed={on}
-                      title={t(`series.sort_${o}`, { defaultValue: SORT_FALLBACK[o] })}
-                      onClick={() => set(on
-                        // Already sorting by this, so the click means the other
-                        // direction. Name defaults to ascending and everything
-                        // else to descending: nobody looks for the run with the
-                        // fewest volumes missing.
-                        ? { dir: dir === 'asc' ? 'desc' : 'asc' }
-                        : { sort: o === 'name' ? null : o, dir: o === 'name' ? null : 'desc' })}
-                      className={`px-2.5 py-1 text-xs font-medium transition-colors ${
-                        on ? 'bg-accent text-white' : 'text-content-secondary hover:bg-surface-inset'
-                      }`}>
-                      {t(`series.sort_short_${o}`, { defaultValue: SORT_SHORT[o] })}
-                      {on && <span aria-hidden="true" className="ml-1">{dir === 'asc' ? '↑' : '↓'}</span>}
-                    </button>
-                  )
-                })}
-              </div>
-
-              <div className="flex overflow-hidden rounded-md border border-line-strong">
-                {(['list', 'grid'] as ListLayout[]).map(opt => (
-                  <button key={opt} type="button" onClick={() => chooseLayout(opt)}
-                    aria-pressed={layout === opt}
-                    className={`px-2.5 py-1 text-xs font-medium transition-colors ${
-                      layout === opt ? 'bg-accent text-white' : 'text-content-secondary hover:bg-surface-inset'
-                    }`}>
-                    {t(`views.layout_${opt}`, { defaultValue: opt === 'list' ? 'Rows' : 'Grid' })}
-                  </button>
-                ))}
-              </div>
             </div>
 
             {error && (

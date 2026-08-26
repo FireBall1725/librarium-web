@@ -26,6 +26,7 @@ export interface SuggestItem {
 
 export default function SuggestBox({
   value, onChange, onCommitText, placeholder, ariaLabel, items, onPick,
+  className = 'mb-6 w-full max-w-lg',
 }: {
   value: string
   onChange: (next: string) => void
@@ -35,6 +36,15 @@ export default function SuggestBox({
   ariaLabel?: string
   items: SuggestItem[]
   onPick: (index: number) => void
+  /**
+   * The wrapper's classes, when the caller needs it to share a row.
+   *
+   * The box owns its own width by default. A page that puts its actions on the
+   * same line has to own the layout instead, and the dropdown is positioned
+   * against this element, so it cannot be wrapped in another div without the
+   * list detaching from the input.
+   */
+  className?: string
 }) {
   const [open, setOpen] = useState(false)
   const [highlighted, setHighlighted] = useState(0)
@@ -60,7 +70,7 @@ export default function SuggestBox({
   }
 
   return (
-    <div ref={boxRef} className="relative mb-6 w-full max-w-lg">
+    <div ref={boxRef} className={`relative ${className}`}>
       <input
         type="search"
         value={value}
