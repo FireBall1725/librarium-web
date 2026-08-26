@@ -496,6 +496,13 @@
     "favourite": "Coup de cœur",
     "rating": "Note"
   },
+  "book_contents": {
+    "add": "+ Indiquer ce que ce livre contient",
+    "find": "Quel tome est à l'intérieur ?",
+    "inside": "Aussi dans :",
+    "position": "Ordre",
+    "remove": "Retirer {{title}}"
+  },
   "book_series": {
     "add": "+ Ajouter à une série",
     "failed": "Échec de l'enregistrement",

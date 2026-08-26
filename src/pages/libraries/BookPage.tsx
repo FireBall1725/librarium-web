@@ -9,6 +9,7 @@ import { AddEditionModal } from '../../components/AddEditionModal'
 import EditBookModal from '../../components/EditBookModal'
 import LoanFormModal from '../../components/LoanFormModal'
 import BookCover from '../../components/BookCover'
+import BookContents from '../../components/BookContents'
 import BookLists from '../../components/BookLists'
 import BookReaders from '../../components/BookReaders'
 import BookSeries from '../../components/BookSeries'
@@ -1885,6 +1886,13 @@ export default function BookPage() {
               refs={seriesRefs}
               onChanged={() => void load()}
             />
+          </Section>
+
+          {/* Always rendered, whether or not anything is recorded. The table
+              has been empty since it shipped because there was no surface to
+              write a row from, so an empty-hides rule would keep it that way. */}
+          <Section title="Contains">
+            <BookContents bookId={bookId ?? ''} libraryId={libraryId ?? ''} />
           </Section>
 
           {/* Always rendered, pills or not. Hiding it when the book was on

@@ -140,6 +140,19 @@ export interface Book {
   active_loans?: Loan[]
 }
 
+/**
+ * One containment link: an omnibus and a volume inside it.
+ *
+ * Both directions come back in this shape, so the id that matters depends on
+ * which end you asked from. Title is always the other book's.
+ */
+export interface BookContent {
+  container_id: string
+  contained_id: string
+  position: number
+  title: string
+}
+
 export interface PagedBooks {
   items: Book[]
   total: number
@@ -457,6 +470,14 @@ export interface SeriesVolume {
 
 export interface SeriesEntry {
   position: number
+  /**
+   * The last volume a container covers, for an omnibus or a bind-up. Null on
+   * an ordinary book, which occupies one position rather than a span.
+   *
+   * Derived by the server from what the book contains, so it agrees with the
+   * contained rows by construction.
+   */
+  position_end?: number | null
   book_id: string
   arc_id: string | null
   title: string

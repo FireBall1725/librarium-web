@@ -2733,11 +2733,13 @@ interface SeriesDetailViewProps {
 // badge so the # column can go away. Read-state glow follows the same color
 // scheme used by BookCoverThumb so both surfaces are consistent.
 function SeriesVolumeCover({
-  title, coverUrl, position, readStatus, isGhost,
+  title, coverUrl, position, positionEnd, readStatus, isGhost,
 }: {
   title: string
   coverUrl: string | null | undefined
   position: number
+  /** Set on a container, so a three-in-one reads 1-3 rather than a second 1. */
+  positionEnd?: number | null
   readStatus?: string
   isGhost?: boolean
 }) {
@@ -2770,7 +2772,9 @@ function SeriesVolumeCover({
           </div>
         )}
         <span className="absolute bottom-0 right-0 bg-black/75 text-white text-[10px] font-bold leading-none px-1.5 py-0.5 rounded-tl">
-          {formatPosition(position)}
+          {positionEnd != null && positionEnd > position
+            ? `${formatPosition(position)}-${formatPosition(positionEnd)}`
+            : formatPosition(position)}
         </span>
       </div>
     </div>
@@ -3594,6 +3598,7 @@ function SeriesDetailView({ seriesId, libraryId, setExtraCrumbs, onBack }: Serie
                           title={row.entry.title}
                           coverUrl={row.entry.cover_url}
                           position={row.entry.position}
+                          positionEnd={row.entry.position_end}
                           readStatus={showReadBadges ? row.entry.user_read_status : undefined}
                         />
                       </td>

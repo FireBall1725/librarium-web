@@ -496,6 +496,13 @@
     "favourite": "Favourite",
     "rating": "Rating"
   },
+  "book_contents": {
+    "add": "+ Record what this contains",
+    "find": "Which volume is inside?",
+    "inside": "Also in:",
+    "position": "Order",
+    "remove": "Remove {{title}}"
+  },
   "book_series": {
     "add": "+ Add to a series",
     "failed": "That did not save",

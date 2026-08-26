@@ -39,8 +39,12 @@ export default function BookSeries({
 
   const loadSeries = useCallback(() => {
     let cancelled = false
-    void callApi<{ items: Series[] }>(`/api/v1/libraries/${libraryId}/series`)
-      .then(r => { if (!cancelled) setAll(r?.items ?? []) })
+    // A bare array, not an items envelope. The series routes and the newer
+    // /me routes disagree on that, and reading the wrong one fails silently:
+    // the picker simply had nothing in it, so the only path anyone could take
+    // was making a new series.
+    void callApi<Series[]>(`/api/v1/libraries/${libraryId}/series`)
+      .then(r => { if (!cancelled) setAll(Array.isArray(r) ? r : []) })
       .catch(() => { if (!cancelled) setAll([]) })
     return () => { cancelled = true }
   }, [callApi, libraryId])
