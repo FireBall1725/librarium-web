@@ -3,7 +3,9 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAuth, ApiError } from '../auth/AuthContext'
-import type { Book, Tag, Genre, MediaType, ContributorResult, Shelf, BookEdition } from '../types'
+import type { Book, Tag, Genre, MediaType, ContributorResult, BookEdition } from '../types'
+import { fetchLists, listIcon, type SavedList } from '../lib/lists'
+import { Icon } from '../lib/icons'
 import ContributorRow from './ContributorRow'
 import MediaTypeSelect from './MediaTypeSelect'
 import { AddEditionModal } from './AddEditionModal'
@@ -68,7 +70,7 @@ export default function EditBookModal({ libraryId, book, onClose, onSaved, initi
   const genreInputRef = useRef<HTMLInputElement>(null)
 
   const [mediaTypes, setMediaTypes] = useState<MediaType[]>([])
-  const [allShelves, setAllShelves] = useState<Shelf[]>([])
+  const [allShelves, setAllShelves] = useState<SavedList[]>([])
   const [initialShelfIds, setInitialShelfIds] = useState<Set<string>>(new Set())
   const [selectedShelfIds, setSelectedShelfIds] = useState<Set<string>>(new Set())
   const [error, setError] = useState<string | null>(null)
@@ -78,8 +80,14 @@ export default function EditBookModal({ libraryId, book, onClose, onSaved, initi
     callApi<MediaType[]>('/api/v1/media-types').then(mt => setMediaTypes(mt ?? [])).catch(() => {})
     callApi<Tag[]>(`/api/v1/libraries/${libraryId}/tags`).then(ts => setLibraryTags(ts ?? [])).catch(() => {})
     callApi<Genre[]>('/api/v1/genres').then(gs => setAllGenres(gs ?? [])).catch(() => {})
-    callApi<Shelf[]>(`/api/v1/libraries/${libraryId}/shelves`).then(ss => setAllShelves(ss ?? [])).catch(() => {})
-    callApi<Shelf[]>(`/api/v1/libraries/${libraryId}/books/${book.id}/shelves`).then(ss => {
+    // Every list this person can see, not the ones one library shares. The
+    // shelf route only ever returned lists shared with a library, so a private
+    // one was missing from a control that claimed to show them all.
+    void fetchLists(callApi)
+      .then(all => setAllShelves(all.filter(l => l.kind === 'manual')))
+      .catch(() => {})
+    callApi<{ items: SavedList[] }>(`/api/v1/books/${book.id}/lists`).then(r => {
+      const ss = r?.items ?? []
       const ids = new Set((ss ?? []).map(s => s.id))
       setInitialShelfIds(ids)
       setSelectedShelfIds(new Set(ids))
@@ -127,11 +135,11 @@ export default function EditBookModal({ libraryId, book, onClose, onSaved, initi
       const bookId = updated!.id
       for (const id of initialShelfIds) {
         if (!selectedShelfIds.has(id))
-          await callApi(`/api/v1/libraries/${libraryId}/shelves/${id}/books/${bookId}`, { method: 'DELETE' }).catch(() => {})
+          await callApi(`/api/v1/me/lists/${id}/books/${bookId}`, { method: 'DELETE' }).catch(() => {})
       }
       for (const id of selectedShelfIds) {
         if (!initialShelfIds.has(id))
-          await callApi(`/api/v1/libraries/${libraryId}/shelves/${id}/books`, { method: 'POST', body: JSON.stringify({ book_id: bookId }) }).catch(() => {})
+          await callApi(`/api/v1/me/lists/${id}/books/${bookId}`, { method: 'POST' }).catch(() => {})
       }
       onSaved(updated!)
     } catch (err) {
@@ -329,10 +337,10 @@ export default function EditBookModal({ libraryId, book, onClose, onSaved, initi
               </div>
             </div>
 
-            {/* Shelves */}
+            {/* Lists */}
             {allShelves.length > 0 && (
               <div>
-                <label className={labelCls}>Shelves</label>
+                <label className={labelCls}>Lists</label>
                 <div className="flex flex-wrap gap-2">
                   {allShelves.map(shelf => {
                     const checked = selectedShelfIds.has(shelf.id)
@@ -350,7 +358,8 @@ export default function EditBookModal({ libraryId, book, onClose, onSaved, initi
                             else next.delete(shelf.id)
                             return next
                           })} />
-                        {shelf.icon && <span>{shelf.icon}</span>}
+                        <Icon name={listIcon(shelf)} size={14}
+                          style={shelf.color ? { color: shelf.color } : undefined} />
                         {shelf.name}
                       </label>
                     )

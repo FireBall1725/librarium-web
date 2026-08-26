@@ -53,7 +53,6 @@ import {
   listIcon,
   listQuery,
   adoptedList,
-  manualListInParams,
   matchList,
   updateList,
   DEFAULT_LIST_KEY,
@@ -594,23 +593,11 @@ export default function BooksPage() {
   // choice the reader made, so it gets no chip to remove.
   // all, so matching on the filter is the only thing that covers every route in.
   const paramsNow = params.toString()
-  // A manual view is named outright by the URL, so it settles the question
-  // before any of the filter matching does. It used to be invisible here:
-  // matchList only compares filters, a manual view has none, so opening a
-  // shared one fell through to the default and the bar offered to save that
-  // view's id over the filter Books opens on.
-  const manualNow = manualListInParams(views, paramsNow)
-
   const activeChips = FACET_ORDER.flatMap(key =>
     (key === 'ownership' &&
       (isDefaultOwnership(state.selection[key]) || state.selection[key].includes(OWNERSHIP_ANY))
       ? []
-      // The open view's own id is not a filter sitting on top of it, it is the
-      // view. Left in, a manual view rendered its name twice: once as the view
-      // and once as a chip beside it that closed the view when dismissed.
-      : key === 'shelf'
-        ? state.selection[key].filter(v => v !== manualNow?.id)
-        : state.selection[key]
+      : state.selection[key]
     ).map(value => ({
       key,
       value,
@@ -684,7 +671,6 @@ export default function BooksPage() {
 
   const activeView =
     views.find(v => v.id === activeViewId) ??
-    manualNow ??
     views.find(v => v.id === adoptedNow) ??
     matchedNow ??
     views.find(v => v.builtin_key === DEFAULT_LIST_KEY) ??
@@ -747,13 +733,7 @@ export default function BooksPage() {
 
   const commitView = async () => {
     if (!activeView) return
-    // A manual view's membership is not a filter, and the server refuses a
-    // filter written onto one, so the only thing there is to save is how it
-    // is laid out.
-    const changes = activeView.kind === 'manual'
-      ? { layout }
-      : { query: paramsNow, layout }
-    await updateList(callApi, activeView.id, changes)
+    await updateList(callApi, activeView.id, { query: paramsNow, layout })
       .catch(() => {})
     await reloadLists()
     announceListsChanged()

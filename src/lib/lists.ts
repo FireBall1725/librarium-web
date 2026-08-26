@@ -60,7 +60,7 @@ export const listQuery = (l: SavedList): string =>
  * contains. A manual list has no filter to show, so it is addressed by id.
  */
 export const listHref = (l: SavedList): string =>
-  l.kind === 'smart' ? `/books?${listQuery(l)}` : `/books?shelf=${l.id}`
+  l.kind === 'smart' ? `/books?${listQuery(l)}` : `/books?list=${l.id}`
 
 /** Rail rows, in display order. The default list is not somewhere you go. */
 export const visibleLists = (lists: SavedList[]): SavedList[] =>
@@ -204,7 +204,14 @@ export function saveListOrder(callApi: CallApi, after: SavedList[]): Promise<unk
  * section boundary says that without a dialog having to ask.
  */
 export function splitLists(lists: SavedList[]): { mine: SavedList[]; shared: SavedList[] } {
-  const shown = visibleLists(lists)
+  // Views only. A list is a hand-picked set of books, which is a property of the
+  // books rather than somewhere to navigate, so it belongs in the filter rail as
+  // a checkbox. Putting both in the nav is what made one word cover two objects
+  // and sent a shared list to the wrong page.
+  //
+  // A list still reaches the nav by being saved as a view over it, which also
+  // buys a combination the list alone cannot express: this list AND unread.
+  const shown = visibleLists(lists).filter(l => l.kind === 'smart')
   return {
     mine: shown.filter(l => l.visibility !== 'library'),
     // Including ones this person shared themselves. It is where the view now
@@ -222,6 +229,14 @@ export const listIcon = (l: SavedList): IconName =>
 export function normaliseParams(params: string): string {
   const p = new URLSearchParams(params)
   p.delete('page')
+  // A filter saved before the facet was renamed still says shelf. Folding it to
+  // the current spelling is what keeps a migrated view from reading as modified
+  // against its own URL, without rewriting what is stored.
+  const shelf = p.get('shelf')
+  if (shelf !== null) {
+    p.delete('shelf')
+    if (!p.has('list')) p.set('list', shelf)
+  }
   const entries = [...p.entries()].sort(([a], [b]) => a.localeCompare(b))
   return new URLSearchParams(entries).toString()
 }
@@ -242,19 +257,6 @@ export const isDirty = (l: SavedList, params: string, layout?: ListLayout): bool
   // save it offered would have been refused by the server.
   if (l.kind === 'manual') return layoutMoved
   return normaliseParams(listQuery(l)) !== normaliseParams(params) || layoutMoved
-}
-
-/**
- * The manual view a `shelf=<id>` parameter names.
- *
- * matchList cannot answer this: it compares filters, and a manual view has
- * none. Without it, opening a shared view fell through to the default, so the
- * bar offered to save someone else's view over the one Books opens on.
- */
-export function manualListInParams(lists: SavedList[], params: string): SavedList | null {
-  const id = new URLSearchParams(params).get('shelf')
-  if (!id) return null
-  return lists.find(l => l.id === id && l.kind === 'manual') ?? null
 }
 
 /**

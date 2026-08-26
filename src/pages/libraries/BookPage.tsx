@@ -9,8 +9,8 @@ import { AddEditionModal } from '../../components/AddEditionModal'
 import EditBookModal from '../../components/EditBookModal'
 import LoanFormModal from '../../components/LoanFormModal'
 import BookCover from '../../components/BookCover'
-import { Icon } from '../../lib/icons'
-import { listHref, listIcon, type SavedList } from '../../lib/lists'
+import BookLists from '../../components/BookLists'
+import { type SavedList } from '../../lib/lists'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -1893,25 +1893,11 @@ export default function BookPage() {
             </Section>
           )}
 
-          {/* Shelves */}
-          {bookLists.length > 0 && (
-            <Section title="On lists">
-              <div className="flex flex-wrap gap-2">
-                {bookLists.map(l => (
-                  <Link key={l.id} to={listHref(l)}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-surface px-3 py-1.5 text-sm text-content-secondary hover:bg-surface-inset transition-colors">
-                    {/* Drawn from the icon set rather than printed. This pill
-                        rendered the field as text, which was right while it
-                        held an emoji and drew the literal word "libraries" once
-                        the picker moved to named icons. */}
-                    <Icon name={listIcon(l)} size={14}
-                      style={l.color ? { color: l.color } : undefined} />
-                    {l.name}
-                  </Link>
-                ))}
-              </div>
-            </Section>
-          )}
+          {/* Always rendered, pills or not. Hiding it when the book was on
+              nothing meant the first list could never be added from here. */}
+          <Section title="On lists">
+            <BookLists bookId={bookId ?? ''} lists={bookLists} onChanged={() => void load()} />
+          </Section>
 
           {/* Editions */}
           <Section

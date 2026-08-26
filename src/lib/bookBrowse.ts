@@ -23,11 +23,18 @@ export type FacetKey = 'ownership' | 'library' | 'shelf' | 'read_status' | 'medi
 // as against what it is or where it lives.
 export const FACET_ORDER: FacetKey[] = ['ownership', 'library', 'shelf', 'read_status', 'favourite', 'media_type', 'genre', 'tag', 'rating']
 
-/** Query-string key for each facet. Short, because these end up in shared links. */
+/**
+ * Query-string key for each facet. Short, because these end up in shared links.
+ *
+ * `shelf` is keyed to `list` here. The facet is a hand-picked set of books, and
+ * "shelf" now means where a physical copy sits, so the URL says the word the
+ * reader sees. The internal key stays `shelf` because that is what the server
+ * calls the facet in its response, and API_PARAM keeps the wire honest.
+ */
 export const PARAM: Record<FacetKey, string> = {
   ownership: 'own',
   library: 'lib',
-  shelf: 'shelf',
+  shelf: 'list',
   read_status: 'status',
   media_type: 'type',
   genre: 'genre',
@@ -35,6 +42,25 @@ export const PARAM: Record<FacetKey, string> = {
   rating: 'rating',
   favourite: 'fav',
 }
+
+/**
+ * What the server calls each facet on the wire.
+ *
+ * Identical to PARAM except where the reader-facing vocabulary has moved ahead
+ * of the API's. Keeping the two separate is what lets the URL rename ship
+ * without waiting on an API release, and without a client sending a parameter
+ * the server would silently ignore.
+ */
+const API_PARAM: Record<FacetKey, string> = { ...PARAM, shelf: 'shelf' }
+
+/**
+ * The URL spellings a facet answers to, newest first.
+ *
+ * `shelf` is still read because it is inside saved filters and inside any link
+ * already shared. Rewriting stored filters to chase a rename would turn a
+ * presentation change into a migration.
+ */
+const PARAM_ALIASES: Partial<Record<FacetKey, string[]>> = { shelf: ['shelf'] }
 
 export interface FacetValue {
   value: string
@@ -119,7 +145,8 @@ export const OWNERSHIP_ANY = 'any'
 export function readState(params: URLSearchParams): BrowseState {
   const selection = emptySelection()
   for (const key of FACET_ORDER) {
-    const raw = params.get(PARAM[key])
+    const raw = params.get(PARAM[key]) ??
+      (PARAM_ALIASES[key] ?? []).map(a => params.get(a)).find(v => v !== null) ?? null
     if (raw) selection[key] = raw.split(',').filter(Boolean)
   }
   if (!params.has(PARAM.ownership)) selection.ownership = [...DEFAULT_OWNERSHIP]
@@ -186,7 +213,7 @@ export function toApiQuery(state: BrowseState, perPage: number, forFacets = fals
     // The sentinel is a client-side idea; the server has no 'any' ownership,
     // it simply receives no ownership filter.
     if (key === 'ownership' && vals.includes(OWNERSHIP_ANY)) continue
-    if (vals.length) params.set(PARAM[key], vals.join(','))
+    if (vals.length) params.set(API_PARAM[key], vals.join(','))
   }
 
   // The drill-in narrows the facet counts too, so the rail describes the

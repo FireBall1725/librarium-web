@@ -146,7 +146,11 @@ export default function FacetRail({ facets, selection, onToggle, onClear, loadin
           onClick={onClear}
           className="w-full rounded-md border border-line-strong px-3 py-1.5 text-xs font-medium text-content-secondary transition-colors hover:bg-surface-inset hover:text-content"
         >
-          {t('facets.clear', { count: active, defaultValue: `Clear ${active} filters` })}
+          {t('facets.clear', {
+            count: active,
+            defaultValue: 'Clear 1 filter',
+            defaultValue_other: `Clear ${active} filters`,
+          })}
         </button>
       )}
     </div>

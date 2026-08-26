@@ -11,7 +11,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth, ApiError } from '../auth/AuthContext'
-import type { Book, ContributorResult, Genre, ISBNLookupResult, Library, MediaType, Shelf, Tag } from '../types'
+import type { Book, ContributorResult, Genre, ISBNLookupResult, Library, MediaType, Tag } from '../types'
+import { fetchLists, type SavedList } from '../lib/lists'
 import { LANGUAGE_OPTIONS } from './AddEditionModal'
 import ContributorRow, { CONTRIBUTOR_ROLES } from './ContributorRow'
 import MediaTypeSelect from './MediaTypeSelect'
@@ -101,15 +102,18 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [targetLibrary])
 
-  const [allShelves, setAllShelves] = useState<Shelf[]>([])
+  const [allShelves, setAllShelves] = useState<SavedList[]>([])
   const [selectedShelfIds, setSelectedShelfIds] = useState<Set<string>>(new Set())
 
+  // Not scoped to the target library: a list's membership is (list, book) with
+  // no library in it, and the shelf route this replaced could not see a
+  // private list at all.
   useEffect(() => {
-    callApi<Shelf[]>(`/api/v1/libraries/${targetLibrary}/shelves`)
-      .then(ss => setAllShelves(ss ?? []))
+    void fetchLists(callApi)
+      .then(all => setAllShelves(all.filter(l => l.kind === 'manual')))
       .catch(() => {})
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [targetLibrary])
+  }, [])
 
   // Edition section — open by default when adding a new book
   const [showEdition, setShowEdition] = useState(true)
@@ -458,9 +462,9 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
         }).catch(() => {})
       }
 
-      // Apply shelf membership
+      // Apply list membership
       for (const id of selectedShelfIds)
-        await callApi(`/api/v1/libraries/${targetLibrary}/shelves/${id}/books`, { method: 'POST', body: JSON.stringify({ book_id: bookId }) }).catch(() => {})
+        await callApi(`/api/v1/me/lists/${id}/books/${bookId}`, { method: 'POST' }).catch(() => {})
 
       onSaved(book)
     } catch (err) {
@@ -848,10 +852,10 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
               </div>
             </div>
 
-            {/* Shelves */}
+            {/* Lists */}
             {allShelves.length > 0 && (
               <div>
-                <label className={labelCls}>Shelves</label>
+                <label className={labelCls}>Lists</label>
                 <div className="flex flex-wrap gap-2">
                   {allShelves.map(shelf => {
                     const checked = selectedShelfIds.has(shelf.id)

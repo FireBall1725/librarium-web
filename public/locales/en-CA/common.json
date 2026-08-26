@@ -69,7 +69,8 @@
     "licences": "Licences",
     "tokens": "API tokens",
     "ai_privacy": "AI and privacy",
-    "members": "Members"
+    "members": "Members",
+    "lists": "Lists"
   },
   "theme": {
     "light": "☀ Light",
@@ -117,13 +118,14 @@
     "tag": "Tag",
     "rating": "Rating",
     "stars": "{{count}} stars",
-    "clear": "Clear {{count}} filters",
     "active": "{{count}} filters",
     "ownership": "Ownership",
     "remove": "Remove filter",
     "favourite": "Favourite",
     "favourited": "Favourited",
-    "shelf": "View"
+    "shelf": "List",
+    "clear_one": "Clear 1 filter",
+    "clear_other": "Clear {{count}} filters"
   },
   "common": {
     "loading": "Loading…",
@@ -336,10 +338,10 @@
     "which_library": "Which library should this act in? Books in only one library are unaffected.",
     "no_common_library": "These books share no common library. Narrow the selection and try again.",
     "tags_need_unambiguous": "Tags belong to a library, and some of these are in more than one. Filter by a library to edit tags.",
-    "add_view": "Add to view",
-    "remove_view": "Remove from view",
-    "added_to_view": "Added to view",
-    "removed_from_view": "Removed from view"
+    "add_list": "Add to list",
+    "remove_list": "Remove from list",
+    "added_to_list": "Added to list",
+    "removed_from_list": "Removed from list"
   },
   "library_picker": {
     "title_one": "In {{count}} library",
@@ -439,5 +441,28 @@
   "search": {
     "placeholder": "Search, or name an author, tag or library…",
     "author": "Author"
+  },
+  "book_lists": {
+    "add": "+ Add to list",
+    "failed": "That did not save",
+    "new": "New list…",
+    "new_placeholder": "Name a new list…",
+    "remove": "Take off this list",
+    "remove_named": "Take off {{name}}"
+  },
+  "lists_settings": {
+    "count_one": "1 book",
+    "count_other": "{{count}} books",
+    "create": "Create list",
+    "delete_confirm": "Delete {{name}}? The {{count}} books on it stay in your library.",
+    "description": "A list is a set of books you pick by hand. Fill one from a book's own page or from a selection; this page is for naming and tidying them.",
+    "editing": "Editing {{name}}",
+    "empty": "No lists yet.",
+    "name": "Name",
+    "new": "New list",
+    "note": "What goes on it (optional)",
+    "private": "Only me",
+    "share": "Who can see it",
+    "shared_with": "Shared with {{name}}"
   }
 }

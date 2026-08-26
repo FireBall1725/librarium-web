@@ -69,7 +69,8 @@
     "licences": "Licences",
     "tokens": "Jetons API",
     "ai_privacy": "IA et confidentialité",
-    "members": "Membres"
+    "members": "Membres",
+    "lists": "Listes"
   },
   "theme": {
     "light": "☀ Light",
@@ -117,13 +118,14 @@
     "tag": "Étiquette",
     "rating": "Note",
     "stars": "{{count}} étoiles",
-    "clear": "Effacer {{count}} filtres",
     "active": "{{count}} filtres",
     "ownership": "Possession",
     "remove": "Retirer le filtre",
     "favourite": "Favori",
     "favourited": "Mis en favori",
-    "shelf": "Vue"
+    "shelf": "Liste",
+    "clear_one": "Effacer 1 filtre",
+    "clear_other": "Effacer {{count}} filtres"
   },
   "common": {
     "loading": "Chargement…",
@@ -336,10 +338,10 @@
     "which_library": "Dans quelle bibliothèque appliquer l'action ? Les livres d'une seule bibliothèque ne sont pas touchés.",
     "no_common_library": "Ces livres n'ont aucune bibliothèque en commun. Réduisez la sélection et réessayez.",
     "tags_need_unambiguous": "Les étiquettes appartiennent à une bibliothèque, et certains de ces livres sont dans plusieurs. Filtrez par bibliothèque pour les modifier.",
-    "add_view": "Ajouter à une vue",
-    "remove_view": "Retirer d'une vue",
-    "added_to_view": "Ajouté à la vue",
-    "removed_from_view": "Retiré de la vue"
+    "add_list": "Ajouter à une liste",
+    "remove_list": "Retirer d'une liste",
+    "added_to_list": "Ajouté à la liste",
+    "removed_from_list": "Retiré de la liste"
   },
   "library_picker": {
     "title_one": "Dans {{count}} bibliothèque",
@@ -439,5 +441,28 @@
   "search": {
     "placeholder": "Rechercher, ou nommer un auteur, une étiquette ou une bibliothèque…",
     "author": "Auteur"
+  },
+  "book_lists": {
+    "add": "+ Ajouter à une liste",
+    "failed": "Échec de l'enregistrement",
+    "new": "Nouvelle liste…",
+    "new_placeholder": "Nommer une nouvelle liste…",
+    "remove": "Retirer de cette liste",
+    "remove_named": "Retirer de {{name}}"
+  },
+  "lists_settings": {
+    "count_one": "1 livre",
+    "count_other": "{{count}} livres",
+    "create": "Créer la liste",
+    "delete_confirm": "Supprimer {{name}} ? Les {{count}} livres qu'elle contient restent dans votre bibliothèque.",
+    "description": "Une liste est un ensemble de livres choisis à la main. Remplissez-la depuis la page d'un livre ou depuis une sélection ; cette page sert à les nommer et à les ranger.",
+    "editing": "Modification de {{name}}",
+    "empty": "Aucune liste pour l'instant.",
+    "name": "Nom",
+    "new": "Nouvelle liste",
+    "note": "Ce qu'elle contient (facultatif)",
+    "private": "Moi seulement",
+    "share": "Qui peut la voir",
+    "shared_with": "Partagée avec {{name}}"
   }
 }

@@ -13,7 +13,6 @@ import {
   listHref,
   listNameKey,
   listQuery,
-  manualListInParams,
   matchList,
   splitLists,
   normaliseParams,
@@ -56,7 +55,7 @@ describe('where a row points', () => {
 
   it('addresses a manual list by id, since it has no filter to show', () => {
     expect(listHref(list({ id: 'abc', kind: 'manual', filter: null })))
-      .toBe('/books?shelf=abc')
+      .toBe('/books?list=abc')
   })
 
   it('reports no query for a manual list rather than inventing one', () => {
@@ -182,37 +181,50 @@ describe('splitting the rail', () => {
   })
 })
 
-describe('a manual view, which the URL names outright', () => {
+describe('a list, which is a filter rather than somewhere to navigate', () => {
   const fiction = list({ id: 'f1', name: 'Fiction', kind: 'manual', filter: null, layout: 'grid' })
+  const view = list({ id: 'v1', name: 'Unread', kind: 'smart', filter: { query: 'status=unread' } })
 
-  it('is found by the shelf parameter, which matchList cannot do', () => {
-    // matchList compares filters and a manual view has none, so opening a
-    // shared one fell through to the default: the bar then offered to save
-    // that view's id over the filter Books opens on, and its menu offered to
-    // delete the default.
-    expect(manualListInParams([fiction], 'shelf=f1')?.id).toBe('f1')
+  it('stays out of the nav, whoever it is shared with', () => {
+    // A hand-picked set is a property of the books, not a place. Putting both
+    // kinds in the nav is what made one word cover two objects and sent a
+    // shared list to the wrong page.
+    const shared = list({ id: 'f2', kind: 'manual', filter: null, visibility: 'library' })
+    const { mine, shared: sharedRail } = splitLists([fiction, shared, view])
+    expect(mine.map(l => l.id)).toEqual(['v1'])
+    expect(sharedRail).toEqual([])
   })
 
-  it('is not found when the filter names something else', () => {
-    expect(manualListInParams([fiction], 'tag=manga')).toBeNull()
-    expect(manualListInParams([fiction], '')).toBeNull()
-  })
-
-  it('does not claim a smart view that happens to be filtered to it', () => {
-    const smart = list({ id: 'f1', kind: 'smart', filter: { query: 'shelf=f1' } })
-    expect(manualListInParams([smart], 'shelf=f1')).toBeNull()
+  it('is addressed by the list parameter', () => {
+    expect(listHref(fiction)).toBe('/books?list=f1')
   })
 
   it('is never modified by the filter on screen', () => {
     // Its membership is not a filter, so nothing on screen can drift from it,
     // and the server refuses a filter written onto one anyway.
-    expect(isDirty(fiction, 'shelf=f1')).toBe(false)
-    expect(isDirty(fiction, 'shelf=f1&tag=manga')).toBe(false)
+    expect(isDirty(fiction, 'list=f1')).toBe(false)
+    expect(isDirty(fiction, 'list=f1&tag=manga')).toBe(false)
   })
 
   it('is modified by its layout, which is the one thing it can save', () => {
-    expect(isDirty(fiction, 'shelf=f1', 'list')).toBe(true)
-    expect(isDirty(fiction, 'shelf=f1', 'grid')).toBe(false)
+    expect(isDirty(fiction, 'list=f1', 'list')).toBe(true)
+    expect(isDirty(fiction, 'list=f1', 'grid')).toBe(false)
+  })
+})
+
+describe('the filter saved before the facet was renamed', () => {
+  it('reads as the same filter, so it is not modified against its own URL', () => {
+    const saved = list({ id: 'v1', filter: { query: 'shelf=f1' } })
+    expect(isDirty(saved, 'list=f1')).toBe(false)
+  })
+
+  it('normalises to the current spelling', () => {
+    expect(normaliseParams('shelf=f1')).toBe(normaliseParams('list=f1'))
+  })
+
+  it('does not let the old spelling overwrite the new one', () => {
+    // Both present means a link built by hand; the current spelling wins.
+    expect(normaliseParams('list=new&shelf=old')).toBe('list=new')
   })
 })
 
