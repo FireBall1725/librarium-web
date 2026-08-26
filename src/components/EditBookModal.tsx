@@ -3,7 +3,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAuth, ApiError } from '../auth/AuthContext'
-import type { Book, Tag, Genre, MediaType, ContributorResult, BookEdition } from '../types'
+import type { Book, Tag, Genre, MediaType, ContributorResult, BookEdition, Series } from '../types'
 import { fetchLists, type SavedList } from '../lib/lists'
 import ContributorRow from './ContributorRow'
 import MediaTypeSelect from './MediaTypeSelect'
@@ -68,6 +68,17 @@ export default function EditBookModal({ libraryId, book, onClose, onSaved, initi
   const [genreDropdownOpen, setGenreDropdownOpen] = useState(false)
   const genreInputRef = useRef<HTMLInputElement>(null)
 
+  // Series membership, edited as a diff like everything else in this form.
+  // It was the one thing you could not do while editing a book: the modal had
+  // no reference to series at all, so putting volume three in its run meant
+  // leaving the book you were already looking at. That is what librarium-web#85
+  // means by the two living in different parts of the app.
+  const [allSeries, setAllSeries] = useState<Series[]>([])
+  const [seriesRows, setSeriesRows] = useState<{ seriesId: string; position: string }[]>(
+    (book.series ?? []).map(r => ({ seriesId: r.series_id, position: String(r.position) })),
+  )
+  const initialSeries = useRef(new Map((book.series ?? []).map(r => [r.series_id, r.position])))
+
   const [mediaTypes, setMediaTypes] = useState<MediaType[]>([])
   const [allShelves, setAllShelves] = useState<SavedList[]>([])
   const [initialShelfIds, setInitialShelfIds] = useState<Set<string>>(new Set())
@@ -79,6 +90,10 @@ export default function EditBookModal({ libraryId, book, onClose, onSaved, initi
     callApi<MediaType[]>('/api/v1/media-types').then(mt => setMediaTypes(mt ?? [])).catch(() => {})
     callApi<Tag[]>(`/api/v1/libraries/${libraryId}/tags`).then(ts => setLibraryTags(ts ?? [])).catch(() => {})
     callApi<Genre[]>('/api/v1/genres').then(gs => setAllGenres(gs ?? [])).catch(() => {})
+    // A bare array, not an items envelope. The series routes and the newer /me
+    // routes disagree on that, and reading the wrong one fails silently.
+    callApi<Series[]>(`/api/v1/libraries/${libraryId}/series`)
+      .then(r => setAllSeries(Array.isArray(r) ? r : [])).catch(() => {})
     // Every list this person can see, not the ones one library shares. The
     // shelf route only ever returned lists shared with a library, so a private
     // one was missing from a control that claimed to show them all.
@@ -140,6 +155,27 @@ export default function EditBookModal({ libraryId, book, onClose, onSaved, initi
         if (!initialShelfIds.has(id))
           await callApi(`/api/v1/me/lists/${id}/books/${bookId}`, { method: 'POST' }).catch(() => {})
       }
+
+      // Series, same diff. A row whose position did not move is still posted
+      // because the endpoint upserts, and skipping it would mean tracking
+      // which change came from where for no gain.
+      const kept = new Set(seriesRows.map(r => r.seriesId))
+      for (const [seriesId] of initialSeries.current) {
+        if (!kept.has(seriesId))
+          await callApi(`/api/v1/libraries/${libraryId}/series/${seriesId}/books/${bookId}`,
+            { method: 'DELETE' }).catch(() => {})
+      }
+      for (const row of seriesRows) {
+        if (!row.seriesId) continue
+        await callApi(`/api/v1/libraries/${libraryId}/series/${row.seriesId}/books`, {
+          method: 'POST',
+          body: JSON.stringify({
+            book_id: bookId,
+            position: row.position.trim() !== '' ? Number(row.position) : 1,
+          }),
+        }).catch(() => {})
+      }
+
       onSaved(updated!)
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Failed to save')
@@ -333,6 +369,57 @@ export default function EditBookModal({ libraryId, book, onClose, onSaved, initi
                     <p className="text-xs text-content-subtle">No matching genres</p>
                   </div>
                 )}
+              </div>
+            </div>
+
+            {/* Series */}
+            <div>
+              <label className={labelCls}>Series</label>
+              <div className="space-y-2">
+                {seriesRows.map((row, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <select
+                      className={inputCls}
+                      value={row.seriesId}
+                      onChange={e => setSeriesRows(rs =>
+                        rs.map((r, n) => n === i ? { ...r, seriesId: e.target.value } : r))}
+                      aria-label="Series"
+                    >
+                      <option value="">Pick a series…</option>
+                      {allSeries
+                        // Already on another row, so it cannot be picked twice
+                        // and made to hold two positions at once.
+                        .filter(x => x.id === row.seriesId
+                          || !seriesRows.some(r => r.seriesId === x.id))
+                        .map(x => <option key={x.id} value={x.id}>{x.name}</option>)}
+                    </select>
+                    <input
+                      type="number"
+                      step="0.5"
+                      min="0"
+                      // Half positions are real: side stories and specials are
+                      // numbered 4.5, which is why the column is numeric.
+                      className={inputCls}
+                      style={{ width: '6rem' }}
+                      value={row.position}
+                      onChange={e => setSeriesRows(rs =>
+                        rs.map((r, n) => n === i ? { ...r, position: e.target.value } : r))}
+                      placeholder="Vol."
+                      aria-label="Volume number"
+                    />
+                    <button type="button"
+                      onClick={() => setSeriesRows(rs => rs.filter((_, n) => n !== i))}
+                      aria-label="Take out of this series"
+                      className="rounded px-2 py-1 text-sm text-content-faint hover:bg-surface-inset hover:text-danger">
+                      ×
+                    </button>
+                  </div>
+                ))}
+                <button type="button"
+                  onClick={() => setSeriesRows(rs => [...rs, { seriesId: '', position: '' }])}
+                  className="rounded-lg border border-dashed border-line-strong px-3 py-1.5 text-xs text-content-tertiary hover:bg-surface-inset">
+                  + Add to a series
+                </button>
               </div>
             </div>
 
