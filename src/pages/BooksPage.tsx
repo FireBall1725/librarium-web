@@ -53,6 +53,7 @@ import {
   listIcon,
   listQuery,
   adoptedList,
+  manualListInParams,
   matchList,
   updateList,
   DEFAULT_LIST_KEY,
@@ -227,6 +228,23 @@ function chipLabel(key: FacetKey, value: string, facets: BookFacets | null, t: T
   // results, which says nothing about what was filtered.
   if (key === 'favourite') return t('facets.favourited', { defaultValue: 'Favourited' })
   return facets?.[key]?.find(v => v.value === value)?.label ?? value
+}
+
+/**
+ * chipLabel, plus the views the reader can see.
+ *
+ * A view's chip is keyed by id, and the facet block only lists values something
+ * matched, so an empty view had no entry to read a name from and the chip
+ * rendered a raw UUID.
+ */
+function chipLabelWithViews(
+  key: FacetKey, value: string, facets: BookFacets | null, views: SavedList[], t: TFunction,
+): string {
+  if (key === 'shelf') {
+    const named = views.find(v => v.id === value)
+    if (named) return named.name
+  }
+  return chipLabel(key, value, facets, t)
 }
 
 /** Book detail still lives under a library, so link via the first one holding it. */
@@ -574,15 +592,29 @@ export default function BooksPage() {
 
   // Chips for what is actually applied. Ownership at its default is not a
   // choice the reader made, so it gets no chip to remove.
+  // all, so matching on the filter is the only thing that covers every route in.
+  const paramsNow = params.toString()
+  // A manual view is named outright by the URL, so it settles the question
+  // before any of the filter matching does. It used to be invisible here:
+  // matchList only compares filters, a manual view has none, so opening a
+  // shared one fell through to the default and the bar offered to save that
+  // view's id over the filter Books opens on.
+  const manualNow = manualListInParams(views, paramsNow)
+
   const activeChips = FACET_ORDER.flatMap(key =>
     (key === 'ownership' &&
       (isDefaultOwnership(state.selection[key]) || state.selection[key].includes(OWNERSHIP_ANY))
       ? []
-      : state.selection[key]
+      // The open view's own id is not a filter sitting on top of it, it is the
+      // view. Left in, a manual view rendered its name twice: once as the view
+      // and once as a chip beside it that closed the view when dismissed.
+      : key === 'shelf'
+        ? state.selection[key].filter(v => v !== manualNow?.id)
+        : state.selection[key]
     ).map(value => ({
       key,
       value,
-      label: chipLabel(key, value, facets, t),
+      label: chipLabelWithViews(key, value, facets, views, t),
     }))
   )
   // The drilled-into series' name, read off the books on screen rather than
@@ -609,8 +641,6 @@ export default function BooksPage() {
   // A view is "open" either because it was clicked, or because the filter on
   // screen describes it. The second case is not a nicety: the sidebar links only
   // navigate, and a bookmarked URL or the back button arrive with no click at
-  // all, so matching on the filter is the only thing that covers every route in.
-  const paramsNow = params.toString()
   // Falls back to the Default view rather than to nothing. Books is always
   // showing *something*, and that something is the Default unless a real view
   // was opened or the filter happens to describe one. Without the fallback,
@@ -654,6 +684,7 @@ export default function BooksPage() {
 
   const activeView =
     views.find(v => v.id === activeViewId) ??
+    manualNow ??
     views.find(v => v.id === adoptedNow) ??
     matchedNow ??
     views.find(v => v.builtin_key === DEFAULT_LIST_KEY) ??
@@ -716,7 +747,13 @@ export default function BooksPage() {
 
   const commitView = async () => {
     if (!activeView) return
-    await updateList(callApi, activeView.id, { query: paramsNow, layout })
+    // A manual view's membership is not a filter, and the server refuses a
+    // filter written onto one, so the only thing there is to save is how it
+    // is laid out.
+    const changes = activeView.kind === 'manual'
+      ? { layout }
+      : { query: paramsNow, layout }
+    await updateList(callApi, activeView.id, changes)
       .catch(() => {})
     await reloadLists()
     announceListsChanged()

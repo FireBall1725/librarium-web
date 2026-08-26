@@ -13,6 +13,7 @@ import {
   listHref,
   listNameKey,
   listQuery,
+  manualListInParams,
   matchList,
   splitLists,
   normaliseParams,
@@ -178,6 +179,40 @@ describe('splitting the rail', () => {
     const { mine, shared } = splitLists([list({ id: 'd', hidden: true })])
     expect(mine).toEqual([])
     expect(shared).toEqual([])
+  })
+})
+
+describe('a manual view, which the URL names outright', () => {
+  const fiction = list({ id: 'f1', name: 'Fiction', kind: 'manual', filter: null, layout: 'grid' })
+
+  it('is found by the shelf parameter, which matchList cannot do', () => {
+    // matchList compares filters and a manual view has none, so opening a
+    // shared one fell through to the default: the bar then offered to save
+    // that view's id over the filter Books opens on, and its menu offered to
+    // delete the default.
+    expect(manualListInParams([fiction], 'shelf=f1')?.id).toBe('f1')
+  })
+
+  it('is not found when the filter names something else', () => {
+    expect(manualListInParams([fiction], 'tag=manga')).toBeNull()
+    expect(manualListInParams([fiction], '')).toBeNull()
+  })
+
+  it('does not claim a smart view that happens to be filtered to it', () => {
+    const smart = list({ id: 'f1', kind: 'smart', filter: { query: 'shelf=f1' } })
+    expect(manualListInParams([smart], 'shelf=f1')).toBeNull()
+  })
+
+  it('is never modified by the filter on screen', () => {
+    // Its membership is not a filter, so nothing on screen can drift from it,
+    // and the server refuses a filter written onto one anyway.
+    expect(isDirty(fiction, 'shelf=f1')).toBe(false)
+    expect(isDirty(fiction, 'shelf=f1&tag=manga')).toBe(false)
+  })
+
+  it('is modified by its layout, which is the one thing it can save', () => {
+    expect(isDirty(fiction, 'shelf=f1', 'list')).toBe(true)
+    expect(isDirty(fiction, 'shelf=f1', 'grid')).toBe(false)
   })
 })
 

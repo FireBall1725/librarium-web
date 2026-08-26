@@ -234,9 +234,28 @@ export function normaliseParams(params: string): string {
  * list and the bar has to offer to save it. Comparing only the filter meant
  * that edit could not be saved at all.
  */
-export const isDirty = (l: SavedList, params: string, layout?: ListLayout): boolean =>
-  normaliseParams(listQuery(l)) !== normaliseParams(params) ||
-  (layout !== undefined && layout !== l.layout)
+export const isDirty = (l: SavedList, params: string, layout?: ListLayout): boolean => {
+  const layoutMoved = layout !== undefined && layout !== l.layout
+  // A manual view holds books, not a filter, so nothing about the filter on
+  // screen can drift from it and nothing about it can be saved from here.
+  // Comparing anyway made it permanently modified against its own URL, and the
+  // save it offered would have been refused by the server.
+  if (l.kind === 'manual') return layoutMoved
+  return normaliseParams(listQuery(l)) !== normaliseParams(params) || layoutMoved
+}
+
+/**
+ * The manual view a `shelf=<id>` parameter names.
+ *
+ * matchList cannot answer this: it compares filters, and a manual view has
+ * none. Without it, opening a shared view fell through to the default, so the
+ * bar offered to save someone else's view over the one Books opens on.
+ */
+export function manualListInParams(lists: SavedList[], params: string): SavedList | null {
+  const id = new URLSearchParams(params).get('shelf')
+  if (!id) return null
+  return lists.find(l => l.id === id && l.kind === 'manual') ?? null
+}
 
 /**
  * The list standing for a filter, if one does.
