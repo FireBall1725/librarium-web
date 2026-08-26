@@ -127,6 +127,14 @@ export interface Book {
   publisher: string
   publish_year: number | null
   language: string
+  /**
+   * Where this book stands in relation to you: on the shelf, on a wishlist,
+   * suggested, or a volume missing from a run you hold part of.
+   *
+   * Sent by the list. A single-book read always means shelf, because it cannot
+   * return a book nobody has.
+   */
+  ownership?: string
   user_read_status?: string
   // Caller-scoped, and all three pick the same interaction row, so a user who
   // owns several editions of one work gets a consistent status, rating and

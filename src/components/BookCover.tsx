@@ -63,6 +63,16 @@ interface BookCoverProps {
    * be a grey smudge rather than something anyone can read.
    */
   hideLabel?: boolean
+  /**
+   * Where the book stands in relation to the reader. Anything other than
+   * "shelf" draws the cover drained of colour.
+   *
+   * A missing volume, a wishlist entry and a book on the shelf rendered
+   * identically, so a grid of a run gave no sign which ones you could go and
+   * pick up. Grey is the oldest convention there is for "not yours yet" and it
+   * survives being scanned at thumbnail size, which a badge does not.
+   */
+  ownership?: string
 }
 
 export default function BookCover({
@@ -73,6 +83,7 @@ export default function BookCover({
   readStatus,
   seed,
   hideLabel = false,
+  ownership,
 }: BookCoverProps) {
   const [imgError, setImgError] = useState(false)
   const { ref, src, status } = useAuthenticatedImage(coverUrl)
@@ -89,9 +100,21 @@ export default function BookCover({
    */
   const pending = !showImage && !imgError && (status === 'idle' || status === 'loading')
 
+  // Not held. Absent ownership means held: the single-book read and every
+  // pre-existing caller send nothing, and none of them can return a book
+  // nobody has.
+  const unheld = ownership != null && ownership !== '' && ownership !== 'shelf'
+
   return (
     <div className={`${className} flex-shrink-0`} ref={ref}>
-      <div className={`lb-cover ${hideLabel ? 'mini' : ''} ${showImage || pending ? '' : tintFor(seed || title)} ${innerClassName}`}>
+      <div
+        className={`lb-cover ${hideLabel ? 'mini' : ''} ${showImage || pending ? '' : tintFor(seed || title)} ${innerClassName}`}
+        // Not fully drained, and not fully faded. All the way to zero reads as
+        // a broken image; opacity alone reads as a loading state. Most of the
+        // colour gone plus a little of the light is the one that says "real,
+        // just not yours".
+        style={unheld ? { filter: 'grayscale(0.9)', opacity: 0.65 } : undefined}
+      >
         {showImage ? (
           <img
             src={src}
@@ -126,11 +149,13 @@ export function BookCoverThumb({
   coverUrl,
   readStatus,
   seed,
+  ownership,
 }: {
   title: string
   coverUrl: string | null | undefined
   readStatus?: string
   seed?: string
+  ownership?: string
 }) {
   return (
     <BookCover
@@ -138,6 +163,7 @@ export function BookCoverThumb({
       coverUrl={coverUrl}
       readStatus={readStatus}
       seed={seed}
+      ownership={ownership}
       hideLabel
       className="w-[30px]"
       innerClassName="shadow-none"

@@ -1151,6 +1151,7 @@ export default function BooksPage() {
                         title={entry.book.title}
                         coverUrl={entry.book.cover_url}
                         readStatus={entry.book.user_read_status}
+                        ownership={entry.book.ownership}
                         seed={coverSeed(entry.book)}
                       />
                       <span className="min-w-0 flex-1">
@@ -1239,6 +1240,7 @@ export default function BooksPage() {
                         title={entry.book.title}
                         coverUrl={entry.book.cover_url}
                         readStatus={entry.book.user_read_status}
+                        ownership={entry.book.ownership}
                         seed={coverSeed(entry.book)}
                         className="w-full"
                       />
