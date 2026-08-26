@@ -58,12 +58,17 @@ type Translate = ReturnType<typeof useTranslation>['t']
  * way ownership and read status do on Books: the server has no business
  * deciding what a reader's language calls "on hiatus".
  */
-function displayLabel(key: SeriesFacetKey, v: FacetValue, t: Translate): string {
-  if (key === 'status') return t(`series.status_${v.value}`, { defaultValue: v.label })
-  if (key === 'arcs') return t(`series.arcs_${v.value}`, { defaultValue: v.label })
-  if (key === 'reading') return t(`series.reading_${v.value}`, { defaultValue: v.label })
-  return v.label
+export function seriesFacetLabel(
+  key: SeriesFacetKey, value: string, t: Translate, fallback = value,
+): string {
+  if (key === 'status') return t(`series.status_${value}`, { defaultValue: fallback })
+  if (key === 'arcs') return t(`series.arcs_${value}`, { defaultValue: fallback })
+  if (key === 'reading') return t(`series.reading_${value}`, { defaultValue: fallback })
+  return fallback
 }
+
+const displayLabel = (key: SeriesFacetKey, v: FacetValue, t: Translate) =>
+  seriesFacetLabel(key, v.value, t, v.label)
 
 function Group({ facetKey, values, selection, onToggle }: {
   facetKey: SeriesFacetKey

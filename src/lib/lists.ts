@@ -424,13 +424,16 @@ export const fetchLists = (callApi: CallApi): Promise<SavedList[]> =>
 /** Saves the filter on screen as a new smart list, on the page it was made on. */
 export function createSmartList(
   callApi: CallApi, name: string, query: string, icon?: string,
-  surface: ListSurface = 'books',
+  surface: ListSurface = 'books', layout?: ListLayout,
 ): Promise<SavedList> {
   return callApi<SavedList>('/api/v1/me/lists', {
     method: 'POST',
     body: JSON.stringify({
       name, icon: icon ?? '', kind: 'smart', surface,
-      filter: { query }, visibility: 'private',
+      // The layout on screen, not the column's default. Saving a view is
+      // saying "keep this", and dropping the layout meant saving from Rows
+      // handed back a view that opened in Grid.
+      filter: { query }, layout: layout ?? 'list', visibility: 'private',
     }),
   })
 }

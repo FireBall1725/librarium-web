@@ -16,7 +16,7 @@
 // the better way to recognise a shelf you already know.
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useNavigationType, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth, ApiError } from '../auth/AuthContext'
 import PageHeader from '../components/PageHeader'
@@ -25,13 +25,13 @@ import BookCover from '../components/BookCover'
 import SeriesFormModal from '../components/SeriesFormModal'
 import SuggestSeriesModal from '../components/SuggestSeriesModal'
 import SeriesFacetRail, {
-  SERIES_FACET_ORDER, SERIES_PARAM,
+  SERIES_FACET_ORDER, SERIES_PARAM, seriesFacetLabel,
   type SeriesFacetKey, type SeriesFacets,
 } from '../components/SeriesFacetRail'
 import { usePageTitle } from '../hooks/usePageTitle'
 import {
   DEFAULT_LIST_KEY, LISTS_CHANGED, announceListsChanged, createSmartList,
-  defaultListFor, fetchLists, isDirty as viewIsDirty, listQuery, matchList,
+  adoptedList, defaultListFor, fetchLists, isDirty as viewIsDirty, listQuery, matchList,
   updateList, type ListLayout, type SavedList,
 } from '../lib/lists'
 import type { Library, Series } from '../types'
@@ -122,10 +122,38 @@ export default function SeriesPage() {
     return p.toString()
   }, [params])
 
-  const activeView = useMemo(
+  /**
+   * Which view is open, and it has to survive the filter being edited.
+   *
+   * Matching alone is not enough. Arriving from the rail sets no id, so the
+   * page works out which view it is on by matching the URL; the first click on
+   * a facet then breaks the match, nothing is open, and there is nothing to
+   * save the change to. Sorting did exactly that: pick Missing and the Default
+   * stopped matching, so "this is how I want Series to open" had no button.
+   *
+   * An exact match adopts the view; from then on it stays open while the URL
+   * drifts, which is what makes the edit saveable. Opening a different one
+   * matches again and takes over.
+   */
+  const matchedNow = useMemo(
     () => matchList(views, paramsNow, 'series'), [views, paramsNow],
   )
+  const [adopted, setAdopted] = useState<string | null>(null)
+  // Only a real navigation changes which view is open. Editing one can drift it
+  // into looking like another: clear the filters on any view and what is left
+  // is the Default's empty query. The two cases are identical in the URL, so
+  // the history action is what tells them apart. Rail links push; set()
+  // replaces.
+  const editedInPlace = useNavigationType() === 'REPLACE'
+  const adoptedNow = adoptedList(matchedNow, adopted, editedInPlace)
+  // Adjusted during render rather than in an effect: React re-runs this
+  // component before touching the DOM, so the view is already adopted by the
+  // time anything is drawn and there is no frame showing the wrong one.
+  if (adoptedNow !== adopted) setAdopted(adoptedNow)
+
   const defaultView = useMemo(() => defaultListFor(views, 'series'), [views])
+  const activeView =
+    views.find(v => v.id === adoptedNow) ?? matchedNow ?? defaultView ?? null
   const isDefaultView = activeView?.builtin_key === DEFAULT_LIST_KEY
 
   // Layout belongs to the view, so flipping to grid inside one and saving it
@@ -152,21 +180,23 @@ export default function SeriesPage() {
 
   const saveCurrentAs = async (name: string) => {
     setNaming(false)
-    await createSmartList(callApi, name, paramsNow, undefined, 'series').catch(() => null)
+    await createSmartList(callApi, name, paramsNow, undefined, 'series', layout).catch(() => null)
     await reloadViews()
     announceListsChanged()
   }
 
-  // Land on the default view's filters when arriving with none of our own. The
-  // page has to open on something, and the reader's own answer beats ours.
+  // Land on the default view's own filters when arriving with none.
+  //
+  // Push, not replace, so the adoption above reads it as a navigation rather
+  // than an edit: replacing would mark the page dirty against a view it had
+  // just opened, and offer to save what it had only just loaded.
   const [landed, setLanded] = useState(false)
   useEffect(() => {
-    if (landed) return
-    if (views.length === 0) return
+    if (landed || views.length === 0) return
     setLanded(true)
     if (paramsNow !== '') return
     const q = defaultView ? listQuery(defaultView) : ''
-    if (q) setParams(new URLSearchParams(q), { replace: true })
+    if (q) setParams(new URLSearchParams(q))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [views, landed])
 
@@ -266,21 +296,56 @@ export default function SeriesPage() {
   const activeFilters = SERIES_FACET_ORDER.reduce(
     (n, k) => n + (selection[k]?.length ?? 0), 0)
 
+  /**
+   * A chip per ticked value, labelled the way the rail labels it.
+   *
+   * Read off the facets rather than the URL, because a library is a uuid and a
+   * status is a bare word: a chip reading the raw value is a chip nobody can
+   * act on. A value the facets do not know about still gets a chip, so a filter
+   * can always be removed even when nothing matches it.
+   */
+  const activeChips = useMemo(() => {
+    const out: { key: SeriesFacetKey; value: string; label: string }[] = []
+    for (const key of SERIES_FACET_ORDER) {
+      for (const value of selection[key] ?? []) {
+        // Translated, not the server's label. Status, arcs and reading come
+        // back as raw values by design, so taking the label straight put
+        // "ONGOING" and "READING" in the chip row beside a rail that said
+        // "Ongoing" and "Reading" for the same filter.
+        const known = facets?.[key]?.find(v => v.value === value)
+        out.push({
+          key, value,
+          label: seriesFacetLabel(key, value, t, known?.label ?? value),
+        })
+      }
+    }
+    return out
+  }, [selection, facets, t])
+
   return (
     <>
       <PageHeader
         title={t('nav.series', { defaultValue: 'Series' })}
-        description={
-          series === null
-            ? undefined
-            : t('series.count', {
-                count: series.length,
-                defaultValue: '{{count}} across every library',
-              })
-        }
+        description={t('series.description', {
+          defaultValue: 'Every run across the libraries you can read.',
+        })}
       />
 
       <div className="px-8 py-6">
+        {/* Above the grid and on its own, the way Books has it: a search box is
+            the widest control on the page and the first thing anyone reaches
+            for, so it does not belong in a row competing with five buttons. */}
+        <div className="relative mb-6 w-full max-w-lg">
+          <input
+            type="search"
+            value={draft}
+            onChange={e => setDraft(e.target.value)}
+            placeholder={t('series.search', { defaultValue: 'Search series…' })}
+            aria-label={t('series.search', { defaultValue: 'Search series' })}
+            className="w-full rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm text-content placeholder:text-content-muted focus:border-accent focus:outline-none"
+          />
+        </div>
+
         <div className="grid gap-7 lg:grid-cols-[13rem_1fr]">
           <aside>
             <SeriesFacetRail
@@ -291,23 +356,44 @@ export default function SeriesPage() {
             />
           </aside>
 
-          <div>
-            {/* One row: which view is open, then what is filtered, then the
-                controls. The same order Books uses, because the reader is
-                answering the same questions in the same sequence. */}
+          {/* min-w-0, or the 1fr track is minmax(auto, 1fr) and sizes itself to
+              the widest thing inside it rather than to what is left. That is
+              what pushed the toolbar past the right edge of the window. */}
+          <div className="min-w-0">
+            {/* One row, wrapping: what is open and what is filtered on the
+                left, what you can do about it on the right. The same order
+                Books uses, because the reader is answering the same questions
+                in the same sequence. */}
             <div className="mb-4 flex flex-wrap items-center gap-2 text-sm text-content-muted">
               {activeView && !isDefaultView && (
                 <span className="lb-chip on">{activeView.name}</span>
+              )}
+              {dirty && (
+                <span className="text-xs italic text-content-faint">
+                  {t('views.modified', { defaultValue: 'modified' })}
+                </span>
               )}
 
               <span className="tabular-nums">
                 {series === null
                   ? ''
                   : t('series.count', {
-                      count: series.length,
+                      count: shown.length,
                       defaultValue: '{{count}} across every library',
                     })}
               </span>
+
+              {/* What is filtered, removable. The rail says it too, but the
+                  rail is a column you have to look down; a chip row says it
+                  where the reader already is. */}
+              {activeChips.map(chip => (
+                <button key={`${chip.key}:${chip.value}`} type="button"
+                  onClick={() => toggleFacet(chip.key, chip.value)}
+                  className="lb-chip on"
+                  title={t('facets.remove', { defaultValue: 'Remove filter' })}>
+                  {chip.label} ×
+                </button>
+              ))}
 
               <span className="flex-1" />
 
@@ -334,55 +420,16 @@ export default function SeriesPage() {
                 </>
               )}
 
-              {/* Offered only when there is something worth naming. */}
-              {(!activeView || isDefaultView) && (activeFilters > 0 || query) && (
+              {/* Offered once there is something worth naming, which includes a
+                  sort and a layout: those are part of what a view stands for,
+                  and leaving them out meant sorting the page gave no way to
+                  keep the result. */}
+              {isDefaultView && dirty && (
                 <button type="button" onClick={() => setNaming(true)}
                   className="rounded-md bg-accent px-2.5 py-1 text-xs font-medium text-white hover:brightness-110">
                   {t('views.save', { defaultValue: 'Save as a view' })}
                 </button>
               )}
-            </div>
-
-            <div className="mb-3 flex flex-wrap items-center gap-2">
-              <input
-                value={draft}
-                onChange={e => setDraft(e.target.value)}
-                placeholder={t('series.search', { defaultValue: 'Search series…' })}
-                aria-label={t('series.search', { defaultValue: 'Search series' })}
-                className="lb-field min-w-[12rem] flex-1"
-              />
-
-              <select className="lb-field" style={{ width: 'auto' }} value={sort}
-                onChange={e => set({ sort: e.target.value })}
-                aria-label={t('series.sort', { defaultValue: 'Sort by' })}>
-                {SORTS.map(o => (
-                  <option key={o} value={o}>
-                    {t(`series.sort_${o}`, { defaultValue: SORT_FALLBACK[o] })}
-                  </option>
-                ))}
-              </select>
-
-              <button type="button"
-                onClick={() => set({ dir: dir === 'asc' ? 'desc' : null })}
-                title={t(dir === 'asc' ? 'series.ascending' : 'series.descending', {
-                  defaultValue: dir === 'asc' ? 'Ascending' : 'Descending',
-                })}
-                aria-label={t('series.direction', { defaultValue: 'Sort direction' })}
-                className="rounded-md border border-line-strong px-2.5 py-1 text-xs text-content-secondary hover:bg-surface-inset">
-                {dir === 'asc' ? '↑' : '↓'}
-              </button>
-
-              <div className="flex overflow-hidden rounded-md border border-line-strong">
-                {(['list', 'grid'] as ListLayout[]).map(opt => (
-                  <button key={opt} type="button" onClick={() => chooseLayout(opt)}
-                    aria-pressed={layout === opt}
-                    className={`px-2.5 py-1 text-xs font-medium transition-colors ${
-                      layout === opt ? 'bg-accent text-white' : 'text-content-secondary hover:bg-surface-inset'
-                    }`}>
-                    {t(`views.layout_${opt}`, { defaultValue: opt === 'list' ? 'Rows' : 'Grid' })}
-                  </button>
-                ))}
-              </div>
 
               {/* Finds runs hiding in loose titles. A collection imported from
                   a spreadsheet arrives as a thousand books and no series at
@@ -405,6 +452,46 @@ export default function SeriesPage() {
               <button type="button" className="lb-btn sm" onClick={() => setCreating(true)}>
                 {t('series.new', { defaultValue: 'New series' })}
               </button>
+
+              {/* A segmented group, not a dropdown. Five sort orders is a
+                  comparison, and a comparison you have to open a menu to see
+                  is one nobody makes. Clicking the one already active flips
+                  the direction, the way a table header does, which is also
+                  what retired the separate arrow button beside it. */}
+              <div className="flex overflow-hidden rounded-md border border-line-strong">
+                {SORTS.map(o => {
+                  const on = sort === o
+                  return (
+                    <button key={o} type="button" aria-pressed={on}
+                      title={t(`series.sort_${o}`, { defaultValue: SORT_FALLBACK[o] })}
+                      onClick={() => set(on
+                        // Already sorting by this, so the click means the other
+                        // direction. Name defaults to ascending and everything
+                        // else to descending: nobody looks for the run with the
+                        // fewest volumes missing.
+                        ? { dir: dir === 'asc' ? 'desc' : 'asc' }
+                        : { sort: o === 'name' ? null : o, dir: o === 'name' ? null : 'desc' })}
+                      className={`px-2.5 py-1 text-xs font-medium transition-colors ${
+                        on ? 'bg-accent text-white' : 'text-content-secondary hover:bg-surface-inset'
+                      }`}>
+                      {t(`series.sort_short_${o}`, { defaultValue: SORT_SHORT[o] })}
+                      {on && <span aria-hidden="true" className="ml-1">{dir === 'asc' ? '↑' : '↓'}</span>}
+                    </button>
+                  )
+                })}
+              </div>
+
+              <div className="flex overflow-hidden rounded-md border border-line-strong">
+                {(['list', 'grid'] as ListLayout[]).map(opt => (
+                  <button key={opt} type="button" onClick={() => chooseLayout(opt)}
+                    aria-pressed={layout === opt}
+                    className={`px-2.5 py-1 text-xs font-medium transition-colors ${
+                      layout === opt ? 'bg-accent text-white' : 'text-content-secondary hover:bg-surface-inset'
+                    }`}>
+                    {t(`views.layout_${opt}`, { defaultValue: opt === 'list' ? 'Rows' : 'Grid' })}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <AlphabetBar available={available} active={letter}
@@ -486,9 +573,16 @@ export default function SeriesPage() {
   )
 }
 
+/** What each order means, for the tooltip. */
 const SORT_FALLBACK: Record<string, string> = {
   name: 'Name', volumes: 'Volumes held', missing: 'Missing volumes',
   read: 'Volumes read', recent: 'Recently changed',
+}
+
+/** What fits on a button. The tooltip carries the rest. */
+const SORT_SHORT: Record<string, string> = {
+  name: 'Name', volumes: 'Volumes', missing: 'Missing',
+  read: 'Read', recent: 'Recent',
 }
 
 type Translate = (k: string, o?: Record<string, unknown>) => string

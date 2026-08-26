@@ -717,7 +717,7 @@ export default function BooksPage() {
 
   const saveCurrentAs = async (name: string, icon?: IconName) => {
     setNaming(false)
-    const created = await createSmartList(callApi, name, paramsNow, icon)
+    const created = await createSmartList(callApi, name, paramsNow, icon, 'books', layout)
       .catch(() => null)
     await reloadLists()
     if (created) setActiveViewId(created.id)
