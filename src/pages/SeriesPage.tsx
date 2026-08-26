@@ -24,7 +24,16 @@ import AlphabetBar from '../components/AlphabetBar'
 import BookCover from '../components/BookCover'
 import SeriesFormModal from '../components/SeriesFormModal'
 import SuggestSeriesModal from '../components/SuggestSeriesModal'
+import SeriesFacetRail, {
+  SERIES_FACET_ORDER, SERIES_PARAM,
+  type SeriesFacetKey, type SeriesFacets,
+} from '../components/SeriesFacetRail'
 import { usePageTitle } from '../hooks/usePageTitle'
+import {
+  DEFAULT_LIST_KEY, LISTS_CHANGED, announceListsChanged, createSmartList,
+  defaultListFor, fetchLists, isDirty as viewIsDirty, listQuery, matchList,
+  updateList, type ListLayout, type SavedList,
+} from '../lib/lists'
 import type { Library, Series } from '../types'
 
 /**
@@ -43,13 +52,10 @@ function indexLetter(name: string): string {
   return upper >= 'A' && upper <= 'Z' ? upper : '#'
 }
 
-const STATUSES = ['ongoing', 'completed', 'hiatus', 'cancelled'] as const
-const ARCS = ['with', 'without'] as const
-const READING = ['unread', 'reading', 'read_all'] as const
 const SORTS = ['name', 'volumes', 'missing', 'read', 'recent'] as const
 
-type Layout = 'list' | 'grid'
-const LAYOUT_KEY = 'librarium:series:layout'
+/** Which parameters are filters, so a chip row and a count can tell them apart. */
+const FILTER_PARAMS = SERIES_FACET_ORDER.map(k => SERIES_PARAM[k])
 
 export default function SeriesPage() {
   const { t } = useTranslation()
@@ -64,30 +70,105 @@ export default function SeriesPage() {
   // the rest of the redesign already does on Books and Authors.
   const get = useCallback((k: string) => params.get(k) ?? '', [params])
   const query = get('q')
-  const lib = get('lib')
-  const status = get('status')
-  const arcs = get('arcs')
-  const reading = get('reading')
-  const tag = get('tag')
   const sort = get('sort') || 'name'
   const dir = get('dir') || 'asc'
 
+  /** Every filter dimension, each a list of ticked values. */
+  const selection = useMemo(() => {
+    const out = {} as Record<SeriesFacetKey, string[]>
+    for (const key of SERIES_FACET_ORDER) {
+      const raw = params.get(SERIES_PARAM[key]) ?? ''
+      out[key] = raw ? raw.split(',').filter(Boolean) : []
+    }
+    return out
+  }, [params])
+
   const [series, setSeries] = useState<Series[] | null>(null)
+  const [facets, setFacets] = useState<SeriesFacets | null>(null)
   const [libraries, setLibraries] = useState<Library[]>([])
-  const [tags, setTags] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
   const [suggesting, setSuggesting] = useState(false)
   const [editing, setEditing] = useState<Series | null>(null)
   const [busy, setBusy] = useState(false)
+  const [naming, setNaming] = useState(false)
 
-  const [layout, setLayout] = useState<Layout>(
-    () => (localStorage.getItem(LAYOUT_KEY) as Layout) || 'list',
+  // ── Saved views ──────────────────────────────────────────────────────────
+  //
+  // The same machinery Books uses, because a view was never a books idea: the
+  // stored filter is a URL query string and lists.surface says which page it
+  // belongs to. What that buys here is the thing worth having, which is that
+  // the page opens on the reader's own filters and layout rather than on
+  // whatever the product shipped.
+  const [views, setViews] = useState<SavedList[]>([])
+  const reloadViews = useCallback(
+    () => fetchLists(callApi).then(setViews).catch(() => {}),
+    [callApi],
   )
-  const chooseLayout = (next: Layout) => {
-    setLayout(next)
-    localStorage.setItem(LAYOUT_KEY, next)
+  useEffect(() => { void reloadViews() }, [reloadViews])
+  // Another tab, or the rail itself, can change them.
+  useEffect(() => {
+    const again = () => void reloadViews()
+    window.addEventListener(LISTS_CHANGED, again)
+    return () => window.removeEventListener(LISTS_CHANGED, again)
+  }, [reloadViews])
+
+  // Everything except the letter, which is a jump within a result set rather
+  // than part of what the view stands for: saving "the Bs" as a view would
+  // make a filter out of scrolling.
+  const paramsNow = useMemo(() => {
+    const p = new URLSearchParams(params)
+    p.delete('letter')
+    return p.toString()
+  }, [params])
+
+  const activeView = useMemo(
+    () => matchList(views, paramsNow, 'series'), [views, paramsNow],
+  )
+  const defaultView = useMemo(() => defaultListFor(views, 'series'), [views])
+  const isDefaultView = activeView?.builtin_key === DEFAULT_LIST_KEY
+
+  // Layout belongs to the view, so flipping to grid inside one and saving it
+  // sticks; an override holds the choice until it is saved or abandoned.
+  const [layoutOverride, setLayoutOverride] = useState<{
+    viewId: string | null; layout: ListLayout
+  } | null>(null)
+  const layout: ListLayout =
+    layoutOverride && layoutOverride.viewId === (activeView?.id ?? null)
+      ? layoutOverride.layout
+      : activeView?.layout ?? 'list'
+  const chooseLayout = (next: ListLayout) =>
+    setLayoutOverride({ viewId: activeView?.id ?? null, layout: next })
+
+  const dirty = activeView ? viewIsDirty(activeView, paramsNow, layout) : false
+
+  const commitView = async () => {
+    if (!activeView) return
+    await updateList(callApi, activeView.id, { query: paramsNow, layout }).catch(() => {})
+    setLayoutOverride(null)
+    await reloadViews()
+    announceListsChanged()
   }
+
+  const saveCurrentAs = async (name: string) => {
+    setNaming(false)
+    await createSmartList(callApi, name, paramsNow, undefined, 'series').catch(() => null)
+    await reloadViews()
+    announceListsChanged()
+  }
+
+  // Land on the default view's filters when arriving with none of our own. The
+  // page has to open on something, and the reader's own answer beats ours.
+  const [landed, setLanded] = useState(false)
+  useEffect(() => {
+    if (landed) return
+    if (views.length === 0) return
+    setLanded(true)
+    if (paramsNow !== '') return
+    const q = defaultView ? listQuery(defaultView) : ''
+    if (q) setParams(new URLSearchParams(q), { replace: true })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [views, landed])
 
   // Typing into the search box should not fire a request per keystroke, and it
   // should not push a history entry per keystroke either. Held locally, pushed
@@ -101,6 +182,18 @@ export default function SeriesPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [draft])
 
+  /** Tick or untick one value of one dimension. */
+  const toggleFacet = (key: SeriesFacetKey, value: string) => {
+    const current = selection[key] ?? []
+    const next = current.includes(value)
+      ? current.filter(v => v !== value)
+      : [...current, value]
+    set({ [SERIES_PARAM[key]]: next.join(',') || null })
+  }
+
+  const clearFacets = () =>
+    set(Object.fromEntries(FILTER_PARAMS.map(p => [p, null])))
+
   function set(changes: Record<string, string | null>) {
     const next = new URLSearchParams(params)
     for (const [k, v] of Object.entries(changes)) {
@@ -110,21 +203,31 @@ export default function SeriesPage() {
     setParams(next, { replace: true })
   }
 
-  /** Toggle a value off when it is already the one selected. */
-  const pick = (k: string, value: string, current: string) =>
-    set({ [k]: current === value ? null : value })
+  // The request is the URL, minus the letter, which is a jump within a result
+  // set rather than something the server can narrow on.
+  const wire = useMemo(() => {
+    const p = new URLSearchParams(params)
+    p.delete('letter')
+    if (p.get('sort') === 'name') p.delete('sort')
+    if (p.get('dir') === 'asc') p.delete('dir')
+    return p.toString()
+  }, [params])
 
   const load = useCallback(() => {
     let cancelled = false
-    const q = new URLSearchParams()
-    for (const [k, v] of Object.entries({ q: query, lib, status, arcs, reading, tag, sort, dir })) {
-      if (v && !(k === 'sort' && v === 'name') && !(k === 'dir' && v === 'asc')) q.set(k, v)
-    }
-    callApi<{ items: Series[] }>(`/api/v1/me/series/index?${q}`)
-      .then(res => { if (!cancelled) { setSeries(res?.items ?? []); setError(null) } })
+    callApi<{ items: Series[]; facets: SeriesFacets | null }>(
+      `/api/v1/me/series/index${wire ? `?${wire}` : ''}`)
+      .then(res => {
+        if (cancelled) return
+        setSeries(res?.items ?? [])
+        // ?? null, not ?? [], so a server older than the rail leaves it unset
+        // and the rail renders its skeleton rather than five empty headings.
+        setFacets(res?.facets ?? null)
+        setError(null)
+      })
       .catch((e: Error) => { if (!cancelled) { setError(e.message); setSeries([]) } })
     return () => { cancelled = true }
-  }, [callApi, query, lib, status, arcs, reading, tag, sort, dir])
+  }, [callApi, wire])
 
   useEffect(() => load(), [load])
 
@@ -133,18 +236,6 @@ export default function SeriesPage() {
       .then(l => setLibraries((l ?? []).slice().sort((a, b) => a.name.localeCompare(b.name))))
       .catch(() => setLibraries([]))
   }, [callApi])
-
-  // The tag vocabulary is per library, so the options are whatever the series
-  // currently in view actually carry. Deriving them beats another request for a
-  // control most people never open.
-  useEffect(() => {
-    if (!series) return
-    setTags(prev => {
-      const names = new Set(prev)
-      for (const s of series) for (const g of s.tags ?? []) names.add(g.name)
-      return [...names].sort((a, b) => a.localeCompare(b))
-    })
-  }, [series])
 
   const available = useMemo(
     () => new Set((series ?? []).map(s => indexLetter(s.name))),
@@ -172,7 +263,8 @@ export default function SeriesPage() {
     }
   }
 
-  const activeFilters = [lib, status, arcs, reading, tag].filter(Boolean).length
+  const activeFilters = SERIES_FACET_ORDER.reduce(
+    (n, k) => n + (selection[k]?.length ?? 0), 0)
 
   return (
     <>
@@ -189,170 +281,193 @@ export default function SeriesPage() {
       />
 
       <div className="px-8 py-6">
-        {/* One row of controls, wrapping. The search box grows and everything
-            else keeps its own width, so a narrow window stacks the controls
-            rather than squeezing the field nobody can then type in. */}
-        <div className="mb-3 flex flex-wrap items-center gap-2">
-          <input
-            value={draft}
-            onChange={e => setDraft(e.target.value)}
-            placeholder={t('series.search', { defaultValue: 'Search series…' })}
-            aria-label={t('series.search', { defaultValue: 'Search series' })}
-            className="lb-field min-w-[14rem] flex-1"
-          />
+        <div className="grid gap-7 lg:grid-cols-[13rem_1fr]">
+          <aside>
+            <SeriesFacetRail
+              facets={facets}
+              selection={selection}
+              onToggle={toggleFacet}
+              onClear={clearFacets}
+            />
+          </aside>
 
-          {libraries.length > 1 && (
-            <select className="lb-field" style={{ width: 'auto' }} value={lib}
-              onChange={e => set({ lib: e.target.value })}
-              aria-label={t('facets.library', { defaultValue: 'Library' })}>
-              <option value="">{t('series.all_libraries', { defaultValue: 'Every library' })}</option>
-              {libraries.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
-            </select>
-          )}
+          <div>
+            {/* One row: which view is open, then what is filtered, then the
+                controls. The same order Books uses, because the reader is
+                answering the same questions in the same sequence. */}
+            <div className="mb-4 flex flex-wrap items-center gap-2 text-sm text-content-muted">
+              {activeView && !isDefaultView && (
+                <span className="lb-chip on">{activeView.name}</span>
+              )}
 
-          {tags.length > 0 && (
-            <select className="lb-field" style={{ width: 'auto' }} value={tag}
-              onChange={e => set({ tag: e.target.value })}
-              aria-label={t('facets.tag', { defaultValue: 'Tag' })}>
-              <option value="">{t('series.all_tags', { defaultValue: 'Any tag' })}</option>
-              {tags.map(name => <option key={name} value={name}>{name}</option>)}
-            </select>
-          )}
+              <span className="tabular-nums">
+                {series === null
+                  ? ''
+                  : t('series.count', {
+                      count: series.length,
+                      defaultValue: '{{count}} across every library',
+                    })}
+              </span>
 
-          <select className="lb-field" style={{ width: 'auto' }} value={sort}
-            onChange={e => set({ sort: e.target.value })}
-            aria-label={t('series.sort', { defaultValue: 'Sort by' })}>
-            {SORTS.map(s => (
-              <option key={s} value={s}>
-                {t(`series.sort_${s}`, { defaultValue: SORT_FALLBACK[s] })}
-              </option>
-            ))}
-          </select>
+              <span className="flex-1" />
 
-          <button type="button"
-            onClick={() => set({ dir: dir === 'asc' ? 'desc' : null })}
-            title={t(dir === 'asc' ? 'series.ascending' : 'series.descending', {
-              defaultValue: dir === 'asc' ? 'Ascending' : 'Descending',
-            })}
-            aria-label={t('series.direction', { defaultValue: 'Sort direction' })}
-            className="rounded-md border border-line-strong px-2.5 py-1 text-xs text-content-secondary hover:bg-surface-inset">
-            {dir === 'asc' ? '↑' : '↓'}
-          </button>
+              {/* Unsaved changes to an open view. The only view state worth a
+                  button in the reader's way, which is why it is the only one
+                  that gets one. The Default counts: it is where "open Series
+                  the way I like it" is kept. */}
+              {activeView && dirty && (
+                <>
+                  <button type="button" onClick={() => void commitView()}
+                    className="rounded-md bg-accent px-2.5 py-1 text-xs font-medium text-white hover:brightness-110">
+                    {isDefaultView
+                      ? t('views.save_default', { defaultValue: 'Make this the default' })
+                      : t('views.save_changes', { defaultValue: 'Save changes' })}
+                  </button>
+                  <button type="button"
+                    onClick={() => {
+                      setLayoutOverride(null)
+                      setParams(new URLSearchParams(listQuery(activeView)), { replace: true })
+                    }}
+                    className="rounded-md border border-line-strong px-2.5 py-1 text-xs text-content-secondary hover:bg-surface-inset">
+                    {t('views.revert', { defaultValue: 'Revert' })}
+                  </button>
+                </>
+              )}
 
-          <div className="flex overflow-hidden rounded-md border border-line-strong">
-            {(['list', 'grid'] as Layout[]).map(opt => (
-              <button key={opt} type="button" onClick={() => chooseLayout(opt)}
-                aria-pressed={layout === opt}
-                className={`px-2.5 py-1 text-xs font-medium transition-colors ${
-                  layout === opt ? 'bg-accent text-white' : 'text-content-secondary hover:bg-surface-inset'
-                }`}>
-                {t(`views.layout_${opt}`, { defaultValue: opt === 'list' ? 'Rows' : 'Grid' })}
+              {/* Offered only when there is something worth naming. */}
+              {(!activeView || isDefaultView) && (activeFilters > 0 || query) && (
+                <button type="button" onClick={() => setNaming(true)}
+                  className="rounded-md bg-accent px-2.5 py-1 text-xs font-medium text-white hover:brightness-110">
+                  {t('views.save', { defaultValue: 'Save as a view' })}
+                </button>
+              )}
+            </div>
+
+            <div className="mb-3 flex flex-wrap items-center gap-2">
+              <input
+                value={draft}
+                onChange={e => setDraft(e.target.value)}
+                placeholder={t('series.search', { defaultValue: 'Search series…' })}
+                aria-label={t('series.search', { defaultValue: 'Search series' })}
+                className="lb-field min-w-[12rem] flex-1"
+              />
+
+              <select className="lb-field" style={{ width: 'auto' }} value={sort}
+                onChange={e => set({ sort: e.target.value })}
+                aria-label={t('series.sort', { defaultValue: 'Sort by' })}>
+                {SORTS.map(o => (
+                  <option key={o} value={o}>
+                    {t(`series.sort_${o}`, { defaultValue: SORT_FALLBACK[o] })}
+                  </option>
+                ))}
+              </select>
+
+              <button type="button"
+                onClick={() => set({ dir: dir === 'asc' ? 'desc' : null })}
+                title={t(dir === 'asc' ? 'series.ascending' : 'series.descending', {
+                  defaultValue: dir === 'asc' ? 'Ascending' : 'Descending',
+                })}
+                aria-label={t('series.direction', { defaultValue: 'Sort direction' })}
+                className="rounded-md border border-line-strong px-2.5 py-1 text-xs text-content-secondary hover:bg-surface-inset">
+                {dir === 'asc' ? '↑' : '↓'}
               </button>
-            ))}
+
+              <div className="flex overflow-hidden rounded-md border border-line-strong">
+                {(['list', 'grid'] as ListLayout[]).map(opt => (
+                  <button key={opt} type="button" onClick={() => chooseLayout(opt)}
+                    aria-pressed={layout === opt}
+                    className={`px-2.5 py-1 text-xs font-medium transition-colors ${
+                      layout === opt ? 'bg-accent text-white' : 'text-content-secondary hover:bg-surface-inset'
+                    }`}>
+                    {t(`views.layout_${opt}`, { defaultValue: opt === 'list' ? 'Rows' : 'Grid' })}
+                  </button>
+                ))}
+              </div>
+
+              {/* Finds runs hiding in loose titles. A collection imported from
+                  a spreadsheet arrives as a thousand books and no series at
+                  all, and this is the only thing that fixes that in one pass.
+
+                  One library at a time, because the books it files belong to
+                  one. With several it acts on the one being filtered, and asks
+                  for one when nothing is. */}
+              <button type="button" className="lb-btn ghost sm"
+                onClick={() => setSuggesting(true)}
+                disabled={libraries.length > 1 && selection.library.length !== 1}
+                title={libraries.length > 1 && selection.library.length !== 1
+                  ? t('series.pick_library_first', {
+                      defaultValue: 'Pick one library first: a series belongs to one',
+                    })
+                  : undefined}>
+                {t('series.suggest', { defaultValue: 'Find series' })}
+              </button>
+
+              <button type="button" className="lb-btn sm" onClick={() => setCreating(true)}>
+                {t('series.new', { defaultValue: 'New series' })}
+              </button>
+            </div>
+
+            <AlphabetBar available={available} active={letter}
+              onSelect={v => set({ letter: v })} />
+
+            {error && (
+              <p className="mt-6 rounded-lg border border-danger-line bg-danger-surface px-3 py-2 text-sm text-danger">
+                {error}
+              </p>
+            )}
+
+            {series === null && (
+              <div className="mt-6 space-y-4">
+                {Array.from({ length: 5 }, (_, i) => (
+                  <div key={i} className="h-28 animate-pulse rounded-lg bg-surface-inset" />
+                ))}
+              </div>
+            )}
+
+            {series !== null && shown.length === 0 && !error && (
+              <p className="font-display mt-12 text-center text-xl text-content-secondary">
+                {letter
+                  ? t('series.none_under', { letter, defaultValue: 'No series under {{letter}}' })
+                  : activeFilters > 0 || query
+                    ? t('series.none_matching', { defaultValue: 'No series match that' })
+                    : t('series.none', { defaultValue: 'No series yet' })}
+              </p>
+            )}
+
+            {series !== null && shown.length > 0 && (
+              layout === 'grid' ? (
+                <ul className="mt-4 grid gap-5"
+                  style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))' }}>
+                  {shown.map(s => (
+                    <SeriesTile key={s.id} series={s} libraryName={libraryName(s.library_id)}
+                      showLibrary={libraries.length > 1} t={t} />
+                  ))}
+                </ul>
+              ) : (
+                <ul className="mt-4">
+                  {shown.map(s => (
+                    <SeriesRow key={s.id} series={s} libraryName={libraryName(s.library_id)}
+                      showLibrary={libraries.length > 1} busy={busy} t={t}
+                      onEdit={() => setEditing(s)} onDelete={() => void remove(s)} />
+                  ))}
+                </ul>
+              )
+            )}
           </div>
-
-          {/* Finds runs hiding in loose titles. Worth surfacing beside New
-              series rather than buried: a collection imported from a
-              spreadsheet arrives as a thousand books and no series at all, and
-              this is the only thing that fixes that in one pass.
-
-              One library at a time, because the books it files belong to one.
-              With several, it acts on the one being filtered, and asks for one
-              when the filter is off. */}
-          <button type="button" className="lb-btn ghost sm"
-            onClick={() => setSuggesting(true)}
-            disabled={libraries.length > 1 && !lib}
-            title={libraries.length > 1 && !lib
-              ? t('series.pick_library_first', {
-                  defaultValue: 'Pick a library first: a series belongs to one',
-                })
-              : undefined}>
-            {t('series.suggest', { defaultValue: 'Find series' })}
-          </button>
-
-          <button type="button" className="lb-btn sm" onClick={() => setCreating(true)}>
-            {t('series.new', { defaultValue: 'New series' })}
-          </button>
         </div>
-
-        {/* Small closed vocabularies, so pills rather than another three
-            dropdowns: the whole choice is readable at a glance and one click
-            wide, which a select is not. */}
-        <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2">
-          <PillGroup label={t('series.status', { defaultValue: 'Status' })}
-            options={STATUSES} active={status} fallback={STATUS_FALLBACK}
-            prefix="series.status_" onPick={v => pick('status', v, status)} t={t} />
-          <PillGroup label={t('series.arcs', { defaultValue: 'Arcs' })}
-            options={ARCS} active={arcs} fallback={ARCS_FALLBACK}
-            prefix="series.arcs_" onPick={v => pick('arcs', v, arcs)} t={t} />
-          <PillGroup label={t('series.reading', { defaultValue: 'Reading' })}
-            options={READING} active={reading} fallback={READING_FALLBACK}
-            prefix="series.reading_" onPick={v => pick('reading', v, reading)} t={t} />
-
-          {activeFilters > 0 && (
-            <button type="button"
-              onClick={() => set({ lib: null, status: null, arcs: null, reading: null, tag: null })}
-              className="text-xs text-content-tertiary underline hover:text-content">
-              {t('series.clear_filters', {
-                count: activeFilters,
-                defaultValue: 'Clear 1 filter',
-                defaultValue_other: `Clear ${activeFilters} filters`,
-              })}
-            </button>
-          )}
-        </div>
-
-        <AlphabetBar available={available} active={letter}
-          onSelect={v => set({ letter: v })} />
-
-        {error && (
-          <p className="mt-6 rounded-lg border border-danger-line bg-danger-surface px-3 py-2 text-sm text-danger">
-            {error}
-          </p>
-        )}
-
-        {series === null && (
-          <div className="mt-6 space-y-4">
-            {Array.from({ length: 5 }, (_, i) => (
-              <div key={i} className="h-28 animate-pulse rounded-lg bg-surface-inset" />
-            ))}
-          </div>
-        )}
-
-        {series !== null && shown.length === 0 && !error && (
-          <p className="font-display mt-12 text-center text-xl text-content-secondary">
-            {letter
-              ? t('series.none_under', { letter, defaultValue: 'No series under {{letter}}' })
-              : activeFilters > 0 || query
-                ? t('series.none_matching', { defaultValue: 'No series match that' })
-                : t('series.none', { defaultValue: 'No series yet' })}
-          </p>
-        )}
-
-        {series !== null && shown.length > 0 && (
-          layout === 'grid' ? (
-            <ul className="mt-4 grid gap-5"
-              style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))' }}>
-              {shown.map(s => (
-                <SeriesTile key={s.id} series={s} libraryName={libraryName(s.library_id)}
-                  showLibrary={libraries.length > 1} t={t} />
-              ))}
-            </ul>
-          ) : (
-            <ul className="mt-4">
-              {shown.map(s => (
-                <SeriesRow key={s.id} series={s} libraryName={libraryName(s.library_id)}
-                  showLibrary={libraries.length > 1} busy={busy} t={t}
-                  onEdit={() => setEditing(s)} onDelete={() => void remove(s)} />
-              ))}
-            </ul>
-          )
-        )}
       </div>
+
+      {naming && (
+        <NameViewDialog
+          onCancel={() => setNaming(false)}
+          onSave={name => void saveCurrentAs(name)}
+          t={t}
+        />
+      )}
 
       {suggesting && (
         <SuggestSeriesModal
-          libraryId={lib || libraries[0]?.id || ''}
+          libraryId={selection.library[0] || libraries[0]?.id || ''}
           onClose={() => setSuggesting(false)}
           onCreated={() => { setSuggesting(false); load() }}
         />
@@ -360,7 +475,7 @@ export default function SeriesPage() {
 
       {(creating || editing) && (
         <SeriesFormModal
-          libraryId={editing?.library_id ?? lib ?? libraries[0]?.id ?? ''}
+          libraryId={editing?.library_id ?? selection.library[0] ?? libraries[0]?.id ?? ''}
           series={editing}
           libraries={libraries}
           onClose={() => { setCreating(false); setEditing(null) }}
@@ -375,39 +490,49 @@ const SORT_FALLBACK: Record<string, string> = {
   name: 'Name', volumes: 'Volumes held', missing: 'Missing volumes',
   read: 'Volumes read', recent: 'Recently changed',
 }
-const STATUS_FALLBACK: Record<string, string> = {
-  ongoing: 'Ongoing', completed: 'Complete', hiatus: 'On hiatus', cancelled: 'Cancelled',
-}
-const ARCS_FALLBACK: Record<string, string> = { with: 'With arcs', without: 'No arcs' }
-const READING_FALLBACK: Record<string, string> = {
-  unread: 'Unread', reading: 'Reading', read_all: 'Read all',
-}
 
 type Translate = (k: string, o?: Record<string, unknown>) => string
 
-/** A closed vocabulary as a labelled row of toggles. Clicking the active one clears it. */
-function PillGroup({ label, options, active, fallback, prefix, onPick, t }: {
-  label: string
-  options: readonly string[]
-  active: string
-  fallback: Record<string, string>
-  prefix: string
-  onPick: (value: string) => void
+/**
+ * Name a view.
+ *
+ * A prompt() would do the job and would also be the one piece of this page that
+ * cannot be styled, cannot be dismissed with Escape the way everything else is,
+ * and blocks the tab while it is open.
+ */
+function NameViewDialog({ onCancel, onSave, t }: {
+  onCancel: () => void
+  onSave: (name: string) => void
   t: Translate
 }) {
+  const [name, setName] = useState('')
   return (
-    <div className="flex items-center gap-1.5">
-      <span className="lb-eyebrow">{label}</span>
-      {options.map(o => (
-        <button key={o} type="button" onClick={() => onPick(o)} aria-pressed={active === o}
-          className={`rounded-full border px-2.5 py-[3px] text-[11px] font-medium transition-colors ${
-            active === o
-              ? 'border-accent bg-accent text-white'
-              : 'border-line-strong text-content-tertiary hover:bg-surface-inset'
-          }`}>
-          {t(prefix + o, { defaultValue: fallback[o] })}
-        </button>
-      ))}
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4"
+      role="dialog" aria-modal="true"
+      onKeyDown={e => { if (e.key === 'Escape') onCancel() }}>
+      <div className="w-full max-w-sm rounded-xl border border-line bg-surface-raised p-4">
+        <h2 className="mb-3 text-sm font-semibold text-content">
+          {t('views.save', { defaultValue: 'Save as a view' })}
+        </h2>
+        <input
+          autoFocus
+          value={name}
+          onChange={e => setName(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter' && name.trim()) onSave(name.trim()) }}
+          placeholder={t('views.name_placeholder', { defaultValue: 'Name it…' })}
+          aria-label={t('views.name', { defaultValue: 'Name' })}
+          className="lb-field w-full"
+        />
+        <div className="mt-3 flex justify-end gap-2">
+          <button type="button" className="lb-btn ghost sm" onClick={onCancel}>
+            {t('common.cancel', { defaultValue: 'Cancel' })}
+          </button>
+          <button type="button" className="lb-btn sm" disabled={!name.trim()}
+            onClick={() => onSave(name.trim())}>
+            {t('common.save', { defaultValue: 'Save' })}
+          </button>
+        </div>
+      </div>
     </div>
   )
 }
