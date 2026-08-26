@@ -2163,7 +2163,7 @@ interface SeriesDetailViewProps {
 // badge so the # column can go away. Read-state glow follows the same color
 // scheme used by BookCoverThumb so both surfaces are consistent.
 function SeriesVolumeCover({
-  title, coverUrl, position, positionEnd, readStatus, isGhost,
+  title, coverUrl, position, positionEnd, readStatus, isGhost, unheld,
 }: {
   title: string
   coverUrl: string | null | undefined
@@ -2172,6 +2172,8 @@ function SeriesVolumeCover({
   positionEnd?: number | null
   readStatus?: string
   isGhost?: boolean
+  /** A real volume the library does not have. Drawn drained, like everywhere else. */
+  unheld?: boolean
 }) {
   const [imgError, setImgError] = useState(false)
   const { ref, src } = useAuthenticatedImage(coverUrl)
@@ -2192,7 +2194,12 @@ function SeriesVolumeCover({
   const grad = COVER_GRADIENTS[title.charCodeAt(0) % COVER_GRADIENTS.length]
 
   return (
-    <div className={`w-12 flex-shrink-0 rounded ${isGhost ? 'opacity-50' : ''}`} style={glow}>
+    <div className={`w-12 flex-shrink-0 rounded ${isGhost ? 'opacity-50' : ''}`}
+      // The same treatment BookCover gives a book you do not have, so a
+      // missing volume reads the same on every surface. Not all the way to
+      // zero, which looks broken, and not opacity alone, which looks like
+      // loading.
+      style={unheld ? { ...glow, filter: 'grayscale(0.9)', opacity: 0.65 } : glow}>
       <div ref={ref} className="relative aspect-[2/3] rounded overflow-hidden">
         {showImage ? (
           <img src={src} alt="" className="w-full h-full object-cover" onError={() => setImgError(true)} />
@@ -3024,17 +3031,27 @@ function SeriesDetailView({ seriesId, libraryId, setExtraCrumbs, onBack }: Serie
                   {group.rows.map((row, idx) => row.type === 'entry' ? (
                     <tr key={row.entry.book_id} className="hover:bg-surface-muted transition-colors">
                       <td className="pl-4 pr-2 py-3 w-16">
+                        {/* held === false, not falsy: a server older than the
+                            field sends nothing, and greying a run somebody owns
+                            outright is worse than greying nothing. */}
                         <SeriesVolumeCover
                           title={row.entry.title}
                           coverUrl={row.entry.cover_url}
                           position={row.entry.position}
                           positionEnd={row.entry.position_end}
+                          unheld={row.entry.held === false}
                           readStatus={showReadBadges ? row.entry.user_read_status : undefined}
                         />
                       </td>
                       <td className="px-4 py-3">
+                        {/* A volume nobody owns is still a book: it opens, it
+                            can go on a list, and cover backfill fetches its
+                            art. It used to be a placeholder that linked
+                            nowhere and offered to Add. */}
                         <Link to={`/libraries/${libraryId}/books/${row.entry.book_id}`}
-                          className="font-medium text-content hover:text-accent transition-colors">
+                          className={`font-medium transition-colors hover:text-accent ${
+                            row.entry.held === false ? 'text-content-tertiary' : 'text-content'
+                          }`}>
                           {row.entry.title}
                         </Link>
                         {row.entry.subtitle && <p className="text-xs text-content-subtle">{row.entry.subtitle}</p>}

@@ -512,6 +512,15 @@ export interface SeriesEntry {
   subtitle: string
   media_type: string
   cover_url: string | null
+  /**
+   * Whether the library actually has this volume.
+   *
+   * A series lists the whole run, promoted gaps included, so without this a
+   * volume nobody owns draws exactly like one on the shelf. Optional because a
+   * server older than the field sends nothing, and "unknown" has to mean held
+   * rather than greying a run somebody owns outright.
+   */
+  held?: boolean
   user_read_status: string
   contributors: BookContributor[]
 }
