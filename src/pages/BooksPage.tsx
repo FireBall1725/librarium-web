@@ -12,6 +12,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useNavigationType, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { announceCollectionChanged } from '../lib/collectionEvents'
+import { formatStars, starsOf } from '../lib/rating'
 import { useAuth } from '../auth/AuthContext'
 import PageHeader from '../components/PageHeader'
 import { PromptDialog } from '../components/Dialog'
@@ -221,13 +222,22 @@ function SelectBox({ book, picked, onToggle, t }: {
 function chipLabel(key: FacetKey, value: string, facets: BookFacets | null, t: TFunction): string {
   if (key === 'ownership') return t(`ownership.${value}`, { defaultValue: value })
   if (key === 'read_status') return t(`read_status.${value}`, { defaultValue: value })
-  if (key === 'rating') return t('facets.stars', { count: Number(value), defaultValue: `${value} stars` })
+  if (key === 'rating') {
+    return t('facets.stars', {
+      count: starsOf(Number(value)), stars: formatStars(Number(value)),
+      defaultValue: `${formatStars(Number(value))} stars`,
+    })
+  }
   // Favourite is a boolean, so its facet value is the string "true". Falling
   // through to the label the server sent put a chip reading TRUE beside the
   // results, which says nothing about what was filtered.
   if (key === 'favourite') return t('facets.favourited', { defaultValue: 'Favourited' })
   return facets?.[key]?.find(v => v.value === value)?.label ?? value
 }
+
+/** A bare id, which is never something to show a reader. */
+const looksLikeAnID = (s: string) =>
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s)
 
 /**
  * chipLabel, plus the views the reader can see.
@@ -243,7 +253,15 @@ function chipLabelWithViews(
     const named = views.find(v => v.id === value)
     if (named) return named.name
   }
-  return chipLabel(key, value, facets, t)
+  const label = chipLabel(key, value, facets, t)
+  // Never a raw id. An id-keyed facet reads its name out of the facet block,
+  // and the block only carries values something matched, so a filter matching
+  // nothing had nothing to read and fell through to the UUID. The dimension's
+  // own name says more than forty hex digits ever will.
+  if (looksLikeAnID(label)) {
+    return t(`facets.${key}`, { defaultValue: key })
+  }
+  return label
 }
 
 /** Book detail still lives under a library, so link via the first one holding it. */
@@ -781,6 +799,11 @@ export default function BooksPage() {
           lists={views}
           selection={state.selection}
           onToggleFacet={(key, value) => apply(toggle(state, key, value))}
+          onPickRating={values => apply({
+            ...state,
+            selection: { ...state.selection, rating: values },
+            page: 1,
+          })}
           onPickContributor={id => {
             if (state.contributors.includes(id)) return
             apply({ ...state, contributors: [...state.contributors, id], page: 1 })

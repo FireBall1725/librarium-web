@@ -10,6 +10,7 @@ import EditBookModal from '../../components/EditBookModal'
 import LoanFormModal from '../../components/LoanFormModal'
 import BookCover from '../../components/BookCover'
 import BookLists from '../../components/BookLists'
+import StarRating from '../../components/StarRating'
 import { type SavedList } from '../../lib/lists'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -239,9 +240,15 @@ function ReadingPanel({ bookId }: { bookId: string }) {
             </select>
           </div>
           <div>
-            <label className="block text-xs text-content-tertiary mb-1">Rating (1–10)</label>
-            <input type="number" min="1" max="10" value={form.rating} placeholder="—"
-              onChange={e => setForm(f => ({ ...f, rating: e.target.value }))} className={inputCls} />
+            <label className="block text-xs text-content-tertiary mb-1">Rating</label>
+            {/* Stars rather than a number box labelled 1-10. The column holds
+                ten points, which is five stars of two, so the reader is no
+                longer asked to convert in their head against a rail that talks
+                about stars. */}
+            <StarRating
+              value={form.rating === '' ? null : Number(form.rating)}
+              onChange={r => setForm(f => ({ ...f, rating: r === null ? '' : String(r) }))}
+            />
           </div>
           <div>
             <label className="block text-xs text-content-tertiary mb-1">Date started</label>

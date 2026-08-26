@@ -4,8 +4,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAuth, ApiError } from '../auth/AuthContext'
 import type { Book, Tag, Genre, MediaType, ContributorResult, BookEdition } from '../types'
-import { fetchLists, listIcon, type SavedList } from '../lib/lists'
-import { Icon } from '../lib/icons'
+import { fetchLists, type SavedList } from '../lib/lists'
 import ContributorRow from './ContributorRow'
 import MediaTypeSelect from './MediaTypeSelect'
 import { AddEditionModal } from './AddEditionModal'
@@ -358,8 +357,6 @@ export default function EditBookModal({ libraryId, book, onClose, onSaved, initi
                             else next.delete(shelf.id)
                             return next
                           })} />
-                        <Icon name={listIcon(shelf)} size={14}
-                          style={shelf.color ? { color: shelf.color } : undefined} />
                         {shelf.name}
                       </label>
                     )

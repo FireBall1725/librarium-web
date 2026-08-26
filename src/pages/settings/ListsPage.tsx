@@ -17,22 +17,20 @@ import { Link } from 'react-router-dom'
 import { useAuth, ApiError } from '../../auth/AuthContext'
 import { usePageTitle } from '../../hooks/usePageTitle'
 import PageHeader from '../../components/PageHeader'
-import { Icon } from '../../lib/icons'
-import { LIST_ICONS } from '../../lib/listIcons'
-import { TAG_COLORS } from '../../lib/tagColours'
-import { announceListsChanged, fetchLists, listHref, listIcon, type SavedList } from '../../lib/lists'
+import { announceListsChanged, fetchLists, listHref, type SavedList } from '../../lib/lists'
 import type { Library } from '../../types'
 
 interface Draft {
   name: string
   description: string
-  color: string
-  icon: string
   /** A library id shares it with that library; empty keeps it to the owner. */
   sharedWith: string
 }
 
-const emptyDraft = (): Draft => ({ name: '', description: '', color: '', icon: 'tag', sharedWith: '' })
+// No icon and no colour. A list is a name and a set of books: the facet rail
+// draws neither for any dimension, not even for tags, which carry a colour of
+// their own. Picking one would decorate a settings row and nothing else.
+const emptyDraft = (): Draft => ({ name: '', description: '', sharedWith: '' })
 
 export default function ListsPage() {
   const { t } = useTranslation()
@@ -89,8 +87,6 @@ export default function ListsPage() {
           body: JSON.stringify({
             name,
             description: draft.description.trim(),
-            color: draft.color,
-            icon: draft.icon,
             visibility: draft.sharedWith ? 'library' : 'private',
             shared_library_id: draft.sharedWith || null,
           }),
@@ -101,8 +97,6 @@ export default function ListsPage() {
           body: JSON.stringify({
             name,
             description: draft.description.trim(),
-            color: draft.color,
-            icon: draft.icon,
             kind: 'manual',
             visibility: draft.sharedWith ? 'library' : 'private',
             shared_library_id: draft.sharedWith || null,
@@ -122,8 +116,8 @@ export default function ListsPage() {
   const edit = (l: SavedList) => {
     setEditingId(l.id)
     setDraft({
-      name: l.name, description: l.description, color: l.color,
-      icon: l.icon || 'tag', sharedWith: l.shared_library_id ?? '',
+      name: l.name, description: l.description,
+      sharedWith: l.shared_library_id ?? '',
     })
   }
 
@@ -215,34 +209,6 @@ export default function ListsPage() {
           )}
         </div>
 
-        <div className="mt-3 flex flex-wrap items-center gap-1">
-          {LIST_ICONS.map(name => (
-            <button key={name} type="button"
-              onClick={() => setDraft(d => ({ ...d, icon: name }))}
-              aria-label={name} aria-pressed={draft.icon === name}
-              className={`rounded-md border p-1.5 transition-colors ${
-                draft.icon === name
-                  ? 'border-accent bg-accent-surface text-accent'
-                  : 'border-line-strong text-content-tertiary hover:bg-surface-inset'
-              }`}
-              style={draft.icon === name && draft.color ? { color: draft.color } : undefined}>
-              <Icon name={name} size={16} className="" />
-            </button>
-          ))}
-          <span className="mx-2 h-5 w-px bg-line" />
-          {TAG_COLORS.map(c => (
-            <button key={c.value || 'none'} type="button"
-              onClick={() => setDraft(d => ({ ...d, color: c.value }))}
-              aria-label={c.label} aria-pressed={draft.color === c.value} title={c.label}
-              className={`h-7 w-7 rounded-md border transition-colors ${
-                draft.color === c.value ? 'border-accent' : 'border-line-strong hover:bg-surface-inset'
-              }`}>
-              <span className="mx-auto block h-3.5 w-3.5 rounded-full border border-line"
-                style={c.value ? { backgroundColor: c.value, borderColor: c.value } : undefined} />
-            </button>
-          ))}
-        </div>
-
         <div className="mt-3 flex items-center gap-2">
           <button type="button" className="lb-btn sm" disabled={busy || !draft.name.trim()}
             onClick={() => void save()}>
@@ -266,7 +232,6 @@ export default function ListsPage() {
         <ul className="divide-y divide-line rounded-xl border border-line bg-surface">
           {lists.map(l => (
             <li key={l.id} className="flex items-center gap-3 px-4 py-3">
-              <Icon name={listIcon(l)} size={16} style={l.color ? { color: l.color } : undefined} />
               <div className="min-w-0 flex-1">
                 <Link to={listHref(l)} className="text-sm text-content hover:text-accent">{l.name}</Link>
                 <div className="text-xs text-content-tertiary">

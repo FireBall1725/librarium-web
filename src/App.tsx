@@ -14,6 +14,7 @@ import LoansPage from './pages/LoansPage'
 import SettingsIndexPage from './pages/settings/SettingsIndexPage'
 import LicencesPage from './pages/settings/LicencesPage'
 import ListsPage from './pages/settings/ListsPage'
+import ShelvesPage from './pages/settings/ShelvesPage'
 import MembersPage from './pages/settings/MembersPage'
 import AppearancePage from './pages/settings/AppearancePage'
 import LegacySettingsRedirect from './pages/settings/LegacySettingsRedirect'
@@ -102,6 +103,7 @@ function AppRoutes() {
                   <Route path="media-types"       element={<MediaTypesPage />} />
                   <Route path="profiles"          element={<ProfilesPage />} />
                   <Route path="lists"             element={<ListsPage />} />
+                  <Route path="shelves"           element={<ShelvesPage />} />
                   <Route path="members"           element={<MembersPage />} />
                   <Route path="general"           element={<GeneralPage />} />
                   <Route path="jobs"              element={<JobsPage />} />

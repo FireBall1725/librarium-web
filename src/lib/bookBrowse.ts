@@ -13,7 +13,7 @@
 // two people opening the same link should each get their own, and the link
 // should not change meaning when one of them switches to 200.
 
-export type FacetKey = 'ownership' | 'library' | 'shelf' | 'read_status' | 'media_type' | 'genre' | 'tag' | 'rating' | 'favourite'
+export type FacetKey = 'ownership' | 'library' | 'shelf' | 'location' | 'read_status' | 'media_type' | 'genre' | 'tag' | 'rating' | 'favourite'
 
 // Ownership leads: whether you have a book at all comes before anything else
 // about it, and it is the one facet that arrives with a default.
@@ -21,7 +21,10 @@ export type FacetKey = 'ownership' | 'library' | 'shelf' | 'read_status' | 'medi
 // pair: which library, then which shelf within it.
 // Favourite sits by read status: both are the reader's own verdict on a book,
 // as against what it is or where it lives.
-export const FACET_ORDER: FacetKey[] = ['ownership', 'library', 'shelf', 'read_status', 'favourite', 'media_type', 'genre', 'tag', 'rating']
+// Location follows library for the same reason list does: a place belongs to
+// one library, so the two read as a pair. Where the object physically is comes
+// before what anyone thinks of it.
+export const FACET_ORDER: FacetKey[] = ['ownership', 'library', 'shelf', 'location', 'read_status', 'favourite', 'media_type', 'genre', 'tag', 'rating']
 
 /**
  * Query-string key for each facet. Short, because these end up in shared links.
@@ -35,6 +38,11 @@ export const PARAM: Record<FacetKey, string> = {
   ownership: 'own',
   library: 'lib',
   shelf: 'list',
+  // Not 'shelf', which the list facet still answers to for links saved before
+  // it was renamed. Two facets reading one parameter is the ambiguity this
+  // whole rename exists to remove, and it showed up as one filter producing
+  // two identical chips.
+  location: 'location',
   read_status: 'status',
   media_type: 'type',
   genre: 'genre',
@@ -101,7 +109,7 @@ export interface BrowseState {
 }
 
 export const emptySelection = (): Selection => ({
-  ownership: [], library: [], shelf: [], read_status: [], media_type: [], genre: [], tag: [], rating: [], favourite: [],
+  ownership: [], library: [], shelf: [], location: [], read_status: [], media_type: [], genre: [], tag: [], rating: [], favourite: [],
 })
 
 export const isDefaultOwnership = (vals: string[]): boolean =>

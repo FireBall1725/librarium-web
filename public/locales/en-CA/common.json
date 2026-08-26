@@ -70,7 +70,8 @@
     "tokens": "API tokens",
     "ai_privacy": "AI and privacy",
     "members": "Members",
-    "lists": "Lists"
+    "lists": "Lists",
+    "shelves": "Shelves"
   },
   "theme": {
     "light": "☀ Light",
@@ -117,7 +118,6 @@
     "genre": "Genre",
     "tag": "Tag",
     "rating": "Rating",
-    "stars": "{{count}} stars",
     "active": "{{count}} filters",
     "ownership": "Ownership",
     "remove": "Remove filter",
@@ -125,7 +125,10 @@
     "favourited": "Favourited",
     "shelf": "List",
     "clear_one": "Clear 1 filter",
-    "clear_other": "Clear {{count}} filters"
+    "clear_other": "Clear {{count}} filters",
+    "stars_one": "{{stars}} star",
+    "stars_other": "{{stars}} stars",
+    "location": "Shelf"
   },
   "common": {
     "loading": "Loading…",
@@ -464,5 +467,23 @@
     "private": "Only me",
     "share": "Who can see it",
     "shared_with": "Shared with {{name}}"
+  },
+  "rating": {
+    "label": "Rating",
+    "none": "Not rated",
+    "set": "Rate {{stars}} stars"
+  },
+  "shelves_settings": {
+    "count_one": "1 copy",
+    "count_other": "{{count}} copies",
+    "create": "Add place",
+    "description": "Where a copy physically sits. Places nest, so a room holds a bookcase and a bookcase holds a shelf, and a book filed on the shelf is findable under all three.",
+    "editing": "Editing {{name}}",
+    "empty": "Nowhere recorded yet.",
+    "inside": "Inside",
+    "library": "Library",
+    "name": "Office, Bookcase, Top shelf…",
+    "new": "New place",
+    "top": "Not inside anything"
   }
 }

@@ -4,7 +4,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
-import { suggestFacets, textSuggestion, type Suggestion } from '../lib/filterSuggest'
+import { suggestFacets, suggestRating, textSuggestion, type Suggestion } from '../lib/filterSuggest'
 import type { BookFacets, FacetKey } from '../lib/bookBrowse'
 import type { SavedList } from '../lib/lists'
 import type { ContributorResult } from '../types'
@@ -24,7 +24,8 @@ import type { ContributorResult } from '../types'
  * rather than a filter.
  */
 export default function FilterSearch({
-  value, onChange, onCommitText, facets, lists, selection, onToggleFacet, onPickContributor,
+  value, onChange, onCommitText, facets, lists, selection,
+  onToggleFacet, onPickContributor, onPickRating,
 }: {
   value: string
   onChange: (next: string) => void
@@ -35,6 +36,8 @@ export default function FilterSearch({
   selection: Record<FacetKey, string[]>
   onToggleFacet: (facet: FacetKey, value: string) => void
   onPickContributor: (id: string, name: string) => void
+  /** Replace the rating selection outright: a comparison is a set, not one tick. */
+  onPickRating: (values: string[]) => void
 }) {
   const { t } = useTranslation()
   const { callApi } = useAuth()
@@ -68,8 +71,12 @@ export default function FilterSearch({
   const authorHits: Suggestion[] = value.trim().length < 2 ? [] : authors.map(a => ({
     kind: 'contributor', value: a.id, label: a.name, group: t('search.author', { defaultValue: 'Author' }),
   }))
+  // A rating leads when the box parses as one. "4 stars" is not a title anybody
+  // is searching for, and burying it under text matches would mean scrolling
+  // past them to reach the thing that was actually typed.
+  const rating = suggestRating(value)
   const suggestions: Suggestion[] = value.trim()
-    ? [...facetHits, ...authorHits, textSuggestion(value)]
+    ? [...(rating ? [rating] : []), ...facetHits, ...authorHits, textSuggestion(value)]
     : []
 
   // Kept in range as the list shrinks under the cursor, or Enter would take
@@ -96,6 +103,13 @@ export default function FilterSearch({
         break
       case 'contributor':
         onPickContributor(s.value, s.label)
+        onChange('')
+        break
+      case 'rating':
+        // Set rather than toggled. "Four stars and up" is one answer that
+        // happens to cover several values, so adding them one at a time to
+        // whatever was already ticked would produce a filter nobody asked for.
+        onPickRating(s.values.map(String))
         onChange('')
         break
       default:

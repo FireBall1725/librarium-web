@@ -13,6 +13,7 @@
 // the chip is the box's own rendering. Two systems would drift.
 
 import { PARAM, type BookFacets, type FacetKey } from './bookBrowse'
+import { ratingsMatching } from './rating'
 import type { SavedList } from './lists'
 
 /** What a suggestion does when chosen. */
@@ -36,6 +37,21 @@ export type Suggestion =
     }
   | {
       kind: 'series'
+      value: string
+      label: string
+      group: string
+    }
+  | {
+      /**
+       * A rating, expanded to every stored value that satisfies it.
+       *
+       * The scale is ten discrete points, so a comparison is a set rather than
+       * a range and rides the filter the rail already sends. The server never
+       * learns what "more than three stars" means.
+       */
+      kind: 'rating'
+      /** The stored ratings this stands for, 1 to 10. */
+      values: number[]
       value: string
       label: string
       group: string
@@ -65,6 +81,44 @@ const SUGGESTABLE: Array<{ facet: FacetKey; group: string }> = [
 ]
 
 const fold = (s: string) => s.trim().toLowerCase()
+
+/**
+ * A rating, spoken the way people say it.
+ *
+ * "4 stars", "> 3.5", "at least 4", "5*". The comparison matters because the
+ * useful question is rarely one exact value: nobody wants only the fours, they
+ * want the fours and up.
+ */
+const RATING_RE = /^(?:rating|stars?)?\s*(>=|<=|>|<|=|at least|over|under|above|below)?\s*([0-5](?:\.5)?)\s*(\*|stars?|\+)?$/i
+
+export function suggestRating(input: string): Suggestion | null {
+  const m = RATING_RE.exec(input.trim())
+  if (!m) return null
+  const stars = Number(m[2])
+  if (!Number.isFinite(stars) || stars <= 0) return null
+
+  // A trailing plus is a comparison wearing a suffix: "4+" means four and up,
+  // and it is how people write it far more often than ">= 4".
+  const word = fold(m[1] ?? '') || (m[3] === '+' ? '+' : '')
+  const op: '>' | '>=' | '<' | '<=' | '=' =
+    word === '>' || word === 'over' || word === 'above' ? '>'
+      : word === '>=' || word === 'at least' || word === '+' ? '>='
+        : word === '<' || word === 'under' || word === 'below' ? '<'
+          : word === '<=' ? '<='
+            : '='
+
+  const values = ratingsMatching(op, stars)
+  if (values.length === 0) return null
+
+  const said =
+    op === '=' ? `${stars} stars`
+      : op === '>' ? `more than ${stars} stars`
+        : op === '>=' ? `${stars} stars and up`
+          : op === '<' ? `under ${stars} stars`
+            : `${stars} stars and below`
+
+  return { kind: 'rating', values, value: values.join(','), label: said, group: 'Rating' }
+}
 
 /**
  * `tag:signed` and the like.

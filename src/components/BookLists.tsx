@@ -5,8 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
-import { Icon } from '../lib/icons'
-import { announceListsChanged, fetchLists, listHref, listIcon, type SavedList } from '../lib/lists'
+import { announceListsChanged, fetchLists, listHref, type SavedList } from '../lib/lists'
 
 /**
  * The lists a book is on, and the controls to change that.
@@ -98,14 +97,7 @@ export default function BookLists({
       {lists.map(l => (
         <span key={l.id}
           className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-surface py-1.5 pl-3 pr-1.5 text-sm text-content-secondary">
-          <Link to={listHref(l)} className="inline-flex items-center gap-1.5 hover:text-content">
-            {/* Drawn from the icon set rather than printed. This pill rendered
-                the field as text, which was right while it held an emoji and
-                drew the literal word "libraries" once the picker moved to
-                named icons. */}
-            <Icon name={listIcon(l)} size={14} style={l.color ? { color: l.color } : undefined} />
-            {l.name}
-          </Link>
+          <Link to={listHref(l)} className="hover:text-content">{l.name}</Link>
           <button type="button" disabled={busy} onClick={() => void remove(l.id)}
             title={t('book_lists.remove', { defaultValue: 'Take off this list' })}
             aria-label={t('book_lists.remove_named', {

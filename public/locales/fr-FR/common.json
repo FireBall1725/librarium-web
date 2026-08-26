@@ -70,7 +70,8 @@
     "tokens": "Jetons API",
     "ai_privacy": "IA et confidentialité",
     "members": "Membres",
-    "lists": "Listes"
+    "lists": "Listes",
+    "shelves": "Étagères"
   },
   "theme": {
     "light": "☀ Light",
@@ -117,7 +118,6 @@
     "genre": "Genre",
     "tag": "Étiquette",
     "rating": "Note",
-    "stars": "{{count}} étoiles",
     "active": "{{count}} filtres",
     "ownership": "Possession",
     "remove": "Retirer le filtre",
@@ -125,7 +125,10 @@
     "favourited": "Mis en favori",
     "shelf": "Liste",
     "clear_one": "Effacer 1 filtre",
-    "clear_other": "Effacer {{count}} filtres"
+    "clear_other": "Effacer {{count}} filtres",
+    "stars_one": "{{stars}} étoile",
+    "stars_other": "{{stars}} étoiles",
+    "location": "Étagère"
   },
   "common": {
     "loading": "Chargement…",
@@ -464,5 +467,23 @@
     "private": "Moi seulement",
     "share": "Qui peut la voir",
     "shared_with": "Partagée avec {{name}}"
+  },
+  "rating": {
+    "label": "Note",
+    "none": "Non noté",
+    "set": "Noter {{stars}} étoiles"
+  },
+  "shelves_settings": {
+    "count_one": "1 exemplaire",
+    "count_other": "{{count}} exemplaires",
+    "create": "Ajouter",
+    "description": "Où se trouve physiquement un exemplaire. Les emplacements s'imbriquent : une pièce contient une bibliothèque, qui contient une étagère, et un livre rangé sur l'étagère se retrouve sous les trois.",
+    "editing": "Modification de {{name}}",
+    "empty": "Aucun emplacement enregistré.",
+    "inside": "Dans",
+    "library": "Bibliothèque",
+    "name": "Bureau, Bibliothèque, Étagère du haut…",
+    "new": "Nouvel emplacement",
+    "top": "À la racine"
   }
 }

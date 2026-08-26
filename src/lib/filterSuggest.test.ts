@@ -2,7 +2,7 @@
 // Copyright (C) 2026 FireBall1725
 
 import { describe, expect, it } from 'vitest'
-import { parsePrefix, suggestFacets, textSuggestion } from './filterSuggest'
+import { parsePrefix, suggestFacets, suggestRating, textSuggestion } from './filterSuggest'
 import type { BookFacets, FacetKey } from './bookBrowse'
 import type { SavedList } from './lists'
 
@@ -22,7 +22,7 @@ const facets = {
 const lists = [{ id: 'list-1', name: 'Fiction' }] as unknown as SavedList[]
 
 const none = {
-  ownership: [], library: [], shelf: [], read_status: [],
+  ownership: [], library: [], shelf: [], location: [], read_status: [],
   media_type: [], genre: [], tag: [], rating: [], favourite: [],
 } as Record<FacetKey, string[]>
 
@@ -101,5 +101,51 @@ describe('the plain search fallback', () => {
     expect(textSuggestion('  something odd ')).toMatchObject({
       kind: 'text', value: 'something odd',
     })
+  })
+})
+
+describe('ratings, said the way people say them', () => {
+  // The column holds 1 to 10, which is five stars of two, so a half star is a
+  // whole number and nothing has to round.
+  const values = (input: string) => {
+    const s = suggestRating(input)
+    return s && s.kind === 'rating' ? s.values : null
+  }
+
+  it('reads an exact number of stars', () => {
+    expect(values('4 stars')).toEqual([8])
+    expect(values('5')).toEqual([10])
+  })
+
+  it('reads a half star, which is why the scale is ten', () => {
+    expect(values('3.5 stars')).toEqual([7])
+  })
+
+  it('reads a comparison, because nobody wants only the fours', () => {
+    expect(values('> 3.5')).toEqual([8, 9, 10])
+    expect(values('>= 4')).toEqual([8, 9, 10])
+    expect(values('at least 4')).toEqual([8, 9, 10])
+    expect(values('4+')).toEqual([8, 9, 10])
+  })
+
+  it('reads the other direction too', () => {
+    expect(values('< 2')).toEqual([1, 2, 3])
+    expect(values('under 2 stars')).toEqual([1, 2, 3])
+  })
+
+  it('accepts the shorthands people actually type', () => {
+    expect(values('5*')).toEqual([10])
+    expect(values('rating 4')).toEqual([8])
+  })
+
+  it('is not a rating when it is a title', () => {
+    expect(suggestRating('bleach')).toBeNull()
+    expect(suggestRating('11')).toBeNull()
+    expect(suggestRating('')).toBeNull()
+  })
+
+  it('says what it means, in stars rather than in stored points', () => {
+    expect(suggestRating('> 3.5')?.label).toBe('more than 3.5 stars')
+    expect(suggestRating('4')?.label).toBe('4 stars')
   })
 })

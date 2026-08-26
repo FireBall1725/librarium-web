@@ -65,6 +65,7 @@ export const SETTINGS_TREE: SettingsSection[] = [
       { id: 'genres', to: '/settings/genres', labelKey: 'settings_nav.genres', labelFallback: 'Genres', fact: 'genres' },
       { id: 'tags', to: '/settings/tags', labelKey: 'settings_nav.tags', labelFallback: 'Tags' },
       { id: 'lists', to: '/settings/lists', labelKey: 'settings_nav.lists', labelFallback: 'Lists' },
+      { id: 'shelves', to: '/settings/shelves', labelKey: 'settings_nav.shelves', labelFallback: 'Shelves' },
       // Beside Tags because they are the same shape: a named, per-library set
       // of books. A shelf is a tag with an icon and a description.
       { id: 'profiles', to: '/settings/profiles', labelKey: 'settings_nav.profiles', labelFallback: 'Profiles' },
