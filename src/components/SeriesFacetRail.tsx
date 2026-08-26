@@ -40,15 +40,32 @@ export const SERIES_PARAM: Record<SeriesFacetKey, string> = {
 }
 
 /**
- * Top to bottom.
+ * Top to bottom, and the same sequence FACET_ORDER gives Books.
  *
- * Library first because it is the one that used to be a folder, and seeing it
- * as a row of checkboxes is what says it is not one any more. Then how far
- * through the run you are, which is what a series page is actually about.
+ * One order for both, so moving between the two pages does not mean relearning
+ * where a dimension lives. It reads in four runs: where the run is, how you
+ * stand with it, what it is, then the two open vocabularies.
+ *
+ * Library first for the same reason it is first on Books, and with a second
+ * reason here: it is the dimension that used to be a folder, and seeing it as
+ * a row of checkboxes is what says it is not one any more.
+ *
+ * Genre and tag go last because they are the only dimensions with no ceiling.
+ * A collection grows genres and tags forever, so anything below them is pushed
+ * off the bottom of the rail as the shelf fills.
+ *
+ * Status and arcs are the two Books has no equivalent for, and they sit in the
+ * "what it is" run beside media type rather than being appended at the end.
  */
 export const SERIES_FACET_ORDER: SeriesFacetKey[] = [
-  'library', 'media_type', 'reading', 'rating', 'my_rating', 'status',
-  'genre', 'arcs', 'tag',
+  // Where it is.
+  'library',
+  // How you stand with it.
+  'reading', 'rating', 'my_rating',
+  // What it is.
+  'media_type', 'status', 'arcs',
+  // Open vocabularies, last, because they never stop growing.
+  'tag', 'genre',
 ]
 
 /**

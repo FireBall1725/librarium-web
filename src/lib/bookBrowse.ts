@@ -24,7 +24,32 @@ export type FacetKey = 'ownership' | 'library' | 'shelf' | 'location' | 'read_st
 // Location follows library for the same reason list does: a place belongs to
 // one library, so the two read as a pair. Where the object physically is comes
 // before what anyone thinks of it.
-export const FACET_ORDER: FacetKey[] = ['ownership', 'library', 'shelf', 'location', 'read_status', 'favourite', 'media_type', 'genre', 'tag', 'rating', 'my_rating']
+/**
+ * Top to bottom, and the same sequence the Series rail uses.
+ *
+ * One order for both, so moving between the two pages does not mean relearning
+ * where a dimension lives. It reads in four runs: where the book is, how you
+ * stand with it, what it is, then the two open vocabularies.
+ *
+ * Genre and tag go last because they are the only dimensions with no ceiling.
+ * A collection grows genres and tags forever, so anything below them is pushed
+ * off the bottom of the rail as the shelf fills; everything above has a fixed
+ * or small vocabulary and stays where the reader left it.
+ *
+ * Each surface has dimensions the other does not — ownership, lists and
+ * locations are books; status and arcs are runs — and they slot into the run
+ * they belong to rather than being appended.
+ */
+export const FACET_ORDER: FacetKey[] = [
+  // Where it is.
+  'ownership', 'library', 'shelf', 'location',
+  // How you stand with it.
+  'read_status', 'favourite', 'rating', 'my_rating',
+  // What it is.
+  'media_type',
+  // Open vocabularies, last, because they never stop growing.
+  'tag', 'genre',
+]
 
 /**
  * Query-string key for each facet. Short, because these end up in shared links.
