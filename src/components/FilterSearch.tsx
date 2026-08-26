@@ -4,6 +4,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
+import { Stars } from './StarRating'
 import { suggestFacets, suggestRating, textSuggestion, type Suggestion } from '../lib/filterSuggest'
 import type { BookFacets, FacetKey } from '../lib/bookBrowse'
 import type { SavedList } from '../lib/lists'
@@ -167,7 +168,16 @@ export default function FilterSearch({
                 <span className="w-[4.75rem] flex-none text-[10.5px] font-semibold uppercase tracking-wide text-content-faint">
                   {s.group}
                 </span>
-                <span className="min-w-0 flex-1 truncate">{s.label}</span>
+                {/* A rating is drawn rather than described. Reading "more than
+                    three and a half stars" is slower than seeing it. */}
+                {s.kind === 'rating' ? (
+                  <span className="flex min-w-0 flex-1 items-center gap-1.5">
+                    <Stars rating={s.threshold} />
+                    <span className="truncate text-content-tertiary">{s.qualifier}</span>
+                  </span>
+                ) : (
+                  <span className="min-w-0 flex-1 truncate">{s.label}</span>
+                )}
                 {s.kind === 'facet' && s.count !== undefined && (
                   <span className="flex-none text-xs tabular-nums text-content-faint">{s.count}</span>
                 )}

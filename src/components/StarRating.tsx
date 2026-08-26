@@ -33,12 +33,6 @@ export default function StarRating({
   const shown = hover ?? value ?? 0
   const stars = starsOf(shown)
 
-  const half = (index: number) => {
-    // Two points per star, so the left half of the third star is 5.
-    const filled = stars - index
-    return filled >= 1 ? 'full' : filled >= 0.5 ? 'half' : 'empty'
-  }
-
   const set = (rating: number) => {
     if (disabled) return
     // Clicking the rating it already has clears it, which is the only way to
@@ -55,7 +49,7 @@ export default function StarRating({
         aria-label={t('rating.label', { defaultValue: 'Rating' })}
       >
         {Array.from({ length: STAR_MAX }, (_, i) => {
-          const state = half(i)
+          const state = halfOf(stars, i)
           return (
             <span key={i} className="relative inline-block" style={{ width: size, height: size }}>
               <Star state={state} size={size} />
@@ -99,6 +93,30 @@ export default function StarRating({
         {shown > 0 && <span className="ml-1 text-content-faint">({shown}/{RATING_MAX})</span>}
       </span>
     </div>
+  )
+}
+
+/** Which way the star at this index is filled. Two points per star. */
+function halfOf(stars: number, index: number): 'full' | 'half' | 'empty' {
+  const filled = stars - index
+  return filled >= 1 ? 'full' : filled >= 0.5 ? 'half' : 'empty'
+}
+
+/**
+ * A rating drawn, with nothing to click.
+ *
+ * Anywhere a rating is offered or reported rather than set: the suggestion the
+ * search box makes, where the point is to recognise the rating at a glance
+ * rather than read a sentence about it.
+ */
+export function Stars({ rating, size = 14 }: { rating: number; size?: number }) {
+  const stars = starsOf(rating)
+  return (
+    <span className="inline-flex items-center" aria-label={`${formatStars(rating)} stars`}>
+      {Array.from({ length: STAR_MAX }, (_, i) => (
+        <Star key={i} state={halfOf(stars, i)} size={size} />
+      ))}
+    </span>
   )
 }
 

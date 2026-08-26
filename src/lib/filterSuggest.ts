@@ -52,6 +52,10 @@ export type Suggestion =
       kind: 'rating'
       /** The stored ratings this stands for, 1 to 10. */
       values: number[]
+      /** The rating the comparison is against, so the row can draw it. */
+      threshold: number
+      /** What the comparison does to that rating: "and up", "exactly". */
+      qualifier: string
       value: string
       label: string
       group: string
@@ -110,6 +114,16 @@ export function suggestRating(input: string): Suggestion | null {
   const values = ratingsMatching(op, stars)
   if (values.length === 0) return null
 
+  // The qualifier is said in words and the rating is drawn, because a row of
+  // stars is recognised faster than a sentence describing one. Only the part
+  // stars cannot show needs writing down.
+  const qualifier =
+    op === '=' ? 'exactly'
+      : op === '>' ? 'and above'
+        : op === '>=' ? 'and up'
+          : op === '<' ? 'and below'
+            : 'or fewer'
+
   const said =
     op === '=' ? `${stars} stars`
       : op === '>' ? `more than ${stars} stars`
@@ -117,7 +131,15 @@ export function suggestRating(input: string): Suggestion | null {
           : op === '<' ? `under ${stars} stars`
             : `${stars} stars and below`
 
-  return { kind: 'rating', values, value: values.join(','), label: said, group: 'Rating' }
+  return {
+    kind: 'rating',
+    values,
+    threshold: stars * 2,
+    qualifier,
+    value: values.join(','),
+    label: said,
+    group: 'Rating',
+  }
 }
 
 /**
