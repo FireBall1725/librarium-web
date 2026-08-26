@@ -84,13 +84,15 @@ export default function ListsPage() {
     setError(null)
     try {
       if (editingId) {
-        // Sharing is not in the update body, so it is set once when the list is
-        // made. Changing who can see an existing list needs an API change and
-        // is deliberately not faked here.
         await callApi(`/api/v1/me/lists/${editingId}`, {
           method: 'PATCH',
           body: JSON.stringify({
-            name, description: draft.description.trim(), color: draft.color, icon: draft.icon,
+            name,
+            description: draft.description.trim(),
+            color: draft.color,
+            icon: draft.icon,
+            visibility: draft.sharedWith ? 'library' : 'private',
+            shared_library_id: draft.sharedWith || null,
           }),
         })
       } else {
@@ -192,9 +194,10 @@ export default function ListsPage() {
             placeholder={t('lists_settings.note', { defaultValue: 'What goes on it (optional)' })}
             aria-label={t('lists_settings.note', { defaultValue: 'What goes on it (optional)' })}
           />
-          {/* Only when there is a choice to make. One library and the picker is
-              a control with a single answer. */}
-          {!editingId && libraries.length > 0 && (
+          {/* Offered while editing too: a list starts private because that is
+              the safe default, and deciding later that the household should see
+              it is the normal case rather than a reason to rebuild it. */}
+          {libraries.length > 0 && (
             <select
               className="lb-field"
               style={{ width: 'auto' }}
