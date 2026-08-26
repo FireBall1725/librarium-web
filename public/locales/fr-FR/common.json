@@ -486,5 +486,9 @@
     "name": "Bureau, Bibliothèque, Étagère du haut…",
     "new": "Nouvel emplacement",
     "top": "À la racine"
+  },
+  "readers": {
+    "finished": "terminé le {{date}}",
+    "title": "Activité de lecture"
   }
 }

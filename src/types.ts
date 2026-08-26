@@ -931,3 +931,22 @@ export interface PagedGroupedBooks {
   page: number
   per_page: number
 }
+
+/**
+ * What one member has recorded about a book, as shown to the others.
+ *
+ * No notes field, deliberately: the server does not select them, because the
+ * form that writes them calls them private.
+ */
+export interface BookReader {
+  user_id: string
+  display_name: string
+  username: string
+  read_status: string
+  rating?: number
+  is_favorite: boolean
+  review: string
+  started_at?: string
+  finished_at?: string
+  updated_at: string
+}

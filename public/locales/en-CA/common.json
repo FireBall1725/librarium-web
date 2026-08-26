@@ -486,5 +486,9 @@
     "name": "Office, Bookcase, Top shelf…",
     "new": "New place",
     "top": "Not inside anything"
+  },
+  "readers": {
+    "finished": "finished {{date}}",
+    "title": "Reading activity"
   }
 }

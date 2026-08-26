@@ -10,6 +10,7 @@ import EditBookModal from '../../components/EditBookModal'
 import LoanFormModal from '../../components/LoanFormModal'
 import BookCover from '../../components/BookCover'
 import BookLists from '../../components/BookLists'
+import BookReaders from '../../components/BookReaders'
 import StarRating from '../../components/StarRating'
 import { type SavedList } from '../../lib/lists'
 
@@ -1905,6 +1906,11 @@ export default function BookPage() {
           <Section title="On lists">
             <BookLists bookId={bookId ?? ''} lists={bookLists} onChanged={() => void load()} />
           </Section>
+
+          {/* What everyone else thought. The component owns its heading and
+              renders nothing at all when there is nobody else, so a one-person
+              library never meets an empty section. */}
+          <BookReaders bookId={bookId ?? ''} />
 
           {/* Editions */}
           <Section
