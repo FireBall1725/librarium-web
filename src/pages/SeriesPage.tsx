@@ -697,6 +697,7 @@ function SeriesRow({ series: s, libraryName, showLibrary, busy, t, onEdit, onDel
           <Link key={v.book_id} to={`/books/${v.book_id}`} title={v.title}
             className="w-[30px] flex-none">
             <BookCover title={v.title} coverUrl={v.cover_url} seed={s.name}
+              ownership={v.held === false ? 'gap' : undefined}
               hideLabel className="w-[30px]" innerClassName="shadow-none" />
           </Link>
         ))}
@@ -716,22 +717,35 @@ function SeriesTile({ series: s, libraryName, showLibrary, t }: {
   showLibrary: boolean
   t: Translate
 }) {
-  // Four covers in a square. The same shape the per-library page used, because
-  // it is what makes a shelf recognisable without reading a word of it.
+  // Up to four covers, and only covers that exist.
+  //
+  // It used to pad to four with filled boxes so every card was the same shape,
+  // which was a lie a two-volume run told four times over: a grey rectangle
+  // where a cover goes is exactly how this product draws a book you do not
+  // have, so a short series looked like a series with holes in it.
+  //
+  // A one-volume run gets one full-width cover rather than one cover and a gap,
+  // because a single tile in a two-column grid reads as the left half of
+  // something missing its right half.
   const tiles = s.preview_books.slice(0, 4)
   return (
     <li className="rounded-xl border border-line bg-surface p-3 transition-colors hover:border-line-strong">
       <Link to={`/libraries/${s.library_id}/series/${s.id}`} className="group block">
-        <div className="grid grid-cols-2 gap-1 overflow-hidden rounded-lg">
-          {Array.from({ length: 4 }, (_, i) => {
-            const v = tiles[i]
-            return v ? (
+        {/* A fixed 2:3 block whatever is in it, so every card in a row lines
+            up. Four covers fill it exactly, three fill it exactly, one fills
+            it exactly; only a two-volume run leaves the bottom half empty, and
+            empty is the point. The thing that had to go was the filled grey
+            box, not the gap. */}
+        <div className="aspect-[2/3] overflow-hidden rounded-lg">
+          <div className={`grid content-start gap-1 ${
+            tiles.length === 1 ? 'grid-cols-1' : 'grid-cols-2'
+          }`}>
+            {tiles.map(v => (
               <BookCover key={v.book_id} title={v.title} coverUrl={v.cover_url}
-                seed={s.name} hideLabel className="w-full" innerClassName="shadow-none" />
-            ) : (
-              <span key={i} className="block aspect-[2/3] rounded bg-surface-inset" />
-            )
-          })}
+                seed={s.name} ownership={v.held === false ? 'gap' : undefined}
+                hideLabel className="w-full" innerClassName="shadow-none" />
+            ))}
+          </div>
         </div>
         <p className="font-display mt-2 truncate text-[15px] font-semibold text-content group-hover:text-accent">
           {s.name}

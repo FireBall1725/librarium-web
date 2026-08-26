@@ -380,6 +380,15 @@ export interface SeriesPreviewBook {
   book_id: string
   title: string
   cover_url: string | null
+  /**
+   * Whether the library actually has this volume.
+   *
+   * The strip is the whole run, missing volumes included, so without this a
+   * volume nobody owns draws exactly like one on the shelf. Optional because a
+   * server older than the field sends nothing, and "unknown" has to mean held
+   * rather than greying a shelf full of books somebody owns.
+   */
+  held?: boolean
 }
 
 // ── Cross-library index surfaces ────────────────────────────────────────────

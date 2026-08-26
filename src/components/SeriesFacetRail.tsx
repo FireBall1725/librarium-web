@@ -19,6 +19,8 @@ import type { FacetValue } from '../lib/bookBrowse'
 
 export interface SeriesFacets {
   library: FacetValue[]
+  media_type: FacetValue[]
+  genre: FacetValue[]
   status: FacetValue[]
   arcs: FacetValue[]
   reading: FacetValue[]
@@ -29,7 +31,8 @@ export type SeriesFacetKey = keyof SeriesFacets
 
 /** URL parameter per dimension. Library is plural because it multi-selects. */
 export const SERIES_PARAM: Record<SeriesFacetKey, string> = {
-  library: 'lib', status: 'status', arcs: 'arcs', reading: 'reading', tag: 'tag',
+  library: 'lib', media_type: 'type', genre: 'genre',
+  status: 'status', arcs: 'arcs', reading: 'reading', tag: 'tag',
 }
 
 /**
@@ -40,11 +43,13 @@ export const SERIES_PARAM: Record<SeriesFacetKey, string> = {
  * through the run you are, which is what a series page is actually about.
  */
 export const SERIES_FACET_ORDER: SeriesFacetKey[] = [
-  'library', 'reading', 'status', 'arcs', 'tag',
+  'library', 'media_type', 'reading', 'status', 'genre', 'arcs', 'tag',
 ]
 
 const LABEL_KEY: Record<SeriesFacetKey, string> = {
   library: 'facets.library',
+  media_type: 'facets.media_type',
+  genre: 'facets.genre',
   reading: 'series.reading',
   status: 'series.status',
   arcs: 'series.arcs',
