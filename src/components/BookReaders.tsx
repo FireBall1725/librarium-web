@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import { COLLECTION_CHANGED } from '../lib/collectionEvents'
 import { formatStars, starsOf } from '../lib/rating'
-import { libraryColour } from '../lib/libraryColour'
+import AuthorAvatar from './AuthorAvatar'
 import { Stars } from './StarRating'
 import type { BookReader } from '../types'
 
@@ -93,9 +93,12 @@ export default function BookReaders({ bookId }: { bookId: string }) {
         <ul className="divide-y divide-line">
           {readers.map(r => {
             const isMe = r.user_id === user?.id
-            const name = isMe
-              ? t('readers.you', { defaultValue: 'You' })
-              : (r.display_name || r.username)
+            // Who they are, and what to call them. The avatar keys on the
+            // former so it matches the one in the rail; the row says the
+            // latter, because "You" reads better than your own name on a page
+            // you are already looking at.
+            const who = r.display_name || r.username
+            const label = isMe ? t('readers.you', { defaultValue: 'You' }) : who
             const finished = when(r.finished_at)
             return (
               <li
@@ -106,18 +109,13 @@ export default function BookReaders({ bookId }: { bookId: string }) {
                 className="grid grid-cols-1 gap-x-6 gap-y-2 py-3 sm:grid-cols-[minmax(0,14rem)_7rem_minmax(0,1fr)]"
               >
                 <div className="flex items-center gap-2.5">
-                  {/* The initial on a colour derived from the id, the same way
-                      a library gets its swatch. Nobody has an avatar image, so
-                      this is what tells two members apart at a glance. */}
-                  <span
-                    aria-hidden="true"
-                    className="flex h-8 w-8 flex-none items-center justify-center rounded-full text-xs font-semibold text-white"
-                    style={{ background: libraryColour(r.user_id) }}
-                  >
-                    {(name.trim()[0] ?? '?').toUpperCase()}
-                  </span>
+                  {/* The same avatar the rail draws for the signed-in account.
+                      Keyed on the person's name, not on the word beside it, or
+                      the reader's own row shows a Y for "You" in a colour their
+                      avatar never uses anywhere else. */}
+                  <AuthorAvatar name={who} size={32} />
                   <span className="min-w-0">
-                    <span className="block truncate text-sm font-medium text-content">{name}</span>
+                    <span className="block truncate text-sm font-medium text-content">{label}</span>
                     <span className="block text-xs text-content-tertiary">
                       {finished
                         ? t('readers.finished', { date: finished, defaultValue: `Finished ${finished}` })
