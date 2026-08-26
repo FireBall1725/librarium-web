@@ -493,6 +493,7 @@
     "you": "You",
     "from_one": "from 1 rating",
     "from_other": "from {{count}} ratings",
-    "favourite": "Favourite"
+    "favourite": "Favourite",
+    "rating": "Rating"
   }
 }

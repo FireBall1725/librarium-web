@@ -493,6 +493,7 @@
     "you": "Vous",
     "from_one": "sur 1 note",
     "from_other": "sur {{count}} notes",
-    "favourite": "Coup de cœur"
+    "favourite": "Coup de cœur",
+    "rating": "Note"
   }
 }

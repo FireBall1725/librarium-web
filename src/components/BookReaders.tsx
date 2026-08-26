@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import { COLLECTION_CHANGED } from '../lib/collectionEvents'
 import { formatStars, starsOf } from '../lib/rating'
+import { libraryColour } from '../lib/libraryColour'
 import { Stars } from './StarRating'
 import type { BookReader } from '../types'
 
@@ -62,81 +63,116 @@ export default function BookReaders({ bookId }: { bookId: string }) {
     iso ? new Date(iso).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : null
 
   return (
-    // Matching the page's own Section spacing rather than lb-eyebrow's, so this
-    // sits in the rhythm of the headings around it. It cannot use Section
-    // itself: the heading has to disappear with the content when nobody has
-    // recorded anything, and a wrapper renders whatever it is given.
     <section className="pt-6">
-      <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-content-muted">
-          {t('readers.title', { defaultValue: 'Reading activity' })}
-        </h2>
-        {average !== null && (
-          <span className="flex items-center gap-1.5">
-            <Stars rating={Math.round(average)} size={14} />
-            <span className="text-xs tabular-nums text-content-tertiary">
-              {starsOf(average).toFixed(1)}
-              <span className="ml-1 text-content-faint">
-                {t('readers.from', {
-                  count: rated.length,
-                  defaultValue: 'from 1 rating',
-                  defaultValue_other: `from ${rated.length} ratings`,
-                })}
+      {/* A card, matching the mockup on librarium-web#41 and the cards this
+          page already uses for editions and copies. The section it replaced
+          was flat text against the page, which read as a footnote rather than
+          as the other half of the reading panel above. */}
+      <div className="rounded-xl border border-line bg-surface p-4">
+        <div className="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <h2 className="text-sm font-semibold text-content">
+            {t('readers.title', { defaultValue: 'Reading activity' })}
+          </h2>
+          {average !== null && (
+            <span className="flex items-center gap-1.5">
+              <Stars rating={Math.round(average)} size={14} />
+              <span className="text-xs tabular-nums text-content-tertiary">
+                {starsOf(average).toFixed(1)}
+                <span className="ml-1 text-content-faint">
+                  {t('readers.from', {
+                    count: rated.length,
+                    defaultValue: 'from 1 rating',
+                    defaultValue_other: `from ${rated.length} ratings`,
+                  })}
+                </span>
               </span>
             </span>
-          </span>
-        )}
+          )}
+        </div>
+
+        <ul className="divide-y divide-line">
+          {readers.map(r => {
+            const isMe = r.user_id === user?.id
+            const name = isMe
+              ? t('readers.you', { defaultValue: 'You' })
+              : (r.display_name || r.username)
+            const finished = when(r.finished_at)
+            return (
+              <li
+                key={r.user_id}
+                // Columns on a wide screen, stacked on a narrow one. The rating
+                // column is fixed so the numbers line up down the card, which
+                // is the point of giving it a column at all.
+                className="grid grid-cols-1 gap-x-6 gap-y-2 py-3 sm:grid-cols-[minmax(0,14rem)_7rem_minmax(0,1fr)]"
+              >
+                <div className="flex items-center gap-2.5">
+                  {/* The initial on a colour derived from the id, the same way
+                      a library gets its swatch. Nobody has an avatar image, so
+                      this is what tells two members apart at a glance. */}
+                  <span
+                    aria-hidden="true"
+                    className="flex h-8 w-8 flex-none items-center justify-center rounded-full text-xs font-semibold text-white"
+                    style={{ background: libraryColour(r.user_id) }}
+                  >
+                    {(name.trim()[0] ?? '?').toUpperCase()}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-medium text-content">{name}</span>
+                    <span className="block text-xs text-content-tertiary">
+                      {finished
+                        ? t('readers.finished', { date: finished, defaultValue: `Finished ${finished}` })
+                        : t(`read_status.${r.read_status}`, { defaultValue: r.read_status })}
+                    </span>
+                  </span>
+                </div>
+
+                <div className="min-w-0">
+                  {r.rating != null ? (
+                    <>
+                      <span className="block text-xs text-content-tertiary">
+                        {t('readers.rating', { defaultValue: 'Rating' })}
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <Stars rating={r.rating} size={12} />
+                        <span className="text-xs tabular-nums text-content-secondary">
+                          {formatStars(r.rating)}
+                        </span>
+                      </span>
+                    </>
+                  ) : (
+                    r.is_favorite && (
+                      <span className="text-xs text-warning">
+                        {t('readers.favourite', { defaultValue: 'Favourite' })}
+                      </span>
+                    )
+                  )}
+                </div>
+
+                {r.review && (
+                  <div className="flex min-w-0 gap-2">
+                    {/* The quote mark from the mockup. Decorative, so it is
+                        hidden from a screen reader, which gets the blockquote
+                        instead. */}
+                    <span
+                      aria-hidden="true"
+                      className="flex-none font-serif text-2xl leading-none text-content-faint"
+                      // Nudged down so it sits beside the first line rather
+                      // than floating above it: a quote mark's glyph hangs from
+                      // the cap height, which puts it a third of a line high.
+                      style={{ marginTop: '0.15rem' }}
+                    >
+                      &ldquo;
+                    </span>
+                    <blockquote className="font-read min-w-0 text-sm leading-relaxed text-content-secondary">
+                      {r.review}
+                    </blockquote>
+                  </div>
+                )}
+              </li>
+            )
+          })}
+        </ul>
       </div>
-
-      <ul className="divide-y divide-line">
-        {readers.map(r => {
-          const isMe = r.user_id === user?.id
-          const finished = when(r.finished_at)
-          return (
-            <li key={r.user_id} className="py-3">
-              {/* Stacked rather than crammed onto one line: name, then what
-                  they did with it, then what they said. A review is prose and
-                  wants a line of its own to be read as prose. */}
-              <div className="text-sm font-medium text-content">
-                {isMe ? t('readers.you', { defaultValue: 'You' }) : (r.display_name || r.username)}
-              </div>
-
-              <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-content-tertiary">
-                <span>
-                  {finished
-                    ? t('readers.finished', {
-                        date: finished, defaultValue: `Finished ${finished}`,
-                      })
-                    : t(`read_status.${r.read_status}`, { defaultValue: r.read_status })}
-                </span>
-                {r.rating != null && (
-                  <>
-                    <span aria-hidden="true">·</span>
-                    <span className="flex items-center gap-1.5">
-                      <Stars rating={r.rating} size={13} />
-                      <span className="tabular-nums text-content-faint">{formatStars(r.rating)}</span>
-                    </span>
-                  </>
-                )}
-                {r.is_favorite && (
-                  <>
-                    <span aria-hidden="true">·</span>
-                    <span className="text-warning">
-                      {t('readers.favourite', { defaultValue: 'Favourite' })}
-                    </span>
-                  </>
-                )}
-              </div>
-
-              {r.review && (
-                <blockquote className="font-read mt-2 border-l-2 border-line py-0.5 pl-3 text-sm leading-relaxed text-content-secondary">
-                  {r.review}
-                </blockquote>
-              )}
-            </li>
-          )
-        })}
-      </ul>
     </section>
   )
 }
