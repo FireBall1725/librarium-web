@@ -53,25 +53,26 @@
     "ai": "AI"
   },
   "settings_nav": {
-    "media_management": "Media Management",
-    "metadata": "Metadata",
-    "tags": "Tags",
-    "genres": "Genres",
-    "media_types": "Media Types",
-    "profiles": "Profiles",
-    "general": "General",
-    "jobs": "Jobs",
-    "profile": "Profile",
-    "appearance": "Appearance",
-    "providers": "Metadata providers",
-    "people": "People",
-    "job_history": "Job history",
-    "licences": "Licences",
-    "tokens": "API tokens",
     "ai_privacy": "AI and privacy",
-    "members": "Members",
+    "appearance": "Appearance",
+    "duplicate_authors": "Duplicate authors",
+    "general": "General",
+    "genres": "Genres",
+    "job_history": "Job history",
+    "jobs": "Jobs",
+    "licences": "Licences",
     "lists": "Lists",
-    "shelves": "Shelves"
+    "media_management": "Media Management",
+    "media_types": "Media Types",
+    "members": "Members",
+    "metadata": "Metadata",
+    "people": "People",
+    "profile": "Profile",
+    "profiles": "Profiles",
+    "providers": "Metadata providers",
+    "shelves": "Shelves",
+    "tags": "Tags",
+    "tokens": "API tokens"
   },
   "theme": {
     "light": "☀ Light",
@@ -566,5 +567,17 @@
     "illustrator": "Illustrators",
     "narrator": "Narrators",
     "translator": "Translators"
+  },
+  "duplicate_authors": {
+    "books": "{{count}} book",
+    "books_other": "{{count}} books",
+    "description": "Names that differ only by punctuation, or by the spacing between initials. Merging is reversible: the folded name is kept as a record of where it went rather than deleted.",
+    "dismiss": "Different people",
+    "merge": "Merge {{count}} in",
+    "merge_other": "Merge {{count}} in",
+    "merged": "Moved {{count}} credit to {{name}}",
+    "merged_other": "Moved {{count}} credits to {{name}}",
+    "none": "Nothing looks duplicated.",
+    "pick_one": "Choose which spelling to keep"
   }
 }

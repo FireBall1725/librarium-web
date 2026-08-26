@@ -34,6 +34,7 @@ import MetadataPage from './pages/admin/settings/MetadataPage'
 import MediaManagementPage from './pages/admin/settings/MediaManagementPage'
 import TagsPage from './pages/admin/settings/TagsPage'
 import GenresPage from './pages/admin/settings/GenresPage'
+import DuplicateAuthorsPage from './pages/settings/DuplicateAuthorsPage'
 import MediaTypesPage from './pages/admin/settings/MediaTypesPage'
 import ProfilesPage from './pages/admin/settings/ProfilesPage'
 import GeneralPage from './pages/admin/settings/GeneralPage'
@@ -100,6 +101,7 @@ function AppRoutes() {
                   <Route path="media-management"  element={<MediaManagementPage />} />
                   <Route path="tags"               element={<TagsPage />} />
                   <Route path="genres"             element={<GenresPage />} />
+                  <Route path="duplicate-authors"  element={<DuplicateAuthorsPage />} />
                   <Route path="media-types"       element={<MediaTypesPage />} />
                   <Route path="profiles"          element={<ProfilesPage />} />
                   <Route path="lists"             element={<ListsPage />} />

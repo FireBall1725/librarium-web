@@ -53,25 +53,26 @@
     "ai": "AI"
   },
   "settings_nav": {
-    "media_management": "Media Management",
-    "metadata": "Metadata",
-    "tags": "Tags",
-    "genres": "Genres",
-    "media_types": "Media Types",
-    "profiles": "Profiles",
-    "general": "General",
-    "jobs": "Jobs",
-    "profile": "Profil",
-    "appearance": "Apparence",
-    "providers": "Fournisseurs de métadonnées",
-    "people": "Personnes",
-    "job_history": "Historique des tâches",
-    "licences": "Licences",
-    "tokens": "Jetons API",
     "ai_privacy": "IA et confidentialité",
-    "members": "Membres",
+    "appearance": "Apparence",
+    "duplicate_authors": "Doublons d'auteurs",
+    "general": "General",
+    "genres": "Genres",
+    "job_history": "Historique des tâches",
+    "jobs": "Jobs",
+    "licences": "Licences",
     "lists": "Listes",
-    "shelves": "Étagères"
+    "media_management": "Media Management",
+    "media_types": "Media Types",
+    "members": "Membres",
+    "metadata": "Metadata",
+    "people": "Personnes",
+    "profile": "Profil",
+    "profiles": "Profiles",
+    "providers": "Fournisseurs de métadonnées",
+    "shelves": "Étagères",
+    "tags": "Tags",
+    "tokens": "Jetons API"
   },
   "theme": {
     "light": "☀ Light",
@@ -566,5 +567,17 @@
     "illustrator": "Illustrateurs",
     "narrator": "Narrateurs",
     "translator": "Traducteurs"
+  },
+  "duplicate_authors": {
+    "books": "{{count}} livre",
+    "books_other": "{{count}} livres",
+    "description": "Des noms qui ne diffèrent que par la ponctuation ou l'espacement des initiales. La fusion est réversible : le nom fusionné est conservé pour indiquer où il est parti, plutôt que supprimé.",
+    "dismiss": "Personnes différentes",
+    "merge": "Fusionner {{count}}",
+    "merge_other": "Fusionner {{count}}",
+    "merged": "{{count}} crédit transféré vers {{name}}",
+    "merged_other": "{{count}} crédits transférés vers {{name}}",
+    "none": "Aucun doublon apparent.",
+    "pick_one": "Choisissez l'orthographe à conserver"
   }
 }

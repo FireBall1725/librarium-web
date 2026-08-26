@@ -69,6 +69,10 @@ export const SETTINGS_TREE: SettingsSection[] = [
       // Beside Tags because they are the same shape: a named, per-library set
       // of books. A shelf is a tag with an icon and a description.
       { id: 'profiles', to: '/settings/profiles', labelKey: 'settings_nav.profiles', labelFallback: 'Profiles' },
+      // Beside the vocabulary pages, because a contributor is instance-wide the
+      // same way a genre is: folding two names together changes what every
+      // household on the server sees.
+      { id: 'duplicate-authors', to: '/settings/duplicate-authors', labelKey: 'settings_nav.duplicate_authors', labelFallback: 'Duplicate authors' },
     ],
   },
   {
