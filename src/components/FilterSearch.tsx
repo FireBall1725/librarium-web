@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import { Stars } from './StarRating'
-import { suggestFacets, suggestRating, textSuggestion, type Suggestion } from '../lib/filterSuggest'
+import { suggestFacets, suggestRatings, textSuggestion, type Suggestion } from '../lib/filterSuggest'
 import type { BookFacets, FacetKey } from '../lib/bookBrowse'
 import type { SavedList } from '../lib/lists'
 import type { ContributorResult } from '../types'
@@ -75,9 +75,9 @@ export default function FilterSearch({
   // A rating leads when the box parses as one. "4 stars" is not a title anybody
   // is searching for, and burying it under text matches would mean scrolling
   // past them to reach the thing that was actually typed.
-  const rating = suggestRating(value)
+  const ratings = suggestRatings(value)
   const suggestions: Suggestion[] = value.trim()
-    ? [...(rating ? [rating] : []), ...facetHits, ...authorHits, textSuggestion(value)]
+    ? [...ratings, ...facetHits, ...authorHits, textSuggestion(value)]
     : []
 
   // Kept in range as the list shrinks under the cursor, or Enter would take

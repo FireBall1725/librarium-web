@@ -95,6 +95,39 @@ const fold = (s: string) => s.trim().toLowerCase()
  */
 const RATING_RE = /^(?:rating|stars?)?\s*(>=|<=|>|<|=|at least|over|under|above|below)?\s*([0-5](?:\.5)?)\s*(\*|stars?|\+)?$/i
 
+/**
+ * The ratings worth offering when someone types the word rather than a number.
+ *
+ * Nobody types ">". They type "rating", which until now dead-ended in a plain
+ * text search for the word. Presets are the discovery path: the shortcuts are
+ * shown rather than having to be guessed at, and choosing one teaches the
+ * shape of what can be typed.
+ *
+ * Whole stars and up, plus five exactly, because "my best books" and "anything
+ * decent" are the two questions a collection actually gets asked. The rail
+ * still holds every exact value for anything narrower.
+ */
+const RATING_WORD = /^(rating|ratings|stars?)$/i
+
+function ratingPresets(): Suggestion[] {
+  const presets: Array<{ op: '>=' | '='; stars: number }> = [
+    { op: '=', stars: 5 },
+    { op: '>=', stars: 4 },
+    { op: '>=', stars: 3.5 },
+    { op: '>=', stars: 3 },
+  ]
+  return presets.map(({ op, stars }) => build(op, stars)).filter((x): x is Suggestion => x !== null)
+}
+
+/**
+ * Suggestions for a rating: presets for the bare word, one answer for a number.
+ */
+export function suggestRatings(input: string): Suggestion[] {
+  if (RATING_WORD.test(input.trim())) return ratingPresets()
+  const one = suggestRating(input)
+  return one ? [one] : []
+}
+
 export function suggestRating(input: string): Suggestion | null {
   const m = RATING_RE.exec(input.trim())
   if (!m) return null
@@ -111,6 +144,10 @@ export function suggestRating(input: string): Suggestion | null {
           : word === '<=' ? '<='
             : '='
 
+  return build(op, stars)
+}
+
+function build(op: '>' | '>=' | '<' | '<=' | '=', stars: number): Suggestion | null {
   const values = ratingsMatching(op, stars)
   if (values.length === 0) return null
 

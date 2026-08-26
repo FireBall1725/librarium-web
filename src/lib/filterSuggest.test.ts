@@ -2,7 +2,7 @@
 // Copyright (C) 2026 FireBall1725
 
 import { describe, expect, it } from 'vitest'
-import { parsePrefix, suggestFacets, suggestRating, textSuggestion } from './filterSuggest'
+import { parsePrefix, suggestFacets, suggestRating, suggestRatings, textSuggestion } from './filterSuggest'
 import type { BookFacets, FacetKey } from './bookBrowse'
 import type { SavedList } from './lists'
 
@@ -147,5 +147,34 @@ describe('ratings, said the way people say them', () => {
   it('says what it means, in stars rather than in stored points', () => {
     expect(suggestRating('> 3.5')?.label).toBe('more than 3.5 stars')
     expect(suggestRating('4')?.label).toBe('4 stars')
+  })
+})
+
+describe('typing the word rather than a number', () => {
+  // Nobody types ">". They type "rating", which used to dead-end in a text
+  // search for the word.
+  it('offers presets, so the shortcuts are shown rather than guessed at', () => {
+    const s = suggestRatings('rating')
+    expect(s.length).toBeGreaterThan(1)
+    expect(s.every(x => x.kind === 'rating')).toBe(true)
+  })
+
+  it('answers to the words people actually use', () => {
+    for (const word of ['rating', 'ratings', 'star', 'stars']) {
+      expect(suggestRatings(word).length).toBeGreaterThan(1)
+    }
+  })
+
+  it('leads with the best books, which is the common ask', () => {
+    const first = suggestRatings('rating')[0]
+    expect(first.kind === 'rating' && first.values).toEqual([10])
+  })
+
+  it('still gives one answer for a number', () => {
+    expect(suggestRatings('4 stars')).toHaveLength(1)
+  })
+
+  it('offers nothing for a word that is not about ratings', () => {
+    expect(suggestRatings('bleach')).toEqual([])
   })
 })
