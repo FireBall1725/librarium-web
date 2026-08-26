@@ -113,7 +113,14 @@ export default function BookReaders({ bookId }: { bookId: string }) {
                       Keyed on the person's name, not on the word beside it, or
                       the reader's own row shows a Y for "You" in a colour their
                       avatar never uses anywhere else. */}
-                  <AuthorAvatar name={who} size={32} />
+                  {/* Wrapped, because AuthorAvatar carries mx-auto for the
+                      places that centre it in a column. As a flex item that
+                      auto margin eats the row's free space, so the avatar drank
+                      whatever the name beside it left over and every row landed
+                      at a different x. A shrink-to-fit box leaves it none. */}
+                  <span className="flex-none">
+                    <AuthorAvatar name={who} size={32} />
+                  </span>
                   <span className="min-w-0">
                     <span className="block truncate text-sm font-medium text-content">{label}</span>
                     <span className="block text-xs text-content-tertiary">
