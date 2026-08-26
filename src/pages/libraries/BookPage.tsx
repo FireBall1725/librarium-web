@@ -193,10 +193,18 @@ function ReadingPanel({ bookId }: { bookId: string }) {
     <div className="rounded-lg border border-line-subtle">
       <div className="flex items-center justify-between px-3 py-2">
         <div className="flex items-center gap-2 min-w-0">
-          {READ_STATUS_PILL[form.read_status] && (
+          {/* Every status draws something, including the one that means nothing
+              has happened yet. Only read, reading and did-not-finish had a pill,
+              so an untouched book left this whole side blank and the row read as
+              a control that had failed to load. */}
+          {READ_STATUS_PILL[form.read_status] ? (
             <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ring-1 ${READ_STATUS_PILL[form.read_status].cls}`}>
               {READ_STATUS_PILL[form.read_status].icon}
               {READ_STATUS_PILL[form.read_status].label}
+            </span>
+          ) : (
+            <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium text-content-subtle ring-1 ring-line">
+              Unread
             </span>
           )}
           {state?.inherited && (
@@ -208,9 +216,14 @@ function ReadingPanel({ bookId }: { bookId: string }) {
             </span>
           )}
         </div>
+        {/* Labelled, because a bare star is a guess.
+            An unrecorded book draws no status pill, so this row was an empty
+            box with one outlined star floating at the right of it and nothing
+            to say what it meant. A tooltip does not help: it needs a hover to
+            appear and never appears at all on a touch screen. */}
         <button onClick={toggleFavourite}
           aria-pressed={form.is_favorite}
-          className={`p-1 rounded transition-colors ${form.is_favorite ? 'text-warning' : 'text-content-subtle hover:text-content-tertiary'}`}
+          className={`flex items-center gap-1.5 rounded px-1.5 py-1 text-xs transition-colors ${form.is_favorite ? 'text-warning' : 'text-content-subtle hover:text-content-tertiary'}`}
           title={form.is_favorite ? 'Remove from favourites' : 'Add to favourites'}>
           {/* Filled when starred, outlined when not: the state has to read at a
               glance rather than by comparing shades. */}
@@ -219,6 +232,7 @@ function ReadingPanel({ bookId }: { bookId: string }) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
               d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.783-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
           </svg>
+          Favourite
         </button>
       </div>
 
