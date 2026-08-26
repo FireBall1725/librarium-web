@@ -25,8 +25,9 @@ import BookCover, { BookCoverThumb } from '../components/BookCover'
 import { usePageTitle } from '../hooks/usePageTitle'
 import { useContributorNames } from '../hooks/useContributorNames'
 import type { TFunction } from 'i18next'
-import { Icon, type IconName } from '../lib/icons'
+import { type IconName } from '../lib/icons'
 import { LIST_ICONS } from '../lib/listIcons'
+import ViewChip from '../components/ViewChip'
 import type { Book, GroupedEntry, Library, MediaType, PagedGroupedBooks, SeriesGroupEntry } from '../types'
 import {
   DEFAULT_PAGE_SIZE,
@@ -337,7 +338,6 @@ export default function BooksPage() {
   /** The list the filter arrived from, kept while the filter is edited. */
   const [adopted, setAdopted] = useState<string | null>(null)
   const [naming, setNaming] = useState(false)
-  const [viewMenuAt, setViewMenuAt] = useState<{ x: number; y: number } | null>(null)
   const [adding, setAdding] = useState(false)
 
   // Fetched only when the modal opens. Books is a read surface; making every
@@ -840,50 +840,18 @@ export default function BooksPage() {
                   then there is something to leave, and × does it. */}
               {activeView && (
                 <span className="flex items-center gap-1.5">
-                  {/* inline-flex because the icon is an svg, and Tailwind's
-                      preflight makes svg display:block — so it took its own
-                      line inside the chip and pushed the label underneath,
-                      which white-space:nowrap does nothing about.
-
-                      warn instead of on, not alongside it: .on paints an
-                      accent fill that .warn does not override, which would put
-                      amber text on an indigo chip. */}
-                  {isDefaultView && !dirty ? (
-                    <span className="inline-flex items-center gap-1.5 text-xs uppercase tracking-wide text-content-tertiary">
-                      <Icon name={listIcon(activeView)} size={13} className="flex-none" />
-                      {t('views.default_name', { defaultValue: 'Default view' })}
-                    </span>
-                  ) : (
-                    <button type="button"
-                      className={`inline-flex items-center gap-1.5 ${dirty ? 'lb-chip warn' : 'lb-chip on'}`}
-                      onClick={leaveView}
-                      title={t('views.leave', { defaultValue: 'Leave view' })}>
-                      <Icon name={listIcon(activeView)} size={13} className="flex-none" />
-                      {/* "Default" on its own names a state rather than a
-                          thing, and reads oddly beside Up next or Favourites. */}
-                      {isDefaultView
-                        ? t('views.default_name', { defaultValue: 'Default view' })
-                        : activeView.name} ×
-                    </button>
-                  )}
-                  {dirty && (
-                    <span className="text-xs text-warning-strong">
-                      {t('views.modified', { defaultValue: 'modified' })}
-                    </span>
-                  )}
-                  {/* Beside the chip rather than out with the page's own
-                      buttons: these act on the view, and at the far end of the
-                      row they read as things that act on the books. */}
-                  <button type="button"
-                    onClick={e => {
-                      const r = e.currentTarget.getBoundingClientRect()
-                      setViewMenuAt(m => m ? null : { x: r.left, y: r.bottom + 6 })
-                    }}
-                    aria-haspopup="menu" aria-expanded={viewMenuAt !== null}
-                    className="rounded-md px-1.5 py-0.5 text-content-tertiary hover:bg-surface-inset hover:text-content"
-                    title={t('views.more', { defaultValue: 'View options' })}>
-                    ⋯
-                  </button>
+                                    <ViewChip
+                    view={activeView}
+                    dirty={dirty}
+                    isDefault={isDefaultView}
+                    defaultHint={t('views.default_hint', {
+                      defaultValue: 'what Books opens on',
+                    })}
+                    onLeave={leaveView}
+                    onRename={() => setRenaming(true)}
+                    onSaveAsNew={() => setNaming(true)}
+                    onDelete={() => removeView(activeView.id)}
+                  />
                 </span>
               )}
               <span className="tabular-nums">
@@ -1345,42 +1313,6 @@ export default function BooksPage() {
             announceCollectionChanged()
           }}
         />
-      )}
-
-      {/* Rename and Delete: real but rare, so they sit behind the ⋯ rather
-          than as two more buttons in the reader's way. Fixed-positioned, so
-          it is placed from the trigger's rect. */}
-      {activeView && viewMenuAt && (
-        <>
-          {/* Catches the click that dismisses, so the menu closes the way every
-              menu does rather than only via its own items. */}
-          <div className="fixed inset-0 z-[190]" onClick={() => setViewMenuAt(null)} />
-          <div className="lb-menu open" style={{ left: viewMenuAt.x, top: viewMenuAt.y }}
-            role="menu">
-            <div className="hd">
-              {activeView.name}
-              {isDefaultView && ` · ${t('views.default_hint', { defaultValue: 'what Books opens on' })}`}
-            </div>
-            <button type="button" role="menuitem"
-              onClick={() => { setViewMenuAt(null); setRenaming(true) }}>
-              {t('views.rename', { defaultValue: 'Rename' })}
-            </button>
-            <button type="button" role="menuitem"
-              onClick={() => { setViewMenuAt(null); setNaming(true) }}>
-              {t('views.save_as_new', { defaultValue: 'Save as new' })}
-            </button>
-            {/* The Default cannot go: Books has to open on something. */}
-            {!activeView.permanent && (
-              <>
-                <div className="sep" />
-                <button type="button" role="menuitem" className="danger"
-                  onClick={() => { setViewMenuAt(null); removeView(activeView.id) }}>
-                  {t('views.delete', { defaultValue: 'Delete view' })}
-                </button>
-              </>
-            )}
-          </div>
-        </>
       )}
 
       <PromptDialog

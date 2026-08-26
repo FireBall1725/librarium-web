@@ -20,10 +20,11 @@ import { Link, useNavigationType, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth, ApiError } from '../auth/AuthContext'
 import PageHeader from '../components/PageHeader'
-import AlphabetBar from '../components/AlphabetBar'
 import BookCover from '../components/BookCover'
+import { PromptDialog } from '../components/Dialog'
 import SeriesFormModal from '../components/SeriesFormModal'
 import SuggestSeriesModal from '../components/SuggestSeriesModal'
+import ViewChip from '../components/ViewChip'
 import SeriesFacetRail, {
   SERIES_FACET_ORDER, SERIES_PARAM, seriesFacetLabel,
   type SeriesFacetKey, type SeriesFacets,
@@ -31,26 +32,12 @@ import SeriesFacetRail, {
 import { usePageTitle } from '../hooks/usePageTitle'
 import {
   DEFAULT_LIST_KEY, LISTS_CHANGED, announceListsChanged, createSmartList,
-  adoptedList, defaultListFor, fetchLists, isDirty as viewIsDirty, listQuery, matchList,
-  updateList, type ListLayout, type SavedList,
+  adoptedList, defaultListFor, deleteList, fetchLists, isDirty as viewIsDirty,
+  listIcon, listQuery, matchList, updateList, type ListLayout, type SavedList,
 } from '../lib/lists'
+import { LIST_ICONS } from '../lib/listIcons'
+import type { IconName } from '../lib/icons'
 import type { Library, Series } from '../types'
-
-/**
- * The letter a name files under, matching what the API does for authors:
- * accents fold to their base, anything else goes to '#'.
- *
- * Client-side here because a series has no sort_name column to file it by, so
- * there is nothing for the server to have decided.
- */
-function indexLetter(name: string): string {
-  // NFD splits an accented letter into base plus combining mark; dropping the
-  // marks leaves the base, so Émile files under E rather than '#'.
-  const first = name.trim().normalize('NFD').replace(/[̀-ͯ]/g, '')[0]
-  if (!first) return '#'
-  const upper = first.toUpperCase()
-  return upper >= 'A' && upper <= 'Z' ? upper : '#'
-}
 
 const SORTS = ['name', 'volumes', 'missing', 'read', 'recent'] as const
 
@@ -63,7 +50,6 @@ export default function SeriesPage() {
   usePageTitle(t('nav.series', { defaultValue: 'Series' }))
 
   const [params, setParams] = useSearchParams()
-  const letter = params.get('letter')
 
   // The URL is the state. A filtered view is a link someone can send, and the
   // back button walks the filters rather than leaving the page, which is what
@@ -113,14 +99,7 @@ export default function SeriesPage() {
     return () => window.removeEventListener(LISTS_CHANGED, again)
   }, [reloadViews])
 
-  // Everything except the letter, which is a jump within a result set rather
-  // than part of what the view stands for: saving "the Bs" as a view would
-  // make a filter out of scrolling.
-  const paramsNow = useMemo(() => {
-    const p = new URLSearchParams(params)
-    p.delete('letter')
-    return p.toString()
-  }, [params])
+  const paramsNow = useMemo(() => params.toString(), [params])
 
   /**
    * Which view is open, and it has to survive the filter being edited.
@@ -178,9 +157,38 @@ export default function SeriesPage() {
     announceListsChanged()
   }
 
-  const saveCurrentAs = async (name: string) => {
+  /** Close the view and go back to an unfiltered Series. */
+  const leaveView = () => {
+    setAdopted(null)
+    setLayoutOverride(null)
+    setParams(new URLSearchParams())
+  }
+
+  /**
+   * Rename the view on screen and change its icon.
+   *
+   * The same dialog does both, because from the reader's side it is one edit.
+   */
+  const [renaming, setRenaming] = useState(false)
+  const applyRename = async (name: string, icon?: IconName) => {
+    setRenaming(false)
+    if (!activeView) return
+    await updateList(callApi, activeView.id, { name, icon }).catch(() => {})
+    await reloadViews()
+    announceListsChanged()
+  }
+
+  const removeView = async (id: string) => {
+    await deleteList(callApi, id).catch(() => {})
+    setAdopted(null)
+    await reloadViews()
+    announceListsChanged()
+    setParams(new URLSearchParams())
+  }
+
+  const saveCurrentAs = async (name: string, icon?: IconName) => {
     setNaming(false)
-    await createSmartList(callApi, name, paramsNow, undefined, 'series', layout).catch(() => null)
+    await createSmartList(callApi, name, paramsNow, icon, 'series', layout).catch(() => null)
     await reloadViews()
     announceListsChanged()
   }
@@ -233,11 +241,9 @@ export default function SeriesPage() {
     setParams(next, { replace: true })
   }
 
-  // The request is the URL, minus the letter, which is a jump within a result
-  // set rather than something the server can narrow on.
+  // The request is the URL, minus the defaults, which say nothing.
   const wire = useMemo(() => {
     const p = new URLSearchParams(params)
-    p.delete('letter')
     if (p.get('sort') === 'name') p.delete('sort')
     if (p.get('dir') === 'asc') p.delete('dir')
     return p.toString()
@@ -267,14 +273,7 @@ export default function SeriesPage() {
       .catch(() => setLibraries([]))
   }, [callApi])
 
-  const available = useMemo(
-    () => new Set((series ?? []).map(s => indexLetter(s.name))),
-    [series],
-  )
-  const shown = useMemo(
-    () => (series ?? []).filter(s => !letter || indexLetter(s.name) === letter),
-    [series, letter],
-  )
+  const shown = series ?? []
 
   const libraryName = (id: string) => libraries.find(l => l.id === id)?.name ?? ''
 
@@ -365,13 +364,19 @@ export default function SeriesPage() {
                 Books uses, because the reader is answering the same questions
                 in the same sequence. */}
             <div className="mb-4 flex flex-wrap items-center gap-2 text-sm text-content-muted">
-              {activeView && !isDefaultView && (
-                <span className="lb-chip on">{activeView.name}</span>
-              )}
-              {dirty && (
-                <span className="text-xs italic text-content-faint">
-                  {t('views.modified', { defaultValue: 'modified' })}
-                </span>
+              {activeView && (
+                <ViewChip
+                  view={activeView}
+                  dirty={dirty}
+                  isDefault={isDefaultView}
+                  defaultHint={t('views.default_hint_series', {
+                    defaultValue: 'what Series opens on',
+                  })}
+                  onLeave={leaveView}
+                  onRename={() => setRenaming(true)}
+                  onSaveAsNew={() => setNaming(true)}
+                  onDelete={() => void removeView(activeView.id)}
+                />
               )}
 
               <span className="tabular-nums">
@@ -494,9 +499,6 @@ export default function SeriesPage() {
               </div>
             </div>
 
-            <AlphabetBar available={available} active={letter}
-              onSelect={v => set({ letter: v })} />
-
             {error && (
               <p className="mt-6 rounded-lg border border-danger-line bg-danger-surface px-3 py-2 text-sm text-danger">
                 {error}
@@ -513,11 +515,9 @@ export default function SeriesPage() {
 
             {series !== null && shown.length === 0 && !error && (
               <p className="font-display mt-12 text-center text-xl text-content-secondary">
-                {letter
-                  ? t('series.none_under', { letter, defaultValue: 'No series under {{letter}}' })
-                  : activeFilters > 0 || query
-                    ? t('series.none_matching', { defaultValue: 'No series match that' })
-                    : t('series.none', { defaultValue: 'No series yet' })}
+                {activeFilters > 0 || query
+                  ? t('series.none_matching', { defaultValue: 'No series match that' })
+                  : t('series.none', { defaultValue: 'No series yet' })}
               </p>
             )}
 
@@ -544,13 +544,32 @@ export default function SeriesPage() {
         </div>
       </div>
 
-      {naming && (
-        <NameViewDialog
-          onCancel={() => setNaming(false)}
-          onSave={name => void saveCurrentAs(name)}
-          t={t}
-        />
-      )}
+      <PromptDialog
+        open={naming}
+        title={t('views.save_as_view', { defaultValue: 'Save as a view' })}
+        description={t('views.new_description_series', {
+          defaultValue: 'Saves the filters you have on Series right now. You can change it later.',
+        })}
+        label={t('views.name_label', { defaultValue: 'Name' })}
+        placeholder={t('views.name_placeholder_series', { defaultValue: 'Runs I am behind on' })}
+        icons={LIST_ICONS}
+        initialIcon="newview"
+        iconLabel={t('common.icon', { defaultValue: 'Icon' })}
+        onCancel={() => setNaming(false)}
+        onSubmit={saveCurrentAs}
+      />
+
+      <PromptDialog
+        open={renaming}
+        title={t('views.rename', { defaultValue: 'Rename' })}
+        label={t('views.name_label', { defaultValue: 'Name' })}
+        initialValue={activeView?.name ?? ''}
+        icons={LIST_ICONS}
+        initialIcon={activeView ? listIcon(activeView) : undefined}
+        iconLabel={t('common.icon', { defaultValue: 'Icon' })}
+        onCancel={() => setRenaming(false)}
+        onSubmit={applyRename}
+      />
 
       {suggesting && (
         <SuggestSeriesModal
@@ -586,50 +605,6 @@ const SORT_SHORT: Record<string, string> = {
 }
 
 type Translate = (k: string, o?: Record<string, unknown>) => string
-
-/**
- * Name a view.
- *
- * A prompt() would do the job and would also be the one piece of this page that
- * cannot be styled, cannot be dismissed with Escape the way everything else is,
- * and blocks the tab while it is open.
- */
-function NameViewDialog({ onCancel, onSave, t }: {
-  onCancel: () => void
-  onSave: (name: string) => void
-  t: Translate
-}) {
-  const [name, setName] = useState('')
-  return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4"
-      role="dialog" aria-modal="true"
-      onKeyDown={e => { if (e.key === 'Escape') onCancel() }}>
-      <div className="w-full max-w-sm rounded-xl border border-line bg-surface-raised p-4">
-        <h2 className="mb-3 text-sm font-semibold text-content">
-          {t('views.save', { defaultValue: 'Save as a view' })}
-        </h2>
-        <input
-          autoFocus
-          value={name}
-          onChange={e => setName(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Enter' && name.trim()) onSave(name.trim()) }}
-          placeholder={t('views.name_placeholder', { defaultValue: 'Name it…' })}
-          aria-label={t('views.name', { defaultValue: 'Name' })}
-          className="lb-field w-full"
-        />
-        <div className="mt-3 flex justify-end gap-2">
-          <button type="button" className="lb-btn ghost sm" onClick={onCancel}>
-            {t('common.cancel', { defaultValue: 'Cancel' })}
-          </button>
-          <button type="button" className="lb-btn sm" disabled={!name.trim()}
-            onClick={() => onSave(name.trim())}>
-            {t('common.save', { defaultValue: 'Save' })}
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
 
 /** What the series says about itself, shared by both layouts. */
 function counts(s: Series) {
