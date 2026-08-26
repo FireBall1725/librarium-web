@@ -199,7 +199,7 @@
     "count_one": "{{count}} sur vos étagères",
     "count_other": "{{count}} sur vos étagères",
     "none": "Aucun auteur",
-    "none_under": "Aucun auteur sous {{letter}}",
+    "none_in_role": "Personne ici n'a ce rôle",
     "one_library": "Une bibliothèque",
     "read_count_one": "{{count}} lu",
     "read_count_other": "{{count}} lus",

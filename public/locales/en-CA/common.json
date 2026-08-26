@@ -199,7 +199,7 @@
     "count_one": "{{count}} on your shelves",
     "count_other": "{{count}} on your shelves",
     "none": "No authors yet",
-    "none_under": "No authors under {{letter}}",
+    "none_in_role": "Nobody here holds that role",
     "one_library": "One library",
     "read_count_one": "{{count}} read",
     "read_count_other": "{{count}} read",

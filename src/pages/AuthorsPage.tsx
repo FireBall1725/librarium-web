@@ -13,7 +13,6 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import PageHeader from '../components/PageHeader'
-import AlphabetBar from '../components/AlphabetBar'
 import AuthorAvatar from '../components/AuthorAvatar'
 import BookCover from '../components/BookCover'
 import SuggestBox, { type SuggestItem } from '../components/SuggestBox'
@@ -29,7 +28,6 @@ export default function AuthorsPage() {
 
   const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
-  const letter = params.get('letter')
   const sort: SortMode = params.get('sort') === 'count' ? 'count' : 'name'
   // Carried from the retired per-library Contributors page. The server does the
   // narrowing, because filtering here would print a count for authors the
@@ -67,15 +65,8 @@ export default function AuthorsPage() {
 
 
 
-  // Derived, not stored. The letters the bar can offer are a property of the
-  // data, so recomputing them beats holding a second copy that can go stale.
-  const available = useMemo(
-    () => new Set((authors ?? []).map(a => a.letter)),
-    [authors]
-  )
-
   const shown = useMemo(() => {
-    const list = (authors ?? []).filter(a => !letter || a.letter === letter)
+    const list = authors ?? []
     if (sort === 'count') {
       // Ties break on the sort name, so equal-sized authors keep a stable and
       // meaningful order rather than whatever the server happened to return.
@@ -84,7 +75,7 @@ export default function AuthorsPage() {
       )
     }
     return list
-  }, [authors, letter, sort])
+  }, [authors, sort])
 
   // The library's own name, taken from the rows already on screen rather than
   // fetched: every author in a scoped result carries it. Undefined only when
@@ -156,11 +147,15 @@ export default function AuthorsPage() {
       />
 
       <div className="px-8 py-6">
-        {/* Search first, because this page is a lookup rather than a browse:
-            people arrive knowing the name. The A-Z bar stays for the other
-            case, and it earns its place here in a way it did not on Series,
-            where it was filtering titles that search handles better. An index
-            of names is what an alphabet is for. */}
+        {/* Search, because this page is a lookup rather than a browse: people
+            arrive knowing the name.
+
+            It replaced an A-Z bar, which only files Latin script. The letter
+            comes from sort_name and is '#' for anything outside A-Z, so every
+            Japanese, Cyrillic, Greek and Arabic name landed in one bucket
+            whatever it started with, and a manga collection is full of them.
+            A jump that works for some readers' names and not others is worse
+            than no jump. */}
         <div className="mb-6 flex flex-wrap items-center gap-2">
           <SuggestBox
             className="min-w-[14rem] max-w-lg flex-1"
@@ -186,6 +181,25 @@ export default function AuthorsPage() {
           {/* Role, which has been a parameter since this endpoint was written
               and was reachable from nowhere. Data-driven rather than a list
               spelled out here, so a role added later arrives on its own. */}
+          {/* Which order, in the same segmented shape Books and Series use. It
+              sat on a row of its own once the A-Z bar went, stranded at the
+              right with nothing beside it. */}
+          <div className="flex overflow-hidden rounded-md border border-line-strong">
+            {(['name', 'count'] as SortMode[]).map(mode => (
+              <button key={mode} type="button" aria-pressed={sort === mode}
+                onClick={() => setParam('sort', mode === 'name' ? null : mode)}
+                className={`px-2.5 py-1 text-xs font-medium transition-colors ${
+                  sort === mode
+                    ? 'bg-accent text-white'
+                    : 'text-content-secondary hover:bg-surface-inset'
+                }`}>
+                {mode === 'name'
+                  ? t('authors.sort_name', { defaultValue: 'A–Z' })
+                  : t('authors.sort_count', { defaultValue: 'Most books' })}
+              </button>
+            ))}
+          </div>
+
           {roles.length > 1 && (
             <div className="flex overflow-hidden rounded-md border border-line-strong">
               {roles.map(r => {
@@ -209,40 +223,20 @@ export default function AuthorsPage() {
           )}
         </div>
 
-      <div className="flex flex-wrap items-center gap-3">
-        {/* A scoped page that looks unscoped is the bug worth avoiding here:
-            arriving from the retired per-library page shows 33 where the rail
-            says 55, and without this there is nothing to explain the gap or
-            any way back. */}
-        {lib && (
+      {/* A scoped page that looks unscoped is the bug worth avoiding here:
+          arriving from the retired per-library page shows 33 where the rail
+          says 55, and without this there is nothing to explain the gap or any
+          way back. Drawn only when there is one, since an empty row still
+          takes its own gap. */}
+      {lib && (
+        <div className="flex flex-wrap items-center gap-3">
           <button type="button" className="lb-chip on"
             onClick={() => setParam('lib', null)}
             title={t('authors.clear_library', { defaultValue: 'Show every library' })}>
             {scopeName ?? t('authors.one_library', { defaultValue: 'One library' })} ×
           </button>
-        )}
-        <AlphabetBar available={available} active={letter} onSelect={v => setParam('letter', v)} />
-        <span className="flex-1" />
-        <div className="flex gap-1.5">
-          {(['name', 'count'] as SortMode[]).map(mode => (
-            <button
-              key={mode}
-              type="button"
-              aria-pressed={sort === mode}
-              onClick={() => setParam('sort', mode === 'name' ? null : mode)}
-              className={`rounded-full border px-2.5 py-[3px] text-[11px] transition-colors ${
-                sort === mode
-                  ? 'border-accent-line bg-accent-surface text-accent'
-                  : 'border-line-strong text-content-tertiary hover:bg-surface-inset'
-              }`}
-            >
-              {mode === 'name'
-                ? t('authors.sort_name', { defaultValue: 'A–Z' })
-                : t('authors.sort_count', { defaultValue: 'Most books' })}
-            </button>
-          ))}
         </div>
-      </div>
+      )}
 
       {error && (
         <p className="mt-6 rounded-lg border border-danger-line bg-danger-surface px-3 py-2 text-sm text-danger">
@@ -260,8 +254,8 @@ export default function AuthorsPage() {
 
       {authors !== null && shown.length === 0 && !error && (
         <p className="font-display mt-12 text-center text-xl text-content-secondary">
-          {letter
-            ? t('authors.none_under', { letter, defaultValue: 'No authors under {{letter}}' })
+          {role
+            ? t('authors.none_in_role', { defaultValue: 'Nobody here holds that role' })
             : t('authors.none', { defaultValue: 'No authors yet' })}
         </p>
       )}
