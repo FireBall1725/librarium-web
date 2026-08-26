@@ -128,7 +128,8 @@
     "clear_other": "Effacer {{count}} filtres",
     "stars_one": "{{stars}} étoile",
     "stars_other": "{{stars}} étoiles",
-    "location": "Étagère"
+    "location": "Étagère",
+    "my_rating": "Ma note"
   },
   "common": {
     "loading": "Chargement…",

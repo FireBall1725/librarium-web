@@ -23,7 +23,7 @@ const lists = [{ id: 'list-1', name: 'Fiction' }] as unknown as SavedList[]
 
 const none = {
   ownership: [], library: [], shelf: [], location: [], read_status: [],
-  media_type: [], genre: [], tag: [], rating: [], favourite: [],
+  media_type: [], genre: [], tag: [], rating: [], my_rating: [], favourite: [],
 } as Record<FacetKey, string[]>
 
 describe('resolving what was typed', () => {

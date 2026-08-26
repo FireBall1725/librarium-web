@@ -36,6 +36,7 @@ const LABEL_KEY: Record<FacetKey, string> = {
   genre: 'facets.genre',
   tag: 'facets.tag',
   rating: 'facets.rating',
+  my_rating: 'facets.my_rating',
   favourite: 'facets.favourite',
 }
 
@@ -47,7 +48,7 @@ function displayLabel(key: FacetKey, v: FacetValue, t: Translate): string {
   if (key === 'read_status') return t(`read_status.${v.value}`, { defaultValue: v.label })
   // Halves, because the column holds ten points and the reader counts five
   // stars. Printing the stored number said "8 stars" for four.
-  if (key === 'rating') {
+  if (key === 'rating' || key === 'my_rating') {
     return t('facets.stars', {
       count: starsOf(Number(v.value)), stars: formatStars(Number(v.value)),
       defaultValue: `${formatStars(Number(v.value))} stars`,

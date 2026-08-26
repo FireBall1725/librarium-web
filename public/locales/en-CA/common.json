@@ -128,7 +128,8 @@
     "clear_other": "Clear {{count}} filters",
     "stars_one": "{{stars}} star",
     "stars_other": "{{stars}} stars",
-    "location": "Shelf"
+    "location": "Shelf",
+    "my_rating": "My rating"
   },
   "common": {
     "loading": "Loading…",

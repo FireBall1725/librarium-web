@@ -222,7 +222,7 @@ function SelectBox({ book, picked, onToggle, t }: {
 function chipLabel(key: FacetKey, value: string, facets: BookFacets | null, t: TFunction): string {
   if (key === 'ownership') return t(`ownership.${value}`, { defaultValue: value })
   if (key === 'read_status') return t(`read_status.${value}`, { defaultValue: value })
-  if (key === 'rating') {
+  if (key === 'rating' || key === 'my_rating') {
     return t('facets.stars', {
       count: starsOf(Number(value)), stars: formatStars(Number(value)),
       defaultValue: `${formatStars(Number(value))} stars`,
