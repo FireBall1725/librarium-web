@@ -14,7 +14,7 @@
 
 import { useEffect, useState } from 'react'
 import { useAuth, ApiError } from '../auth/AuthContext'
-import type { Library, Series, SeriesLookupResult, Tag } from '../types'
+import type { Genre, Library, Series, SeriesLookupResult, Tag } from '../types'
 import { LANGUAGE_OPTIONS } from './AddEditionModal'
 import { TAG_COLORS } from '../lib/tagColours'
 
@@ -67,6 +67,11 @@ export default function SeriesFormModal({
     external_id: series?.external_id ?? '',
     external_source: series?.external_source ?? '',
   })
+  // The shared genre vocabulary, the same list books pick from. Series used to
+  // carry free text nobody checked, which is how one facet ended up counting
+  // "Sci-Fi" beside "Science Fiction" beside "Science fiction".
+  const [allGenres, setAllGenres] = useState<Genre[]>([])
+  const [genreQuery, setGenreQuery] = useState('')
   const [libraryTags, setLibraryTags] = useState<Tag[]>([])
   const [selectedTags, setSelectedTags] = useState<Tag[]>(series?.tags ?? [])
   const [newTagName, setNewTagName] = useState('')
@@ -79,6 +84,10 @@ export default function SeriesFormModal({
   useEffect(() => {
     callApi<Tag[]>(`/api/v1/libraries/${actingLibrary}/tags`).then(ts => setLibraryTags(ts ?? [])).catch(() => {})
   }, [callApi, actingLibrary])
+
+  useEffect(() => {
+    callApi<Genre[]>('/api/v1/genres').then(gs => setAllGenres(gs ?? [])).catch(() => {})
+  }, [callApi])
 
   const createTag = async () => {
     if (!newTagName.trim()) return
@@ -346,16 +355,45 @@ export default function SeriesFormModal({
  <option value="other">Other</option>
  </select>
  </div>
- {form.genres.length > 0 && (
- <div>
- <label className="block text-sm font-medium text-content-secondary mb-1">Genres</label>
- <div className="flex flex-wrap gap-1.5">
- {form.genres.map(g => (
- <span key={g} className="inline-flex items-center rounded-full bg-surface-inset px-2.5 py-1 text-xs font-medium text-gray-600 dark:text-gray-300">{g}</span>
- ))}
- </div>
- </div>
- )}
+              <div>
+                <label className="block text-sm font-medium text-content-secondary mb-1">Genres</label>
+                {form.genres.length > 0 && (
+                  <div className="mb-1.5 flex flex-wrap gap-1.5">
+                    {form.genres.map(g => (
+                      <span key={g}
+                        className="inline-flex items-center gap-1 rounded-full bg-surface-inset px-2.5 py-1 text-xs font-medium text-content-secondary">
+                        {g}
+                        <button type="button" aria-label={`Remove ${g}`}
+                          onClick={() => setForm(f => ({ ...f, genres: f.genres.filter(x => x !== g) }))}
+                          className="text-sm leading-none hover:opacity-70">×</button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {/* Picked from the vocabulary, never typed. A genre nobody else
+                    uses is a genre no filter will ever find, and inventing them
+                    freely is exactly what this replaced. */}
+                <input value={genreQuery} onChange={e => setGenreQuery(e.target.value)}
+                  placeholder="Search genres…" className={inputCls} />
+                {genreQuery.trim() !== '' && (
+                  <div className="mt-1.5 flex flex-wrap gap-1.5">
+                    {allGenres
+                      .filter(g => !form.genres.includes(g.name)
+                        && g.name.toLowerCase().includes(genreQuery.trim().toLowerCase()))
+                      .slice(0, 8)
+                      .map(g => (
+                        <button key={g.id} type="button"
+                          onClick={() => {
+                            setForm(f => ({ ...f, genres: [...f.genres, g.name] }))
+                            setGenreQuery('')
+                          }}
+                          className="rounded-full border border-line-strong px-2.5 py-1 text-xs text-content-tertiary hover:bg-surface-inset">
+                          + {g.name}
+                        </button>
+                      ))}
+                  </div>
+                )}
+              </div>
  <div>
  <div className="flex items-center justify-between mb-1.5">
  <label className="text-sm font-medium text-content-secondary dark:text-gray-300">Tags</label>
