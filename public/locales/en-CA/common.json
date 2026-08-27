@@ -579,5 +579,8 @@
     "merged_other": "Moved {{count}} credits to {{name}}",
     "none": "Nothing looks duplicated.",
     "pick_one": "Choose which spelling to keep"
+  },
+  "scan": {
+    "start_failed": "Could not start the barcode scanner."
   }
 }

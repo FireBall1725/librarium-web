@@ -579,5 +579,8 @@
     "merged_other": "{{count}} crédits transférés vers {{name}}",
     "none": "Aucun doublon apparent.",
     "pick_one": "Choisissez l'orthographe à conserver"
+  },
+  "scan": {
+    "start_failed": "Impossible de démarrer le scanner de codes-barres."
   }
 }
