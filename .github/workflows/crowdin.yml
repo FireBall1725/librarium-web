@@ -27,7 +27,17 @@ jobs:
         uses: crowdin/github-action@v2
         with:
           upload_sources: true
-          upload_translations: false
+          # Every French string in this repo was written by hand in a feature
+          # PR. With this off, Crowdin only ever received the English source,
+          # had no French to pair with it, and exported the source strings back
+          # as if they were translations: PR #64 proposed reverting 421 values
+          # to English, including the footer credit line. Sending the
+          # translations up is what makes the round trip honest.
+          upload_translations: true
+          # Imported strings arrive approved. Without this they sit as
+          # unapproved suggestions, and a project that exports only approved
+          # translations would still send English back down.
+          auto_approve_imported: true
           download_translations: true
           localization_branch_name: crowdin/translations
           create_pull_request: true
