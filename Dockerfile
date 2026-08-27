@@ -15,5 +15,12 @@ RUN npm run build
 
 FROM nginx:alpine
 COPY --from=builder /app/dist /usr/share/nginx/html
+# Both configs ship. The entrypoint picks one: the default serves at the root,
+# and LIBRARIUM_BASE_PATH swaps in the other so several apps can share a
+# hostname without each needing its own port.
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY nginx.base-path.conf /etc/nginx/librarium-base-path.conf
+COPY docker/30-librarium-base-path.sh /docker-entrypoint.d/30-librarium-base-path.sh
+RUN chmod +x /docker-entrypoint.d/30-librarium-base-path.sh
+ENV LIBRARIUM_BASE_PATH=""
 EXPOSE 3000

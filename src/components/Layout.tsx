@@ -21,6 +21,7 @@ import { PromptDialog, type PromptExtras } from './Dialog'
 import { TAG_COLORS } from '../lib/tagColours'
 import CommandPalette from './CommandPalette'
 import { libraryColour } from '../lib/libraryColour'
+import { withBase } from '../lib/basePath'
 
 interface CollectionCounts {
   books: number
@@ -568,7 +569,7 @@ export default function Layout() {
   }, [theme])
 
   useEffect(() => {
-    fetch('/health')
+    fetch(withBase('/health'))
       .then(r => r.json())
       .then(d => setApiVersion(d.version ?? null))
       .catch(() => {})

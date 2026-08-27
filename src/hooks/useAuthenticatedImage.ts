@@ -3,6 +3,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../auth/AuthContext'
+import { withBase } from '../lib/basePath'
 
 /**
  * What the caller should be drawing right now.
@@ -87,7 +88,7 @@ export function useAuthenticatedImage(url: string | null | undefined): Authentic
       try {
         const token = await getToken()
         if (cancelled) return
-        const res = await fetch(url, token ? { headers: { Authorization: `Bearer ${token}` } } : {})
+        const res = await fetch(withBase(url), token ? { headers: { Authorization: `Bearer ${token}` } } : {})
         if (cancelled) return
         if (!res.ok) { setSrc(null); setStatus('none'); return }
         const blob = await res.blob()

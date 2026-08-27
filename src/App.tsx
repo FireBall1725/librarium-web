@@ -42,6 +42,7 @@ import AIPage from './pages/admin/connections/AIPage'
 import { AiPrivacyPage, ApiTokensPage, ProfilePage } from './pages/settings/AccountPages'
 import SuggestionsPage from './pages/SuggestionsPage'
 import BookDetailPage from './pages/BookDetailPage'
+import { basePath } from './lib/basePath'
 
 function AppRoutes() {
   const { apiReachable } = useAuth()
@@ -151,7 +152,9 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <BrowserRouter>
+    // Links and routes go through the router's own basename rather than
+    // withBase: applying both would prefix twice.
+    <BrowserRouter basename={basePath || undefined}>
       <AuthProvider>
         <ToastProvider>
           <AppRoutes />
