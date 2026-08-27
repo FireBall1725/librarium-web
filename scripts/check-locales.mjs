@@ -15,19 +15,33 @@ const ROOT = 'public/locales'
 const SOURCE = 'en-CA'
 
 /**
- * Plural categories per language, from CLDR.
+ * Plural categories per language, split by whether this app can reach them.
  *
- * English and German distinguish one from other. Japanese does not distinguish
- * at all, so a `_one` key there is dead weight the library will never read.
- * The Slavic languages need `_few` and `_many`, which the English source has
- * no way to express: adding one of those is a change to the source keys, not a
- * translation, which is why they are not in this list yet.
+ * `required` is what a translator must supply. `allowed` is everything CLDR
+ * lists, so a form somebody adds is accepted rather than flagged.
+ *
+ * The gap between them is `many`, which French, Spanish and Portuguese all
+ * have and which `Intl.PluralRules` only selects at a million and above. No
+ * count in this app reaches that: they are books on a shelf, volumes in a run,
+ * filters on a page. Requiring it would mean 33 dead strings per language, and
+ * pretending the category does not exist would be the kind of quiet
+ * inaccuracy this script is meant to catch. So it is written down and not
+ * required.
+ *
+ * Japanese has no singular at all, so a `_one` key there is a string i18next
+ * will never read.
+ *
+ * The Slavic languages need `_few`, which the English source has no way to
+ * express. Adding one is a change to the source keys rather than a
+ * translation, which is why they are not here yet.
  */
 const PLURALS = {
-  'en-CA': ['one', 'other'],
-  'fr-FR': ['one', 'other'],
-  'de-DE': ['one', 'other'],
-  'ja-JP': ['other'],
+  'en-CA': { required: ['one', 'other'], allowed: ['one', 'other'] },
+  'fr-FR': { required: ['one', 'other'], allowed: ['one', 'many', 'other'] },
+  'de-DE': { required: ['one', 'other'], allowed: ['one', 'other'] },
+  'ja-JP': { required: ['other'], allowed: ['other'] },
+  'es-ES': { required: ['one', 'other'], allowed: ['one', 'many', 'other'] },
+  'pt-BR': { required: ['one', 'other'], allowed: ['one', 'many', 'other'] },
 }
 
 const flatten = (o, p = '') =>
@@ -68,10 +82,19 @@ const locales = readdirSync(ROOT).filter(l => l !== SOURCE)
 
 for (const locale of locales) {
   console.log(`${locale}`)
-  const allowed = PLURALS[locale]
-  if (!allowed) {
+  const rules = PLURALS[locale]
+  if (!rules) {
     fail(`${locale}: no plural rules recorded. Add them to PLURALS before shipping this locale.`)
     continue
+  }
+  // Checked against the platform rather than trusted: a table written by hand
+  // is a table that can be wrong about a language nobody here speaks.
+  const actual = new Intl.PluralRules(locale).resolvedOptions().pluralCategories
+  for (const c of rules.allowed) {
+    if (!actual.includes(c)) fail(`${locale}: CLDR has no "${c}" category`)
+  }
+  for (const c of rules.required) {
+    if (!actual.includes(c)) fail(`${locale}: "${c}" is required here but CLDR does not have it`)
   }
 
   for (const ns of namespaces) {
@@ -85,13 +108,13 @@ for (const locale of locales) {
     // without saying so, which is how a locale rots quietly.
     for (const key of Object.keys(src)) {
       const suffix = suffixOf(key, src)
-      if (suffix && !allowed.includes(suffix)) continue
+      if (suffix && !rules.required.includes(suffix)) continue
       if (!(key in dst)) fail(`${locale}/${ns}: missing ${key}`)
     }
 
     for (const [key, value] of Object.entries(dst)) {
       const suffix = suffixOf(key, src)
-      if (suffix && !allowed.includes(suffix)) {
+      if (suffix && !rules.allowed.includes(suffix)) {
         fail(`${locale}/${ns}: ${key} uses the "${suffix}" plural, which ${locale} does not have`)
         continue
       }
