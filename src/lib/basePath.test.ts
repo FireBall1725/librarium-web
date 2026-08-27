@@ -65,6 +65,13 @@ describe('withBase', () => {
       .toBe('data:image/png;base64,AAAA')
   })
 
+  it('keeps interpolation placeholders intact', () => {
+    // i18next's loadPath carries {{lng}} and {{ns}} and is resolved by the
+    // backend, not by us. Prefixing must not disturb them.
+    expect(withBase('/locales/{{lng}}/{{ns}}.json', base))
+      .toBe('/librarium/locales/{{lng}}/{{ns}}.json')
+  })
+
   it('leaves a relative path alone', () => {
     // Already resolved against the document, so prefixing would move it.
     expect(withBase('assets/logo.svg', base)).toBe('assets/logo.svg')
