@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import type { AuthTokens, User } from '../types'
+import { withBase } from '../lib/basePath'
 
 // ─── Storage keys ────────────────────────────────────────────────────────────
 
@@ -118,7 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const req = (async (): Promise<string | null> => {
       try {
-        const res = await fetch('/api/v1/auth/refresh', {
+        const res = await fetch(withBase('/api/v1/auth/refresh'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ refresh_token: rt }),
@@ -159,12 +160,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const token = await getToken()
       let res: Response
       try {
-        res = await fetch(path, {
+        res = await fetch(withBase(path), {
           ...options,
           headers: {
             ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
             ...(options.headers ?? {}),
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            // Who is asking, and which build. The server refuses first-party
+            // clients too old to understand the shapes it produces, and answers
+            // 426 with a readable message rather than letting them render blank
+            // panels that look like data loss.
+            //
+            // Spread after options.headers so a call site cannot override the
+            // client's identity: that is a property of the bundle, not of one
+            // request. Only callApi needs this, because the gate lives inside
+            // requireAuth and the login, refresh, logout and setup calls below
+            // deliberately sit outside it, so a gated client can still sign in.
+            'X-Librarium-Client': 'web',
+            'X-Librarium-Client-Version': __APP_VERSION__,
           },
         })
       } catch {
@@ -197,7 +210,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(async (identifier: string, password: string, rememberMe = true) => {
     storageRef.current = rememberMe ? localStorage : sessionStorage
-    const res = await fetch('/api/v1/auth/login', {
+    const res = await fetch(withBase('/api/v1/auth/login'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ identifier, password }),
@@ -211,7 +224,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     storageRef.current = localStorage
     let res: Response
     try {
-      res = await fetch('/api/v1/setup/admin', {
+      res = await fetch(withBase('/api/v1/setup/admin'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(req),
@@ -235,7 +248,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const token = accessRef.current
     if (token) {
       try {
-        await fetch('/api/v1/auth/logout', {
+        await fetch(withBase('/api/v1/auth/logout'), {
           method: 'POST',
           headers: { Authorization: `Bearer ${token}` },
         })
@@ -255,7 +268,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let cancelled = false
     setApiReachable(null)
     setInitialized(null)
-    fetch('/api/v1/setup/status')
+    fetch(withBase('/api/v1/setup/status'))
       .then(async res => {
         if (!res.ok) throw new Error(`probe HTTP ${res.status}`)
         const body = await res.json() as { data?: { initialized?: boolean } }

@@ -15,9 +15,10 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
-import type { Book, Genre, MediaType, Shelf, Tag } from '../types'
+import { fetchLists } from '../lib/lists'
+import type { Book, Genre, MediaType, Tag } from '../types'
 import {
-  addToShelf,
+  addToList,
   ambiguousBooks,
   applyToEach,
   bookPatchBody,
@@ -25,7 +26,7 @@ import {
   commonLibraries,
   deleteEach,
   fanOutByLibrary,
-  removeFromShelf,
+  removeFromList,
   type BulkResult,
 } from '../lib/bookBulk'
 import { ConfirmDialog } from './Dialog'
@@ -118,19 +119,21 @@ export default function BookBulkBar({
 
   const tags = tagsFor?.library === library ? tagsFor.list : []
 
-  // Shelves come from the same single library the tag vocabulary does, and for
-  // the same reason: a shelf only holds books from its own library, so putting
-  // a book from another one on it is not a thing the data model allows.
-  const [shelvesFor, setShelvesFor] = useState<{ library: string; list: Shelf[] } | null>(null)
+  // Every list this person can see, not the ones a single library shares. The
+  // shelf route only ever returned lists shared with a library, so a private
+  // one could not be filled from here at all. Membership is (list, book) with
+  // no library in it, so a list is not confined to one the way a tag is.
+  const [lists, setLists] = useState<{ id: string; name: string }[]>([])
   useEffect(() => {
-    if (!library) return
     let cancelled = false
-    callApi<Shelf[]>(`/api/v1/libraries/${library}/shelves`)
-      .then(r => { if (!cancelled) setShelvesFor({ library, list: r ?? [] }) })
-      .catch(() => {})
+    void fetchLists(callApi)
+      .then(all => {
+        if (cancelled) return
+        setLists(all.filter(l => l.kind === 'manual').map(l => ({ id: l.id, name: l.name })))
+      })
+      .catch(() => { /* The rest of the bar works without them. */ })
     return () => { cancelled = true }
-  }, [callApi, library])
-  const shelves = shelvesFor?.library === library ? shelvesFor.list : []
+  }, [callApi])
 
   // Books in the selection that several libraries hold, and the libraries that
   // would resolve all of them at once.
@@ -201,13 +204,13 @@ export default function BookBulkBar({
         tag_ids: b.tags.filter(x => x.id !== id).map(x => x.id),
       }), lib))
 
-  const putOnShelf = (id: string) =>
-    run(t('bulk.shelved', { defaultValue: 'Added to shelf' }), () =>
-      addToShelf(callApi, selected, library!, id))
+  const putOnList = (id: string) =>
+    run(t('bulk.added_to_list', { defaultValue: 'Added to list' }), () =>
+      addToList(callApi, selected, id))
 
-  const takeOffShelf = (id: string) =>
-    run(t('bulk.unshelved', { defaultValue: 'Removed from shelf' }), () =>
-      removeFromShelf(callApi, selected, library!, id))
+  const takeOffList = (id: string) =>
+    run(t('bulk.removed_from_list', { defaultValue: 'Removed from list' }), () =>
+      removeFromList(callApi, selected, id))
 
   const refreshCovers = () =>
     run(t('bulk.covers_queued', { defaultValue: 'Cover refresh queued' }), chosen =>
@@ -259,21 +262,24 @@ export default function BookBulkBar({
         <ActionSelect label={t('bulk.remove_genre', { defaultValue: 'Remove genre' })}
           options={genres} disabled={busy} onPick={removeGenre} />
 
+        {/* Outside the single-library gate that tags sit behind. A tag belongs
+            to one library; a list's membership is (list, book) with no library
+            in it, so a selection spanning several can still be filed.
+
+            Name only, no icon prefix: a native select matches typed characters
+            against the start of an option, so leading with an icon means typing
+            "Fic" finds nothing. */}
+        <ActionSelect label={t('bulk.add_list', { defaultValue: 'Add to list' })}
+          options={lists} disabled={busy} onPick={putOnList} />
+        <ActionSelect label={t('bulk.remove_list', { defaultValue: 'Remove from list' })}
+          options={lists} disabled={busy} onPick={takeOffList} />
+
         {library ? (
           <>
             <ActionSelect label={t('bulk.add_tag', { defaultValue: 'Add tag' })}
               options={tags} disabled={busy} onPick={addTag} />
             <ActionSelect label={t('bulk.remove_tag', { defaultValue: 'Remove tag' })}
               options={tags} disabled={busy} onPick={removeTag} />
-            {/* Name only, no icon prefix. A native select matches typed
-                characters against the start of an option, so leading with the
-                emoji means typing "Fav" finds nothing. The icon is decoration
-                and belongs on the rail row, not in a control someone drives
-                from the keyboard. */}
-            <ActionSelect label={t('bulk.add_shelf', { defaultValue: 'Add to shelf' })}
-              options={shelves} disabled={busy} onPick={putOnShelf} />
-            <ActionSelect label={t('bulk.remove_shelf', { defaultValue: 'Remove from shelf' })}
-              options={shelves} disabled={busy} onPick={takeOffShelf} />
           </>
         ) : (
           <span className="text-xs text-content-tertiary">

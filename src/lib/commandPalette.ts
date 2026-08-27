@@ -15,8 +15,7 @@
 
 import type { IconName } from './icons'
 import { SETTINGS_TREE } from './settingsTree'
-import type { SavedView } from './views'
-import { viewIcon } from './viewIcons'
+import { listHref, listIcon, type SavedList } from './lists'
 
 /**
  * Which section an item belongs to.
@@ -32,7 +31,6 @@ export type ItemKind =
   | 'series'
   | 'author'
   | 'view'
-  | 'shelf'
   | 'library'
   | 'loan'
   | 'page'
@@ -106,15 +104,24 @@ export function pageItems(t: (k: string, o?: Record<string, unknown>) => string)
   return [...top, ...settings]
 }
 
-export function viewItems(views: SavedView[]): CommandItem[] {
-  return views
-    .filter(v => !v.hidden)
-    .map(v => ({
+/**
+ * Views, as palette rows.
+ *
+ * One source, not two. The palette used to read saved views out of this
+ * browser's localStorage and shelves off the API, listing them under separate
+ * headings, which put the two halves of one concept in two places and meant a
+ * view made anywhere else never appeared here at all.
+ */
+export function viewItems(lists: SavedList[]): CommandItem[] {
+  return lists
+    .filter(l => !l.hidden)
+    .map(l => ({
       kind: 'view',
-      id: `view:${v.id}`,
-      label: v.name,
-      icon: viewIcon(v),
-      to: v.params ? `/books?${v.params}` : '/books',
+      id: `view:${l.id}`,
+      label: l.name,
+      icon: listIcon(l),
+      tint: l.color || undefined,
+      to: listHref(l),
     }))
 }
 
@@ -155,7 +162,6 @@ export const KIND_LABEL: Record<ItemKind, string> = {
   series: 'palette.series',
   author: 'palette.authors',
   view: 'palette.views',
-  shelf: 'palette.shelves',
   library: 'palette.libraries',
   loan: 'palette.loans',
   page: 'palette.pages',
@@ -169,5 +175,5 @@ export const KIND_LABEL: Record<ItemKind, string> = {
  * match something, so they would otherwise crowd out the collection.
  */
 export const KIND_ORDER: ItemKind[] = [
-  'action', 'book', 'series', 'author', 'view', 'shelf', 'library', 'loan', 'page',
+  'action', 'book', 'series', 'author', 'view', 'library', 'loan', 'page',
 ]

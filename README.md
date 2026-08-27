@@ -4,8 +4,6 @@ The web client for **[Librarium](https://librarium.press)**, a self-hosted, priv
 
 React 19 · TypeScript · Vite · Tailwind CSS v4 · TanStack Query. Talks to [`librarium-api`](https://github.com/fireball1725/librarium-api) over HTTP.
 
-Questions, updates, and works in progress: [FireBall Codes on Discord](https://discord.gg/QpV82CFfVD).
-
 > ⚠︎ **Early beta.** Things are changing fast, some edges are rough, and self-hosters should expect to read release notes before upgrading.
 
 Part of the Librarium stack:
@@ -63,6 +61,28 @@ docker run -p 3000:3000 librarium-web
 
 You'll need to override `nginx.conf` (or rebuild the image with a patched one) so `/api` proxies to your API host instead of the default `http://librarium-api:8080`.
 
+### Serving from a path
+
+A host running several apps can give each a path instead of a port. Set `LIBRARIUM_BASE_PATH` and the image serves the whole app, its assets and its API proxy from there:
+
+```bash
+docker run -p 3000:3000 -e LIBRARIUM_BASE_PATH=/librarium librarium-web
+```
+
+`librarium`, `/librarium` and `/librarium/` all mean the same thing. Unset means the root, which is what every deployment did before this existed.
+
+The path is applied when the container starts, not when the image is built, so one image serves any path. A reverse proxy in front of it should pass the prefix through rather than stripping it:
+
+```nginx
+location /librarium/ {
+    proxy_pass http://librarium-web:3000;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}
+```
+
+The API needs nothing: the image proxies `/librarium/api` to it and strips the prefix on the way through, so the API still answers on `/api/v1` as it always has.
+
 ## Versioning
 
 Format: **`YY.MM.revision`** (e.g. `26.4.0`).
@@ -87,6 +107,12 @@ Releases are cut from `main` via the `release` GitHub Actions workflow (`workflo
 ## Contributing
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md). PRs must sign off on the [Developer Certificate of Origin](./DCO) (`git commit -s`) — a CI check enforces this.
+
+## Support
+
+Questions, updates, and works in progress: [FireBall Codes on Discord](https://discord.gg/QpV82CFfVD).
+
+If this saved you some time, you can [buy me a sushi roll](https://ko-fi.com/fireball1725).
 
 ## License
 

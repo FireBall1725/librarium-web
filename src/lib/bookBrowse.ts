@@ -13,7 +13,7 @@
 // two people opening the same link should each get their own, and the link
 // should not change meaning when one of them switches to 200.
 
-export type FacetKey = 'ownership' | 'library' | 'shelf' | 'read_status' | 'media_type' | 'genre' | 'tag' | 'rating' | 'favourite'
+export type FacetKey = 'ownership' | 'library' | 'shelf' | 'location' | 'read_status' | 'media_type' | 'genre' | 'tag' | 'rating' | 'my_rating' | 'favourite'
 
 // Ownership leads: whether you have a book at all comes before anything else
 // about it, and it is the one facet that arrives with a default.
@@ -21,20 +21,80 @@ export type FacetKey = 'ownership' | 'library' | 'shelf' | 'read_status' | 'medi
 // pair: which library, then which shelf within it.
 // Favourite sits by read status: both are the reader's own verdict on a book,
 // as against what it is or where it lives.
-export const FACET_ORDER: FacetKey[] = ['ownership', 'library', 'shelf', 'read_status', 'favourite', 'media_type', 'genre', 'tag', 'rating']
+// Location follows library for the same reason list does: a place belongs to
+// one library, so the two read as a pair. Where the object physically is comes
+// before what anyone thinks of it.
+/**
+ * Top to bottom, and the same sequence the Series rail uses.
+ *
+ * One order for both, so moving between the two pages does not mean relearning
+ * where a dimension lives. It reads in four runs: where the book is, how you
+ * stand with it, what it is, then the two open vocabularies.
+ *
+ * Genre and tag go last because they are the only dimensions with no ceiling.
+ * A collection grows genres and tags forever, so anything below them is pushed
+ * off the bottom of the rail as the shelf fills; everything above has a fixed
+ * or small vocabulary and stays where the reader left it.
+ *
+ * Each surface has dimensions the other does not — ownership, lists and
+ * locations are books; status and arcs are runs — and they slot into the run
+ * they belong to rather than being appended.
+ */
+export const FACET_ORDER: FacetKey[] = [
+  // Where it is.
+  'ownership', 'library', 'shelf', 'location',
+  // How you stand with it.
+  'read_status', 'favourite', 'rating', 'my_rating',
+  // What it is.
+  'media_type',
+  // Open vocabularies, last, because they never stop growing.
+  'tag', 'genre',
+]
 
-/** Query-string key for each facet. Short, because these end up in shared links. */
+/**
+ * Query-string key for each facet. Short, because these end up in shared links.
+ *
+ * `shelf` is keyed to `list` here. The facet is a hand-picked set of books, and
+ * "shelf" now means where a physical copy sits, so the URL says the word the
+ * reader sees. The internal key stays `shelf` because that is what the server
+ * calls the facet in its response, and API_PARAM keeps the wire honest.
+ */
 export const PARAM: Record<FacetKey, string> = {
   ownership: 'own',
   library: 'lib',
-  shelf: 'shelf',
+  shelf: 'list',
+  // Not 'shelf', which the list facet still answers to for links saved before
+  // it was renamed. Two facets reading one parameter is the ambiguity this
+  // whole rename exists to remove, and it showed up as one filter producing
+  // two identical chips.
+  location: 'location',
   read_status: 'status',
   media_type: 'type',
   genre: 'genre',
   tag: 'tag',
   rating: 'rating',
+  my_rating: 'my_rating',
   favourite: 'fav',
 }
+
+/**
+ * What the server calls each facet on the wire.
+ *
+ * Identical to PARAM except where the reader-facing vocabulary has moved ahead
+ * of the API's. Keeping the two separate is what lets the URL rename ship
+ * without waiting on an API release, and without a client sending a parameter
+ * the server would silently ignore.
+ */
+const API_PARAM: Record<FacetKey, string> = { ...PARAM, shelf: 'shelf' }
+
+/**
+ * The URL spellings a facet answers to, newest first.
+ *
+ * `shelf` is still read because it is inside saved filters and inside any link
+ * already shared. Rewriting stored filters to chase a rename would turn a
+ * presentation change into a migration.
+ */
+const PARAM_ALIASES: Partial<Record<FacetKey, string[]>> = { shelf: ['shelf'] }
 
 export interface FacetValue {
   value: string
@@ -63,10 +123,19 @@ export interface BrowseState {
    * series id; empty means no drill-in.
    */
   series: string
+  /**
+   * Contributor ids to narrow to.
+   *
+   * Not a facet, though it filters like one. A collection has hundreds of
+   * contributors, so the rail would be a wall rather than a list, and the
+   * counted-dimension machinery a facet carries would have to count all of
+   * them on every request. Reached by typing a name instead.
+   */
+  contributors: string[]
 }
 
 export const emptySelection = (): Selection => ({
-  ownership: [], library: [], shelf: [], read_status: [], media_type: [], genre: [], tag: [], rating: [], favourite: [],
+  ownership: [], library: [], shelf: [], location: [], read_status: [], media_type: [], genre: [], tag: [], rating: [], my_rating: [], favourite: [],
 })
 
 export const isDefaultOwnership = (vals: string[]): boolean =>
@@ -110,7 +179,8 @@ export const OWNERSHIP_ANY = 'any'
 export function readState(params: URLSearchParams): BrowseState {
   const selection = emptySelection()
   for (const key of FACET_ORDER) {
-    const raw = params.get(PARAM[key])
+    const raw = params.get(PARAM[key]) ??
+      (PARAM_ALIASES[key] ?? []).map(a => params.get(a)).find(v => v !== null) ?? null
     if (raw) selection[key] = raw.split(',').filter(Boolean)
   }
   if (!params.has(PARAM.ownership)) selection.ownership = [...DEFAULT_OWNERSHIP]
@@ -124,6 +194,7 @@ export function readState(params: URLSearchParams): BrowseState {
     // everything on screen.
     grouped: params.get('group') === 'series' && !params.get('series'),
     series: params.get('series') ?? '',
+    contributors: (params.get('contributor') ?? '').split(',').filter(Boolean),
   }
 }
 
@@ -143,6 +214,7 @@ export function writeState(state: BrowseState): URLSearchParams {
     if (vals.length) params.set(PARAM[key], vals.join(','))
   }
   if (state.query) params.set('q', state.query)
+  if (state.contributors.length) params.set('contributor', state.contributors.join(','))
   if (state.series) params.set('series', state.series)
   if (state.grouped && !state.series) params.set('group', 'series')
   if (state.page > 1) params.set('page', String(state.page))
@@ -175,12 +247,16 @@ export function toApiQuery(state: BrowseState, perPage: number, forFacets = fals
     // The sentinel is a client-side idea; the server has no 'any' ownership,
     // it simply receives no ownership filter.
     if (key === 'ownership' && vals.includes(OWNERSHIP_ANY)) continue
-    if (vals.length) params.set(PARAM[key], vals.join(','))
+    if (vals.length) params.set(API_PARAM[key], vals.join(','))
   }
 
   // The drill-in narrows the facet counts too, so the rail describes the
   // series you opened rather than the whole shelf.
   if (state.series) params.set('series', state.series)
+
+  // Sent for the facet request as well, so choosing an author leaves the rail
+  // describing that author's books rather than the whole shelf.
+  if (state.contributors.length) params.set('contributor', state.contributors.join(','))
 
   if (!forFacets) {
     params.set('page', String(state.page))

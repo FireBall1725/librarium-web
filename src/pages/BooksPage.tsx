@@ -9,21 +9,25 @@
 // tranches replace it.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useNavigationType, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { announceCollectionChanged } from '../lib/collectionEvents'
+import { formatStars, starsOf } from '../lib/rating'
 import { useAuth } from '../auth/AuthContext'
 import PageHeader from '../components/PageHeader'
 import { PromptDialog } from '../components/Dialog'
 import AddBookModal from '../components/AddBookModal'
 import FacetRail from '../components/FacetRail'
+import FilterSearch from '../components/FilterSearch'
 import BookBulkBar from '../components/BookBulkBar'
 import LibraryPickerDialog from '../components/LibraryPickerDialog'
 import BookCover, { BookCoverThumb } from '../components/BookCover'
 import { usePageTitle } from '../hooks/usePageTitle'
+import { useContributorNames } from '../hooks/useContributorNames'
 import type { TFunction } from 'i18next'
-import { Icon, type IconName } from '../lib/icons'
-import { VIEW_ICONS, viewIcon } from '../lib/viewIcons'
+import { type IconName } from '../lib/icons'
+import { LIST_ICONS } from '../lib/listIcons'
+import ViewChip from '../components/ViewChip'
 import type { Book, GroupedEntry, Library, MediaType, PagedGroupedBooks, SeriesGroupEntry } from '../types'
 import {
   DEFAULT_PAGE_SIZE,
@@ -43,19 +47,20 @@ import {
   type FacetKey,
 } from '../lib/bookBrowse'
 import {
-  announceViewsChanged,
-  deleteView,
-  renameView,
+  announceListsChanged,
+  createSmartList,
+  deleteList,
+  fetchLists,
   isDirty as viewIsDirty,
-  loadViews,
-  matchView,
-  DEFAULT_VIEW_ID,
-  findDefaultView,
-  newViewId,
-  saveView,
-  type SavedView,
-  type ViewLayout,
-} from '../lib/views'
+  listIcon,
+  listQuery,
+  adoptedList,
+  matchList,
+  updateList,
+  DEFAULT_LIST_KEY,
+  type SavedList,
+  type ListLayout,
+} from '../lib/lists'
 
 /**
  * Colour a whole series alike, so twenty volumes read as one run on the shelf.
@@ -218,12 +223,46 @@ function SelectBox({ book, picked, onToggle, t }: {
 function chipLabel(key: FacetKey, value: string, facets: BookFacets | null, t: TFunction): string {
   if (key === 'ownership') return t(`ownership.${value}`, { defaultValue: value })
   if (key === 'read_status') return t(`read_status.${value}`, { defaultValue: value })
-  if (key === 'rating') return t('facets.stars', { count: Number(value), defaultValue: `${value} stars` })
+  if (key === 'rating' || key === 'my_rating') {
+    return t('facets.stars', {
+      count: starsOf(Number(value)), stars: formatStars(Number(value)),
+      defaultValue: `${formatStars(Number(value))} stars`,
+    })
+  }
   // Favourite is a boolean, so its facet value is the string "true". Falling
   // through to the label the server sent put a chip reading TRUE beside the
   // results, which says nothing about what was filtered.
   if (key === 'favourite') return t('facets.favourited', { defaultValue: 'Favourited' })
   return facets?.[key]?.find(v => v.value === value)?.label ?? value
+}
+
+/** A bare id, which is never something to show a reader. */
+const looksLikeAnID = (s: string) =>
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s)
+
+/**
+ * chipLabel, plus the views the reader can see.
+ *
+ * A view's chip is keyed by id, and the facet block only lists values something
+ * matched, so an empty view had no entry to read a name from and the chip
+ * rendered a raw UUID.
+ */
+function chipLabelWithViews(
+  key: FacetKey, value: string, facets: BookFacets | null, views: SavedList[], t: TFunction,
+): string {
+  if (key === 'shelf') {
+    const named = views.find(v => v.id === value)
+    if (named) return named.name
+  }
+  const label = chipLabel(key, value, facets, t)
+  // Never a raw id. An id-keyed facet reads its name out of the facet block,
+  // and the block only carries values something matched, so a filter matching
+  // nothing had nothing to read and fell through to the UUID. The dimension's
+  // own name says more than forty hex digits ever will.
+  if (looksLikeAnID(label)) {
+    return t(`facets.${key}`, { defaultValue: key })
+  }
+  return label
 }
 
 /** Book detail still lives under a library, so link via the first one holding it. */
@@ -279,10 +318,26 @@ export default function BooksPage() {
   // from the sidebar, which only navigates, so the layout has to follow from the
   // filter rather than from having gone through openView; without the key, the
   // toggle you flipped on one view would follow you onto the next one.
-  const [views, setViews] = useState<SavedView[]>(() => loadViews())
+  // Server-backed, not localStorage. Views used to live in this browser, which
+  // meant one saved on a laptop did not exist on a phone; worse, after the rail
+  // moved to /me/lists a view saved here went somewhere the rail never looked.
+  const [views, setViews] = useState<SavedList[]>([])
+
+  const reloadLists = useCallback(async () => {
+    setViews(await fetchLists(callApi).catch(() => []))
+  }, [callApi])
+
+  useEffect(() => {
+    let cancelled = false
+    void fetchLists(callApi)
+      .then(l => { if (!cancelled) setViews(l) })
+      .catch(() => { /* The page works unfiltered without them. */ })
+    return () => { cancelled = true }
+  }, [callApi])
   const [activeViewId, setActiveViewId] = useState<string | null>(null)
+  /** The list the filter arrived from, kept while the filter is edited. */
+  const [adopted, setAdopted] = useState<string | null>(null)
   const [naming, setNaming] = useState(false)
-  const [viewMenuAt, setViewMenuAt] = useState<{ x: number; y: number } | null>(null)
   const [adding, setAdding] = useState(false)
 
   // Fetched only when the modal opens. Books is a read surface; making every
@@ -302,7 +357,7 @@ export default function BooksPage() {
       .catch(() => { if (!cancelled) setAddData({ libraries: [], mediaTypes: [] }) })
     return () => { cancelled = true }
   }, [adding, addData, callApi])
-  const [layoutOverride, setLayoutOverride] = useState<{ viewId: string | null; layout: ViewLayout } | null>(null)
+  const [layoutOverride, setLayoutOverride] = useState<{ viewId: string | null; layout: ListLayout } | null>(null)
 
   // Entries, not books, even when grouping is off.
   //
@@ -493,11 +548,12 @@ export default function BooksPage() {
     setParams(writeState(next), { replace: true })
   }, [setParams])
 
+  // Emptying the box clears the search. Text is otherwise committed on Enter
+  // rather than as it is typed: the box now offers suggestions, and searching
+  // for each half-typed name reflowed the page under the dropdown and, when a
+  // list was open, reported it modified against a filter nobody had chosen yet.
   useEffect(() => {
-    const handle = setTimeout(() => {
-      if (draftQuery !== state.query) apply({ ...state, query: draftQuery, page: 1 })
-    }, 300)
-    return () => clearTimeout(handle)
+    if (draftQuery === '' && state.query !== '') apply({ ...state, query: '', page: 1 })
   }, [draftQuery, state, apply])
 
   // Results and counts are two requests but one logical fetch. A stale-response
@@ -553,6 +609,8 @@ export default function BooksPage() {
 
   // Chips for what is actually applied. Ownership at its default is not a
   // choice the reader made, so it gets no chip to remove.
+  // all, so matching on the filter is the only thing that covers every route in.
+  const paramsNow = params.toString()
   const activeChips = FACET_ORDER.flatMap(key =>
     (key === 'ownership' &&
       (isDefaultOwnership(state.selection[key]) || state.selection[key].includes(OWNERSHIP_ANY))
@@ -561,7 +619,7 @@ export default function BooksPage() {
     ).map(value => ({
       key,
       value,
-      label: chipLabel(key, value, facets, t),
+      label: chipLabelWithViews(key, value, facets, views, t),
     }))
   )
   // The drilled-into series' name, read off the books on screen rather than
@@ -577,23 +635,63 @@ export default function BooksPage() {
     return null
   }, [entries, state.series])
 
-  const activeFilters = selectionCount(state.selection)
+  // Contributors filter like a facet but are not one, so they are counted and
+  // chipped alongside rather than inside the selection.
+  const contributorNames = useContributorNames(state.contributors)
+  const activeFilters = selectionCount(state.selection) + state.contributors.length
+
+  const dropContributor = (id: string) =>
+    apply({ ...state, contributors: state.contributors.filter(c => c !== id), page: 1 })
 
   // A view is "open" either because it was clicked, or because the filter on
   // screen describes it. The second case is not a nicety: the sidebar links only
   // navigate, and a bookmarked URL or the back button arrive with no click at
-  // all, so matching on the filter is the only thing that covers every route in.
-  const paramsNow = params.toString()
   // Falls back to the Default view rather than to nothing. Books is always
   // showing *something*, and that something is the Default unless a real view
   // was opened or the filter happens to describe one. Without the fallback,
   // editing the Default drops the bar the moment the filter changes — which is
   // precisely when "Save changes" needs to be on screen, since saving is how
   // you set what Books opens on.
+  /**
+   * Which list is open, and it has to survive the filter being edited.
+   *
+   * Arriving from the rail sets no id: the page worked out which list it was on
+   * by matching the filter. So the first keystroke broke the match, the page
+   * fell back to the default, and Save changes pointed at the wrong list. The
+   * one thing you cannot do with a list is edit it.
+   *
+   * An exact match adopts the list; from then on it stays open while the filter
+   * drifts, which is what makes the edit saveable. Opening a different one
+   * matches again and takes over.
+   */
+  const matchedNow = matchList(views, paramsNow)
+
+  // Only a real navigation changes which list is open. Editing a list's filter
+  // can drift it into looking like another one: clear the search on Bleach and
+  // what is left is the Default's empty filter, so matching alone jumped to the
+  // Default and Bleach could not be edited at all. The two cases are identical
+  // in the URL, so the history action is what tells them apart. The rail links
+  // push; apply() replaces.
+  const editedInPlace = useNavigationType() === 'REPLACE'
+  const adoptedNow = adoptedList(matchedNow, adopted, editedInPlace)
+
+  // Adjusted during render rather than in an effect: React re-runs this
+  // component before touching the DOM, so the list is already adopted by the
+  // time anything is drawn and there is no frame showing the wrong one. The
+  // value is computed above rather than read back from state, so this render
+  // uses it too.
+  if (adoptedNow !== adopted) setAdopted(adoptedNow)
+  // Navigating to a different list drops a pinned one, or Revert would leave
+  // the old list open while the rail said otherwise.
+  if (!editedInPlace && matchedNow && activeViewId && activeViewId !== matchedNow.id) {
+    setActiveViewId(null)
+  }
+
   const activeView =
     views.find(v => v.id === activeViewId) ??
-    matchView(views, paramsNow) ??
-    findDefaultView(views) ??
+    views.find(v => v.id === adoptedNow) ??
+    matchedNow ??
+    views.find(v => v.builtin_key === DEFAULT_LIST_KEY) ??
     null
 
   // Layout belongs to the view, so it follows from whichever view is open
@@ -601,28 +699,29 @@ export default function BooksPage() {
   // switch. An override is remembered against the view it was made on, which
   // means flipping to rows inside one view survives editing that view's filter
   // but does not leak onto the next one.
-  const layout: ViewLayout =
+  const layout: ListLayout =
     layoutOverride && layoutOverride.viewId === (activeView?.id ?? null)
       ? layoutOverride.layout
-      : activeView?.layout ?? 'rows'
+      : activeView?.layout ?? 'list'
   const dirty = activeView ? viewIsDirty(activeView, paramsNow, layout) : false
-  const isDefaultView = activeView?.id === DEFAULT_VIEW_ID
+  const isDefaultView = activeView?.builtin_key === DEFAULT_LIST_KEY
 
-  const chooseLayout = (next: ViewLayout) =>
+  const chooseLayout = (next: ListLayout) =>
     setLayoutOverride({ viewId: activeView?.id ?? null, layout: next })
 
-  const openView = (v: SavedView) => {
+  const openView = (v: SavedList) => {
     setActiveViewId(v.id)
     setLayoutOverride(null)
-    setParams(new URLSearchParams(v.params), { replace: true })
+    setParams(new URLSearchParams(listQuery(v)), { replace: true })
   }
 
-  const saveCurrentAs = (name: string, icon?: IconName) => {
+  const saveCurrentAs = async (name: string, icon?: IconName) => {
     setNaming(false)
-    const v: SavedView = { id: newViewId(), name, icon, params: paramsNow, layout }
-    setViews(saveView(v))
-    setActiveViewId(v.id)
-    announceViewsChanged()
+    const created = await createSmartList(callApi, name, paramsNow, icon, 'books', layout)
+      .catch(() => null)
+    await reloadLists()
+    if (created) setActiveViewId(created.id)
+    announceListsChanged()
   }
 
   /**
@@ -633,33 +732,40 @@ export default function BooksPage() {
    * does both, because from the reader's side it is one edit.
    */
   const [renaming, setRenaming] = useState(false)
-  const applyRename = (name: string, icon?: IconName) => {
+  const applyRename = async (name: string, icon?: IconName) => {
     setRenaming(false)
     if (!activeView) return
-    setViews(renameView(activeView.id, name, icon))
-    announceViewsChanged()
+    await updateList(callApi, activeView.id, { name, icon }).catch(() => {})
+    await reloadLists()
+    announceListsChanged()
   }
 
   /** Close the view and go back to an unfiltered Books. */
   const leaveView = useCallback(() => {
+    // Forget the adopted list too, or leaving would land back on it.
+    setAdopted(null)
     setActiveViewId(null)
     setLayoutOverride(null)
     setParams(new URLSearchParams(), { replace: true })
   }, [setParams])
 
-  const commitView = () => {
+  const commitView = async () => {
     if (!activeView) return
-    setViews(saveView({ ...activeView, params: paramsNow, layout }))
-    announceViewsChanged()
+    await updateList(callApi, activeView.id, { query: paramsNow, layout })
+      .catch(() => {})
+    await reloadLists()
+    announceListsChanged()
     // The layout is part of the view now, so the override has nothing left to
     // override; leaving it would keep the bar reading "modified" after a save.
     setLayoutOverride(null)
   }
 
-  const removeView = (id: string) => {
-    setViews(deleteView(id))
-    announceViewsChanged()
+  const removeView = async (id: string) => {
+    await deleteList(callApi, id).catch(() => {})
+    await reloadLists()
+    announceListsChanged()
     if (activeViewId === id) setActiveViewId(null)
+    if (adopted === id) setAdopted(null)
     setLayoutOverride(null)
   }
 
@@ -685,15 +791,81 @@ export default function BooksPage() {
       />
 
       <div className="px-8 py-6">
-        <input
-          type="search"
+        {/* Search on the left, the page's own actions on the right, one line.
+            They used to sit in the row below with the view chip, the count and
+            a chip per filter, which is a row that grows: every filter ticked
+            and every unsaved change pushed the buttons onto a second line and
+            then a third. Nothing here depends on which view is open, so
+            nothing here belongs in that row. */}
+        <div className="mb-6 flex flex-wrap items-center gap-2">
+        <FilterSearch
+          className="min-w-[14rem] max-w-lg flex-1"
           value={draftQuery}
-          onChange={e => setDraftQuery(e.target.value)}
-          placeholder={t('books.search_placeholder', {
-            defaultValue: 'Title, author, series, ISBN…',
+          onChange={setDraftQuery}
+          onCommitText={text => { setDraftQuery(text); apply({ ...state, query: text, page: 1 }) }}
+          facets={facets}
+          lists={views}
+          selection={state.selection}
+          onToggleFacet={(key, value) => apply(toggle(state, key, value))}
+          onPickRating={values => apply({
+            ...state,
+            selection: { ...state.selection, rating: values },
+            page: 1,
           })}
-          className="mb-6 w-full max-w-lg rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm text-content placeholder:text-content-muted focus:border-accent focus:outline-none"
+          onPickContributor={id => {
+            if (state.contributors.includes(id)) return
+            apply({ ...state, contributors: [...state.contributors, id], page: 1 })
+          }}
         />
+
+          <span className="flex-1" />
+          <button type="button" onClick={() => setAdding(true)}
+            className="lb-btn sm">
+            {t('books.add', { defaultValue: 'Add book' })}
+          </button>
+
+          <button type="button"
+            onClick={() => (selecting ? stopSelecting() : setSelecting(true))}
+            aria-pressed={selecting}
+            className={`rounded-md border px-2.5 py-1 text-xs font-medium transition-colors ${
+              selecting
+                ? 'border-accent bg-accent text-white'
+                : 'border-line-strong text-content-secondary hover:bg-surface-inset'
+            }`}>
+            {selecting
+              ? t('books.done_selecting', { defaultValue: 'Done' })
+              : t('books.select', { defaultValue: 'Select' })}
+          </button>
+
+          {/* Not in the layout toggle beside it: layout is how the same
+              rows are drawn, grouping changes what a row is. Hidden while
+              drilled into a series, where there is nothing left to
+              collapse. */}
+          {!state.series && (
+            <button type="button"
+              onClick={() => apply({ ...state, grouped: !state.grouped, page: 1 })}
+              aria-pressed={state.grouped}
+              className={`rounded-md border px-2.5 py-1 text-xs font-medium transition-colors ${
+                state.grouped
+                  ? 'border-accent bg-accent text-white'
+                  : 'border-line-strong text-content-secondary hover:bg-surface-inset'
+              }`}>
+              {t('books.group_series', { defaultValue: 'Group series' })}
+            </button>
+          )}
+
+          <div className="flex overflow-hidden rounded-md border border-line-strong">
+            {(['list', 'grid'] as ListLayout[]).map(opt => (
+              <button key={opt} type="button" onClick={() => chooseLayout(opt)}
+                aria-pressed={layout === opt}
+                className={`px-2.5 py-1 text-xs font-medium transition-colors ${
+                  layout === opt ? 'bg-accent text-white' : 'text-content-secondary hover:bg-surface-inset'
+                }`}>
+                {t(`views.layout_${opt}`, { defaultValue: opt === 'list' ? 'Rows' : 'Grid' })}
+              </button>
+            ))}
+          </div>
+        </div>
 
         <div className="grid gap-7 lg:grid-cols-[13rem_1fr]">
           <aside>
@@ -725,50 +897,18 @@ export default function BooksPage() {
                   then there is something to leave, and × does it. */}
               {activeView && (
                 <span className="flex items-center gap-1.5">
-                  {/* inline-flex because the icon is an svg, and Tailwind's
-                      preflight makes svg display:block — so it took its own
-                      line inside the chip and pushed the label underneath,
-                      which white-space:nowrap does nothing about.
-
-                      warn instead of on, not alongside it: .on paints an
-                      accent fill that .warn does not override, which would put
-                      amber text on an indigo chip. */}
-                  {isDefaultView && !dirty ? (
-                    <span className="inline-flex items-center gap-1.5 text-xs uppercase tracking-wide text-content-tertiary">
-                      <Icon name={viewIcon(activeView)} size={13} className="flex-none" />
-                      {t('views.default_name', { defaultValue: 'Default view' })}
-                    </span>
-                  ) : (
-                    <button type="button"
-                      className={`inline-flex items-center gap-1.5 ${dirty ? 'lb-chip warn' : 'lb-chip on'}`}
-                      onClick={leaveView}
-                      title={t('views.leave', { defaultValue: 'Leave view' })}>
-                      <Icon name={viewIcon(activeView)} size={13} className="flex-none" />
-                      {/* "Default" on its own names a state rather than a
-                          thing, and reads oddly beside Up next or Favourites. */}
-                      {isDefaultView
-                        ? t('views.default_name', { defaultValue: 'Default view' })
-                        : activeView.name} ×
-                    </button>
-                  )}
-                  {dirty && (
-                    <span className="text-xs text-warning-strong">
-                      {t('views.modified', { defaultValue: 'modified' })}
-                    </span>
-                  )}
-                  {/* Beside the chip rather than out with the page's own
-                      buttons: these act on the view, and at the far end of the
-                      row they read as things that act on the books. */}
-                  <button type="button"
-                    onClick={e => {
-                      const r = e.currentTarget.getBoundingClientRect()
-                      setViewMenuAt(m => m ? null : { x: r.left, y: r.bottom + 6 })
-                    }}
-                    aria-haspopup="menu" aria-expanded={viewMenuAt !== null}
-                    className="rounded-md px-1.5 py-0.5 text-content-tertiary hover:bg-surface-inset hover:text-content"
-                    title={t('views.more', { defaultValue: 'View options' })}>
-                    ⋯
-                  </button>
+                                    <ViewChip
+                    view={activeView}
+                    dirty={dirty}
+                    isDefault={isDefaultView}
+                    defaultHint={t('views.default_hint', {
+                      defaultValue: 'what Books opens on',
+                    })}
+                    onLeave={leaveView}
+                    onRename={() => setRenaming(true)}
+                    onSaveAsNew={() => setNaming(true)}
+                    onDelete={() => removeView(activeView.id)}
+                  />
                 </span>
               )}
               <span className="tabular-nums">
@@ -826,6 +966,21 @@ export default function BooksPage() {
                 </button>
               )}
 
+              {state.contributors.map(id => (
+                <button
+                  key={`contributor:${id}`}
+                  type="button"
+                  onClick={() => dropContributor(id)}
+                  className="lb-chip on"
+                  title={t('facets.remove', { defaultValue: 'Remove filter' })}
+                >
+                  {/* Named once the lookup lands. Until then the chip still has
+                      to be here and still has to be removable, so it says what
+                      it is rather than sitting blank. */}
+                  {contributorNames[id] ?? t('search.author', { defaultValue: 'Author' })} ×
+                </button>
+              ))}
+
               {activeChips.map(chip => (
                 <button
                   key={`${chip.key}:${chip.value}`}
@@ -865,52 +1020,6 @@ export default function BooksPage() {
                 </button>
               )}
 
-              <button type="button" onClick={() => setAdding(true)}
-                className="lb-btn sm">
-                {t('books.add', { defaultValue: 'Add book' })}
-              </button>
-
-              <button type="button"
-                onClick={() => (selecting ? stopSelecting() : setSelecting(true))}
-                aria-pressed={selecting}
-                className={`rounded-md border px-2.5 py-1 text-xs font-medium transition-colors ${
-                  selecting
-                    ? 'border-accent bg-accent text-white'
-                    : 'border-line-strong text-content-secondary hover:bg-surface-inset'
-                }`}>
-                {selecting
-                  ? t('books.done_selecting', { defaultValue: 'Done' })
-                  : t('books.select', { defaultValue: 'Select' })}
-              </button>
-
-              {/* Not in the layout toggle beside it: layout is how the same
-                  rows are drawn, grouping changes what a row is. Hidden while
-                  drilled into a series, where there is nothing left to
-                  collapse. */}
-              {!state.series && (
-                <button type="button"
-                  onClick={() => apply({ ...state, grouped: !state.grouped, page: 1 })}
-                  aria-pressed={state.grouped}
-                  className={`rounded-md border px-2.5 py-1 text-xs font-medium transition-colors ${
-                    state.grouped
-                      ? 'border-accent bg-accent text-white'
-                      : 'border-line-strong text-content-secondary hover:bg-surface-inset'
-                  }`}>
-                  {t('books.group_series', { defaultValue: 'Group series' })}
-                </button>
-              )}
-
-              <div className="flex overflow-hidden rounded-md border border-line-strong">
-                {(['rows', 'grid'] as ViewLayout[]).map(opt => (
-                  <button key={opt} type="button" onClick={() => chooseLayout(opt)}
-                    aria-pressed={layout === opt}
-                    className={`px-2.5 py-1 text-xs font-medium transition-colors ${
-                      layout === opt ? 'bg-accent text-white' : 'text-content-secondary hover:bg-surface-inset'
-                    }`}>
-                    {t(`views.layout_${opt}`, { defaultValue: opt === 'rows' ? 'Rows' : 'Grid' })}
-                  </button>
-                ))}
-              </div>
             </div>
 
             {selected.length > 0 && (
@@ -964,7 +1073,7 @@ export default function BooksPage() {
               </div>
             )}
 
-            {entries.length > 0 && layout === 'rows' && (
+            {entries.length > 0 && layout === 'list' && (
               <ul>
                 {entries.map(entry => entry.kind === 'series' ? (
                   <li key={`s:${entry.series_id}`}>
@@ -1021,6 +1130,7 @@ export default function BooksPage() {
                         title={entry.book.title}
                         coverUrl={entry.book.cover_url}
                         readStatus={entry.book.user_read_status}
+                        ownership={entry.book.ownership}
                         seed={coverSeed(entry.book)}
                       />
                       <span className="min-w-0 flex-1">
@@ -1109,6 +1219,7 @@ export default function BooksPage() {
                         title={entry.book.title}
                         coverUrl={entry.book.cover_url}
                         readStatus={entry.book.user_read_status}
+                        ownership={entry.book.ownership}
                         seed={coverSeed(entry.book)}
                         className="w-full"
                       />
@@ -1215,42 +1326,6 @@ export default function BooksPage() {
         />
       )}
 
-      {/* Rename and Delete: real but rare, so they sit behind the ⋯ rather
-          than as two more buttons in the reader's way. Fixed-positioned, so
-          it is placed from the trigger's rect. */}
-      {activeView && viewMenuAt && (
-        <>
-          {/* Catches the click that dismisses, so the menu closes the way every
-              menu does rather than only via its own items. */}
-          <div className="fixed inset-0 z-[190]" onClick={() => setViewMenuAt(null)} />
-          <div className="lb-menu open" style={{ left: viewMenuAt.x, top: viewMenuAt.y }}
-            role="menu">
-            <div className="hd">
-              {activeView.name}
-              {isDefaultView && ` · ${t('views.default_hint', { defaultValue: 'what Books opens on' })}`}
-            </div>
-            <button type="button" role="menuitem"
-              onClick={() => { setViewMenuAt(null); setRenaming(true) }}>
-              {t('views.rename', { defaultValue: 'Rename' })}
-            </button>
-            <button type="button" role="menuitem"
-              onClick={() => { setViewMenuAt(null); setNaming(true) }}>
-              {t('views.save_as_new', { defaultValue: 'Save as new' })}
-            </button>
-            {/* The Default cannot go: Books has to open on something. */}
-            {!activeView.permanent && (
-              <>
-                <div className="sep" />
-                <button type="button" role="menuitem" className="danger"
-                  onClick={() => { setViewMenuAt(null); removeView(activeView.id) }}>
-                  {t('views.delete', { defaultValue: 'Delete view' })}
-                </button>
-              </>
-            )}
-          </div>
-        </>
-      )}
-
       <PromptDialog
         open={naming}
         title={t('views.save_as_view', { defaultValue: 'Save as a view' })}
@@ -1259,7 +1334,7 @@ export default function BooksPage() {
         })}
         label={t('views.name_label', { defaultValue: 'Name' })}
         placeholder={t('views.name_placeholder', { defaultValue: 'Signed first editions' })}
-        icons={VIEW_ICONS}
+        icons={LIST_ICONS}
         initialIcon="newview"
         iconLabel={t('common.icon', { defaultValue: 'Icon' })}
         onCancel={() => setNaming(false)}
@@ -1271,8 +1346,8 @@ export default function BooksPage() {
         title={t('views.rename', { defaultValue: 'Rename' })}
         label={t('views.name_label', { defaultValue: 'Name' })}
         initialValue={activeView?.name ?? ''}
-        icons={VIEW_ICONS}
-        initialIcon={activeView ? viewIcon(activeView) : undefined}
+        icons={LIST_ICONS}
+        initialIcon={activeView ? listIcon(activeView) : undefined}
         iconLabel={t('common.icon', { defaultValue: 'Icon' })}
         onCancel={() => setRenaming(false)}
         onSubmit={applyRename}

@@ -127,6 +127,14 @@ export interface Book {
   publisher: string
   publish_year: number | null
   language: string
+  /**
+   * Where this book stands in relation to you: on the shelf, on a wishlist,
+   * suggested, or a volume missing from a run you hold part of.
+   *
+   * Sent by the list. A single-book read always means shelf, because it cannot
+   * return a book nobody has.
+   */
+  ownership?: string
   user_read_status?: string
   // Caller-scoped, and all three pick the same interaction row, so a user who
   // owns several editions of one work gets a consistent status, rating and
@@ -138,6 +146,19 @@ export interface Book {
   // GetBook endpoint) for the loan panel.
   active_loan_count?: number
   active_loans?: Loan[]
+}
+
+/**
+ * One containment link: an omnibus and a volume inside it.
+ *
+ * Both directions come back in this shape, so the id that matters depends on
+ * which end you asked from. Title is always the other book's.
+ */
+export interface BookContent {
+  container_id: string
+  contained_id: string
+  position: number
+  title: string
 }
 
 export interface PagedBooks {
@@ -177,11 +198,74 @@ export interface BookEdition {
   duration_seconds: number | null
   page_count: number | null
   is_primary: boolean
-  // copy_count and acquired_at used to live here; they're now per-library
-  // (tracked in library_book_editions). Future work: per-library copy UI.
+  // copy_count and acquired_at used to live here. A count could not say which
+  // of two copies was signed, lent, or in the office, so each object is its own
+  // row now; see Copy below.
   created_at: string
   updated_at: string
   files: EditionFile[]
+}
+
+/**
+ * One physical object on a shelf.
+ *
+ * Not a count. A number could say you owned two and nothing else: which one is
+ * signed, which is lent to a friend, which is in the office. Each object gets a
+ * row, and everything that is true of the object rather than of the work or the
+ * printing lives on it.
+ */
+export interface Copy {
+  id: string
+  library_id: string
+  book_id: string
+  /** Null when the printing was never recorded, which is a supported state. */
+  edition_id: string | null
+  acquired_at: string | null
+  acquired_from: string
+  /** Minor units plus an ISO 4217 code, so a collection can span currencies. */
+  price_minor: number | null
+  price_currency: string
+  condition: string
+  is_signed: boolean
+  notes: string
+  location_id: string | null
+  /** Filled by reads that join it; empty on a bare row. */
+  location_name: string
+  /** Names the borrower when this copy is out, empty otherwise. */
+  on_loan_to: string
+  created_at: string
+  updated_at: string
+}
+
+/** A place in a library where copies physically live. */
+export interface CopyLocation {
+  id: string
+  library_id: string
+  name: string
+  parent_id: string | null
+  copy_count: number
+  created_at: string
+}
+
+/**
+ * How many people hold one contributor role, over the libraries in scope.
+ *
+ * From the index rather than the vocabulary: the vocabulary defines every role
+ * this server knows, and a collection uses a handful of them. Offering the rest
+ * is offering a filter that returns nothing.
+ */
+export interface RoleCount {
+  code: string
+  count: number
+}
+
+/** One row of a controlled vocabulary. Codes only: a label in the database
+ *  cannot be translated, so the name lives in the locale files. */
+export interface Vocabulary {
+  code: string
+  sort_order: number
+  is_active: boolean
+  applies_to?: string
 }
 
 export interface BrowseEntry {
@@ -226,6 +310,43 @@ export interface UserBookInteraction {
   updated_at: string
 }
 
+/**
+ * What one person thinks of a work.
+ *
+ * Keyed to the book rather than to a printing: an opinion is about the story,
+ * not about which paperback it was read in, so it does not change when a second
+ * edition is added. UserBookInteraction was the per-edition shape and is gone.
+ */
+export interface MyBook {
+  book_id: string
+  read_status: string
+  rating: number | null
+  is_favorite: boolean
+  review: string
+  notes: string
+  wants: boolean
+  /**
+   * True when the status came from a container the caller has read, an omnibus
+   * holding this volume, rather than from anything said about this book. An
+   * inherited status carries no rating, because a rating is an opinion about
+   * the thing rated and never moves through containment.
+   */
+  inherited: boolean
+}
+
+/** One pass through a work. A reread is another session, not a counter. */
+export interface ReadingSession {
+  id: string
+  book_id: string
+  edition_id?: string | null
+  started_at?: string | null
+  finished_at?: string | null
+  status: string
+  progress_unit: string
+  progress_value?: number | null
+  created_at: string
+}
+
 export interface Library {
   id: string
   name: string
@@ -259,6 +380,17 @@ export interface Series {
   // Caller-relative reading state — number of books in the series whose
   // effective user_read_status is 'read' / 'reading'. Both 0 when not authed
   // or no progress recorded. UI gates display behind show_read_badges.
+  /**
+   * What the run is worth, averaged from the volumes anyone has rated.
+   *
+   * Null when nothing in it is rated, which is a different thing from a rating
+   * of nought. rated_books says how many volumes it came from, because a 4
+   * from one volume of twenty and a 4 from all twenty are not the same claim.
+   */
+  rating?: number | null
+  rated_books?: number
+  /** The caller's own average over the run, null when they have rated none. */
+  my_rating?: number | null
   read_count: number
   reading_count: number
   preview_books: SeriesPreviewBook[]
@@ -271,6 +403,15 @@ export interface SeriesPreviewBook {
   book_id: string
   title: string
   cover_url: string | null
+  /**
+   * Whether the library actually has this volume.
+   *
+   * The strip is the whole run, missing volumes included, so without this a
+   * volume nobody owns draws exactly like one on the shelf. Optional because a
+   * server older than the field sends nothing, and "unknown" has to mean held
+   * rather than greying a shelf full of books somebody owns.
+   */
+  held?: boolean
 }
 
 // ── Cross-library index surfaces ────────────────────────────────────────────
@@ -369,12 +510,29 @@ export interface SeriesVolume {
 
 export interface SeriesEntry {
   position: number
+  /**
+   * The last volume a container covers, for an omnibus or a bind-up. Null on
+   * an ordinary book, which occupies one position rather than a span.
+   *
+   * Derived by the server from what the book contains, so it agrees with the
+   * contained rows by construction.
+   */
+  position_end?: number | null
   book_id: string
   arc_id: string | null
   title: string
   subtitle: string
   media_type: string
   cover_url: string | null
+  /**
+   * Whether the library actually has this volume.
+   *
+   * A series lists the whole run, promoted gaps included, so without this a
+   * volume nobody owns draws exactly like one on the shelf. Optional because a
+   * server older than the field sends nothing, and "unknown" has to mean held
+   * rather than greying a run somebody owns outright.
+   */
+  held?: boolean
   user_read_status: string
   contributors: BookContributor[]
 }
@@ -842,4 +1000,23 @@ export interface PagedGroupedBooks {
   book_total: number
   page: number
   per_page: number
+}
+
+/**
+ * What one member has recorded about a book, as shown to the others.
+ *
+ * No notes field, deliberately: the server does not select them, because the
+ * form that writes them calls them private.
+ */
+export interface BookReader {
+  user_id: string
+  display_name: string
+  username: string
+  read_status: string
+  rating?: number
+  is_favorite: boolean
+  review: string
+  started_at?: string
+  finished_at?: string
+  updated_at: string
 }

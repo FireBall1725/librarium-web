@@ -15,6 +15,7 @@ import { useAuth } from '../../../auth/AuthContext'
 import PageHeader from '../../../components/PageHeader'
 import { KeyValue, SettingRow, SettingSection, SettingsBody } from '../../../components/settings/SettingRow'
 import { usePageTitle } from '../../../hooks/usePageTitle'
+import { withBase } from '../../../lib/basePath'
 
 interface AdminConfig {
   cover_storage_path: string
@@ -49,7 +50,7 @@ export default function GeneralPage() {
       .catch(() => {})
     // The same endpoint the footer reads. Unauthenticated on purpose, so it
     // answers even when the token has expired.
-    fetch('/health')
+    fetch(withBase('/health'))
       .then(r => r.json())
       .then(d => { if (!cancelled) setApiVersion(d.version ?? null) })
       .catch(() => {})

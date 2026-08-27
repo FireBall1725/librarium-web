@@ -13,8 +13,9 @@ import SeriesPage from './pages/SeriesPage'
 import LoansPage from './pages/LoansPage'
 import SettingsIndexPage from './pages/settings/SettingsIndexPage'
 import LicencesPage from './pages/settings/LicencesPage'
-import MembersPage from './pages/settings/MembersPage'
+import ListsPage from './pages/settings/ListsPage'
 import ShelvesPage from './pages/settings/ShelvesPage'
+import MembersPage from './pages/settings/MembersPage'
 import AppearancePage from './pages/settings/AppearancePage'
 import LegacySettingsRedirect from './pages/settings/LegacySettingsRedirect'
 import AuthorsPage from './pages/AuthorsPage'
@@ -33,6 +34,7 @@ import MetadataPage from './pages/admin/settings/MetadataPage'
 import MediaManagementPage from './pages/admin/settings/MediaManagementPage'
 import TagsPage from './pages/admin/settings/TagsPage'
 import GenresPage from './pages/admin/settings/GenresPage'
+import DuplicateAuthorsPage from './pages/settings/DuplicateAuthorsPage'
 import MediaTypesPage from './pages/admin/settings/MediaTypesPage'
 import ProfilesPage from './pages/admin/settings/ProfilesPage'
 import GeneralPage from './pages/admin/settings/GeneralPage'
@@ -40,6 +42,7 @@ import AIPage from './pages/admin/connections/AIPage'
 import { AiPrivacyPage, ApiTokensPage, ProfilePage } from './pages/settings/AccountPages'
 import SuggestionsPage from './pages/SuggestionsPage'
 import BookDetailPage from './pages/BookDetailPage'
+import { basePath } from './lib/basePath'
 
 function AppRoutes() {
   const { apiReachable } = useAuth()
@@ -98,10 +101,12 @@ function AppRoutes() {
                   <Route path="ai"                element={<AIPage />} />
                   <Route path="media-management"  element={<MediaManagementPage />} />
                   <Route path="tags"               element={<TagsPage />} />
-                  <Route path="shelves"           element={<ShelvesPage />} />
                   <Route path="genres"             element={<GenresPage />} />
+                  <Route path="duplicate-authors"  element={<DuplicateAuthorsPage />} />
                   <Route path="media-types"       element={<MediaTypesPage />} />
                   <Route path="profiles"          element={<ProfilesPage />} />
+                  <Route path="lists"             element={<ListsPage />} />
+                  <Route path="shelves"           element={<ShelvesPage />} />
                   <Route path="members"           element={<MembersPage />} />
                   <Route path="general"           element={<GeneralPage />} />
                   <Route path="jobs"              element={<JobsPage />} />
@@ -120,8 +125,16 @@ function AppRoutes() {
                     sensible instead of on the dashboard. */}
                 <Route path="/libraries/:libraryId" element={<LegacyLibraryRedirect to="/books" />} />
                 <Route path="/libraries/:libraryId/books" element={<LegacyLibraryRedirect to="/books" />} />
-                <Route path="/libraries/:libraryId/shelves" element={<LegacyLibraryRedirect to="/settings/shelves" />} />
-                <Route path="/libraries/:libraryId/series" element={<LibraryPage section="series" />} />
+                {/* Shelves became views, which live in the rail rather than
+                    on a page of their own, so the old per-library URL lands on
+                    Books with the rail beside it. */}
+                <Route path="/libraries/:libraryId/shelves" element={<LegacyLibraryRedirect to="/books" />} />
+                {/* The list is retired; /series does the same job across every
+                    library, with filters, a sort and a create button the old
+                    section never had. The detail view is still the only place
+                    arcs, volume sync and the metadata merge live, so it stays
+                    on its own URL until that moves too. */}
+                <Route path="/libraries/:libraryId/series" element={<LegacyLibraryRedirect to="/series" />} />
                 <Route path="/libraries/:libraryId/series/:seriesId" element={<LibraryPage section="series" />} />
                 <Route path="/libraries/:libraryId/loans" element={<LegacyLibraryRedirect to="/loans" />} />
                 <Route path="/libraries/:libraryId/members" element={<LegacyLibraryRedirect to="/settings/members" />} />
@@ -139,7 +152,9 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <BrowserRouter>
+    // Links and routes go through the router's own basename rather than
+    // withBase: applying both would prefix twice.
+    <BrowserRouter basename={basePath || undefined}>
       <AuthProvider>
         <ToastProvider>
           <AppRoutes />

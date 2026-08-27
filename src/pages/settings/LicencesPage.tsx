@@ -43,14 +43,19 @@ const RUNTIME: Array<[string, string]> = [
 ]
 
 /**
- * Both typefaces are self-hosted rather than pulled from a font CDN: a CDN sees
+ * Every typeface is self-hosted rather than pulled from a font CDN: a CDN sees
  * every page load, which a self-hosted privacy-focused application should not
  * require of the people running it. The OFL requires the licence to travel with
  * the font, which is what these rows are for.
+ *
+ * OpenDyslexic carries a Reserved Font Name, so it ships unmodified and under
+ * its own name. It is offered in Appearance rather than applied, because it
+ * does not suit every reader with dyslexia.
  */
 const TYPEFACES: Array<[string, string]> = [
   ['Cormorant Garamond', 'OFL-1.1'],
   ['Crimson Pro', 'OFL-1.1'],
+  ['OpenDyslexic (Abbie Gonzalez)', 'OFL-1.1'],
 ]
 
 export default function LicencesPage() {

@@ -192,52 +192,41 @@ export async function fanOutByLibrary(
 }
 
 /**
- * Put every selected book on a shelf, or take them off it.
+ * Put a selection on a list, or take it off.
  *
- * A shelf is a hand-picked set, so unlike a tag it is not a field on the book:
- * membership is its own row, added and removed one book at a time. The library
- * comes from the shelf rather than from each book, because a shelf only ever
- * holds books from its own library.
+ * Membership is its own row, added and removed one book at a time. Adding is
+ * idempotent server-side, so re-adding a book already on the list costs a
+ * request and changes nothing rather than failing the batch.
  *
- * Adding is idempotent server-side, so re-adding a book already on the shelf
- * costs a request and changes nothing rather than failing the batch.
+ * Addressed through /me/lists rather than through the library's shelf route:
+ * the shelf route only ever saw lists shared with a library, so a private list
+ * could not be filled from here at all.
  */
-export async function addToShelf(
+export async function addToList(
   callApi: CallApi,
   books: Book[],
-  libraryId: string,
-  shelfId: string,
+  listId: string,
 ): Promise<BulkResult> {
-  let ok = 0
-  let failed = 0
-  for (const book of books) {
-    try {
-      await callApi(`/api/v1/libraries/${libraryId}/shelves/${shelfId}/books`, {
-        method: 'POST',
-        body: JSON.stringify({ book_id: book.id }),
-      })
-      ok++
-    } catch {
-      failed++
-    }
-  }
-  return { ok, failed }
+  return eachBook(books, book =>
+    callApi(`/api/v1/me/lists/${listId}/books/${book.id}`, { method: 'POST' }))
 }
 
-export async function removeFromShelf(
+export async function removeFromList(
   callApi: CallApi,
   books: Book[],
-  libraryId: string,
-  shelfId: string,
+  listId: string,
 ): Promise<BulkResult> {
+  return eachBook(books, book =>
+    callApi(`/api/v1/me/lists/${listId}/books/${book.id}`, { method: 'DELETE' }))
+}
+
+/** One request per book, counting what worked rather than stopping at the first failure. */
+async function eachBook(books: Book[], run: (b: Book) => Promise<unknown>): Promise<BulkResult> {
   let ok = 0
   let failed = 0
   for (const book of books) {
     try {
-      await callApi(
-        `/api/v1/libraries/${libraryId}/shelves/${shelfId}/books/${book.id}`,
-        { method: 'DELETE' },
-      )
+      await run(book)
       ok++
     } catch {
       failed++

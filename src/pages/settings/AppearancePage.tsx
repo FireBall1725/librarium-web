@@ -19,6 +19,10 @@ import { SettingRow, SettingSection, SettingsBody, Switch } from '../../componen
 import { usePageTitle } from '../../hooks/usePageTitle'
 import { LOCALE_FLAGS, LOCALE_LABELS, LOCALE_STORAGE_KEY, SUPPORTED_LOCALES, type SupportedLocale } from '../../i18n'
 import { THEMES, applyTheme, readStoredTheme, storeTheme, type ThemeId } from '../../lib/theme'
+import {
+  READING_FONTS, applyReadingFont, readStoredReadingFont, storeReadingFont,
+  type ReadingFontId,
+} from '../../lib/readingFont'
 
 export default function AppearancePage() {
   const { t, i18n } = useTranslation()
@@ -26,6 +30,7 @@ export default function AppearancePage() {
   usePageTitle(t('settings_nav.appearance', { defaultValue: 'Appearance' }))
 
   const [theme, setTheme] = useState<ThemeId>(readStoredTheme)
+  const [readingFont, setReadingFont] = useState<ReadingFontId>(readStoredReadingFont)
   const [readBadges, setReadBadges] = useState(true)
 
   useEffect(() => {
@@ -38,6 +43,14 @@ export default function AppearancePage() {
       .catch(() => { /* The default is on; a failed read should not flip it. */ })
     return () => { cancelled = true }
   }, [callApi])
+
+  const chooseReadingFont = (id: ReadingFontId) => {
+    setReadingFont(id)
+    // Applied before it is stored, so the page changes under the click rather
+    // than on the next load: a typeface is judged by looking at it.
+    applyReadingFont(id)
+    storeReadingFont(id)
+  }
 
   const chooseTheme = (id: ThemeId) => {
     setTheme(id)
@@ -97,6 +110,52 @@ export default function AppearancePage() {
                   <span className="size-3.5 rounded-full bg-success" />
                 </span>
                 <span className="lb-display block text-base text-content">{meta.label}</span>
+                <span className="block text-[11px] text-content-tertiary">{meta.hint}</span>
+              </button>
+            ))}
+          </div>
+        </SettingSection>
+
+        <SettingSection title={t('settings_appearance.typeface', { defaultValue: 'Typeface' })}>
+          <p className="pb-1 text-[13px] text-content-tertiary">
+            {t('settings_appearance.typeface_note', {
+              defaultValue: 'OpenDyslexic weights the bottom of each letter and gives similar characters distinct shapes, which some readers with dyslexia find easier.',
+            })}
+          </p>
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-3 pt-1">
+            {READING_FONTS.map(meta => (
+              <button
+                key={meta.id}
+                type="button"
+                aria-pressed={readingFont === meta.id}
+                onClick={() => chooseReadingFont(meta.id)}
+                className={`rounded-xl bg-surface-muted p-3 text-left transition-colors ${
+                  readingFont === meta.id
+                    ? 'border-2 border-accent'
+                    : 'border border-line-strong hover:border-content-faint'
+                }`}
+              >
+                {/* Set in the face it offers, so the choice is made by reading
+                    it rather than by reading its name.
+
+                    Both cards name their family, not just the dyslexic one.
+                    The override that applies the choice is deliberately broad
+                    enough to beat the nineteen places reference.css names a
+                    family, which means it also reaches into this card: with
+                    OpenDyslexic on, the Default sample rendered in
+                    OpenDyslexic and the picker showed the same face twice. An
+                    inline style outranks it. */}
+                <span
+                  className="block text-lg text-content"
+                  style={{
+                    fontFamily: meta.id === 'dyslexic'
+                      ? '"OpenDyslexic", sans-serif'
+                      : '"Cormorant Garamond", Georgia, serif',
+                  }}
+                >
+                  {t('settings_appearance.typeface_sample', { defaultValue: 'Handful of books' })}
+                </span>
+                <span className="mt-1 block text-[13px] font-medium text-content">{meta.label}</span>
                 <span className="block text-[11px] text-content-tertiary">{meta.hint}</span>
               </button>
             ))}
