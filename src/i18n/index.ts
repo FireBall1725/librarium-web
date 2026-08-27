@@ -3,6 +3,8 @@ import { initReactI18next } from 'react-i18next'
 import LanguageDetector from 'i18next-browser-languagedetector'
 import HttpBackend from 'i18next-http-backend'
 
+import { withBase } from '../lib/basePath'
+
 export const SUPPORTED_LOCALES = ['en-CA', 'fr-FR'] as const
 export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number]
 
@@ -29,7 +31,11 @@ i18n
     ns: ['common', 'dashboard'],
     defaultNS: 'common',
     backend: {
-      loadPath: '/locales/{{lng}}/{{ns}}.json',
+      // Through withBase: this is fetched from JS, and the container
+      // entrypoint only rewrites index.html. On an instance served from a
+      // sub-path the request went to the host root, 404'd, and the whole UI
+      // rendered raw translation keys with nothing in the console to say why.
+      loadPath: withBase('/locales/{{lng}}/{{ns}}.json'),
     },
     detection: {
       order: ['localStorage', 'navigator'],
