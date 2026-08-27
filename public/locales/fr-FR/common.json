@@ -340,7 +340,8 @@
     "read_badges_note": "Un coin coloré sur les couvertures des livres lus et en cours.",
     "typeface": "Police",
     "typeface_note": "OpenDyslexic alourdit le bas de chaque lettre et donne des formes distinctes aux caractères qui se ressemblent, ce que certaines personnes dyslexiques trouvent plus lisible.",
-    "typeface_sample": "Quelques livres"
+    "typeface_sample": "Quelques livres",
+    "machine_drafted": "Cette langue a été rédigée avec l'aide d'une IA et n'a pas été relue par une personne qui la parle. Les corrections sont les bienvenues via Crowdin."
   },
   "settings_account": {
     "profile_description": "Votre compte sur cette instance.",

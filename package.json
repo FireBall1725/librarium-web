@@ -2,7 +2,7 @@
   "name": "librarium-web",
   "private": true,
   "version": "0.0.0",
-  "description": "Web client for Librarium — a self-hosted, privacy-focused tracker for your physical book, manga, and comic collection.",
+  "description": "Web client for Librarium \u2014 a self-hosted, privacy-focused tracker for your physical book, manga, and comic collection.",
   "homepage": "https://librarium.press",
   "repository": {
     "type": "git",
@@ -19,7 +19,8 @@
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "verify:tokens": "node scripts/verify-colour-tokens.mjs",
-    "verify:css": "node scripts/verify-built-css.mjs"
+    "verify:css": "node scripts/verify-built-css.mjs",
+    "check:locales": "node scripts/check-locales.mjs"
   },
   "dependencies": {
     "barcode-detector": "^3.2.2",

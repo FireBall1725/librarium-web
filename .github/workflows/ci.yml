@@ -19,3 +19,16 @@ jobs:
       # Matches the Dockerfile. CI previously tested 22 while the image shipped
       # 26, so it was validating a runtime nobody ran.
       node-version: "26"
+
+  locales:
+    name: Locales
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "26"
+      # No dependencies: the check is plain node against the JSON on disk.
+      # A locale that drifts from the source fails silently at runtime, so it
+      # is worth catching where a failure is visible.
+      - run: npm run check:locales
