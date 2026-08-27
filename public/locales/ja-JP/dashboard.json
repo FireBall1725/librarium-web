@@ -1,0 +1,92 @@
+{
+  "welcome_back": "おかえりなさい、{{name}}さん",
+  "page_title": "ダッシュボード",
+  "continue_reading_eyebrow": "読書の続き",
+  "last_opened": "最後に開いたのは{{relative}}",
+  "also_in_progress": "他に読みかけの本",
+  "no_books_in_progress": {
+    "title": "読みかけの本はありません",
+    "hint": "本を「読書中」にすると、ここに表示されます。"
+  },
+  "stats": {
+    "read_in_year": "{{year}}年の読了",
+    "all_time": "通算{{count}}冊",
+    "last_12_months": "過去12か月",
+    "reading": "読書中",
+    "favourites": "お気に入り",
+    "total_books": "蔵書数",
+    "unread": "未読",
+    "sparkline_aria": "過去12か月の読書状況"
+  },
+  "continue_series": {
+    "title": "シリーズの続き",
+    "empty": "シリーズの本を読み終えると、次の巻をおすすめします。"
+  },
+  "recently_finished": {
+    "title": "最近読了した本",
+    "empty": "読了した本はまだありません。",
+    "rating": "★ {{rating}}/10"
+  },
+  "recently_added": {
+    "title": "最近追加した本",
+    "empty": "本がまだありません。追加して始めましょう。"
+  },
+  "picks_of_the_day": {
+    "title": "今日の一冊",
+    "empty": "選ぶ本がありません。ライブラリに小説を追加して、明日また見てみてください。"
+  },
+  "suggestions": {
+    "buy_title": "購入のおすすめ",
+    "read_next_title": "ライブラリから次に読む本",
+    "see_all": "すべて見る →"
+  },
+  "suggestions_page": {
+    "title": "おすすめ",
+    "description": "あなたのライブラリと好みのプロフィールをもとに、AI アシスタントが選んだ本です。",
+    "run_now": "今すぐ実行",
+    "running": "実行中…",
+    "run_queued": "おすすめの生成を予約しました。まもなく新しい候補が表示されます。",
+    "run_failed": "おすすめの生成を開始できませんでした。",
+    "filters": {
+      "all": "すべて ({{count}})",
+      "read_next": "次に読む ({{count}})",
+      "buy": "購入候補 ({{count}})",
+      "saved": "保存済み ({{count}})"
+    },
+    "saved_empty": {
+      "title": "保存したものはまだありません",
+      "hint": "おすすめで「興味あり」を押すと、ここにたまります。"
+    },
+    "empty": {
+      "title": "おすすめはまだありません",
+      "hint": "プロフィールで有効にして実行するか、次回の定期実行をお待ちください。"
+    },
+    "runs": {
+      "title": "最近の実行"
+    },
+    "progress": {
+      "title": "おすすめを生成しています…",
+      "starting": "実行を開始しています…",
+      "steps_other": "{{count}}ステップ完了"
+    },
+    "quota": {
+      "label": "残りの実行回数: {{remaining}}/{{limit}}",
+      "unlimited": "本日の実行回数: {{used}}",
+      "resets_at": "次に実行できるのは{{at}}"
+    }
+  },
+  "library_chips": {
+    "create_first": "+ 最初のライブラリを作成",
+    "view_all": "すべて見る →"
+  },
+  "relative_time": {
+    "just_now": "たった今",
+    "minutes": "{{count}}分前",
+    "hours": "{{count}}時間前",
+    "yesterday": "昨日",
+    "days": "{{count}}日前",
+    "weeks": "{{count}}週間前",
+    "months": "{{count}}か月前",
+    "years": "{{count}}年前"
+  }
+}

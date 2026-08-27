@@ -42,9 +42,22 @@ const flatten = (o, p = '') =>
 const placeholders = s =>
   new Set(typeof s === 'string' ? (s.match(/\{\{[^}]+\}\}/g) ?? []) : [])
 
-const suffixOf = key => {
+/**
+ * The plural category a key carries, or null when it carries none.
+ *
+ * A suffix alone does not make a plural: `books.select_one` is "Select {title}"
+ * and `duplicate_authors.pick_one` is "Choose which spelling to keep". Both are
+ * called by name with no count, and treating them as singular forms drops them
+ * from any language that has no singular category, which is how Japanese ended
+ * up missing two real strings. i18next only pluralises a key when the sibling
+ * forms exist, so that is the test.
+ */
+const suffixOf = (key, all) => {
   const m = key.match(/_(zero|one|two|few|many|other)$/)
-  return m ? m[1] : null
+  if (!m) return null
+  const base = key.slice(0, -m[0].length)
+  const pluralised = `${base}_other` in all || `${base}_plural` in all
+  return pluralised ? m[1] : null
 }
 
 let failed = false
@@ -71,13 +84,13 @@ for (const locale of locales) {
     // A key the source has and the locale does not falls back to English
     // without saying so, which is how a locale rots quietly.
     for (const key of Object.keys(src)) {
-      const suffix = suffixOf(key)
+      const suffix = suffixOf(key, src)
       if (suffix && !allowed.includes(suffix)) continue
       if (!(key in dst)) fail(`${locale}/${ns}: missing ${key}`)
     }
 
     for (const [key, value] of Object.entries(dst)) {
-      const suffix = suffixOf(key)
+      const suffix = suffixOf(key, src)
       if (suffix && !allowed.includes(suffix)) {
         fail(`${locale}/${ns}: ${key} uses the "${suffix}" plural, which ${locale} does not have`)
         continue
