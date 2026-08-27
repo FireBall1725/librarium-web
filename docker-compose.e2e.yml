@@ -29,7 +29,11 @@ services:
 
   api:
     build:
-      context: ../api
+      # Built from source rather than pulled, so a contract change in the API
+      # fails here instead of after it is released. `../api` is the workspace
+      # layout; CI overrides it because actions/checkout refuses to write above
+      # the workspace root.
+      context: ${LIBRARIUM_API_CONTEXT:-../api}
     ports:
       - "8090:8080"
     environment:
