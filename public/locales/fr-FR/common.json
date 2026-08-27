@@ -585,8 +585,8 @@
     "start_failed": "Impossible de démarrer le scanner de codes-barres.",
     "one": "Scanner un code-barres",
     "many": "Scanner plusieurs livres à la suite",
-    "hint": "Vise un code-barres avec la caméra…",
-    "sweep_hint": "Continue à scanner — chaque livre rejoint la liste ci-dessous.",
+    "hint": "Visez un code-barres avec la caméra…",
+    "sweep_hint": "Continuez à scanner — chaque livre rejoint la liste ci-dessous.",
     "stop": "Arrêter le scan",
     "resume": "Scanner d'autres livres",
     "adding": "Ajout en cours…",
@@ -602,6 +602,6 @@
       "error": "Échec",
       "added": "Ajouté"
     },
-    "library_locked": "Termine ou vide la session de scan pour changer de bibliothèque."
+    "library_locked": "Terminez ou videz la session de scan pour changer de bibliothèque."
   }
 }
