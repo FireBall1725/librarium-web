@@ -16,6 +16,8 @@
 
 import type { BarcodeFormat } from 'barcode-detector/pure'
 
+import { withBase } from './basePath'
+
 /** The one shape the scanner needs from either implementation. */
 export interface BarcodeReader {
   detect(source: HTMLVideoElement): Promise<{ rawValue: string }[]>
@@ -59,8 +61,13 @@ export async function getBarcodeReader(formats: BarcodeFormat[]): Promise<Barcod
   // which is the one that actually runs, and which really does hit the CDN.
   pure.prepareZXingModule({
     overrides: {
+      // Through withBase, because vite bakes this in as a root-absolute path
+      // and the container entrypoint only rewrites index.html, not the JS
+      // chunks. On an instance served from a sub-path the browser would ask
+      // the host root for the binary and get a 404, so scanning would fail on
+      // exactly the deployments the fallback exists for.
       locateFile: (path: string, prefix: string) =>
-        path.endsWith('.wasm') ? wasmUrl : prefix + path,
+        path.endsWith('.wasm') ? withBase(wasmUrl) : prefix + path,
     },
     fireImmediately: false,
   })
