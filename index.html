@@ -7,6 +7,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Librarium — self-hosted, privacy-focused tracker for your physical book, manga, and comic collection." />
     <title>Librarium</title>
+    <!-- Where this app is mounted, written in by the container entrypoint
+         before nginx starts. Empty means the root, which is what a bundle
+         served by anything other than our image will also see. Vite's own
+         `base` is a build-time setting, so baking the path in would mean one
+         image per deployment.
+
+         The placeholder is deliberately not spelled the same as the variable:
+         a substitution that matches both rewrites the assignment target too,
+         and `window. = ""` is a syntax error that takes the whole app with
+         it. -->
+    <script>window.__LIBRARIUM_BASE_PATH__ = "%%LIBRARIUM_BASE_PATH%%";</script>
     <script>
       (function () {
         try {

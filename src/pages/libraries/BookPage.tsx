@@ -15,6 +15,7 @@ import BookReaders from '../../components/BookReaders'
 import BookSeries from '../../components/BookSeries'
 import StarRating from '../../components/StarRating'
 import { type SavedList } from '../../lib/lists'
+import { withBase } from '../../lib/basePath'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -989,7 +990,7 @@ function EditionCard({ edition: initialEdition, libraryId, bookId, onEdit, onDel
                   <button
                     onClick={async () => {
                       const token = await getToken()
-                      const res = await fetch(`/api/v1/libraries/${libraryId}/books/${bookId}/editions/${edition.id}/files/${ef.id}`, {
+                      const res = await fetch(withBase(`/api/v1/libraries/${libraryId}/books/${bookId}/editions/${edition.id}/files/${ef.id}`), {
                         headers: token ? { Authorization: `Bearer ${token}` } : {},
                       })
                       if (!res.ok) return

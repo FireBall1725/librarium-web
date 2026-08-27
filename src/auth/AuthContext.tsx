@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import type { AuthTokens, User } from '../types'
+import { withBase } from '../lib/basePath'
 
 // ─── Storage keys ────────────────────────────────────────────────────────────
 
@@ -118,7 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const req = (async (): Promise<string | null> => {
       try {
-        const res = await fetch('/api/v1/auth/refresh', {
+        const res = await fetch(withBase('/api/v1/auth/refresh'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ refresh_token: rt }),
@@ -159,7 +160,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const token = await getToken()
       let res: Response
       try {
-        res = await fetch(path, {
+        res = await fetch(withBase(path), {
           ...options,
           headers: {
             ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
@@ -209,7 +210,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(async (identifier: string, password: string, rememberMe = true) => {
     storageRef.current = rememberMe ? localStorage : sessionStorage
-    const res = await fetch('/api/v1/auth/login', {
+    const res = await fetch(withBase('/api/v1/auth/login'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ identifier, password }),
@@ -223,7 +224,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     storageRef.current = localStorage
     let res: Response
     try {
-      res = await fetch('/api/v1/setup/admin', {
+      res = await fetch(withBase('/api/v1/setup/admin'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(req),
@@ -247,7 +248,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const token = accessRef.current
     if (token) {
       try {
-        await fetch('/api/v1/auth/logout', {
+        await fetch(withBase('/api/v1/auth/logout'), {
           method: 'POST',
           headers: { Authorization: `Bearer ${token}` },
         })
@@ -267,7 +268,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let cancelled = false
     setApiReachable(null)
     setInitialized(null)
-    fetch('/api/v1/setup/status')
+    fetch(withBase('/api/v1/setup/status'))
       .then(async res => {
         if (!res.ok) throw new Error(`probe HTTP ${res.status}`)
         const body = await res.json() as { data?: { initialized?: boolean } }
