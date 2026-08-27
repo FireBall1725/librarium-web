@@ -9,3 +9,7 @@ files:
     languages_mapping:
       locale:
         fr: fr-FR
+        de: de-DE
+        ja: ja-JP
+        es-ES: es-ES
+        pt-BR: pt-BR

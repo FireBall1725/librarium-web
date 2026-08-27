@@ -5,7 +5,7 @@ import HttpBackend from 'i18next-http-backend'
 
 import { withBase } from '../lib/basePath'
 
-export const SUPPORTED_LOCALES = ['en-CA', 'fr-FR', 'de-DE', 'ja-JP'] as const
+export const SUPPORTED_LOCALES = ['en-CA', 'fr-FR', 'de-DE', 'ja-JP', 'es-ES', 'pt-BR'] as const
 export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number]
 
 export const LOCALE_LABELS: Record<SupportedLocale, string> = {
@@ -13,6 +13,8 @@ export const LOCALE_LABELS: Record<SupportedLocale, string> = {
   'fr-FR': 'Français (France)',
   'de-DE': 'Deutsch (Deutschland)',
   'ja-JP': '日本語',
+  'es-ES': 'Español (España)',
+  'pt-BR': 'Português (Brasil)',
 }
 
 export const LOCALE_FLAGS: Record<SupportedLocale, string> = {
@@ -20,6 +22,8 @@ export const LOCALE_FLAGS: Record<SupportedLocale, string> = {
   'fr-FR': '🇫🇷',
   'de-DE': '🇩🇪',
   'ja-JP': '🇯🇵',
+  'es-ES': '🇪🇸',
+  'pt-BR': '🇧🇷',
 }
 
 /**
@@ -32,7 +36,12 @@ export const LOCALE_FLAGS: Record<SupportedLocale, string> = {
  * stated. English is the source and French was written by hand, so neither is
  * listed. A locale leaves this set when somebody has read it through.
  */
-export const MACHINE_DRAFTED: ReadonlySet<SupportedLocale> = new Set(['de-DE', 'ja-JP'])
+export const MACHINE_DRAFTED: ReadonlySet<SupportedLocale> = new Set([
+  'de-DE',
+  'ja-JP',
+  'es-ES',
+  'pt-BR',
+])
 
 export const LOCALE_STORAGE_KEY = 'librarium:locale'
 

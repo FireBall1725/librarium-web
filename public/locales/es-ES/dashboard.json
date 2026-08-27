@@ -1,0 +1,93 @@
+{
+  "welcome_back": "Hola de nuevo, {{name}}",
+  "page_title": "Panel",
+  "continue_reading_eyebrow": "Seguir leyendo",
+  "last_opened": "Abierto por última vez {{relative}}",
+  "also_in_progress": "También empezados",
+  "no_books_in_progress": {
+    "title": "Ningún libro empezado",
+    "hint": "Marca un libro como «Leyendo» y aparecerá aquí."
+  },
+  "stats": {
+    "read_in_year": "Leídos en {{year}}",
+    "all_time": "{{count}} en total",
+    "last_12_months": "Últimos 12 meses",
+    "reading": "Leyendo",
+    "favourites": "Favoritos",
+    "total_books": "Libros en total",
+    "unread": "Sin leer",
+    "sparkline_aria": "Actividad de lectura de 12 meses"
+  },
+  "continue_series": {
+    "title": "Lo siguiente de tus series",
+    "empty": "Termina un libro de una serie y te sugerimos el siguiente."
+  },
+  "recently_finished": {
+    "title": "Terminados hace poco",
+    "empty": "Todavía no hay libros terminados.",
+    "rating": "★ {{rating}}/10"
+  },
+  "recently_added": {
+    "title": "Añadidos hace poco",
+    "empty": "Todavía no hay libros. Añade uno para empezar."
+  },
+  "picks_of_the_day": {
+    "title": "Elegidos del día",
+    "empty": "No hay de dónde elegir. Añade novelas a tus bibliotecas y vuelve mañana."
+  },
+  "suggestions": {
+    "buy_title": "Sugerencias para comprar",
+    "read_next_title": "Para leer a continuación, de tu biblioteca",
+    "see_all": "Ver todas →"
+  },
+  "suggestions_page": {
+    "title": "Sugerencias",
+    "description": "Libros que tu asistente de IA cree que te van a gustar, a partir de tu biblioteca y de tu perfil de gustos.",
+    "run_now": "Ejecutar ahora",
+    "running": "Ejecutando…",
+    "run_queued": "Ejecución en cola. Las nuevas sugerencias aparecerán en breve.",
+    "run_failed": "No se pudo iniciar una ejecución de sugerencias.",
+    "filters": {
+      "all": "Todas ({{count}})",
+      "read_next": "Para leer ({{count}})",
+      "buy": "Para comprar ({{count}})",
+      "saved": "Guardadas ({{count}})"
+    },
+    "saved_empty": {
+      "title": "Todavía no has guardado nada",
+      "hint": "Toca «Me interesa» en una sugerencia para dejarla aquí."
+    },
+    "empty": {
+      "title": "Todavía no hay sugerencias",
+      "hint": "Actívalas desde tu perfil y ejecuta una tanda, o espera a la siguiente ejecución programada."
+    },
+    "runs": {
+      "title": "Ejecuciones recientes"
+    },
+    "progress": {
+      "title": "Generando sugerencias…",
+      "starting": "Iniciando la ejecución…",
+      "steps_one": "{{count}} paso completado",
+      "steps_other": "{{count}} pasos completados"
+    },
+    "quota": {
+      "label": "Ejecuciones restantes: {{remaining}}/{{limit}}",
+      "unlimited": "Ejecuciones de hoy: {{used}}",
+      "resets_at": "Siguiente ejecución disponible {{at}}"
+    }
+  },
+  "library_chips": {
+    "create_first": "+ Crea tu primera biblioteca",
+    "view_all": "Ver todas →"
+  },
+  "relative_time": {
+    "just_now": "ahora mismo",
+    "minutes": "hace {{count}} min",
+    "hours": "hace {{count}} h",
+    "yesterday": "ayer",
+    "days": "hace {{count}} d",
+    "weeks": "hace {{count}} sem",
+    "months": "hace {{count}} mes",
+    "years": "hace {{count}} a"
+  }
+}
