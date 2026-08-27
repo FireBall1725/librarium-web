@@ -1,0 +1,93 @@
+{
+  "welcome_back": "Willkommen zurück, {{name}}",
+  "page_title": "Übersicht",
+  "continue_reading_eyebrow": "Weiterlesen",
+  "last_opened": "Zuletzt geöffnet {{relative}}",
+  "also_in_progress": "Ebenfalls angefangen",
+  "no_books_in_progress": {
+    "title": "Keine angefangenen Bücher",
+    "hint": "Markiere ein Buch als „Lese ich\", dann erscheint es hier."
+  },
+  "stats": {
+    "read_in_year": "Gelesen in {{year}}",
+    "all_time": "{{count}} insgesamt",
+    "last_12_months": "Letzte 12 Monate",
+    "reading": "Lese ich",
+    "favourites": "Favoriten",
+    "total_books": "Bücher gesamt",
+    "unread": "Ungelesen",
+    "sparkline_aria": "Leseaktivität der letzten 12 Monate"
+  },
+  "continue_series": {
+    "title": "Als Nächstes in deinen Reihen",
+    "empty": "Lies ein Buch einer Reihe zu Ende, dann schlagen wir dir das nächste vor."
+  },
+  "recently_finished": {
+    "title": "Zuletzt beendet",
+    "empty": "Noch keine beendeten Bücher.",
+    "rating": "★ {{rating}}/10"
+  },
+  "recently_added": {
+    "title": "Zuletzt hinzugefügt",
+    "empty": "Noch keine Bücher. Füge eines hinzu, um loszulegen."
+  },
+  "picks_of_the_day": {
+    "title": "Vorschläge des Tages",
+    "empty": "Nichts zur Auswahl. Füge deinen Bibliotheken Romane hinzu und schau morgen wieder vorbei."
+  },
+  "suggestions": {
+    "buy_title": "Vorschläge zum Kaufen",
+    "read_next_title": "Als Nächstes aus deiner Bibliothek",
+    "see_all": "Alle ansehen →"
+  },
+  "suggestions_page": {
+    "title": "Vorschläge",
+    "description": "Bücher, die dir dein KI-Assistent empfiehlt, basierend auf deiner Bibliothek und deinem Geschmacksprofil.",
+    "run_now": "Jetzt ausführen",
+    "running": "Läuft…",
+    "run_queued": "Vorschlagslauf eingereiht. Neue Vorschläge erscheinen in Kürze.",
+    "run_failed": "Vorschlagslauf konnte nicht gestartet werden.",
+    "filters": {
+      "all": "Alle ({{count}})",
+      "read_next": "Als Nächstes lesen ({{count}})",
+      "buy": "Zum Kaufen ({{count}})",
+      "saved": "Gemerkt ({{count}})"
+    },
+    "saved_empty": {
+      "title": "Noch nichts gemerkt",
+      "hint": "Tippe bei einem Vorschlag auf „Interessiert\", um ihn hier zu sammeln."
+    },
+    "empty": {
+      "title": "Noch keine Vorschläge",
+      "hint": "Aktiviere sie in deinem Profil und starte einen Lauf, oder warte auf den nächsten geplanten."
+    },
+    "runs": {
+      "title": "Letzte Läufe"
+    },
+    "progress": {
+      "title": "Vorschläge werden erstellt…",
+      "starting": "Lauf wird gestartet…",
+      "steps_one": "{{count}} Schritt abgeschlossen",
+      "steps_other": "{{count}} Schritte abgeschlossen"
+    },
+    "quota": {
+      "label": "Verbleibende Läufe: {{remaining}}/{{limit}}",
+      "unlimited": "Läufe heute: {{used}}",
+      "resets_at": "Nächster Lauf verfügbar {{at}}"
+    }
+  },
+  "library_chips": {
+    "create_first": "+ Erstelle deine erste Bibliothek",
+    "view_all": "Alle ansehen →"
+  },
+  "relative_time": {
+    "just_now": "gerade eben",
+    "minutes": "vor {{count}} Min.",
+    "hours": "vor {{count}} Std.",
+    "yesterday": "gestern",
+    "days": "vor {{count}} T.",
+    "weeks": "vor {{count}} Wo.",
+    "months": "vor {{count}} Mon.",
+    "years": "vor {{count}} J."
+  }
+}

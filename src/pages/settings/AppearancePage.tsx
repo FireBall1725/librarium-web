@@ -17,7 +17,7 @@ import { useAuth } from '../../auth/AuthContext'
 import PageHeader from '../../components/PageHeader'
 import { SettingRow, SettingSection, SettingsBody, Switch } from '../../components/settings/SettingRow'
 import { usePageTitle } from '../../hooks/usePageTitle'
-import { LOCALE_FLAGS, LOCALE_LABELS, LOCALE_STORAGE_KEY, SUPPORTED_LOCALES, type SupportedLocale } from '../../i18n'
+import { LOCALE_FLAGS, LOCALE_LABELS, LOCALE_STORAGE_KEY, MACHINE_DRAFTED, SUPPORTED_LOCALES, type SupportedLocale } from '../../i18n'
 import { THEMES, applyTheme, readStoredTheme, storeTheme, type ThemeId } from '../../lib/theme'
 import {
   READING_FONTS, applyReadingFont, readStoredReadingFont, storeReadingFont,
@@ -184,6 +184,19 @@ export default function AppearancePage() {
               ))}
             </select>
           </SettingRow>
+
+          {/* Only for the language actually chosen. A standing note about
+              machine drafting would sit under English, where it is untrue and
+              means nothing. */}
+          {MACHINE_DRAFTED.has(i18n.language as SupportedLocale) && (
+            <p className="px-1 pb-4 text-xs text-content-muted">
+              {t('settings_appearance.machine_drafted', {
+                defaultValue:
+                  'This language was drafted with AI help and has not been reviewed by a speaker. '
+                  + 'Corrections are welcome through Crowdin.',
+              })}
+            </p>
+          )}
 
           <SettingRow
             label={t('settings_appearance.read_badges', { defaultValue: 'Show read status badges' })}

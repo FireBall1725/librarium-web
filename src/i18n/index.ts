@@ -5,18 +5,32 @@ import HttpBackend from 'i18next-http-backend'
 
 import { withBase } from '../lib/basePath'
 
-export const SUPPORTED_LOCALES = ['en-CA', 'fr-FR'] as const
+export const SUPPORTED_LOCALES = ['en-CA', 'fr-FR', 'de-DE'] as const
 export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number]
 
 export const LOCALE_LABELS: Record<SupportedLocale, string> = {
   'en-CA': 'English (Canada)',
   'fr-FR': 'Français (France)',
+  'de-DE': 'Deutsch (Deutschland)',
 }
 
 export const LOCALE_FLAGS: Record<SupportedLocale, string> = {
   'en-CA': '🇨🇦',
   'fr-FR': '🇫🇷',
+  'de-DE': '🇩🇪',
 }
+
+/**
+ * Locales whose first draft was machine-written rather than translated by a
+ * person.
+ *
+ * Said out loud in the picker, because somebody choosing a language deserves
+ * to know how much to trust it before they rely on it, and because a wrong
+ * string in an interface reads as carelessness unless its provenance is
+ * stated. English is the source and French was written by hand, so neither is
+ * listed. A locale leaves this set when somebody has read it through.
+ */
+export const MACHINE_DRAFTED: ReadonlySet<SupportedLocale> = new Set(['de-DE'])
 
 export const LOCALE_STORAGE_KEY = 'librarium:locale'
 

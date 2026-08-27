@@ -340,7 +340,8 @@
     "read_badges_note": "A coloured corner on covers for read and in-progress books.",
     "typeface": "Typeface",
     "typeface_note": "OpenDyslexic weights the bottom of each letter and gives similar characters distinct shapes, which some readers with dyslexia find easier.",
-    "typeface_sample": "Handful of books"
+    "typeface_sample": "Handful of books",
+    "machine_drafted": "This language was drafted with AI help and has not been reviewed by a speaker. Corrections are welcome through Crowdin."
   },
   "settings_account": {
     "profile_description": "Your account on this instance.",
