@@ -137,3 +137,34 @@ silence them wholesale, and do not add new ones.
 - Commit messages are short and imperative with a scope:
   `fix(jobs): keep schedule config on toggle`.
 - Every commit needs a DCO sign-off (`git commit -s`).
+
+## End-to-end tests
+
+`e2e/` holds Playwright specs that drive the app in a real browser against a
+real API and a real database.
+
+```bash
+npm run e2e:stack        # postgres + api, on 8090, throwaway
+npm run e2e              # headless
+npm run e2e:headed       # watch it happen
+npm run e2e:ui           # time-travel debugger, a DOM snapshot per step
+npm run e2e:stack:down   # takes the database with it
+```
+
+**Drive the interface, verify through the API.** Asserting on the page alone
+cannot tell a write that landed from one that was only drawn: an optimistic
+control shows the new state either way. Click the button, then ask the server
+what came of it, then check the reader can see it. All three, in that order.
+
+The stack is deliberately disposable. The journey starts at "set up a new
+instance" and the setup route refuses once an instance has an admin, so a suite
+that reused a database could only run its most important test once. `down -v`
+and a tmpfs volume are what make it repeatable.
+
+Seeding through the API is not cheating. A test about pagination wants a
+hundred books, and clicking a hundred times tests the add form a hundred times
+rather than testing pagination once. Drive the interface for the thing under
+test; get everything else into place the fast way.
+
+New specs get the session for free: the `setup` project signs in once and saves
+`storageState`, and every other project depends on it.

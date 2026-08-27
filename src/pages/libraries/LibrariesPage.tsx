@@ -60,8 +60,9 @@ function LibraryModal({ library, onClose, onSaved }: LibraryModalProps) {
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-content-secondary mb-1">Name</label>
+            <label htmlFor="library-name" className="block text-sm font-medium text-content-secondary mb-1">Name</label>
             <input
+              id="library-name"
               type="text"
               required
               value={form.name}
@@ -71,8 +72,9 @@ function LibraryModal({ library, onClose, onSaved }: LibraryModalProps) {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-content-secondary mb-1">Description</label>
+            <label htmlFor="library-description" className="block text-sm font-medium text-content-secondary mb-1">Description</label>
             <textarea
+              id="library-description"
               value={form.description}
               onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
               rows={2}

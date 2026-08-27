@@ -1,0 +1,49 @@
+# A throwaway stack for the end-to-end tests.
+#
+# Its own project name and no named volumes, so `down -v` takes the database
+# with it and every run starts from nothing. That is not tidiness: the journey
+# these tests walk begins at "set up a new instance", and the setup route
+# refuses once an instance has an admin. A suite that reuses a database can
+# only run its most important test once.
+#
+# Ports are deliberately not the local stack's. Running the tests should not
+# require tearing down the stack you are working in.
+name: librarium-e2e
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: librarium
+      POSTGRES_USER: librarium
+      POSTGRES_PASSWORD: librarium
+    # tmpfs, so the data never reaches a disk and the teardown cannot leave
+    # a volume behind for the next run to inherit.
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U librarium"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  api:
+    build:
+      context: ../api
+    ports:
+      - "8090:8080"
+    environment:
+      DATABASE_URL: "postgres://librarium:librarium@db:5432/librarium?sslmode=disable"
+      JWT_SECRET: "e2e-only-not-a-real-secret"
+      LOG_LEVEL: "warn"
+      COVER_STORAGE_PATH: "/data/covers"
+      EBOOK_STORAGE_PATH: "/data/media/ebooks"
+      AUDIOBOOK_STORAGE_PATH: "/data/media/audiobooks"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health || exit 1"]
+      interval: 2s
+      timeout: 3s
+      retries: 30

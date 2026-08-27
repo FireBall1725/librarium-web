@@ -1,0 +1,72 @@
+name: End to end
+
+# Repo-local rather than in FireBall1725/workflows: this one needs a Librarium
+# API and a database beside it, which is not something every React client in
+# the org has. It can move to the shared repo the day a second client wants it.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    name: Journey
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v6
+
+      # The API is built from source in the sibling repo, so the tests run
+      # against the API as it is now rather than against the last published
+      # image. A contract change that breaks this client should fail here.
+      - name: Check out the API
+        uses: actions/checkout@v6
+        with:
+          repository: FireBall1725/librarium-api
+          path: ../api-src
+
+      - name: Put the API where the compose file expects it
+        run: |
+          rm -rf ../api
+          mv ../api-src ../api
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "26"
+          cache: npm
+
+      - run: npm ci
+
+      # Only chromium. Three browsers is three times the runtime for a suite
+      # whose failures are almost never browser-specific, and the ones that are
+      # belong in their own job.
+      - name: Install the browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Start the stack
+        run: npm run e2e:stack
+
+      - name: Run the journey
+        run: npm run e2e
+
+      # Kept only on failure, and only for a week: a trace is tens of megabytes
+      # and nobody opens the ones from a green run.
+      - name: Keep the evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+
+      - name: Stop the stack
+        if: always()
+        run: npm run e2e:stack:down
