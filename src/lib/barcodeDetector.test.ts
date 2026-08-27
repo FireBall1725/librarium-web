@@ -64,6 +64,24 @@ describe('getBarcodeReader', () => {
     expect(resolved).not.toMatch(/^https?:\/\//)
   })
 
+  it('finds the .wasm when the app is served from a sub-path', async () => {
+    // vite bakes the URL into a JS chunk as /assets/..., and the container
+    // entrypoint rewrites index.html only. Without withBase, an instance
+    // mounted at /librarium asks the host root for the binary and gets a 404 —
+    // so scanning breaks on exactly the deployments this fallback is for.
+    ;(window as unknown as Record<string, unknown>).__LIBRARIUM_BASE_PATH__ = '/librarium'
+    vi.resetModules()
+    const { getBarcodeReader: mounted } = await import('./barcodeDetector')
+
+    await mounted(['ean_13'])
+    const { overrides } = prepareZXingModule.mock.calls[0][0]
+    expect(overrides.locateFile('zxing_reader.wasm', 'https://cdn.example/'))
+      .toBe('/librarium/assets/zxing_reader-abc123.wasm')
+
+    delete (window as unknown as Record<string, unknown>).__LIBRARIUM_BASE_PATH__
+    vi.resetModules()
+  })
+
   it('leaves non-wasm files to the default resolution', async () => {
     await getBarcodeReader(['ean_13'])
     const { overrides } = prepareZXingModule.mock.calls[0][0]
