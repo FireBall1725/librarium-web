@@ -582,6 +582,26 @@
     "pick_one": "Escolha qual grafia fica"
   },
   "scan": {
-    "start_failed": "Não foi possível iniciar o leitor de código de barras."
+    "start_failed": "Não foi possível iniciar o leitor de código de barras.",
+    "library_locked": "Termine ou limpe a sessão de leitura para trocar de biblioteca.",
+    "one": "Ler código de barras",
+    "many": "Ler vários livros em sequência",
+    "hint": "Aponte a câmera para um código de barras…",
+    "sweep_hint": "Continue lendo — cada livro entra na lista abaixo.",
+    "stop": "Parar a leitura",
+    "resume": "Ler mais",
+    "adding": "Adicionando…",
+    "add_all_one": "Adicionar {{count}} livro",
+    "add_all_other": "Adicionar {{count}} livros",
+    "done": "Pronto",
+    "camera_denied": "Acesso à câmera negado ou indisponível.",
+    "status": {
+      "pending": "Procurando…",
+      "found": "Pronto",
+      "duplicate": "Já está na estante",
+      "not_found": "Não encontrado",
+      "error": "Falhou",
+      "added": "Adicionado"
+    }
   }
 }
