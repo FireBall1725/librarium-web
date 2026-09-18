@@ -10,7 +10,8 @@
     "remember_me": "Remember me",
     "sign_in": "Sign in",
     "signing_in": "Signing in…",
-    "unexpected_error": "An unexpected error occurred"
+    "unexpected_error": "An unexpected error occurred",
+    "invalid_credentials": "Invalid username or password"
   },
   "nav": {
     "dashboard": "Dashboard",

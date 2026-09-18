@@ -7,6 +7,7 @@ import type { ProviderStatus } from '../../../types'
 import PageHeader from '../../../components/PageHeader'
 import { usePageTitle } from '../../../hooks/usePageTitle'
 import { Switch } from '../../../components/settings/SettingRow'
+import { errorMessage } from '../../../lib/errorMessage'
 
 // The reference gives capabilities one chip, not a hue each: four colours for
 // four capabilities is a legend the reader has to learn, and the label already
@@ -90,7 +91,7 @@ function ProviderCard({ provider, onSaved }: ProviderCardProps) {
       if (res?.ok) {
         setTestState({ status: 'ok', title: res.title ?? '(no title)' })
       } else {
-        setTestState({ status: 'fail', error: res?.error ?? 'Unknown error' })
+        setTestState({ status: 'fail', error: errorMessage(res, 'Unknown error') })
       }
     } catch (err) {
       setTestState({ status: 'fail', error: err instanceof ApiError ? err.message : 'Request failed' })

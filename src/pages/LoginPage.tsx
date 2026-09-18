@@ -25,7 +25,18 @@ export default function LoginPage() {
       await login(identifier, password, rememberMe)
       navigate('/dashboard', { replace: true })
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : t('auth.unexpected_error'))
+      // A 401 from this endpoint has exactly one meaning, so say it plainly and
+      // in the reader's language rather than passing through whatever the
+      // server phrased it as. The API says "invalid credentials", which is
+      // correct and untranslated; anything sitting in front of the API may say
+      // something worse, or nothing usable at all.
+      if (err instanceof ApiError && err.status === 401) {
+        setError(t('auth.invalid_credentials'))
+      } else if (err instanceof ApiError) {
+        setError(err.message)
+      } else {
+        setError(t('auth.unexpected_error'))
+      }
     } finally {
       setIsLoading(false)
     }

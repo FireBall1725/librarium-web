@@ -10,7 +10,8 @@
     "remember_me": "Continuar conectado",
     "sign_in": "Entrar",
     "signing_in": "Entrando…",
-    "unexpected_error": "Aconteceu um erro inesperado"
+    "unexpected_error": "Aconteceu um erro inesperado",
+    "invalid_credentials": "Usuário ou senha incorretos"
   },
   "nav": {
     "dashboard": "Painel",

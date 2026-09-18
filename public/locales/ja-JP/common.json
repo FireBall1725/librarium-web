@@ -10,7 +10,8 @@
     "remember_me": "ログイン状態を保持",
     "sign_in": "サインイン",
     "signing_in": "サインインしています…",
-    "unexpected_error": "予期しないエラーが発生しました"
+    "unexpected_error": "予期しないエラーが発生しました",
+    "invalid_credentials": "ユーザー名またはパスワードが正しくありません"
   },
   "nav": {
     "dashboard": "ダッシュボード",
