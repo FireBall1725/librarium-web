@@ -10,7 +10,8 @@
     "remember_me": "Angemeldet bleiben",
     "sign_in": "Anmelden",
     "signing_in": "Anmeldung läuft…",
-    "unexpected_error": "Ein unerwarteter Fehler ist aufgetreten"
+    "unexpected_error": "Ein unerwarteter Fehler ist aufgetreten",
+    "invalid_credentials": "Benutzername oder Passwort ist falsch"
   },
   "nav": {
     "dashboard": "Übersicht",

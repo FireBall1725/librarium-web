@@ -6,6 +6,7 @@ import { useAuth, ApiError } from '../../../auth/AuthContext'
 import type { AIProviderStatus, AIPermissions, AIConfigField } from '../../../types'
 import PageHeader from '../../../components/PageHeader'
 import { usePageTitle } from '../../../hooks/usePageTitle'
+import { errorMessage } from '../../../lib/errorMessage'
 
 type TestState =
   | { status: 'idle' }
@@ -397,7 +398,7 @@ function ProviderCard({ provider, onSaved, onActivate, activating }: ProviderCar
       if (res?.ok) {
         setTestState({ status: 'ok', reply: res.reply ?? '(no reply)' })
       } else {
-        setTestState({ status: 'fail', error: res?.error ?? 'Unknown error' })
+        setTestState({ status: 'fail', error: errorMessage(res, 'Unknown error') })
       }
     } catch (err) {
       setTestState({ status: 'fail', error: err instanceof ApiError ? err.message : 'Request failed' })

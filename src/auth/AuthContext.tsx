@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import type { AuthTokens, User } from '../types'
 import { withBase } from '../lib/basePath'
+import { errorMessage } from '../lib/errorMessage'
 
 // ─── Storage keys ────────────────────────────────────────────────────────────
 
@@ -190,7 +191,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (res.status === 204 || res.status === 202) return undefined as T
       const text = await res.text()
       const body = text ? JSON.parse(text) : {}
-      if (!res.ok) throw new ApiError(res.status, body.error ?? `HTTP ${res.status}`)
+      if (!res.ok) throw new ApiError(res.status, errorMessage(body, `HTTP ${res.status}`))
       return body.data as T
     }
 
@@ -215,9 +216,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ identifier, password }),
     })
-    const body = await res.json()
-    if (!res.ok) throw new ApiError(res.status, body.error ?? 'Login failed')
-    persistSession(body.data as AuthTokens)
+    // Parsed defensively rather than with res.json(), because a proxy in front
+    // of the API can answer a failed login with an HTML error page. That makes
+    // res.json() throw, and the thrown SyntaxError carries none of the status,
+    // so the form ends up showing "unexpected error" for an ordinary wrong
+    // password.
+    const text = await res.text()
+    let body: unknown
+    try { body = text ? JSON.parse(text) : {} } catch { body = {} }
+    if (!res.ok) throw new ApiError(res.status, errorMessage(body, `Login failed (HTTP ${res.status})`))
+    persistSession((body as { data: AuthTokens }).data)
   }, [persistSession])
 
   const bootstrapAdmin = useCallback(async (req: BootstrapAdminRequest) => {
@@ -239,7 +247,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try { body = text ? JSON.parse(text) : {} } catch {
       throw new ApiError(res.status, `Unexpected response from /api/v1/setup/admin (HTTP ${res.status}). Is the API up to date?`)
     }
-    if (!res.ok) throw new ApiError(res.status, body.error ?? `Setup failed (HTTP ${res.status})`)
+    if (!res.ok) throw new ApiError(res.status, errorMessage(body, `Setup failed (HTTP ${res.status})`))
     persistSession(body.data as AuthTokens)
     setInitialized(true)
   }, [persistSession])
