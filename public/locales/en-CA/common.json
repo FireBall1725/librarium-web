@@ -764,6 +764,7 @@
   },
   "add_book": {
     "isbn_or_upc": "ISBN or UPC…",
-    "upc_warning": "Looked up by UPC. Paperbacks often share one UPC with every book at the same price, so check this is your book. The ISBN, printed near the barcode or on the copyright page, finds it for sure."
+    "upc_warning": "Looked up by UPC. Paperbacks often share one UPC with every book at the same price, so check this is your book. The ISBN, printed near the barcode or on the copyright page, finds it for sure.",
+    "from_isbn": "Found by ISBN {{isbn}}, worked out from the small barcode beside the UPC."
   }
 }

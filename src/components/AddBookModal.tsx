@@ -511,12 +511,20 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
         upc
           ? Promise.resolve(null)
           : callApi<Book>(`/api/v1/libraries/${targetLibrary}/book-by-isbn/${encodeURIComponent(cleanISBN)}`).catch(() => null),
-      ])
+      ]).then(async ([m, d]) => {
+        // The server found the ISBN in the add-on, so the duplicate check
+        // can run after all.
+        if (upc && m?.from_isbn) {
+          d = await callApi<Book>(`/api/v1/libraries/${targetLibrary}/book-by-isbn/${encodeURIComponent(m.from_isbn)}`).catch(() => null)
+        }
+        return [m, d] as const
+      })
       setIsbnDuplicate(duplicate ?? null)
       if (duplicate) onDuplicate?.(duplicate)
       if (hasAnyField(merged)) {
         setIsbnMerged(merged)
-        setMergedFromUpc(!!upc)
+        // Found through the add-on's ISBN, it's as sure as an ISBN lookup.
+        setMergedFromUpc(!!upc && !merged.from_isbn)
       } else {
         setIsbnError(upc
           ? t('merged.none_upc', { defaultValue: 'No results found for that UPC.' })
@@ -874,6 +882,11 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
                     // 037145007991 came back as another author's novel).
                     <p className="mb-3 rounded-lg border border-warning-line bg-warning-surface px-3 py-2 text-[13px] text-warning-strong">
                       {t('add_book.upc_warning', { defaultValue: "Looked up by UPC. Paperbacks often share one UPC with every book at the same price, so check this is your book. The ISBN, printed near the barcode or on the copyright page, finds it for sure." })}
+                    </p>
+                  )}
+                  {isbnMerged?.from_isbn && (
+                    <p className="mb-3 text-[13px] text-content-muted">
+                      {t('add_book.from_isbn', { isbn: isbnMerged.from_isbn, defaultValue: 'Found by ISBN {{isbn}}, worked out from the small barcode beside the UPC.' })}
                     </p>
                   )}
                   {isbnMerged && (

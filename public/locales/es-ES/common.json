@@ -764,6 +764,7 @@
   },
   "add_book": {
     "isbn_or_upc": "ISBN o UPC…",
-    "upc_warning": "Buscado por UPC. Los libros de bolsillo suelen compartir un UPC con todos los libros del mismo precio, así que comprueba que sea tu libro. El ISBN, impreso junto al código de barras o en la página de créditos, lo encuentra con seguridad."
+    "upc_warning": "Buscado por UPC. Los libros de bolsillo suelen compartir un UPC con todos los libros del mismo precio, así que comprueba que sea tu libro. El ISBN, impreso junto al código de barras o en la página de créditos, lo encuentra con seguridad.",
+    "from_isbn": "Encontrado por el ISBN {{isbn}}, deducido del pequeño código de barras junto al UPC."
   }
 }
