@@ -182,6 +182,8 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
   const [mode, setMode] = useState<'isbn' | 'search' | 'manual'>(!initialIsbn && initialTitle ? 'search' : 'isbn')
   const [isbnInput, setIsbnInput] = useState(initialIsbn ?? '')
   const [isbnMerged, setIsbnMerged] = useState<MergedBookResult | null>(null)
+  // The last lookup was by UPC, whose answers need checking; see below.
+  const [mergedFromUpc, setMergedFromUpc] = useState(false)
   const [isbnLoading, setIsbnLoading] = useState(false)
   const [isbnError, setIsbnError] = useState<string | null>(null)
   const [isbnDuplicate, setIsbnDuplicate] = useState<Book | null>(null)
@@ -514,6 +516,7 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
       if (duplicate) onDuplicate?.(duplicate)
       if (hasAnyField(merged)) {
         setIsbnMerged(merged)
+        setMergedFromUpc(!!upc)
       } else {
         setIsbnError(upc
           ? t('merged.none_upc', { defaultValue: 'No results found for that UPC.' })
@@ -863,6 +866,15 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
                         <span className="text-amber-600 dark:text-amber-500">or import to add an edition</span>
                       </div>
                     </div>
+                  )}
+                  {isbnMerged && mergedFromUpc && (
+                    // A paperback's UPC names the publisher and the price, and
+                    // every book at that price shares it, so the answer can be
+                    // a different book entirely (Tor's
+                    // 037145007991 came back as another author's novel).
+                    <p className="mb-3 rounded-lg border border-warning-line bg-warning-surface px-3 py-2 text-[13px] text-warning-strong">
+                      {t('add_book.upc_warning', { defaultValue: "Looked up by UPC. Paperbacks often share one UPC with every book at the same price, so check this is your book. The ISBN, printed near the barcode or on the copyright page, finds it for sure." })}
+                    </p>
                   )}
                   {isbnMerged && (
                     <MergedLookup key={isbnInput} merged={isbnMerged} onUse={r => { void importResult(r) }} />

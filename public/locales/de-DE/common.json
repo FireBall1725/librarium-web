@@ -763,6 +763,7 @@
     "remove": "Entfernen"
   },
   "add_book": {
-    "isbn_or_upc": "ISBN oder UPC…"
+    "isbn_or_upc": "ISBN oder UPC…",
+    "upc_warning": "Per UPC gesucht. Taschenbücher teilen sich oft einen UPC mit allen Büchern zum selben Preis, also prüfe, ob das dein Buch ist. Die ISBN, neben dem Strichcode oder im Impressum gedruckt, findet es sicher."
   }
 }
