@@ -23,6 +23,13 @@ export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(computeVersion()),
   },
+  // The camera scanner imports zxing lazily, so vite only discovers it when
+  // someone opens the scanner. A dependency found that late gets re-bundled
+  // mid-session, and until the page reloads its import fails with a 504 and
+  // the camera won't start. Bundle it up front instead.
+  optimizeDeps: {
+    include: ['zxing-wasm/reader'],
+  },
   server: {
     host: '0.0.0.0',
     proxy: {
