@@ -247,6 +247,10 @@ export interface CopyLocation {
   parent_id: string | null
   copy_count: number
   created_at: string
+  /** Set on a bookcase: how many shelves it has, 1 to 50. The places inside are the shelves. */
+  shelf_count?: number | null
+  /** Whether shelf 1 is at the top or the bottom. Absent means top. */
+  shelf_numbering?: 'top_down' | 'bottom_up' | null
 }
 
 /**
