@@ -21,6 +21,7 @@ import {
   type AddBooksPrefs, type Destination,
 } from '../../lib/addBooks'
 import { undoAdd } from '../../lib/addBooksFlow'
+import { finishQueue } from '../../lib/addBooksQueue'
 import { Icon } from '../../lib/icons'
 import { useToast } from '../Toast'
 import AddBookModal from '../AddBookModal'
@@ -171,7 +172,11 @@ export default function AddBooksDialog({
     })
   }
 
+  // Read at close time, after the queue's last save for this library.
+  const libraryRef = useRef(destination.libraryId)
+  useEffect(() => { libraryRef.current = destination.libraryId })
   const close = useCallback(() => {
+    finishQueue(libraryRef.current)
     if (lastSaved.current) onSaved(lastSaved.current)
     else onClose()
   }, [onClose, onSaved])
