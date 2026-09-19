@@ -94,3 +94,39 @@ export function pickCameraScan(values: string[], waitingSince: number | null, no
   if (bare) return waitingSince !== null && now - waitingSince >= ADDON_WAIT_MS ? bare.raw : null
   return values[0] ?? null
 }
+
+/** A scanned code as an edition identifier: the scheme the server files it under, and its value. */
+export interface ScannedIdentifier {
+  scheme: 'upc' | 'ean'
+  value: string
+}
+
+/**
+ * The identifier a UPC or EAN is looked up as, add-on included, so the local
+ * check compares the same string the add path saves.
+ */
+export function barcodeIdentifier(b: Barcode): ScannedIdentifier | null {
+  if (b.kind !== 'upc' && b.kind !== 'ean') return null
+  return { scheme: b.kind, value: upcLookupCode(b) }
+}
+
+/**
+ * The identifier worth saving on a new edition, or null. Only a code with its
+ * add-on qualifies: a paperback's bare UPC is shared by every book at that
+ * price and a comic's names the whole series, and the server reuses whatever
+ * edition already holds an identifier, so saving a bare one would file the
+ * next different book under this one.
+ */
+export function savableIdentifier(b: Barcode): ScannedIdentifier | null {
+  if ((b.kind !== 'upc' && b.kind !== 'ean') || !b.addon) return null
+  return barcodeIdentifier(b)
+}
+
+/**
+ * Which of a new book's editions a scanned identifier belongs on: the one with
+ * the ISBN that was sent, else the only one. Null when it can't be told.
+ */
+export function editionForIdentifier<E extends { id: string; isbn_13: string }>(editions: E[], isbn13: string): E | null {
+  if (isbn13) return editions.find(e => e.isbn_13 === isbn13) ?? null
+  return editions.length === 1 ? editions[0] : null
+}
