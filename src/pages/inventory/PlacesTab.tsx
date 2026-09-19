@@ -34,19 +34,22 @@ export default function PlacesTab({ libraryId, places, placeId, onPlace, onShelv
   const spot = placeId ? shelfSpot(placeId, places) : null
   const bookcase = spot?.bookcase ?? null
   const listed = place && place.shelf_count == null ? place : null
+  // A place with places inside shows everything under it, not just what's
+  // filed on the place itself, which is almost always nothing.
+  const hasInside = !!place && places.some(p => p.parent_id === place.id)
 
   const [copies, setCopies] = useState<InventoryCopy[] | null>(null)
   const [loadedFor, setLoadedFor] = useState('')
-  const key = `${listed?.id}:${version}`
+  const key = `${listed?.id}:${hasInside}:${version}`
   if (loadedFor !== key) { setLoadedFor(key); setCopies(null) }
   useEffect(() => {
     if (!listed) return
     let live = true
-    void fetchInventory(callApi, libraryId, listed.id)
+    void fetchInventory(callApi, libraryId, listed.id, 500, 0, hasInside)
       .then(r => { if (live) setCopies(r.items) })
       .catch(() => { if (live) setCopies([]) })
     return () => { live = false }
-  }, [callApi, libraryId, listed, version])
+  }, [callApi, libraryId, listed, hasInside, version])
 
   if (places.length === 0) {
     return (
@@ -124,14 +127,16 @@ export default function PlacesTab({ libraryId, places, placeId, onPlace, onShelv
                 {t('inventory.empty_place', { defaultValue: 'Nothing is filed here yet.' })}
               </p>
             ) : (
-              <ul className="grid grid-cols-[repeat(auto-fill,minmax(5.5rem,1fr))] gap-3">
+              <ul className="lb-grid">
                 {copies.map(c => (
                   <li key={c.id} className="min-w-0">
                     <Link to={`/libraries/${libraryId}/books/${c.book_id}`} className="block">
-                      <BookCover title={c.book_title} coverUrl={c.cover_url} hideLabel={false} />
+                      <BookCover title={c.book_title} coverUrl={c.cover_url} className="w-full" />
                       <span className="mt-1 block truncate text-[12px] font-semibold text-content">{c.book_title}</span>
                       <span className="block truncate text-[11.5px] text-content-muted">
-                        {c.on_loan_to ? t('inventory.lent_to', { name: c.on_loan_to, defaultValue: 'Lent to {{name}}' }) : c.book_authors}
+                        {c.on_loan_to
+                          ? t('inventory.lent_to', { name: c.on_loan_to, defaultValue: 'Lent to {{name}}' })
+                          : hasInside ? c.location_name : c.book_authors}
                       </span>
                     </Link>
                   </li>

@@ -39,12 +39,17 @@ export interface InventoryPage {
   summary: InventorySummary
 }
 
-/** One place's copies, the unshelved ones ('none'), or every copy. */
+/**
+ * One place's copies, the unshelved ones ('none'), or every copy. `inside`
+ * takes the places nested under that one too, so a room shows what's on its
+ * shelves rather than only what's filed on the room itself.
+ */
 export function fetchInventory(
-  callApi: CallApi, libraryId: string, location: string | 'none' | null, limit = 500, offset = 0,
+  callApi: CallApi, libraryId: string, location: string | 'none' | null, limit = 500, offset = 0, inside = false,
 ): Promise<InventoryPage> {
   const q = new URLSearchParams({ limit: String(limit), offset: String(offset) })
   if (location) q.set('location', location)
+  if (inside) q.set('inside', 'true')
   return callApi<InventoryPage>(`/api/v1/libraries/${libraryId}/inventory?${q}`)
 }
 
