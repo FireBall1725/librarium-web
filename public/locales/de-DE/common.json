@@ -73,7 +73,8 @@
     "providers": "Abfragen",
     "shelves": "Regale",
     "tags": "Schlagwörter",
-    "tokens": "API-Token"
+    "tokens": "API-Token",
+    "barcode_scanner": "Barcodescanner"
   },
   "theme": {
     "light": "☀ Hell",
@@ -344,10 +345,7 @@
     "typeface": "Schriftart",
     "typeface_note": "OpenDyslexic verstärkt den unteren Teil jedes Buchstabens und gibt ähnlichen Zeichen eigene Formen, was manche Menschen mit Legasthenie als leichter empfinden.",
     "typeface_sample": "Eine Handvoll Bücher",
-    "machine_drafted": "Diese Sprache wurde mit KI-Unterstützung erstellt und noch nicht von einer sprechenden Person geprüft. Korrekturen sind über Crowdin willkommen.",
-    "scanner": "Barcode-Scanner",
-    "scanner_toggle": "Bluetooth- oder USB-Scanner verwenden",
-    "scanner_note": "Scanne auf jeder Seite den Barcode eines Buchs: Ein vorhandenes Buch wird geöffnet, ein neues startet „Buch hinzufügen“. Schalte das aus, falls ein Scanner beim Tippen stört."
+    "machine_drafted": "Diese Sprache wurde mit KI-Unterstützung erstellt und noch nicht von einer sprechenden Person geprüft. Korrekturen sind über Crowdin willkommen."
   },
   "settings_account": {
     "profile_description": "Dein Konto auf dieser Instanz.",
@@ -689,5 +687,11 @@
     "no_libraries": "Du hast noch keine Bibliothek, in die du Bücher aufnehmen kannst.",
     "added": "{{title}} hinzugefügt",
     "view": "Ansehen"
+  },
+  "barcode_scanner": {
+    "description": "Ein Bluetooth- oder USB-Scanner im Tastaturmodus. Nur dieser Browser.",
+    "scanning": "Scannen",
+    "toggle": "Bluetooth- oder USB-Scanner verwenden",
+    "note": "Scanne auf jeder Seite den Barcode eines Buchs: Ein vorhandenes Buch wird geöffnet, ein neues startet „Buch hinzufügen“. Schalte das aus, falls ein Scanner beim Tippen stört."
   }
 }

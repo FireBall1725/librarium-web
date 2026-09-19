@@ -73,7 +73,8 @@
     "providers": "Lookups",
     "shelves": "Shelves",
     "tags": "Tags",
-    "tokens": "API tokens"
+    "tokens": "API tokens",
+    "barcode_scanner": "Barcode scanner"
   },
   "theme": {
     "light": "☀ Light",
@@ -344,10 +345,7 @@
     "typeface": "Typeface",
     "typeface_note": "OpenDyslexic weights the bottom of each letter and gives similar characters distinct shapes, which some readers with dyslexia find easier.",
     "typeface_sample": "Handful of books",
-    "machine_drafted": "This language was drafted with AI help and has not been reviewed by a speaker. Corrections are welcome through Crowdin.",
-    "scanner": "Barcode scanner",
-    "scanner_toggle": "Use a Bluetooth or USB scanner",
-    "scanner_note": "Scan a book's barcode on any page: a book you have opens, a new one starts Add Book. Turn this off if a scanner ever gets in the way of typing."
+    "machine_drafted": "This language was drafted with AI help and has not been reviewed by a speaker. Corrections are welcome through Crowdin."
   },
   "settings_account": {
     "profile_description": "Your account on this instance.",
@@ -689,5 +687,11 @@
     "no_libraries": "You don't have a library to add books to yet.",
     "added": "Added {{title}}",
     "view": "View"
+  },
+  "barcode_scanner": {
+    "description": "A Bluetooth or USB scanner in keyboard mode. This browser only.",
+    "scanning": "Scanning",
+    "toggle": "Use a Bluetooth or USB scanner",
+    "note": "Scan a book's barcode on any page: a book you have opens, a new one starts Add Book. Turn this off if a scanner ever gets in the way of typing."
   }
 }

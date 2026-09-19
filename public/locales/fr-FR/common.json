@@ -73,7 +73,8 @@
     "providers": "Recherches",
     "shelves": "Étagères",
     "tags": "Tags",
-    "tokens": "Jetons API"
+    "tokens": "Jetons API",
+    "barcode_scanner": "Lecteur de codes-barres"
   },
   "theme": {
     "light": "☀ Light",
@@ -344,10 +345,7 @@
     "typeface": "Police",
     "typeface_note": "OpenDyslexic alourdit le bas de chaque lettre et donne des formes distinctes aux caractères qui se ressemblent, ce que certaines personnes dyslexiques trouvent plus lisible.",
     "typeface_sample": "Quelques livres",
-    "machine_drafted": "Cette langue a été rédigée avec l'aide d'une IA et n'a pas été relue par une personne qui la parle. Les corrections sont les bienvenues via Crowdin.",
-    "scanner": "Lecteur de codes-barres",
-    "scanner_toggle": "Utiliser un lecteur Bluetooth ou USB",
-    "scanner_note": "Scannez le code-barres d'un livre sur n'importe quelle page : un livre que vous avez s'ouvre, un nouveau lance Ajouter un livre. Désactivez cette option si un lecteur gêne la saisie."
+    "machine_drafted": "Cette langue a été rédigée avec l'aide d'une IA et n'a pas été relue par une personne qui la parle. Les corrections sont les bienvenues via Crowdin."
   },
   "settings_account": {
     "profile_description": "Votre compte sur cette instance.",
@@ -689,5 +687,11 @@
     "no_libraries": "Vous n'avez pas encore de bibliothèque où ajouter des livres.",
     "added": "{{title}} ajouté",
     "view": "Voir"
+  },
+  "barcode_scanner": {
+    "description": "Un lecteur Bluetooth ou USB en mode clavier. Ce navigateur uniquement.",
+    "scanning": "Lecture",
+    "toggle": "Utiliser un lecteur Bluetooth ou USB",
+    "note": "Scannez le code-barres d'un livre sur n'importe quelle page : un livre que vous avez s'ouvre, un nouveau lance Ajouter un livre. Désactivez cette option si un lecteur gêne la saisie."
   }
 }

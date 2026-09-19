@@ -73,7 +73,8 @@
     "providers": "Consultas",
     "shelves": "Lugares",
     "tags": "Etiquetas",
-    "tokens": "Tokens de API"
+    "tokens": "Tokens de API",
+    "barcode_scanner": "Leitor de código de barras"
   },
   "theme": {
     "light": "☀ Claro",
@@ -344,10 +345,7 @@
     "typeface": "Fonte",
     "typeface_note": "A OpenDyslexic engrossa a parte de baixo de cada letra e dá formas distintas a caracteres parecidos, o que algumas pessoas com dislexia acham mais fácil de ler.",
     "typeface_sample": "Um punhado de livros",
-    "machine_drafted": "Este idioma foi rascunhado com ajuda de IA e não foi revisado por um falante. Correções são bem-vindas pelo Crowdin.",
-    "scanner": "Leitor de código de barras",
-    "scanner_toggle": "Usar um leitor Bluetooth ou USB",
-    "scanner_note": "Escaneie o código de barras de um livro em qualquer página: um livro que você já tem abre, e um novo inicia Adicionar livro. Desative se um leitor atrapalhar a digitação."
+    "machine_drafted": "Este idioma foi rascunhado com ajuda de IA e não foi revisado por um falante. Correções são bem-vindas pelo Crowdin."
   },
   "settings_account": {
     "profile_description": "Sua conta nesta instância.",
@@ -689,5 +687,11 @@
     "no_libraries": "Você ainda não tem uma biblioteca para adicionar livros.",
     "added": "{{title}} adicionado",
     "view": "Ver"
+  },
+  "barcode_scanner": {
+    "description": "Um leitor Bluetooth ou USB no modo teclado. Somente este navegador.",
+    "scanning": "Leitura",
+    "toggle": "Usar um leitor Bluetooth ou USB",
+    "note": "Escaneie o código de barras de um livro em qualquer página: um livro que você já tem abre, e um novo inicia Adicionar livro. Desative se um leitor atrapalhar a digitação."
   }
 }

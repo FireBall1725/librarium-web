@@ -112,6 +112,8 @@ export const SETTINGS_TREE: SettingsSection[] = [
       { id: 'jobs', to: '/settings/jobs', labelKey: 'settings_nav.jobs', labelFallback: 'Jobs' },
       { id: 'history', to: '/settings/jobs/history', labelKey: 'settings_nav.job_history', labelFallback: 'Job history' },
       { id: 'general', to: '/settings/general', labelKey: 'settings_nav.general', labelFallback: 'General', fact: 'version' },
+      // A setting for the scanner plugged into this computer, so per browser.
+      { id: 'barcode-scanner', to: '/settings/barcode-scanner', labelKey: 'settings_nav.barcode_scanner', labelFallback: 'Barcode scanner' },
       { id: 'licences', to: '/settings/licences', labelKey: 'settings_nav.licences', labelFallback: 'Licences', staticFact: 'AGPL-3.0' },
     ],
   },

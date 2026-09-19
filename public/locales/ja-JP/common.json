@@ -73,7 +73,8 @@
     "providers": "検索元",
     "shelves": "棚",
     "tags": "タグ",
-    "tokens": "API トークン"
+    "tokens": "API トークン",
+    "barcode_scanner": "バーコードスキャナー"
   },
   "theme": {
     "light": "☀ ライト",
@@ -325,10 +326,7 @@
     "typeface": "書体",
     "typeface_note": "OpenDyslexic は各文字の下部を太くし、似た文字に異なる形を与えます。ディスレクシアのある読者には読みやすいと感じられることがあります。",
     "typeface_sample": "ひとにぎりの本",
-    "machine_drafted": "この言語は AI の助けを借りて作成されており、話者による確認は済んでいません。修正は Crowdin からお寄せください。",
-    "scanner": "バーコードスキャナー",
-    "scanner_toggle": "Bluetooth または USB スキャナーを使う",
-    "scanner_note": "どのページでも本のバーコードをスキャンできます。持っている本はそのまま開き、新しい本は「本を追加」が始まります。スキャナーが入力の邪魔になる場合はオフにしてください。"
+    "machine_drafted": "この言語は AI の助けを借りて作成されており、話者による確認は済んでいません。修正は Crowdin からお寄せください。"
   },
   "settings_account": {
     "profile_description": "このインスタンスでのあなたのアカウントです。",
@@ -654,5 +652,11 @@
     "no_libraries": "本を追加できるライブラリがまだありません。",
     "added": "{{title}} を追加しました",
     "view": "表示"
+  },
+  "barcode_scanner": {
+    "description": "キーボードモードのBluetoothまたはUSBスキャナー。このブラウザーのみ。",
+    "scanning": "スキャン",
+    "toggle": "Bluetooth または USB スキャナーを使う",
+    "note": "どのページでも本のバーコードをスキャンできます。持っている本はそのまま開き、新しい本は「本を追加」が始まります。スキャナーが入力の邪魔になる場合はオフにしてください。"
   }
 }

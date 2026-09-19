@@ -17,6 +17,7 @@ import { Link } from 'react-router-dom'
 import { useAuth, ApiError } from '../../auth/AuthContext'
 import { usePageTitle } from '../../hooks/usePageTitle'
 import PageHeader from '../../components/PageHeader'
+import { SettingsBody } from '../../components/settings/SettingRow'
 import { announceListsChanged, fetchLists, listHref, type SavedList } from '../../lib/lists'
 import type { Library } from '../../types'
 
@@ -145,7 +146,7 @@ export default function ListsPage() {
     libraries.find(l => l.id === id)?.name ?? ''
 
   return (
-    <div className="mx-auto w-full max-w-4xl px-6 py-8">
+    <>
       <PageHeader
         title={t('settings_nav.lists', { defaultValue: 'Lists' })}
         description={t('lists_settings.description', {
@@ -156,112 +157,114 @@ export default function ListsPage() {
           { label: t('settings_nav.lists', { defaultValue: 'Lists' }) },
         ]}
       />
+      <SettingsBody>
 
-      {error && (
-        <p className="mb-4 rounded-lg border border-danger-line bg-danger-surface px-3 py-2 text-sm text-danger">
-          {error}
-        </p>
-      )}
+        {error && (
+          <p className="mb-4 rounded-lg border border-danger-line bg-danger-surface px-3 py-2 text-sm text-danger">
+            {error}
+          </p>
+        )}
 
-      <section className="mb-8 rounded-xl border border-line bg-surface p-4">
-        <h2 className="lb-eyebrow mb-3">
-          {editingId
-            ? t('lists_settings.editing', { name: draft.name, defaultValue: `Editing ${draft.name}` })
-            : t('lists_settings.new', { defaultValue: 'New list' })}
-        </h2>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <input
-            className="lb-field flex-1"
-            style={{ minWidth: '12rem' }}
-            value={draft.name}
-            onChange={e => setDraft(d => ({ ...d, name: e.target.value }))}
-            onKeyDown={e => { if (e.key === 'Enter') void save() }}
-            placeholder={t('lists_settings.name', { defaultValue: 'Name' })}
-            aria-label={t('lists_settings.name', { defaultValue: 'Name' })}
-          />
-          <input
-            className="lb-field flex-1"
-            style={{ minWidth: '12rem' }}
-            value={draft.description}
-            onChange={e => setDraft(d => ({ ...d, description: e.target.value }))}
-            placeholder={t('lists_settings.note', { defaultValue: 'What goes on it (optional)' })}
-            aria-label={t('lists_settings.note', { defaultValue: 'What goes on it (optional)' })}
-          />
-          {/* Offered while editing too: a list starts private because that is
-              the safe default, and deciding later that the household should see
-              it is the normal case rather than a reason to rebuild it. */}
-          {libraries.length > 0 && (
-            <select
-              className="lb-field"
-              style={{ width: 'auto' }}
-              value={draft.sharedWith}
-              onChange={e => setDraft(d => ({ ...d, sharedWith: e.target.value }))}
-              aria-label={t('lists_settings.share', { defaultValue: 'Who can see it' })}
-            >
-              <option value="">{t('lists_settings.private', { defaultValue: 'Only me' })}</option>
-              {libraries.map(l => (
-                <option key={l.id} value={l.id}>
-                  {t('lists_settings.shared_with', { name: l.name, defaultValue: `Shared with ${l.name}` })}
-                </option>
-              ))}
-            </select>
-          )}
-        </div>
-
-        <div className="mt-3 flex items-center gap-2">
-          <button type="button" className="lb-btn sm" disabled={busy || !draft.name.trim()}
-            onClick={() => void save()}>
+        <section className="mb-8 rounded-xl border border-line bg-surface p-4">
+          <h2 className="lb-eyebrow mb-3">
             {editingId
-              ? t('common.save', { defaultValue: 'Save' })
-              : t('lists_settings.create', { defaultValue: 'Create list' })}
-          </button>
-          {editingId && (
-            <button type="button" className="lb-btn ghost sm" onClick={reset}>
-              {t('common.cancel', { defaultValue: 'Cancel' })}
-            </button>
-          )}
-        </div>
-      </section>
+              ? t('lists_settings.editing', { name: draft.name, defaultValue: `Editing ${draft.name}` })
+              : t('lists_settings.new', { defaultValue: 'New list' })}
+          </h2>
 
-      {lists === null ? null : lists.length === 0 ? (
-        <p className="text-sm text-content-tertiary">
-          {t('lists_settings.empty', { defaultValue: 'No lists yet.' })}
-        </p>
-      ) : (
-        <ul className="divide-y divide-line rounded-xl border border-line bg-surface">
-          {lists.map(l => (
-            <li key={l.id} className="flex items-center gap-3 px-4 py-3">
-              <div className="min-w-0 flex-1">
-                <Link to={listHref(l)} className="text-sm text-content hover:text-accent">{l.name}</Link>
-                <div className="text-xs text-content-tertiary">
-                  {l.visibility === 'library'
-                    ? t('lists_settings.shared_with', {
-                        name: libraryName(l.shared_library_id),
-                        defaultValue: `Shared with ${libraryName(l.shared_library_id)}`,
-                      })
-                    : t('lists_settings.private', { defaultValue: 'Only me' })}
-                  {l.description ? ` · ${l.description}` : ''}
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              className="lb-field flex-1"
+              style={{ minWidth: '12rem' }}
+              value={draft.name}
+              onChange={e => setDraft(d => ({ ...d, name: e.target.value }))}
+              onKeyDown={e => { if (e.key === 'Enter') void save() }}
+              placeholder={t('lists_settings.name', { defaultValue: 'Name' })}
+              aria-label={t('lists_settings.name', { defaultValue: 'Name' })}
+            />
+            <input
+              className="lb-field flex-1"
+              style={{ minWidth: '12rem' }}
+              value={draft.description}
+              onChange={e => setDraft(d => ({ ...d, description: e.target.value }))}
+              placeholder={t('lists_settings.note', { defaultValue: 'What goes on it (optional)' })}
+              aria-label={t('lists_settings.note', { defaultValue: 'What goes on it (optional)' })}
+            />
+            {/* Offered while editing too: a list starts private because that is
+                the safe default, and deciding later that the household should see
+                it is the normal case rather than a reason to rebuild it. */}
+            {libraries.length > 0 && (
+              <select
+                className="lb-field"
+                style={{ width: 'auto' }}
+                value={draft.sharedWith}
+                onChange={e => setDraft(d => ({ ...d, sharedWith: e.target.value }))}
+                aria-label={t('lists_settings.share', { defaultValue: 'Who can see it' })}
+              >
+                <option value="">{t('lists_settings.private', { defaultValue: 'Only me' })}</option>
+                {libraries.map(l => (
+                  <option key={l.id} value={l.id}>
+                    {t('lists_settings.shared_with', { name: l.name, defaultValue: `Shared with ${l.name}` })}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+
+          <div className="mt-3 flex items-center gap-2">
+            <button type="button" className="lb-btn sm" disabled={busy || !draft.name.trim()}
+              onClick={() => void save()}>
+              {editingId
+                ? t('common.save', { defaultValue: 'Save' })
+                : t('lists_settings.create', { defaultValue: 'Create list' })}
+            </button>
+            {editingId && (
+              <button type="button" className="lb-btn ghost sm" onClick={reset}>
+                {t('common.cancel', { defaultValue: 'Cancel' })}
+              </button>
+            )}
+          </div>
+        </section>
+
+        {lists === null ? null : lists.length === 0 ? (
+          <p className="text-sm text-content-tertiary">
+            {t('lists_settings.empty', { defaultValue: 'No lists yet.' })}
+          </p>
+        ) : (
+          <ul className="divide-y divide-line rounded-xl border border-line bg-surface">
+            {lists.map(l => (
+              <li key={l.id} className="flex items-center gap-3 px-4 py-3">
+                <div className="min-w-0 flex-1">
+                  <Link to={listHref(l)} className="text-sm text-content hover:text-accent">{l.name}</Link>
+                  <div className="text-xs text-content-tertiary">
+                    {l.visibility === 'library'
+                      ? t('lists_settings.shared_with', {
+                          name: libraryName(l.shared_library_id),
+                          defaultValue: `Shared with ${libraryName(l.shared_library_id)}`,
+                        })
+                      : t('lists_settings.private', { defaultValue: 'Only me' })}
+                    {l.description ? ` · ${l.description}` : ''}
+                  </div>
                 </div>
-              </div>
-              <span className="text-xs tabular-nums text-content-tertiary">
-                {t('lists_settings.count', {
-                  count: l.book_count,
-                  defaultValue: '1 book',
-                  defaultValue_other: `${l.book_count} books`,
-                })}
-              </span>
-              <button type="button" className="lb-btn ghost sm" disabled={busy} onClick={() => edit(l)}>
-                {t('common.edit', { defaultValue: 'Edit' })}
-              </button>
-              <button type="button" className="lb-btn ghost sm" disabled={busy}
-                style={{ color: 'var(--color-danger)' }} onClick={() => void remove(l)}>
-                {t('common.delete', { defaultValue: 'Delete' })}
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
+                <span className="text-xs tabular-nums text-content-tertiary">
+                  {t('lists_settings.count', {
+                    count: l.book_count,
+                    defaultValue: '1 book',
+                    defaultValue_other: `${l.book_count} books`,
+                  })}
+                </span>
+                <button type="button" className="lb-btn ghost sm" disabled={busy} onClick={() => edit(l)}>
+                  {t('common.edit', { defaultValue: 'Edit' })}
+                </button>
+                <button type="button" className="lb-btn ghost sm" disabled={busy}
+                  style={{ color: 'var(--color-danger)' }} onClick={() => void remove(l)}>
+                  {t('common.delete', { defaultValue: 'Delete' })}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </SettingsBody>
+    </>
   )
 }
