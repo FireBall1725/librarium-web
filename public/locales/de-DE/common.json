@@ -875,6 +875,12 @@
     "state_ready": "Bereit zum Hinzufügen",
     "state_failed": "Fehlgeschlagen",
     "state_undone": "Rückgängig gemacht",
-    "state_skipped": "Übersprungen"
+    "state_skipped": "Übersprungen",
+    "close_waiting_title_one": "Mit {{count}} wartenden Buch schließen?",
+    "close_waiting_title_other": "Mit {{count}} wartenden Büchern schließen?",
+    "close_waiting_body": "Sie wurden nicht hinzugefügt. Schließen entfernt sie aus der Warteschlange.",
+    "close_book_title": "Schließen, ohne dieses Buch hinzuzufügen?",
+    "close_book_body": "Es wurde noch nicht hinzugefügt.",
+    "close_anyway": "Trotzdem schließen"
   }
 }

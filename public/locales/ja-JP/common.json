@@ -828,6 +828,11 @@
     "state_ready": "追加できます",
     "state_failed": "失敗",
     "state_undone": "取り消し済み",
-    "state_skipped": "スキップ済み"
+    "state_skipped": "スキップ済み",
+    "close_waiting_title_other": "{{count}} 冊が保留中のまま閉じますか？",
+    "close_waiting_body": "まだ追加されていません。閉じるとキューから消えます。",
+    "close_book_title": "この本を追加せずに閉じますか？",
+    "close_book_body": "まだ追加されていません。",
+    "close_anyway": "このまま閉じる"
   }
 }

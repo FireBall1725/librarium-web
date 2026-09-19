@@ -875,6 +875,12 @@
     "state_ready": "Listo para añadir",
     "state_failed": "Error",
     "state_undone": "Deshecho",
-    "state_skipped": "Omitido"
+    "state_skipped": "Omitido",
+    "close_waiting_title_one": "¿Cerrar con {{count}} libro pendiente?",
+    "close_waiting_title_other": "¿Cerrar con {{count}} libros pendientes?",
+    "close_waiting_body": "No se han añadido. Al cerrar se quitan de la cola.",
+    "close_book_title": "¿Cerrar sin añadir este libro?",
+    "close_book_body": "Aún no se ha añadido.",
+    "close_anyway": "Cerrar de todos modos"
   }
 }

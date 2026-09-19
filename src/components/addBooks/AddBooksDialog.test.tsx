@@ -187,4 +187,48 @@ describe('Many books', () => {
     open()
     expect(await screen.findByText('No provider knew this barcode.')).toBeInTheDocument()
   })
+
+  it('asks before closing on books still waiting, and starts clean after', async () => {
+    window.localStorage.setItem('librarium:add-books:mode', 'many')
+    const onClose = vi.fn()
+    const first = open({ onClose })
+    await waitFor(() => expect(screen.getByLabelText('Place')).toHaveValue('s3'))
+    await act(async () => { scanInto(screen.getByLabelText('Scan, or type an ISBN or UPC'), '9780000000002') })
+    await screen.findByText('No provider knew this barcode.')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+    expect(await screen.findByText('Close with 1 book still waiting?')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+    expect(onClose).not.toHaveBeenCalled()
+    expect(screen.getByText('No provider knew this barcode.')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Close anyway' }))
+    expect(onClose).toHaveBeenCalled()
+    first.unmount()
+    open()
+    expect(await screen.findByText('Nothing scanned yet')).toBeInTheDocument()
+  })
+})
+
+describe('Closing', () => {
+  it('closes straight away when nothing is waiting', async () => {
+    const onClose = vi.fn()
+    open({ onClose })
+    await waitFor(() => expect(screen.getByLabelText('Place')).toHaveValue('s3'))
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+    expect(onClose).toHaveBeenCalled()
+  })
+
+  it('asks before dropping a found book that was never added', async () => {
+    window.localStorage.setItem('librarium:add-books:mode', 'one')
+    const onClose = vi.fn()
+    open({ onClose })
+    await waitFor(() => expect(screen.getByLabelText('Place')).toHaveValue('s3'))
+    scanInto(screen.getByLabelText('Scan, or type an ISBN, UPC or title'), '9780765349064')
+    await screen.findByRole('button', { name: /Add to Book Collection/ })
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(await screen.findByText('Close without adding this book?')).toBeInTheDocument()
+    expect(onClose).not.toHaveBeenCalled()
+  })
 })

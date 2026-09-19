@@ -875,6 +875,12 @@
     "state_ready": "Prêt à ajouter",
     "state_failed": "Échec",
     "state_undone": "Annulé",
-    "state_skipped": "Passé"
+    "state_skipped": "Passé",
+    "close_waiting_title_one": "Fermer avec {{count}} livre en attente ?",
+    "close_waiting_title_other": "Fermer avec {{count}} livres en attente ?",
+    "close_waiting_body": "Ils n’ont pas été ajoutés. Fermer les retire de la file.",
+    "close_book_title": "Fermer sans ajouter ce livre ?",
+    "close_book_body": "Il n’a pas encore été ajouté.",
+    "close_anyway": "Fermer quand même"
   }
 }

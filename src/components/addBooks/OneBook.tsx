@@ -21,7 +21,7 @@ import CameraView from './CameraView'
 import FoundBook from './FoundBook'
 
 export default function OneBook({
-  destination, addLabel, libraryName, mediaTypes, initialCode, initialTitle, onAdded, onEdit, onManual, onImport, onDuplicate,
+  destination, addLabel, libraryName, mediaTypes, initialCode, initialTitle, onAdded, onEdit, onManual, onImport, onDuplicate, onHolding,
 }: {
   destination: Destination
   /** "Add to Book Collection › Shelf 3". */
@@ -36,6 +36,8 @@ export default function OneBook({
   onImport: () => void
   /** A lookup found a book this library already has. */
   onDuplicate?: (book: Book) => void
+  /** A found book is on screen and not added yet. */
+  onHolding?: (holding: boolean) => void
 }) {
   const { callApi } = useAuth()
   const { t } = useTranslation()
@@ -175,6 +177,10 @@ export default function OneBook({
   }
 
   const merged = lookup?.merged
+  useEffect(() => {
+    onHolding?.(!!merged)
+    return () => onHolding?.(false)
+  }, [merged, onHolding])
   const showWays = !lookup && !error && !results && !busy && !camera
 
   return (

@@ -130,12 +130,9 @@ export function saveQueue(libraryId: string, rows: readonly QueueRow[], store: S
   }
 }
 
-/**
- * Closing the dialog means you're done: finished rows go, so the next visit
- * starts clean. Rows still waiting on you stay rather than being lost.
- */
-export function finishQueue(libraryId: string, store: Storage = storage()): void {
-  saveQueue(libraryId, loadQueue(libraryId, store).filter(unsettled), store)
+/** Rows in a library's kept queue that are still being looked up or waiting on you. */
+export function pendingRows(libraryId: string, store: Storage = storage()): number {
+  return loadQueue(libraryId, store).filter(unsettled).length
 }
 
 const unsettled = (r: QueueRow) =>

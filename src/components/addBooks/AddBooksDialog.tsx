@@ -21,7 +21,8 @@ import {
   type AddBooksPrefs, type Destination,
 } from '../../lib/addBooks'
 import { undoAdd } from '../../lib/addBooksFlow'
-import { finishQueue } from '../../lib/addBooksQueue'
+import { pendingRows, saveQueue } from '../../lib/addBooksQueue'
+import { ConfirmDialog } from '../Dialog'
 import { Icon } from '../../lib/icons'
 import { useToast } from '../Toast'
 import AddBookModal from '../AddBookModal'
@@ -176,18 +177,40 @@ export default function AddBooksDialog({
   const libraryRef = useRef(destination.libraryId)
   useEffect(() => { libraryRef.current = destination.libraryId })
   const close = useCallback(() => {
-    finishQueue(libraryRef.current)
+    // Closing means done; anything unfinished was confirmed away first.
+    saveQueue(libraryRef.current, [])
     if (lastSaved.current) onSaved(lastSaved.current)
     else onClose()
   }, [onClose, onSaved])
 
+  // Something not yet added asks before the dialog closes on it: a book on
+  // One book's card, the form, or queue rows still looking up or waiting.
+  const [confirming, setConfirming] = useState<{ waiting: number } | null>(null)
+  const confirmingRef = useRef(false)
+  useEffect(() => { confirmingRef.current = !!confirming })
+  const manualRef = useRef(false)
+  useEffect(() => { manualRef.current = !!manual })
+  // A ref, not state: it only matters at the moment of closing.
+  const holdingRef = useRef(false)
+  const setHolding = useCallback((h: boolean) => { holdingRef.current = h }, [])
+  const requestClose = useCallback(() => {
+    if (confirmingRef.current) return
+    const waiting = pendingRows(libraryRef.current)
+    if (waiting > 0 || holdingRef.current || manualRef.current) setConfirming({ waiting })
+    else close()
+  }, [close])
+  const closeAnyway = () => {
+    setConfirming(null)
+    close()
+  }
+
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') close() }
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') requestClose() }
     document.addEventListener('keydown', onKey)
     const previous = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = previous }
-  }, [close])
+  }, [requestClose])
 
   // While the form is open a scan would throw away what's typed, so it waits.
   useEffect(() => manual ? registerScanTarget(() => {
@@ -198,7 +221,7 @@ export default function AddBooksDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-2 sm:p-4"
-      onMouseDown={e => { if (e.target === e.currentTarget) close() }}>
+      onMouseDown={e => { if (e.target === e.currentTarget) requestClose() }}>
       <div role="dialog" aria-modal="true" aria-labelledby={titleId}
         className={`flex max-h-[94vh] w-full flex-col overflow-hidden rounded-2xl bg-surface shadow-2xl ${mode === 'many' && !manual ? 'max-w-5xl' : 'max-w-3xl'}`}>
         <header className="flex flex-shrink-0 flex-wrap items-center gap-3 border-b border-line px-5 py-3">
@@ -218,7 +241,7 @@ export default function AddBooksDialog({
               ))}
             </div>
           )}
-          <button type="button" onClick={close} aria-label={t('common.close', { defaultValue: 'Close' })}
+          <button type="button" onClick={requestClose} aria-label={t('common.close', { defaultValue: 'Close' })}
             className="ml-auto rounded-lg p-1.5 text-content-muted transition-colors hover:bg-surface-inset hover:text-content">
             <Icon name="close" className="h-5 w-5" />
           </button>
@@ -254,7 +277,7 @@ export default function AddBooksDialog({
               <OneBook
                 destination={shown} addLabel={addLabel} libraryName={library?.name ?? ''} mediaTypes={mediaTypes}
                 initialCode={initialIsbn} initialTitle={initialTitle}
-                onAdded={added} onDuplicate={onDuplicate}
+                onAdded={added} onDuplicate={onDuplicate} onHolding={setHolding}
                 onEdit={(result, identifier) => setManual({ result, identifier })}
                 onManual={barcode => setManual({ barcode })}
                 onImport={() => { close(); navigate('/import') }}
@@ -270,6 +293,19 @@ export default function AddBooksDialog({
             )}
         </div>
       </div>
+      <ConfirmDialog
+        open={!!confirming}
+        title={confirming?.waiting
+          ? t('add_books.close_waiting_title', { count: confirming.waiting, defaultValue: 'Close with {{count}} books still waiting?' })
+          : t('add_books.close_book_title', { defaultValue: 'Close without adding this book?' })}
+        description={confirming?.waiting
+          ? t('add_books.close_waiting_body', { defaultValue: "They haven't been added. Closing drops them from the queue." })
+          : t('add_books.close_book_body', { defaultValue: "It hasn't been added yet." })}
+        confirmLabel={t('add_books.close_anyway', { defaultValue: 'Close anyway' })}
+        destructive
+        onCancel={() => setConfirming(null)}
+        onConfirm={closeAnyway}
+      />
     </div>
   )
 }

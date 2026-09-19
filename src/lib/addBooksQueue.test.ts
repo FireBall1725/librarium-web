@@ -3,7 +3,7 @@
 
 import { describe, expect, it } from 'vitest'
 import type { Copy, MergedBookResult } from '../types'
-import { MAX_KEPT, countBy, finishQueue, isRepeat, loadQueue, matchesFilter, newestCopy, saveQueue, type QueueRow } from './addBooksQueue'
+import { MAX_KEPT, countBy, pendingRows, isRepeat, loadQueue, matchesFilter, newestCopy, saveQueue, type QueueRow } from './addBooksQueue'
 
 const row = (id: string, state: QueueRow['state'], extra: Partial<QueueRow> = {}): QueueRow => ({
   id, code: `978000000000${id}`, scannedAt: 0, state, ...extra,
@@ -88,14 +88,10 @@ describe('keeping the queue', () => {
     expect(back.at(-1)?.state).toBe('needs_you')
   })
 
-  it('drops finished rows when the dialog closes, and keeps ones waiting on you', () => {
+  it('counts the rows still looking up or waiting on you', () => {
     const store = memory()
-    saveQueue('lib', [row('1', 'added'), row('2', 'needs_you'), row('3', 'have'), row('4', 'skipped')], store)
-    finishQueue('lib', store)
-    expect(loadQueue('lib', store).map(r => r.id)).toEqual(['2'])
-    saveQueue('lib', [row('1', 'added')], store)
-    finishQueue('lib', store)
-    expect(store.m.size).toBe(0)
+    saveQueue('lib', [row('1', 'added'), row('2', 'needs_you'), row('3', 'looking'), row('4', 'skipped')], store)
+    expect(pendingRows('lib', store)).toBe(2)
   })
 
   it('clears the key when the queue is empty, and shrugs off junk', () => {
