@@ -608,7 +608,9 @@
     "from_one": "aus 1 Bewertung",
     "from_other": "aus {{count}} Bewertungen",
     "favourite": "Favorit",
-    "rating": "Bewertung"
+    "rating": "Bewertung",
+    "read_between": "{{from}} bis {{to}}",
+    "started": "Begonnen am {{date}}"
   },
   "book_contents": {
     "add": "+ Erfassen, was hierin enthalten ist",

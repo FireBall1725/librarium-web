@@ -608,7 +608,9 @@
     "from_one": "from 1 rating",
     "from_other": "from {{count}} ratings",
     "favourite": "Favourite",
-    "rating": "Rating"
+    "rating": "Rating",
+    "read_between": "{{from}} to {{to}}",
+    "started": "Started {{date}}"
   },
   "book_contents": {
     "add": "+ Record what this contains",
