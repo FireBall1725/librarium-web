@@ -657,6 +657,16 @@ export interface ProviderStatus {
   // self-hosted mirror needing a base URL) declare this; the settings page
   // falls back to the legacy single-API-key form when it's absent.
   config_fields?: ProviderConfigField[]
+  // On the admin Lookups list rather than only in the catalogue. Older
+  // servers omit it; treat enabled as listed there.
+  listed?: boolean
+  // Catalogue details; all optional so older servers still type-check.
+  kind?: 'data' | 'buy'
+  region?: string
+  languages?: string[]
+  sends?: string
+  contributed_by?: string
+  docs_url?: string
 }
 
 export interface SeriesLookupResult {

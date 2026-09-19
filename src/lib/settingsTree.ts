@@ -85,7 +85,7 @@ export const SETTINGS_TREE: SettingsSection[] = [
       // opened the same page and the providers page was unreachable from the
       // tree. The providers page itself was filed under Collection as
       // "Metadata", a name that does not say what it holds.
-      { id: 'providers', to: '/settings/metadata', labelKey: 'settings_nav.providers', labelFallback: 'Metadata providers', fact: 'providers' },
+      { id: 'providers', to: '/settings/metadata', labelKey: 'settings_nav.providers', labelFallback: 'Lookups', fact: 'providers' },
       { id: 'ai', to: '/settings/ai', labelKey: 'connections_nav.ai', labelFallback: 'AI provider', fact: 'aiProvider' },
     ],
   },
