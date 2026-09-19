@@ -344,7 +344,10 @@
     "typeface": "Fonte",
     "typeface_note": "A OpenDyslexic engrossa a parte de baixo de cada letra e dá formas distintas a caracteres parecidos, o que algumas pessoas com dislexia acham mais fácil de ler.",
     "typeface_sample": "Um punhado de livros",
-    "machine_drafted": "Este idioma foi rascunhado com ajuda de IA e não foi revisado por um falante. Correções são bem-vindas pelo Crowdin."
+    "machine_drafted": "Este idioma foi rascunhado com ajuda de IA e não foi revisado por um falante. Correções são bem-vindas pelo Crowdin.",
+    "scanner": "Leitor de código de barras",
+    "scanner_toggle": "Usar um leitor Bluetooth ou USB",
+    "scanner_note": "Escaneie o código de barras de um livro em qualquer página: um livro que você já tem abre, e um novo inicia Adicionar livro. Desative se um leitor atrapalhar a digitação."
   },
   "settings_account": {
     "profile_description": "Sua conta nesta instância.",
@@ -677,5 +680,14 @@
     "answered_other": "{{count}} fontes responderam em {{seconds}} s",
     "answers_one": "{{count}} resposta",
     "answers_other": "{{count}} respostas"
+  },
+  "scanner": {
+    "scanned": "Escaneado {{code}}",
+    "not_book": "Esse código de barras não é de um livro: {{code}}",
+    "upc_unavailable": "A busca por UPC ainda não está disponível: {{code}}",
+    "lookup_failed": "Não foi possível verificar suas bibliotecas para {{code}}",
+    "no_libraries": "Você ainda não tem uma biblioteca para adicionar livros.",
+    "added": "{{title}} adicionado",
+    "view": "Ver"
   }
 }
