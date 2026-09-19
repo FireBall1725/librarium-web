@@ -650,7 +650,6 @@
   },
   "scan": {
     "start_failed": "No se pudo iniciar el lector de códigos de barras.",
-    "library_locked": "Termina o vacía la sesión de escaneo para cambiar de biblioteca.",
     "one": "Escanear código de barras",
     "many": "Escanear varios libros seguidos",
     "hint": "Apunta la cámara a un código de barras…",
@@ -669,7 +668,8 @@
       "not_found": "No encontrado",
       "error": "Ha fallado",
       "added": "Añadido"
-    }
+    },
+    "library_locked": "Termina o vacía la sesión de escaneo para cambiar de biblioteca."
   },
   "lookups": {
     "cap_isbn": "ISBN",
