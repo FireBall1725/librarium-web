@@ -61,13 +61,13 @@ export default function MergedLookup({ merged, onUse }: {
             {t('merged.answered', { count: summary.answered.length, seconds: summary.seconds, defaultValue: '{{count}} providers answered in {{seconds}} s' })}
           </b>
           {summary.answered.length > 0 && <>: {summary.answered.map(p => p.display_name).join(', ')}.</>}
-          {summary.noRecord.length > 0 && <> {t('merged.no_record', { names: summary.noRecord.map(p => p.display_name).join(', '), defaultValue: 'No record at {{names}}.' })}</>}
-          {summary.missed.length > 0 && <> {t('merged.missed', { names: summary.missed.map(p => p.display_name).join(', '), defaultValue: '{{names}} missed the deadline.' })}</>}
-          {summary.failed.length > 0 && <> {t('merged.failed', { names: summary.failed.map(p => p.display_name).join(', '), defaultValue: "{{names}} didn't answer." })}</>}
+          {/* Only who answered: who had nothing is noise. */}
         </p>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-[150px_minmax(0,1fr)]">
+      {/* The cover column only when there's a cover: without one, the table
+          would drop into the 150px column and wrap a letter per line. */}
+      <div className={`grid gap-4 ${covers.length > 0 ? 'sm:grid-cols-[150px_minmax(0,1fr)]' : ''}`}>
         {covers.length > 0 && (
           <div className="flex flex-col gap-2">
             <img src={covers[coverPick]?.cover_url} alt="" referrerPolicy="no-referrer"

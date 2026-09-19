@@ -644,6 +644,8 @@ export interface MergedBookResult {
   // 'largest' once cover sizes are known, else 'first'.
   cover_reason?: 'largest' | 'first'
   providers?: LookupProviderStatus[]
+  // The ISBN a UPC lookup was answered by, worked out from the add-on.
+  from_isbn?: string
 }
 
 export interface ISBNLookupResult {

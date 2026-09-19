@@ -13,7 +13,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import { useToast } from './Toast'
 import AddBookModal from './AddBookModal'
-import { classifyBarcode } from '../lib/barcode'
+import { classifyBarcode, upcLookupCode } from '../lib/barcode'
 import { currentScanTarget, useScannerEnabled } from '../lib/barcodeScanner'
 import { useBarcodeScanner } from '../lib/useBarcodeScanner'
 import { announceCollectionChanged } from '../lib/collectionEvents'
@@ -53,11 +53,6 @@ export default function GlobalBarcodeScanner() {
       return
     }
 
-    if (barcode.kind !== 'isbn') {
-      toast.show(t('scanner.upc_unavailable', { code: shown, defaultValue: `UPC lookup isn't available yet: ${shown}` }), { variant: 'error' })
-      return
-    }
-
     let libraries: Library[]
     try {
       libraries = (await callApi<Library[]>('/api/v1/libraries')) ?? []
@@ -70,8 +65,22 @@ export default function GlobalBarcodeScanner() {
       return
     }
 
-    // Look in the library on screen first, then the rest, and open the first hit.
     const here = currentLibrary()
+    const mediaTypes = () => callApi<MediaType[]>('/api/v1/media-types').then(m => m ?? []).catch((): MediaType[] => [])
+
+    // Books aren't found by UPC yet, so a UPC goes straight to Add Book, which
+    // looks it up the same way it looks up an ISBN.
+    if (barcode.kind !== 'isbn') {
+      setAddFor({
+        isbn: upcLookupCode(barcode),
+        libraries,
+        mediaTypes: await mediaTypes(),
+        libraryId: libraries.some(l => l.id === here) ? here : undefined,
+      })
+      return
+    }
+
+    // Look in the library on screen first, then the rest, and open the first hit.
     const ordered = [...libraries].sort((a, b) => (a.id === here ? -1 : b.id === here ? 1 : 0))
     const found = await Promise.all(ordered.map(lib =>
       callApi<Book>(`/api/v1/libraries/${lib.id}/book-by-isbn/${encodeURIComponent(barcode.isbn13)}`)
@@ -84,11 +93,10 @@ export default function GlobalBarcodeScanner() {
       return
     }
 
-    const mediaTypes = await callApi<MediaType[]>('/api/v1/media-types').then(m => m ?? []).catch((): MediaType[] => [])
     setAddFor({
       isbn: barcode.isbn13,
       libraries,
-      mediaTypes,
+      mediaTypes: await mediaTypes(),
       libraryId: libraries.some(l => l.id === here) ? here : undefined,
     })
   }, [callApi, currentLibrary, navigate, t, toast])

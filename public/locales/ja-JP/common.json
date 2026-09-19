@@ -682,9 +682,6 @@
     "why_longest": "最も長い",
     "why_most_detail": "最も詳しい",
     "why_first": "一致なし、最初の回答",
-    "no_record": "{{names}} には記録がありません。",
-    "missed": "{{names}} は時間内に回答しませんでした。",
-    "failed": "{{names}} から回答がありませんでした。",
     "cover": "表紙",
     "use_cover": "{{name}} の表紙を使う",
     "cover_largest": "最も大きい表紙",
@@ -694,12 +691,13 @@
     "use": "この内容を使う",
     "none": "このISBNでは見つかりませんでした。",
     "answered_other": "{{count}}件の提供元が{{seconds}}秒で回答",
-    "answers_other": "{{count}}件の回答"
+    "answers_other": "{{count}}件の回答",
+    "none_upc": "その UPC の結果は見つかりませんでした。"
   },
   "scanner": {
     "scanned": "スキャンしました: {{code}}",
     "not_book": "本のバーコードではありません: {{code}}",
-    "upc_unavailable": "UPC での検索はまだ使えません: {{code}}",
+    "upc_not_in_sweep": "UPC は連続スキャン中ではなく単独でスキャンしてください：{{code}}",
     "lookup_failed": "{{code}} をライブラリで確認できませんでした",
     "no_libraries": "本を追加できるライブラリがまだありません。",
     "added": "{{title}} を追加しました",
@@ -715,5 +713,10 @@
     "change": "{{name}} を変更",
     "join_above": "上の名前とつなげる",
     "remove": "削除"
+  },
+  "add_book": {
+    "isbn_or_upc": "ISBN または UPC…",
+    "upc_warning": "UPC で検索しました。ペーパーバックは同じ価格の本どうしで UPC を共有していることが多いため、あなたの本かどうか確認してください。バーコードの近くや奥付に印刷された ISBN なら確実に見つかります。",
+    "from_isbn": "UPC の横の小さなバーコードから求めた ISBN {{isbn}} で見つかりました。"
   }
 }

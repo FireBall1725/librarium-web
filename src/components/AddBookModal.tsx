@@ -27,6 +27,7 @@ import {
   type LastAccepted, type ScannedItem,
 } from '../lib/scanSession'
 import { registerScanTarget } from '../lib/barcodeScanner'
+import { classifyBarcode, pickCameraScan, upcLookupCode } from '../lib/barcode'
 import { useToast } from './Toast'
 
 
@@ -181,6 +182,8 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
   const [mode, setMode] = useState<'isbn' | 'search' | 'manual'>(!initialIsbn && initialTitle ? 'search' : 'isbn')
   const [isbnInput, setIsbnInput] = useState(initialIsbn ?? '')
   const [isbnMerged, setIsbnMerged] = useState<MergedBookResult | null>(null)
+  // The last lookup was by UPC, whose answers need checking; see below.
+  const [mergedFromUpc, setMergedFromUpc] = useState(false)
   const [isbnLoading, setIsbnLoading] = useState(false)
   const [isbnError, setIsbnError] = useState<string | null>(null)
   const [isbnDuplicate, setIsbnDuplicate] = useState<Book | null>(null)
@@ -278,9 +281,9 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
         try {
           videoRef.current.srcObject = stream
           await videoRef.current.play()
-          // Native where the browser has it, WebAssembly where it does not —
-          // which is every browser on iOS. See lib/barcodeDetector.
-          detector = await getBarcodeReader(['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128'])
+          // zxing on every browser, so a paperback's add-on is read too.
+          // See lib/barcodeDetector.
+          detector = await getBarcodeReader()
         } catch {
           stopScan()
           setIsbnError(t('scan.start_failed', {
@@ -288,16 +291,25 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
           }))
           return
         }
+        // When a bare UPC was first seen, while the camera waits for its add-on.
+        let bareSince: number | null = null
         const scan = async () => {
           if (!videoRef.current || !streamRef.current) return
           try {
             const codes = await detector.detect(videoRef.current)
             if (codes.length > 0) {
-              const code = codes[0].rawValue
               if (!continuousRef.current) {
-                stopScan()
-                setIsbnInput(code)
-                doISBNLookup(code)
+                const now = performance.now()
+                const code = pickCameraScan(codes.map(c => c.rawValue), bareSince, now)
+                if (code === null) {
+                  bareSince ??= now
+                } else {
+                  stopScan()
+                  setIsbnInput(code)
+                  doISBNLookup(code)
+                  return
+                }
+                requestAnimationFrame(scan)
                 return
               }
               // Continuous mode: the camera stays on and the code joins the
@@ -445,9 +457,18 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
   const sweepRef = useRef(acceptIntoSession)
   useEffect(() => { lookupRef.current = doISBNLookup; sweepRef.current = acceptIntoSession })
   useEffect(() => registerScanTarget(barcode => {
+    // The global scanner turns away anything that isn't a barcode first.
+    if (barcode.kind === 'invalid') return
     if (barcode.kind !== 'isbn') {
-      const code = barcode.code
-      toast.show(t('scanner.upc_unavailable', { code, defaultValue: `UPC lookup isn't available yet: ${code}` }), { variant: 'error' })
+      const code = upcLookupCode(barcode)
+      // A sweep collects ISBNs to look up later; a UPC is looked up on its own.
+      if (continuousRef.current || scannedRef.current.length > 0) {
+        toast.show(t('scanner.upc_not_in_sweep', { code, defaultValue: `Scan a UPC on its own, not in a sweep: ${code}` }), { variant: 'error' })
+        return
+      }
+      setMode('isbn')
+      setIsbnInput(code)
+      lookupRef.current(code)
       return
     }
     // A sweep is running, with the camera on or its list under review: the
@@ -480,24 +501,48 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
   // hazard, since the binding never gets reassigned.
   async function doISBNLookup(isbn: string) {
     if (!isbn.trim()) return
+    // Select what was looked up, so the next scan into the box replaces it
+    // rather than landing on the end: a second scan of the same book, to
+    // catch the add-on the first one missed, used to give 30 digits.
+    const box = isbnInputRef.current
+    if (box && document.activeElement === box) box.select()
     setIsbnLoading(true)
     setIsbnError(null)
     setIsbnMerged(null)
     setIsbnDuplicate(null)
     const cleanISBN = isbn.trim()
+    const barcode = classifyBarcode(cleanISBN)
+    const upc = barcode.kind === 'upc' || barcode.kind === 'ean' ? upcLookupCode(barcode) : null
     try {
       // One merged answer across every provider that's on, each field
       // pre-selected by the server; MergedLookup lets the person switch any.
+      // A UPC asks the providers that read UPCs, and skips the duplicate
+      // check, which only knows ISBNs.
       const [merged, duplicate] = await Promise.all([
-        callApi<MergedBookResult>(`/api/v1/lookup/isbn/${encodeURIComponent(cleanISBN)}/merged`),
-        callApi<Book>(`/api/v1/libraries/${targetLibrary}/book-by-isbn/${encodeURIComponent(cleanISBN)}`).catch(() => null),
-      ])
+        upc
+          ? callApi<MergedBookResult>(`/api/v1/lookup/upc/${encodeURIComponent(upc)}/merged`)
+          : callApi<MergedBookResult>(`/api/v1/lookup/isbn/${encodeURIComponent(cleanISBN)}/merged`),
+        upc
+          ? Promise.resolve(null)
+          : callApi<Book>(`/api/v1/libraries/${targetLibrary}/book-by-isbn/${encodeURIComponent(cleanISBN)}`).catch(() => null),
+      ]).then(async ([m, d]) => {
+        // The server found the ISBN in the add-on, so the duplicate check
+        // can run after all.
+        if (upc && m?.from_isbn) {
+          d = await callApi<Book>(`/api/v1/libraries/${targetLibrary}/book-by-isbn/${encodeURIComponent(m.from_isbn)}`).catch(() => null)
+        }
+        return [m, d] as const
+      })
       setIsbnDuplicate(duplicate ?? null)
       if (duplicate) onDuplicate?.(duplicate)
       if (hasAnyField(merged)) {
         setIsbnMerged(merged)
+        // Found through the add-on's ISBN, it's as sure as an ISBN lookup.
+        setMergedFromUpc(!!upc && !merged.from_isbn)
       } else {
-        setIsbnError(t('merged.none', { defaultValue: 'No results found for that ISBN.' }))
+        setIsbnError(upc
+          ? t('merged.none_upc', { defaultValue: 'No results found for that UPC.' })
+          : t('merged.none', { defaultValue: 'No results found for that ISBN.' }))
       }
     } catch (err) {
       setIsbnError(err instanceof ApiError ? err.message : 'Lookup failed')
@@ -813,7 +858,7 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
                       ref={isbnInputRef}
                       onChange={e => setIsbnInput(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && doISBNLookup(isbnInput)}
-                      placeholder="Enter ISBN-10 or ISBN-13…"
+                      placeholder={t('add_book.isbn_or_upc', { defaultValue: 'ISBN or UPC…' })}
                       className={inputCls} />
                     <button type="button" onClick={() => doISBNLookup(isbnInput)} disabled={isbnLoading || !isbnInput.trim()}
                       className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
@@ -843,6 +888,20 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
                         <span className="text-amber-600 dark:text-amber-500">or import to add an edition</span>
                       </div>
                     </div>
+                  )}
+                  {isbnMerged && mergedFromUpc && (
+                    // A paperback's UPC names the publisher and the price, and
+                    // every book at that price shares it, so the answer can be
+                    // a different book entirely (Tor's
+                    // 037145007991 came back as another author's novel).
+                    <p className="mb-3 rounded-lg border border-warning-line bg-warning-surface px-3 py-2 text-[13px] text-warning-strong">
+                      {t('add_book.upc_warning', { defaultValue: "Looked up by UPC. Paperbacks often share one UPC with every book at the same price, so check this is your book. The ISBN, printed near the barcode or on the copyright page, finds it for sure." })}
+                    </p>
+                  )}
+                  {isbnMerged?.from_isbn && (
+                    <p className="mb-3 text-[13px] text-content-muted">
+                      {t('add_book.from_isbn', { isbn: isbnMerged.from_isbn, defaultValue: 'Found by ISBN {{isbn}}, worked out from the small barcode beside the UPC.' })}
+                    </p>
                   )}
                   {isbnMerged && (
                     <MergedLookup key={isbnInput} merged={isbnMerged} onUse={r => { void importResult(r) }} />

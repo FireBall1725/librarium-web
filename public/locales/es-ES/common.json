@@ -725,9 +725,6 @@
     "why_longest": "La más larga",
     "why_most_detail": "La más precisa",
     "why_first": "Sin acuerdo, primera respuesta",
-    "no_record": "Sin registro en {{names}}.",
-    "missed": "{{names}} no respondió a tiempo.",
-    "failed": "{{names}} no respondió.",
     "cover": "Portada",
     "use_cover": "Usar la portada de {{name}}",
     "cover_largest": "La portada más grande",
@@ -739,12 +736,13 @@
     "answered_one": "{{count}} fuente respondió en {{seconds}} s",
     "answered_other": "{{count}} fuentes respondieron en {{seconds}} s",
     "answers_one": "{{count}} respuesta",
-    "answers_other": "{{count}} respuestas"
+    "answers_other": "{{count}} respuestas",
+    "none_upc": "No hay resultados para ese UPC."
   },
   "scanner": {
     "scanned": "Escaneado {{code}}",
     "not_book": "Ese código de barras no es de un libro: {{code}}",
-    "upc_unavailable": "La búsqueda por UPC aún no está disponible: {{code}}",
+    "upc_not_in_sweep": "Escanea un UPC por separado, no en un barrido: {{code}}",
     "lookup_failed": "No se pudieron revisar tus bibliotecas para {{code}}",
     "no_libraries": "Todavía no tienes una biblioteca donde añadir libros.",
     "added": "{{title}} añadido",
@@ -760,5 +758,10 @@
     "change": "Cambiar {{name}}",
     "join_above": "Unir con el nombre de arriba",
     "remove": "Quitar"
+  },
+  "add_book": {
+    "isbn_or_upc": "ISBN o UPC…",
+    "upc_warning": "Buscado por UPC. Los libros de bolsillo suelen compartir un UPC con todos los libros del mismo precio, así que comprueba que sea tu libro. El ISBN, impreso junto al código de barras o en la página de créditos, lo encuentra con seguridad.",
+    "from_isbn": "Encontrado por el ISBN {{isbn}}, deducido del pequeño código de barras junto al UPC."
   }
 }

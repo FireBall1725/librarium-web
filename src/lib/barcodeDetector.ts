@@ -1,50 +1,35 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (C) 2026 FireBall1725
 //
-// Barcode detection that also works on iOS.
+// Barcode reading for the camera scanner.
 //
-// The scanner in AddBookModal uses the platform's BarcodeDetector, which
-// Chrome and Edge implement and WebKit does not. WebKit's position on the
-// Shape Detection API is "support" and a draft implementation exists behind
-// the ShapeDetection preference, but it ships off by default. Because every
-// browser on iOS is required to use WebKit, that makes scanning unavailable
-// on iPhone and iPad whatever browser the reader picked — which is precisely
-// the device they are holding while standing at a bookshelf.
-//
-// So: use the platform API where it exists, and fall back to a WebAssembly
-// decoder where it does not.
-
-import type { BarcodeFormat } from 'barcode-detector/pure'
+// Every browser goes through zxing, compiled to WebAssembly. The platform
+// BarcodeDetector was used where it existed, but it never reports the 5-digit
+// add-on printed beside a paperback's UPC, and on a mass-market paperback the
+// add-on is the only part that names the book: the UPC itself is shared by
+// every book at the same price. WebKit doesn't ship BarcodeDetector anyway,
+// so iOS was already on zxing.
 
 import { withBase } from './basePath'
 
-/** The one shape the scanner needs from either implementation. */
+/** The one shape the scanner needs. */
 export interface BarcodeReader {
   detect(source: HTMLVideoElement): Promise<{ rawValue: string }[]>
 }
 
-/** True when the browser ships the Shape Detection API itself. */
-export function hasNativeDetector(): boolean {
-  return typeof window !== 'undefined' && 'BarcodeDetector' in window
-}
+// Wider frames cost decode time and add nothing a barcode needs.
+const MAX_FRAME_WIDTH = 1280
 
 /**
- * A detector for the given symbologies, native if possible.
+ * A reader for book barcodes: EAN-13 (ISBNs), UPC-A and UPC-E with any
+ * add-on, EAN-8, and Code 128.
  *
- * The fallback is imported dynamically so the WebAssembly decoder is a
- * separate chunk: a reader on Chrome never downloads it, and a reader on
- * Safari pays for it only once they actually open the scanner.
+ * zxing is imported dynamically so its WebAssembly is a separate chunk,
+ * fetched only when someone opens the scanner.
  */
-export async function getBarcodeReader(formats: BarcodeFormat[]): Promise<BarcodeReader> {
-  if (hasNativeDetector()) {
-    const Native = (window as unknown as {
-      BarcodeDetector: new (o: { formats: BarcodeFormat[] }) => BarcodeReader
-    }).BarcodeDetector
-    return new Native({ formats })
-  }
-
-  const [pure, { default: wasmUrl }] = await Promise.all([
-    import('barcode-detector/pure'),
+export async function getBarcodeReader(): Promise<BarcodeReader> {
+  const [zxing, { default: wasmUrl }] = await Promise.all([
+    import('zxing-wasm/reader'),
     // Vite emits this as a hashed asset in the build output. Resolving it
     // through the bundler rather than a string keeps it working under a
     // sub-path deployment, and keeps the URL in the integrity-checked build.
@@ -54,23 +39,35 @@ export async function getBarcodeReader(formats: BarcodeFormat[]): Promise<Barcod
   // zxing-wasm defaults to fetching its binary from the jsDelivr CDN. That is
   // an external request from a self-hosted, privacy-focused app that promises
   // it makes none unless asked, so it has to be redirected at our own asset.
-  //
-  // It must be barcode-detector's re-export of prepareZXingModule, not the one
-  // from zxing-wasm: the package inlines its own copy of zxing, so configuring
-  // the zxing-wasm module directly leaves a second, unconfigured instance —
-  // which is the one that actually runs, and which really does hit the CDN.
-  pure.prepareZXingModule({
+  zxing.prepareZXingModule({
     overrides: {
       // Through withBase, because vite bakes this in as a root-absolute path
       // and the container entrypoint only rewrites index.html, not the JS
       // chunks. On an instance served from a sub-path the browser would ask
-      // the host root for the binary and get a 404, so scanning would fail on
-      // exactly the deployments the fallback exists for.
+      // the host root for the binary and get a 404.
       locateFile: (path: string, prefix: string) =>
         path.endsWith('.wasm') ? withBase(wasmUrl) : prefix + path,
     },
     fireImmediately: false,
   })
 
-  return new pure.BarcodeDetector({ formats })
+  const canvas = document.createElement('canvas')
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })
+
+  return {
+    async detect(video) {
+      if (!ctx || !video.videoWidth) return []
+      const scale = Math.min(1, MAX_FRAME_WIDTH / video.videoWidth)
+      canvas.width = Math.round(video.videoWidth * scale)
+      canvas.height = Math.round(video.videoHeight * scale)
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+      const results = await zxing.readBarcodes(ctx.getImageData(0, 0, canvas.width, canvas.height), {
+        formats: ['EAN/UPC', 'Code128'],
+        // With Read, a code with an add-on comes back as the code followed
+        // by the add-on's digits; one without comes back on its own.
+        eanAddOnSymbol: 'Read',
+      })
+      return results.filter(r => r.isValid).map(r => ({ rawValue: r.text }))
+    },
+  }
 }
