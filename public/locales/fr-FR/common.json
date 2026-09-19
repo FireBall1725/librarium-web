@@ -755,5 +755,10 @@
     "scanning": "Lecture",
     "toggle": "Utiliser un lecteur Bluetooth ou USB",
     "note": "Scannez le code-barres d'un livre sur n'importe quelle page : un livre que vous avez s'ouvre, un nouveau lance Ajouter un livre. Désactivez cette option si un lecteur gêne la saisie."
+  },
+  "contributor_row": {
+    "change": "Modifier {{name}}",
+    "join_above": "Joindre au nom au-dessus",
+    "remove": "Retirer"
   }
 }

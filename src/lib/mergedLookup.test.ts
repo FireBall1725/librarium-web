@@ -3,7 +3,9 @@
 
 import { describe, expect, it } from 'vitest'
 import type { MergedBookResult } from '../types'
-import { fieldOptions, hasAnyField, mergedToResult, pickedValue, providerNames, summariseProviders } from './mergedLookup'
+import {
+  authorNames, fieldOptions, hasAnyField, mergedToResult, pickedValue, providerNames, splitAuthorNames, summariseProviders,
+} from './mergedLookup'
 
 const dune: MergedBookResult = {
   title: { value: 'Dune', source: 'open_library', source_display: 'Open Library', reason: 'agreed', sources: ['open_library', 'hardcover'], alternatives: [] },
@@ -78,5 +80,32 @@ describe('hasAnyField', () => {
   it('is false for an empty lookup', () => {
     expect(hasAnyField({ categories: [], covers: [] })).toBe(false)
     expect(hasAnyField(dune)).toBe(true)
+  })
+})
+
+describe('author names (librarium-web #84)', () => {
+  it('keeps a suffix with the name before it', () => {
+    expect(splitAuthorNames('Martin Luther King, Jr., Coretta Scott King'))
+      .toEqual(['Martin Luther King, Jr.', 'Coretta Scott King'])
+    expect(splitAuthorNames('Neil Gaiman, Terry Pratchett')).toEqual(['Neil Gaiman', 'Terry Pratchett'])
+    expect(splitAuthorNames('Jane Smith, PhD, John Doe, M.D.')).toEqual(['Jane Smith, PhD', 'John Doe, M.D.'])
+    expect(splitAuthorNames(' , ')).toEqual([])
+  })
+
+  it("uses the server's list when it sends one", () => {
+    expect(authorNames({ value: 'King, Jr.', values: ['King, Jr.'] })).toEqual(['King, Jr.'])
+    expect(authorNames({ value: 'Martin Luther King, Jr.' })).toEqual(['Martin Luther King, Jr.'])
+  })
+
+  it('imports the picked option as a list', () => {
+    const merged = {
+      authors: {
+        value: 'Martin Luther King, Jr.', values: ['Martin Luther King, Jr.'], source: 'a', source_display: 'A',
+        alternatives: [{ value: 'Neil Gaiman, Terry Pratchett', values: ['Neil Gaiman', 'Terry Pratchett'], source: 'b', source_display: 'B' }],
+      },
+      categories: [], covers: [],
+    } as unknown as MergedBookResult
+    expect(mergedToResult(merged, {}).authors).toEqual(['Martin Luther King, Jr.'])
+    expect(mergedToResult(merged, { authors: 1 }).authors).toEqual(['Neil Gaiman', 'Terry Pratchett'])
   })
 })

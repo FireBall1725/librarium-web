@@ -6,7 +6,7 @@
 // the pre-selection and why; this only lists the options and turns the
 // person's picks into one result the form can import.
 
-import type { ISBNLookupResult, LookupProviderStatus, MergedBookResult, MergedFieldResult } from '../types'
+import type { ISBNLookupResult, LookupProviderStatus, MergedBookResult, MergedFieldOption, MergedFieldResult } from '../types'
 
 export type MergedFieldKey =
   | 'title' | 'subtitle' | 'authors' | 'publisher' | 'publish_date'
@@ -44,11 +44,45 @@ export function fieldOptions(f: MergedFieldResult | undefined, names: Record<str
 // server's pre-selection (index 0).
 export type Picks = Partial<Record<MergedFieldKey | 'cover', number>>
 
+/** The authors of whichever option is picked, as a list. */
+export function pickedAuthors(merged: MergedBookResult, picks: Picks): string[] {
+  const f = merged.authors
+  if (!f) return []
+  const i = picks.authors ?? 0
+  return authorNames(i === 0 ? f : f.alternatives[i - 1] ?? f)
+}
+
 export function pickedValue(merged: MergedBookResult, field: MergedFieldKey, picks: Picks): string {
   const f = merged[field]
   if (!f) return ''
   const i = picks[field] ?? 0
   return i === 0 ? f.value : f.alternatives[i - 1]?.value ?? f.value
+}
+
+// Suffixes that follow a name after a comma without being a name:
+// "Martin Luther King, Jr." is one author. The API keeps the same list.
+const NAME_SUFFIXES = new Set(['jr', 'sr', 'ii', 'iii', 'iv', 'v', 'phd', 'md', 'esq', 'dds', 'obe', 'mbe', 'cbe', 'kbe'])
+
+/** Splits comma-joined author names, keeping a suffix with the name before it. */
+export function splitAuthorNames(s: string): string[] {
+  const names: string[] = []
+  for (const raw of s.split(',')) {
+    const part = raw.trim()
+    if (!part) continue
+    if (names.length > 0 && NAME_SUFFIXES.has(part.toLowerCase().replaceAll('.', ''))) {
+      names[names.length - 1] += `, ${part}`
+    } else {
+      names.push(part)
+    }
+  }
+  return names
+}
+
+/** The author list of one merged option: the server's list when it sent
+ *  one, else its joined text split with suffixes kept together. */
+export function authorNames(option: Pick<MergedFieldOption, 'value' | 'values'> | undefined): string[] {
+  if (!option) return []
+  return option.values?.length ? option.values : splitAuthorNames(option.value)
 }
 
 // Provider names to display names, from the lookup report and the answers.
@@ -76,8 +110,7 @@ export function mergedToResult(merged: MergedBookResult, picks: Picks): ISBNLook
     provider_display: '',
     title: v('title'),
     subtitle: v('subtitle'),
-    // The API joins author names with ", ".
-    authors: v('authors') ? v('authors').split(', ').map(a => a.trim()).filter(Boolean) : [],
+    authors: pickedAuthors(merged, picks),
     publisher: v('publisher'),
     publish_date: v('publish_date'),
     isbn_10: v('isbn_10'),

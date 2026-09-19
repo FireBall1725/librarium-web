@@ -755,5 +755,10 @@
     "scanning": "Scanning",
     "toggle": "Use a Bluetooth or USB scanner",
     "note": "Scan a book's barcode on any page: a book you have opens, a new one starts Add Book. Turn this off if a scanner ever gets in the way of typing."
+  },
+  "contributor_row": {
+    "change": "Change {{name}}",
+    "join_above": "Join with the name above",
+    "remove": "Remove"
   }
 }

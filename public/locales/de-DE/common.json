@@ -755,5 +755,10 @@
     "scanning": "Scannen",
     "toggle": "Bluetooth- oder USB-Scanner verwenden",
     "note": "Scanne auf jeder Seite den Barcode eines Buchs: Ein vorhandenes Buch wird geöffnet, ein neues startet „Buch hinzufügen“. Schalte das aus, falls ein Scanner beim Tippen stört."
+  },
+  "contributor_row": {
+    "change": "{{name}} ändern",
+    "join_above": "Mit dem Namen darüber verbinden",
+    "remove": "Entfernen"
   }
 }

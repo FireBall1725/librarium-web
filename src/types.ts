@@ -592,6 +592,8 @@ export interface MergedFieldOption {
   source_display: string
   // Every provider that gave this value. Older servers omit it.
   sources?: string[]
+  // The list behind a joined value; authors only, newer servers only.
+  values?: string[]
 }
 
 // Why a field's value was pre-selected. Older servers omit it.
@@ -603,6 +605,9 @@ export interface MergedFieldResult {
   source_display: string
   reason?: MergeReason
   sources?: string[]
+  // The list behind a joined value; authors only, newer servers only.
+  // Splitting value on commas breaks "King, Jr.", so read this first.
+  values?: string[]
   alternatives: MergedFieldOption[]
 }
 
