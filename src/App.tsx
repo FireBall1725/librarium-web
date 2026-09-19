@@ -26,6 +26,7 @@ import BookPage from './pages/libraries/BookPage'
 import LegacyLibraryRedirect from './pages/libraries/LegacyLibraryRedirect'
 import ContributorPage from './pages/libraries/ContributorPage'
 import ImportPage from './pages/import/ImportPage'
+import InventoryPage from './pages/inventory/InventoryPage'
 import UsersPage from './pages/admin/UsersPage'
 import JobsPage from './pages/jobs/JobsPage'
 import JobKindPage from './pages/jobs/JobKindPage'
@@ -63,6 +64,7 @@ function AppRoutes() {
               <Route path="/loans" element={<LoansPage />} />
               <Route path="/libraries" element={<LibrariesPage />} />
               <Route path="/import" element={<ImportPage />} />
+              <Route path="/inventory" element={<InventoryPage />} />
               <Route path="/profile" element={<SettingsLayout />}>
                 <Route index element={<ProfilePage />} />
               </Route>

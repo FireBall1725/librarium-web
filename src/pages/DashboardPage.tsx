@@ -753,7 +753,10 @@ export default function DashboardPage() {
 
   return (
     <>
-      <PageHeader title={t('welcome_back', { name: user?.display_name ?? '' })} actions={<AddBooksButton />} />
+      <PageHeader title={t('welcome_back', { name: user?.display_name ?? '' })} actions={<>
+        <Link to="/inventory" className="lb-btn ghost sm">{t('inventory.title', { ns: 'common', defaultValue: 'Inventory' })}</Link>
+        <AddBooksButton />
+      </>} />
       <div key={version} className="p-4 sm:p-6 space-y-4 max-w-screen-2xl mx-auto">
         {/* Library chip strip */}
         <LibraryChips />
