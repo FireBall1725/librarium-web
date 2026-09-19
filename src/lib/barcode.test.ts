@@ -2,7 +2,7 @@
 // Copyright (C) 2026 FireBall1725
 
 import { describe, expect, it } from 'vitest'
-import { ADDON_WAIT_MS, classifyBarcode, isbn10to13, pickCameraScan, upcLookupCode } from './barcode'
+import { ADDON_WAIT_MS, barcodeIdentifier, classifyBarcode, editionForIdentifier, isbn10to13, pickCameraScan, savableIdentifier, upcLookupCode } from './barcode'
 
 describe('classifyBarcode', () => {
   it('reads an ISBN-13', () => {
@@ -98,5 +98,64 @@ describe('pickCameraScan', () => {
   it('passes anything else through, as before', () => {
     expect(pickCameraScan(['LIB-0042'], null, 0)).toBe('LIB-0042')
     expect(pickCameraScan([], null, 0)).toBeNull()
+  })
+})
+
+describe('barcodeIdentifier', () => {
+  it('files a UPC under upc, add-on included', () => {
+    expect(barcodeIdentifier(classifyBarcode('07614400012112345'))).toEqual({ scheme: 'upc', value: '07614400012112345' })
+  })
+
+  it('files an EAN under ean', () => {
+    expect(barcodeIdentifier(classifyBarcode('4006381333931'))).toEqual({ scheme: 'ean', value: '4006381333931' })
+  })
+
+  it('files a zero-led EAN-13 as the UPC zxing means', () => {
+    expect(barcodeIdentifier(classifyBarcode('0076144000121'))).toEqual({ scheme: 'upc', value: '076144000121' })
+  })
+
+  it('has nothing for an ISBN or an unreadable code', () => {
+    expect(barcodeIdentifier(classifyBarcode('9780441172719'))).toBeNull()
+    expect(barcodeIdentifier(classifyBarcode('12345'))).toBeNull()
+  })
+})
+
+describe('savableIdentifier', () => {
+  it('saves a UPC with its add-on', () => {
+    expect(savableIdentifier(classifyBarcode('07614400012112345'))).toEqual({ scheme: 'upc', value: '07614400012112345' })
+  })
+
+  it('saves an EAN with its add-on', () => {
+    expect(savableIdentifier(classifyBarcode('400638133393112345'))).toEqual({ scheme: 'ean', value: '400638133393112345' })
+  })
+
+  it('refuses a bare UPC or EAN, which more than one book shares', () => {
+    expect(savableIdentifier(classifyBarcode('076144000121'))).toBeNull()
+    expect(savableIdentifier(classifyBarcode('4006381333931'))).toBeNull()
+  })
+
+  it('refuses an ISBN', () => {
+    expect(savableIdentifier(classifyBarcode('9780441172719'))).toBeNull()
+  })
+})
+
+describe('editionForIdentifier', () => {
+  const a = { id: 'a', isbn_13: '9780441172719' }
+  const b = { id: 'b', isbn_13: '' }
+
+  it('picks the edition with the ISBN that was sent', () => {
+    expect(editionForIdentifier([b, a], '9780441172719')).toBe(a)
+  })
+
+  it('picks nothing when no edition has that ISBN', () => {
+    expect(editionForIdentifier([a, b], '9791032305690')).toBeNull()
+  })
+
+  it('picks the only edition when no ISBN was sent', () => {
+    expect(editionForIdentifier([b], '')).toBe(b)
+  })
+
+  it('picks nothing from several editions without an ISBN to go on', () => {
+    expect(editionForIdentifier([a, b], '')).toBeNull()
   })
 })

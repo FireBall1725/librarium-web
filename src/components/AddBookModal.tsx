@@ -12,7 +12,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { useAuth, ApiError } from '../auth/AuthContext'
-import type { Book, ContributorResult, Genre, ISBNLookupResult, Library, MediaType, MergedBookResult, Tag } from '../types'
+import type { Book, BookEdition, ContributorResult, Genre, ISBNLookupResult, Library, MediaType, MergedBookResult, Tag } from '../types'
 import { fetchLists, type SavedList } from '../lib/lists'
 import { LANGUAGE_OPTIONS } from './AddEditionModal'
 import ContributorRow, { CONTRIBUTOR_ROLES } from './ContributorRow'
@@ -27,7 +27,7 @@ import {
   type LastAccepted, type ScannedItem,
 } from '../lib/scanSession'
 import { registerScanTarget } from '../lib/barcodeScanner'
-import { classifyBarcode, pickCameraScan, upcLookupCode } from '../lib/barcode'
+import { barcodeIdentifier, classifyBarcode, editionForIdentifier, pickCameraScan, savableIdentifier, upcLookupCode, type ScannedIdentifier } from '../lib/barcode'
 import { useToast } from './Toast'
 
 
@@ -184,6 +184,10 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
   const [isbnMerged, setIsbnMerged] = useState<MergedBookResult | null>(null)
   // The last lookup was by UPC, whose answers need checking; see below.
   const [mergedFromUpc, setMergedFromUpc] = useState(false)
+  // The scanned code the showing lookup came from, and, once its result is
+  // used, the code the new edition gets saved under so the next scan finds it.
+  const [mergedIdentifier, setMergedIdentifier] = useState<ScannedIdentifier | null>(null)
+  const [saveIdentifier, setSaveIdentifier] = useState<ScannedIdentifier | null>(null)
   const [isbnLoading, setIsbnLoading] = useState(false)
   const [isbnError, setIsbnError] = useState<string | null>(null)
   const [isbnDuplicate, setIsbnDuplicate] = useState<Book | null>(null)
@@ -519,6 +523,25 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
     } catch { /* not the same book, or the server is older: nothing to learn */ }
   }
 
+  /**
+   * Make sure a scanned code ended up on the book just added. When the ISBN
+   * matched an edition the server already had, it reuses that edition and
+   * drops the identifiers sent with the new one, so this adds it there. The
+   * usual 409 means it's already saved. Any failure is ignored: the book is
+   * added either way, and only the next scan's shortcut is lost.
+   */
+  async function attachIdentifier(bookId: string, id: ScannedIdentifier, isbn13: string) {
+    try {
+      const editions = await callApi<BookEdition[]>(`/api/v1/libraries/${targetLibrary}/books/${bookId}/editions`)
+      const target = editionForIdentifier(editions ?? [], isbn13)
+      if (!target) return
+      await callApi(`/api/v1/editions/${target.id}/identifiers`, {
+        method: 'POST',
+        body: JSON.stringify(id),
+      })
+    } catch { /* already saved, held by another edition, or an older server */ }
+  }
+
   async function doISBNLookup(isbn: string) {
     if (!isbn.trim()) return
     lastLookupRef.current = isbn.trim()
@@ -530,10 +553,12 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
     setIsbnLoading(true)
     setIsbnError(null)
     setIsbnMerged(null)
+    setMergedIdentifier(null)
     setIsbnDuplicate(null)
     const cleanISBN = isbn.trim()
     const barcode = classifyBarcode(cleanISBN)
     const upc = barcode.kind === 'upc' || barcode.kind === 'ean' ? upcLookupCode(barcode) : null
+    const scannedId = barcodeIdentifier(barcode)
     if (barcode.kind === 'isbn' && unresolvedUpcRef.current) {
       void learnFromPair(unresolvedUpcRef.current, barcode.isbn13)
     }
@@ -555,6 +580,10 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
         // can run after all.
         if (upc && m?.from_isbn) {
           d = await callApi<Book>(`/api/v1/libraries/${targetLibrary}/book-by-isbn/${encodeURIComponent(m.from_isbn)}`).catch(() => null)
+        } else if (scannedId) {
+          // Otherwise the code itself may be on a book here already, saved
+          // when that book was added from this same scan.
+          d = await callApi<Book>(`/api/v1/libraries/${targetLibrary}/book-by-identifier?type=${scannedId.scheme}&value=${encodeURIComponent(scannedId.value)}`).catch(() => null)
         }
         return [m, d] as const
       })
@@ -565,6 +594,7 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
       }
       if (hasAnyField(merged)) {
         setIsbnMerged(merged)
+        setMergedIdentifier(savableIdentifier(barcode))
         // Found through the add-on's ISBN, it's as sure as an ISBN lookup.
         setMergedFromUpc(!!upc && !merged.from_isbn)
       } else {
@@ -579,7 +609,10 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
     }
   }
 
-  const importResult = async (result: ISBNLookupResult) => {
+  // identifier is the scanned code the result was looked up by, if any; a
+  // result from a title search has none, so it clears one left from before.
+  const importResult = async (result: ISBNLookupResult, identifier: ScannedIdentifier | null = null) => {
+    setSaveIdentifier(identifier)
     // Media type detection is shared with the sweep rather than written twice.
     // The heuristic itself is not new — it lived here — but two copies of it
     // would drift, and a book added by sweeping should land on the same type
@@ -735,12 +768,28 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
           duration_seconds: durationSecs || null,
           narrator:         isAudio ? edition.narrator : null,
           is_primary:       edition.is_primary,
+          // Saved with the new edition in the same transaction. The server
+          // also reuses an edition that already holds it, so the same comic
+          // scanned into a second library isn't added twice.
+          ...(saveIdentifier ? { identifiers: [saveIdentifier] } : {}),
         }
       }
-      const book = await callApi<Book>(`/api/v1/libraries/${targetLibrary}/books`, {
+      const postBook = () => callApi<Book>(`/api/v1/libraries/${targetLibrary}/books`, {
         method: 'POST',
         body: JSON.stringify(body),
       })
+      let book: Book
+      try {
+        book = await postBook()
+      } catch (err) {
+        // The identifier is refused as a whole add: 409 if another edition
+        // took it meanwhile, 400 for a scheme the server lacks. The book
+        // matters more than the scan shortcut, so add it without.
+        const sent = body.edition as Record<string, unknown> | undefined
+        if (!(err instanceof ApiError && (err.status === 409 || err.status === 400) && sent?.identifiers)) throw err
+        delete sent.identifiers
+        book = await postBook()
+      }
 
       // Fetch cover from provider result (best-effort)
       const bookId = book!.id
@@ -750,6 +799,8 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
           body: JSON.stringify({ url: pendingCoverUrl }),
         }).catch(() => {})
       }
+
+      if (showEdition && saveIdentifier) await attachIdentifier(bookId, saveIdentifier, edition.format === 'audiobook' ? '' : edition.isbn_13)
 
       // Apply list membership
       for (const id of selectedShelfIds)
@@ -960,7 +1011,7 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
                     </div>
                   )}
                   {isbnMerged && (
-                    <MergedLookup key={isbnInput} merged={isbnMerged} onUse={r => { void importResult(r) }}
+                    <MergedLookup key={isbnInput} merged={isbnMerged} onUse={r => { void importResult(r, mergedIdentifier) }}
                       onRetry={isbnLoading ? undefined : () => void doISBNLookup(lastLookupRef.current)} />
                   )}
                   <button type="button" onClick={() => setMode('manual')}
