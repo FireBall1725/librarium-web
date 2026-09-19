@@ -18,7 +18,7 @@ import { LANGUAGE_OPTIONS } from './AddEditionModal'
 import ContributorRow, { CONTRIBUTOR_ROLES } from './ContributorRow'
 import MediaTypeSelect from './MediaTypeSelect'
 import MergedLookup from './MergedLookup'
-import { hasAnyField } from '../lib/mergedLookup'
+import { hasAnyField, mergedToResult } from '../lib/mergedLookup'
 import { TAG_COLORS } from '../lib/tagColours'
 import { getBarcodeReader } from '../lib/barcodeDetector'
 import {
@@ -309,12 +309,7 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
               // first, looking only at codes[0] would reject the frame and
               // never reach the ISBN sitting right behind it.
               for (const detected of codes) {
-                const value = detected.rawValue
-                if (!shouldAccept(value, scannedRef.current, lastAcceptedRef.current, Date.now())) continue
-                lastAcceptedRef.current = { code: value, at: Date.now() }
-                setScanned(prev => upsertItem(prev, { code: value, status: 'pending' }))
-                void lookupScanned(value)
-                break
+                if (acceptIntoSession(detected.rawValue)) break
               }
             }
           } catch {
@@ -338,19 +333,33 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
    * mean the last scan of a sweep silently decided what the form contained,
    * so the session keeps its own lightweight record instead.
    */
+  /**
+   * Take one code into the sweep, if the session's rules allow it: a book
+   * barcode, not already listed, not the code just accepted. Shared by the
+   * camera loop and a hardware scanner, so both follow the same rules.
+   */
+  function acceptIntoSession(code: string): boolean {
+    if (!shouldAccept(code, scannedRef.current, lastAcceptedRef.current, Date.now())) return false
+    lastAcceptedRef.current = { code, at: Date.now() }
+    setScanned(prev => upsertItem(prev, { code, status: 'pending' }))
+    void lookupScanned(code)
+    return true
+  }
+
   async function lookupScanned(code: string) {
     try {
-      const [results, duplicate] = await Promise.all([
-        callApi<ISBNLookupResult[]>(`/api/v1/lookup/isbn/${encodeURIComponent(code)}`),
+      // The merged lookup, like the single-book path: each field is the value
+      // most providers agree on, not whichever provider answered first.
+      const [merged, duplicate] = await Promise.all([
+        callApi<MergedBookResult>(`/api/v1/lookup/isbn/${encodeURIComponent(code)}/merged`),
         callApi<Book>(`/api/v1/libraries/${targetLibrary}/book-by-isbn/${encodeURIComponent(code)}`).catch(() => null),
       ])
       if (duplicate) {
         setScanned(prev => withItem(prev, code, { status: 'duplicate', duplicateTitle: duplicate.title }))
         return
       }
-      const best = results?.[0]
-      setScanned(prev => withItem(prev, code, best
-        ? { status: 'found', result: best }
+      setScanned(prev => withItem(prev, code, hasAnyField(merged)
+        ? { status: 'found', result: mergedToResult(merged!, {}) }
         : { status: 'not_found' }))
     } catch {
       setScanned(prev => withItem(prev, code, { status: 'error' }))
@@ -432,11 +441,19 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
   // replaces the ISBN here instead of opening a second Add Book on top.
   const toast = useToast()
   const lookupRef = useRef(doISBNLookup)
-  useEffect(() => { lookupRef.current = doISBNLookup })
+  const sweepRef = useRef(acceptIntoSession)
+  useEffect(() => { lookupRef.current = doISBNLookup; sweepRef.current = acceptIntoSession })
   useEffect(() => registerScanTarget(barcode => {
     if (barcode.kind !== 'isbn') {
       const code = barcode.code
       toast.show(t('scanner.upc_unavailable', { code, defaultValue: `UPC lookup isn't available yet: ${code}` }), { variant: 'error' })
+      return
+    }
+    // A sweep is running, with the camera on or its list under review: the
+    // scan joins the list, the same as a camera scan would, rather than going
+    // to the single-book form hidden behind it.
+    if (continuousRef.current || scannedRef.current.length > 0) {
+      sweepRef.current(barcode.isbn13)
       return
     }
     setMode('isbn')
