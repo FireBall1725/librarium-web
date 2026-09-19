@@ -27,3 +27,19 @@ describe('MergedLookup layout', () => {
     expect(grid.className).toMatch(/grid-cols-\[150px/)
   })
 })
+
+describe('Ask again', () => {
+  it('asks the providers again when pressed', async () => {
+    let asked = 0
+    const merged = { ...hybrids([]), providers: [{ name: 'hardcover', display_name: 'Hardcover', status: "answered", millis: 200 }] } as MergedBookResult
+    render(<MergedLookup merged={merged} onUse={() => {}} onRetry={() => { asked++ }} />)
+    screen.getByRole('button', { name: 'Ask again' }).click()
+    expect(asked).toBe(1)
+  })
+
+  it('has no button without a way to retry', () => {
+    const merged = { ...hybrids([]), providers: [{ name: 'hardcover', display_name: 'Hardcover', status: "answered", millis: 200 }] } as MergedBookResult
+    render(<MergedLookup merged={merged} onUse={() => {}} />)
+    expect(screen.queryByRole('button', { name: 'Ask again' })).toBeNull()
+  })
+})

@@ -762,6 +762,9 @@
   "add_book": {
     "isbn_or_upc": "ISBN ou UPC…",
     "upc_warning": "Buscado pelo UPC. Livros de bolso costumam compartilhar um UPC com todos os livros do mesmo preço, então confira se é o seu livro. O ISBN, impresso perto do código de barras ou na página de créditos, encontra com certeza.",
-    "from_isbn": "Encontrado pelo ISBN {{isbn}}, deduzido do pequeno código de barras ao lado do UPC."
+    "from_isbn": "Encontrado pelo ISBN {{isbn}}, deduzido do pequeno código de barras ao lado do UPC.",
+    "learned": "Entendido. Os livros de bolso desta editora agora serão encontrados pela contracapa.",
+    "other_isbns": "Esse código de barras também pode ser:",
+    "ask_again": "Perguntar de novo"
   }
 }

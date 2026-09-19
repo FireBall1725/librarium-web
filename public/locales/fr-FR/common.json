@@ -762,6 +762,9 @@
   "add_book": {
     "isbn_or_upc": "ISBN ou UPC…",
     "upc_warning": "Recherche par UPC. Les livres de poche partagent souvent un même UPC avec tous les livres au même prix : vérifiez qu'il s'agit bien de votre livre. L'ISBN, imprimé près du code-barres ou sur la page de copyright, le trouve à coup sûr.",
-    "from_isbn": "Trouvé par l'ISBN {{isbn}}, déduit du petit code-barres à côté de l'UPC."
+    "from_isbn": "Trouvé par l'ISBN {{isbn}}, déduit du petit code-barres à côté de l'UPC.",
+    "learned": "Compris. Les livres de poche de cet éditeur seront désormais trouvés depuis la quatrième de couverture.",
+    "other_isbns": "Ce code-barres pourrait aussi être :",
+    "ask_again": "Redemander"
   }
 }

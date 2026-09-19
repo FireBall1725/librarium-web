@@ -646,6 +646,9 @@ export interface MergedBookResult {
   providers?: LookupProviderStatus[]
   // The ISBN a UPC lookup was answered by, worked out from the add-on.
   from_isbn?: string
+  // Other books the same add-on could be, when the publisher has more than
+  // one ISBN prefix and several resolved.
+  other_isbns?: { isbn: string; title: string }[]
 }
 
 export interface ISBNLookupResult {
