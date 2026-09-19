@@ -352,6 +352,27 @@
     "tokens_description": "Os tokens agem como você, limitados aos escopos que você der. Quem tiver um pode fazer o que ele permite até você revogar.",
     "ai_description": "O que um provedor de IA pode ver sobre suas leituras. Desligado até você ligar."
   },
+  "pin": {
+    "heading": "PIN",
+    "status_set": "Definido",
+    "status_not_set": "Não definido",
+    "description": "Opcional. Um número curto que identifica você em um login rápido onde digitar sua senha não é prático, como em um quiosque de biblioteca.",
+    "set": "Definir PIN",
+    "change": "Alterar PIN",
+    "remove": "Remover",
+    "remove_confirm": "Remover seu PIN? Você não poderá usá-lo para um login rápido até definir um novo.",
+    "new_pin": "Novo PIN",
+    "confirm_pin": "Confirmar PIN",
+    "hint": "De 4 a 8 dígitos.",
+    "save": "Salvar PIN",
+    "saving": "Salvando…",
+    "saved": "PIN salvo",
+    "save_failed": "Não foi possível salvar o PIN",
+    "removed": "PIN removido",
+    "remove_failed": "Não foi possível remover o PIN",
+    "error_format": "Um PIN tem de 4 a 8 dígitos.",
+    "error_mismatch": "Os dois PINs não coincidem."
+  },
   "ownership": {
     "shelf": "Na estante",
     "wishlist": "Lista de desejos",

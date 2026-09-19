@@ -352,6 +352,27 @@
     "tokens_description": "Un jeton agit en votre nom, limité aux portées que vous lui donnez, jusqu à sa révocation.",
     "ai_description": "Ce qu un fournisseur d IA peut voir de vos lectures. Désactivé sauf si vous l activez."
   },
+  "pin": {
+    "heading": "Code PIN",
+    "status_set": "Défini",
+    "status_not_set": "Non défini",
+    "description": "Facultatif. Un court code chiffré qui vous identifie pour une connexion rapide là où saisir votre mot de passe n'est pas pratique, comme sur une borne de bibliothèque.",
+    "set": "Définir un code PIN",
+    "change": "Modifier le code PIN",
+    "remove": "Supprimer",
+    "remove_confirm": "Supprimer votre code PIN ? Vous ne pourrez plus l'utiliser pour une connexion rapide tant que vous n'en aurez pas défini un nouveau.",
+    "new_pin": "Nouveau code PIN",
+    "confirm_pin": "Confirmer le code PIN",
+    "hint": "De 4 à 8 chiffres.",
+    "save": "Enregistrer le code PIN",
+    "saving": "Enregistrement…",
+    "saved": "Code PIN enregistré",
+    "save_failed": "Impossible d'enregistrer le code PIN",
+    "removed": "Code PIN supprimé",
+    "remove_failed": "Impossible de supprimer le code PIN",
+    "error_format": "Un code PIN comporte de 4 à 8 chiffres.",
+    "error_mismatch": "Les deux codes PIN ne correspondent pas."
+  },
   "ownership": {
     "shelf": "Sur l'étagère",
     "wishlist": "Liste de souhaits",

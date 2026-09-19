@@ -5,6 +5,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useAuth } from '../../auth/AuthContext'
 import { useToast } from '../../components/Toast'
 import type { User } from '../../types'
+import PinSection from './PinSection'
 import { FieldRow, SectionHeading, buttonPrimaryClass, cardClass, inputClass } from './shared'
 
 // AccountTab combines the original "Profile" and "Security" sections — both
@@ -163,6 +164,8 @@ export default function AccountTab() {
           </div>
         </form>
       </section>
+
+      <PinSection />
     </div>
   )
 }

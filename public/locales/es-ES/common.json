@@ -352,6 +352,27 @@
     "tokens_description": "Los tokens actúan en tu nombre, limitados a los permisos que les des. Cualquiera que tenga uno puede hacer lo que permita hasta que lo revoques.",
     "ai_description": "Lo que un proveedor de IA puede ver de tus lecturas. Desactivado salvo que lo actives."
   },
+  "pin": {
+    "heading": "PIN",
+    "status_set": "Configurado",
+    "status_not_set": "Sin configurar",
+    "description": "Opcional. Un número corto que te identifica para un inicio de sesión rápido donde escribir tu contraseña no es práctico, como en un quiosco de biblioteca.",
+    "set": "Configurar PIN",
+    "change": "Cambiar PIN",
+    "remove": "Quitar",
+    "remove_confirm": "¿Quitar tu PIN? No podrás usarlo para un inicio de sesión rápido hasta que configures uno nuevo.",
+    "new_pin": "PIN nuevo",
+    "confirm_pin": "Confirmar PIN",
+    "hint": "De 4 a 8 dígitos.",
+    "save": "Guardar PIN",
+    "saving": "Guardando…",
+    "saved": "PIN guardado",
+    "save_failed": "No se pudo guardar el PIN",
+    "removed": "PIN quitado",
+    "remove_failed": "No se pudo quitar el PIN",
+    "error_format": "Un PIN tiene de 4 a 8 dígitos.",
+    "error_mismatch": "Los dos PIN no coinciden."
+  },
   "ownership": {
     "shelf": "En la estantería",
     "wishlist": "Lista de deseos",

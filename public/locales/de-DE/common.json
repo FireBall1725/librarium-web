@@ -352,6 +352,27 @@
     "tokens_description": "Token handeln in deinem Namen, begrenzt auf die Rechte, die du ihnen gibst. Wer eines besitzt, kann damit alles Erlaubte tun, bis du es widerrufst.",
     "ai_description": "Was ein KI-Anbieter über dein Lesen erfahren darf. Aus, sofern du es nicht einschaltest."
   },
+  "pin": {
+    "heading": "PIN",
+    "status_set": "Festgelegt",
+    "status_not_set": "Nicht festgelegt",
+    "description": "Optional. Eine kurze Zahl, die dich bei einer schnellen Anmeldung identifiziert, wo die Eingabe deines Passworts unpraktisch ist, etwa an einem Bibliotheksterminal.",
+    "set": "PIN festlegen",
+    "change": "PIN ändern",
+    "remove": "Entfernen",
+    "remove_confirm": "PIN entfernen? Du kannst dich dann erst wieder schnell anmelden, wenn du eine neue festlegst.",
+    "new_pin": "Neue PIN",
+    "confirm_pin": "PIN bestätigen",
+    "hint": "4 bis 8 Ziffern.",
+    "save": "PIN speichern",
+    "saving": "Wird gespeichert…",
+    "saved": "PIN gespeichert",
+    "save_failed": "PIN konnte nicht gespeichert werden",
+    "removed": "PIN entfernt",
+    "remove_failed": "PIN konnte nicht entfernt werden",
+    "error_format": "Eine PIN besteht aus 4 bis 8 Ziffern.",
+    "error_mismatch": "Die beiden PINs stimmen nicht überein."
+  },
   "ownership": {
     "shelf": "Im Regal",
     "wishlist": "Wunschliste",
