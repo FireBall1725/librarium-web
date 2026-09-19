@@ -499,8 +499,29 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
   // and the auto-trigger effect both call this before this line is reached.
   // A hoisted declaration has no temporal dead zone and no stale-closure
   // hazard, since the binding never gets reassigned.
+  // A back cover scanned with its add-on that the server couldn't turn into
+  // an ISBN. If the next lookup here is that book's ISBN, the server can learn
+  // the publisher from the pair; it checks the add-on matches, so a pair that
+  // isn't the same book is refused and nothing is kept.
+  const unresolvedUpcRef = useRef<string | null>(null)
+  // What the last lookup asked for, for Ask again.
+  const lastLookupRef = useRef('')
+
+  async function learnFromPair(upc: string, isbn13: string) {
+    try {
+      const r = await callApi<{ added: boolean }>('/api/v1/lookup/upc/learn', {
+        method: 'POST',
+        body: JSON.stringify({ upc, isbn: isbn13 }),
+      })
+      if (r?.added) {
+        toast.show(t('add_book.learned', { defaultValue: "Got it. This publisher's paperbacks will now be found from the back cover." }))
+      }
+    } catch { /* not the same book, or the server is older: nothing to learn */ }
+  }
+
   async function doISBNLookup(isbn: string) {
     if (!isbn.trim()) return
+    lastLookupRef.current = isbn.trim()
     // Select what was looked up, so the next scan into the box replaces it
     // rather than landing on the end: a second scan of the same book, to
     // catch the add-on the first one missed, used to give 30 digits.
@@ -513,6 +534,10 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
     const cleanISBN = isbn.trim()
     const barcode = classifyBarcode(cleanISBN)
     const upc = barcode.kind === 'upc' || barcode.kind === 'ean' ? upcLookupCode(barcode) : null
+    if (barcode.kind === 'isbn' && unresolvedUpcRef.current) {
+      void learnFromPair(unresolvedUpcRef.current, barcode.isbn13)
+    }
+    unresolvedUpcRef.current = null
     try {
       // One merged answer across every provider that's on, each field
       // pre-selected by the server; MergedLookup lets the person switch any.
@@ -535,6 +560,9 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
       })
       setIsbnDuplicate(duplicate ?? null)
       if (duplicate) onDuplicate?.(duplicate)
+      if (upc && (barcode.kind === 'upc' || barcode.kind === 'ean') && barcode.addon && !merged?.from_isbn) {
+        unresolvedUpcRef.current = upc
+      }
       if (hasAnyField(merged)) {
         setIsbnMerged(merged)
         // Found through the add-on's ISBN, it's as sure as an ISBN lookup.
@@ -874,7 +902,17 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
                       className="rounded-lg border border-line-strong px-3 py-2 text-sm text-content-tertiary hover:bg-surface-muted transition-colors"
                       title={t('scan.many', { defaultValue: 'Scan several books in a row' })}>📚</button>
                   </div>
-                  {isbnError && <p className="text-sm text-danger">{isbnError}</p>}
+                  {isbnError && (
+                    <p className="flex flex-wrap items-center gap-x-3 text-sm text-danger">
+                      {isbnError}
+                      {/* A provider blips now and then; asking again is cheaper
+                          than retyping. */}
+                      <button type="button" className="text-accent hover:underline" disabled={isbnLoading}
+                        onClick={() => void doISBNLookup(lastLookupRef.current)}>
+                        {t('add_book.ask_again', { defaultValue: 'Ask again' })}
+                      </button>
+                    </p>
+                  )}
                   {isbnLoading && <p className="text-sm text-content-muted">Searching providers…</p>}
                   {isbnDuplicate && (
                     <div className="rounded-xl border border-amber-300 dark:border-amber-700 bg-warning-surface px-4 py-3 text-sm">
@@ -903,8 +941,27 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
                       {t('add_book.from_isbn', { isbn: isbnMerged.from_isbn, defaultValue: 'Found by ISBN {{isbn}}, worked out from the small barcode beside the UPC.' })}
                     </p>
                   )}
+                  {(isbnMerged?.other_isbns?.length ?? 0) > 0 && (
+                    // The publisher has more than one ISBN prefix and the
+                    // add-on is a real book under each: say so, don't guess.
+                    <div className="mb-3 rounded-lg border border-warning-line bg-warning-surface px-3 py-2 text-[13px] text-warning-strong">
+                      {t('add_book.other_isbns', { defaultValue: 'That barcode could also be:' })}
+                      <ul className="mt-1 space-y-0.5">
+                        {isbnMerged!.other_isbns!.map(o => (
+                          <li key={o.isbn}>
+                            <button type="button" className="underline hover:no-underline"
+                              onClick={() => { setIsbnInput(o.isbn); void doISBNLookup(o.isbn) }}>
+                              {o.title || o.isbn}
+                            </button>
+                            <span className="ml-1 text-content-muted">{o.isbn}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                   {isbnMerged && (
-                    <MergedLookup key={isbnInput} merged={isbnMerged} onUse={r => { void importResult(r) }} />
+                    <MergedLookup key={isbnInput} merged={isbnMerged} onUse={r => { void importResult(r) }}
+                      onRetry={isbnLoading ? undefined : () => void doISBNLookup(lastLookupRef.current)} />
                   )}
                   <button type="button" onClick={() => setMode('manual')}
                     className="text-sm text-accent hover:underline">

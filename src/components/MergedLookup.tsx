@@ -14,9 +14,11 @@ import {
   type MergedFieldKey, type Picks,
 } from '../lib/mergedLookup'
 
-export default function MergedLookup({ merged, onUse }: {
+export default function MergedLookup({ merged, onUse, onRetry }: {
   merged: MergedBookResult
   onUse: (result: ISBNLookupResult) => void
+  /** Asks the providers again, for when one blipped. */
+  onRetry?: () => void
 }) {
   const { t } = useTranslation()
   const [picks, setPicks] = useState<Picks>({})
@@ -62,6 +64,11 @@ export default function MergedLookup({ merged, onUse }: {
           </b>
           {summary.answered.length > 0 && <>: {summary.answered.map(p => p.display_name).join(', ')}.</>}
           {/* Only who answered: who had nothing is noise. */}
+          {onRetry && (
+            <> <button type="button" className="text-accent hover:underline" onClick={onRetry}>
+              {t('add_book.ask_again', { defaultValue: 'Ask again' })}
+            </button></>
+          )}
         </p>
       )}
 
