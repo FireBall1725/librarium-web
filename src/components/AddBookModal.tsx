@@ -27,7 +27,7 @@ import {
   type LastAccepted, type ScannedItem,
 } from '../lib/scanSession'
 import { registerScanTarget } from '../lib/barcodeScanner'
-import { classifyBarcode, upcLookupCode } from '../lib/barcode'
+import { classifyBarcode, pickCameraScan, upcLookupCode } from '../lib/barcode'
 import { useToast } from './Toast'
 
 
@@ -281,9 +281,9 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
         try {
           videoRef.current.srcObject = stream
           await videoRef.current.play()
-          // Native where the browser has it, WebAssembly where it does not —
-          // which is every browser on iOS. See lib/barcodeDetector.
-          detector = await getBarcodeReader(['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128'])
+          // zxing on every browser, so a paperback's add-on is read too.
+          // See lib/barcodeDetector.
+          detector = await getBarcodeReader()
         } catch {
           stopScan()
           setIsbnError(t('scan.start_failed', {
@@ -291,16 +291,25 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
           }))
           return
         }
+        // When a bare UPC was first seen, while the camera waits for its add-on.
+        let bareSince: number | null = null
         const scan = async () => {
           if (!videoRef.current || !streamRef.current) return
           try {
             const codes = await detector.detect(videoRef.current)
             if (codes.length > 0) {
-              const code = codes[0].rawValue
               if (!continuousRef.current) {
-                stopScan()
-                setIsbnInput(code)
-                doISBNLookup(code)
+                const now = performance.now()
+                const code = pickCameraScan(codes.map(c => c.rawValue), bareSince, now)
+                if (code === null) {
+                  bareSince ??= now
+                } else {
+                  stopScan()
+                  setIsbnInput(code)
+                  doISBNLookup(code)
+                  return
+                }
+                requestAnimationFrame(scan)
                 return
               }
               // Continuous mode: the camera stays on and the code joins the
@@ -492,6 +501,11 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
   // hazard, since the binding never gets reassigned.
   async function doISBNLookup(isbn: string) {
     if (!isbn.trim()) return
+    // Select what was looked up, so the next scan into the box replaces it
+    // rather than landing on the end: a second scan of the same book, to
+    // catch the add-on the first one missed, used to give 30 digits.
+    const box = isbnInputRef.current
+    if (box && document.activeElement === box) box.select()
     setIsbnLoading(true)
     setIsbnError(null)
     setIsbnMerged(null)

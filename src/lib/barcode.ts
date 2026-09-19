@@ -54,6 +54,10 @@ export function classifyBarcode(raw: string): Barcode {
   if (/^\d{18}$/.test(code)) { addon = code.slice(13); code = code.slice(0, 13) }
   else if (/^\d{17}$/.test(code)) { addon = code.slice(12); code = code.slice(0, 12) }
 
+  // An EAN-13 starting with 0 is a UPC-A with a leading zero, which is how
+  // zxing reports a UPC. Treat it as the UPC it is.
+  if (code.length === 13 && code.startsWith('0') && validGtin(code)) code = code.slice(1)
+
   if (code.length === 13 && validGtin(code)) {
     if (code.startsWith('978') || code.startsWith('979')) return { kind: 'isbn', isbn13: code }
     return addon ? { kind: 'ean', code, addon } : { kind: 'ean', code }
@@ -66,4 +70,27 @@ export function classifyBarcode(raw: string): Barcode {
 /** What to send the UPC lookup: the code with its add-on, which the server keeps. */
 export function upcLookupCode(b: Extract<Barcode, { kind: 'upc' | 'ean' }>): string {
   return b.code + (b.addon ?? '')
+}
+
+/** How long the camera keeps looking for a UPC's add-on before settling. */
+export const ADDON_WAIT_MS = 1500
+
+/**
+ * Picks the code to act on from one camera frame. An ISBN wins outright. A
+ * UPC with its add-on is next. A UPC without one is held for ADDON_WAIT_MS
+ * from the first frame it was seen, since the add-on often reads a few
+ * frames later and a paperback's bare UPC names the wrong book.
+ *
+ * Returns the code to use, or null to keep scanning; waitingSince is when a
+ * bare UPC was first seen, which the caller keeps between frames.
+ */
+export function pickCameraScan(values: string[], waitingSince: number | null, now: number): string | null {
+  const read = values.map(v => ({ raw: v, b: classifyBarcode(v) }))
+  const isbn = read.find(r => r.b.kind === 'isbn')
+  if (isbn) return isbn.raw
+  const withAddon = read.find(r => (r.b.kind === 'upc' || r.b.kind === 'ean') && r.b.addon)
+  if (withAddon) return withAddon.raw
+  const bare = read.find(r => r.b.kind === 'upc' || r.b.kind === 'ean')
+  if (bare) return waitingSince !== null && now - waitingSince >= ADDON_WAIT_MS ? bare.raw : null
+  return values[0] ?? null
 }

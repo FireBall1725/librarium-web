@@ -61,9 +61,7 @@ export default function MergedLookup({ merged, onUse }: {
             {t('merged.answered', { count: summary.answered.length, seconds: summary.seconds, defaultValue: '{{count}} providers answered in {{seconds}} s' })}
           </b>
           {summary.answered.length > 0 && <>: {summary.answered.map(p => p.display_name).join(', ')}.</>}
-          {summary.noRecord.length > 0 && <> {t('merged.no_record', { names: summary.noRecord.map(p => p.display_name).join(', '), defaultValue: 'No record at {{names}}.' })}</>}
-          {summary.missed.length > 0 && <> {t('merged.missed', { names: summary.missed.map(p => p.display_name).join(', '), defaultValue: '{{names}} missed the deadline.' })}</>}
-          {summary.failed.length > 0 && <> {t('merged.failed', { names: summary.failed.map(p => p.display_name).join(', '), defaultValue: "{{names}} didn't answer." })}</>}
+          {/* Only who answered: who had nothing is noise. */}
         </p>
       )}
 

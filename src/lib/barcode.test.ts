@@ -2,7 +2,7 @@
 // Copyright (C) 2026 FireBall1725
 
 import { describe, expect, it } from 'vitest'
-import { classifyBarcode, isbn10to13, upcLookupCode } from './barcode'
+import { ADDON_WAIT_MS, classifyBarcode, isbn10to13, pickCameraScan, upcLookupCode } from './barcode'
 
 describe('classifyBarcode', () => {
   it('reads an ISBN-13', () => {
@@ -61,6 +61,12 @@ describe('isbn10to13', () => {
 })
 
 describe('UPC add-ons', () => {
+  it('reads the camera form: a UPC as a 13-digit EAN, add-on stuck on', () => {
+    // What zxing returns for Hominids' back cover with add-ons turned on.
+    expect(classifyBarcode('003714500799134500')).toEqual({ kind: 'upc', code: '037145007991', addon: '34500' })
+    expect(classifyBarcode('0037145007991')).toEqual({ kind: 'upc', code: '037145007991' })
+  })
+
   it('keeps a 5-digit add-on for the lookup', () => {
     const b = classifyBarcode('03714500699451099')
     expect(b).toEqual({ kind: 'upc', code: '037145006994', addon: '51099' })
@@ -71,5 +77,26 @@ describe('UPC add-ons', () => {
     const b = classifyBarcode('037145006994')
     expect(b).toEqual({ kind: 'upc', code: '037145006994' })
     if (b.kind === 'upc') expect(upcLookupCode(b)).toBe('037145006994')
+  })
+})
+
+describe('pickCameraScan', () => {
+  it('takes an ISBN straight away', () => {
+    expect(pickCameraScan(['0037145007991', '9780765345004'], null, 0)).toBe('9780765345004')
+  })
+
+  it('takes a UPC with its add-on straight away', () => {
+    expect(pickCameraScan(['0037145007991', '003714500799134500'], null, 0)).toBe('003714500799134500')
+  })
+
+  it('holds a bare UPC while the add-on might still read', () => {
+    expect(pickCameraScan(['0037145007991'], null, 0)).toBeNull()
+    expect(pickCameraScan(['0037145007991'], 0, ADDON_WAIT_MS - 1)).toBeNull()
+    expect(pickCameraScan(['0037145007991'], 0, ADDON_WAIT_MS)).toBe('0037145007991')
+  })
+
+  it('passes anything else through, as before', () => {
+    expect(pickCameraScan(['LIB-0042'], null, 0)).toBe('LIB-0042')
+    expect(pickCameraScan([], null, 0)).toBeNull()
   })
 })
