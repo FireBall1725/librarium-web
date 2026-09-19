@@ -20,6 +20,7 @@ import AuthorAvatar from './AuthorAvatar'
 import { PromptDialog, type PromptExtras } from './Dialog'
 import { TAG_COLORS } from '../lib/tagColours'
 import CommandPalette from './CommandPalette'
+import GlobalBarcodeScanner from './GlobalBarcodeScanner'
 import { libraryColour } from '../lib/libraryColour'
 import { withBase } from '../lib/basePath'
 
@@ -920,6 +921,7 @@ export default function Layout() {
      </div>
 
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
+      <GlobalBarcodeScanner />
 
       <PromptDialog
         open={namingList || askedByUrl}

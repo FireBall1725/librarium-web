@@ -17,6 +17,7 @@ import ListsPage from './pages/settings/ListsPage'
 import ShelvesPage from './pages/settings/ShelvesPage'
 import MembersPage from './pages/settings/MembersPage'
 import AppearancePage from './pages/settings/AppearancePage'
+import BarcodeScannerPage from './pages/settings/BarcodeScannerPage'
 import LegacySettingsRedirect from './pages/settings/LegacySettingsRedirect'
 import AuthorsPage from './pages/AuthorsPage'
 import LibrariesPage from './pages/libraries/LibrariesPage'
@@ -76,6 +77,10 @@ function AppRoutes() {
               </Route>
               <Route path="/settings/appearance" element={<SettingsLayout />}>
                 <Route index element={<AppearancePage />} />
+              </Route>
+              {/* Open to everyone, like Appearance: it's this browser's scanner. */}
+              <Route path="/settings/barcode-scanner" element={<SettingsLayout />}>
+                <Route index element={<BarcodeScannerPage />} />
               </Route>
               <Route path="/settings/tokens" element={<SettingsLayout />}>
                 <Route index element={<ApiTokensPage />} />

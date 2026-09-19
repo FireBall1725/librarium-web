@@ -6,6 +6,8 @@ import { useAuth, ApiError } from '../../../auth/AuthContext'
 import type { AIProviderStatus, AIPermissions, AIConfigField } from '../../../types'
 import PageHeader from '../../../components/PageHeader'
 import { usePageTitle } from '../../../hooks/usePageTitle'
+import { errorMessage } from '../../../lib/errorMessage'
+import { Switch } from '../../../components/settings/SettingRow'
 
 type TestState =
   | { status: 'idle' }
@@ -397,7 +399,7 @@ function ProviderCard({ provider, onSaved, onActivate, activating }: ProviderCar
       if (res?.ok) {
         setTestState({ status: 'ok', reply: res.reply ?? '(no reply)' })
       } else {
-        setTestState({ status: 'fail', error: res?.error ?? 'Unknown error' })
+        setTestState({ status: 'fail', error: errorMessage(res, 'Unknown error') })
       }
     } catch (err) {
       setTestState({ status: 'fail', error: err instanceof ApiError ? err.message : 'Request failed' })
@@ -426,18 +428,14 @@ function ProviderCard({ provider, onSaved, onActivate, activating }: ProviderCar
           </div>
           <p className="mt-1 text-sm text-content-muted">{provider.description}</p>
         </div>
-        <label className="relative inline-flex items-center cursor-pointer shrink-0" title={
-          !canToggleOn ? 'Save an API key first' : ''
-        }>
-          <input
-            type="checkbox"
-            className="sr-only peer"
+        <span className="shrink-0" title={!canToggleOn ? 'Save an API key first' : ''}>
+          <Switch
             checked={enabled}
-            onChange={e => setEnabled(e.target.checked)}
+            label={`Enable ${provider.display_name}`}
             disabled={!canToggleOn && !enabled}
+            onChange={setEnabled}
           />
-          <div className="w-10 h-6 bg-surface-strong peer-focus:outline-none rounded-full peer peer-checked:bg-accent after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-surface-raised after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full" />
-        </label>
+        </span>
       </div>
 
       {provider.help_text && (
@@ -667,15 +665,9 @@ function PermissionsCard({ permissions, onSaved }: PermissionsCardProps) {
  <p className="text-sm font-medium text-content">{item.label}</p>
  <p className="text-xs text-content-muted">{item.description}</p>
  </div>
- <label className="relative inline-flex items-center cursor-pointer shrink-0 mt-0.5">
- <input
- type="checkbox"
- className="sr-only peer"
- checked={local[item.key]}
- onChange={() => toggle(item.key)}
- />
- <div className="w-10 h-6 bg-surface-strong peer-focus:outline-none rounded-full peer peer-checked:bg-accent after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-surface-raised after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full" />
-            </label>
+ <span className="mt-0.5 shrink-0">
+              <Switch checked={local[item.key]} label={item.label} onChange={() => toggle(item.key)} />
+            </span>
           </div>
         ))}
       </div>

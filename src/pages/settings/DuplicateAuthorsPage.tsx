@@ -22,6 +22,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuth, ApiError } from '../../auth/AuthContext'
 import { usePageTitle } from '../../hooks/usePageTitle'
 import PageHeader from '../../components/PageHeader'
+import { SettingsBody } from '../../components/settings/SettingRow'
 
 interface Member {
   id: string
@@ -109,7 +110,7 @@ export default function DuplicateAuthorsPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-4xl px-6 py-8">
+    <>
       <PageHeader
         title={t('settings_nav.duplicate_authors', { defaultValue: 'Duplicate authors' })}
         description={t('duplicate_authors.description', {
@@ -120,82 +121,84 @@ export default function DuplicateAuthorsPage() {
           { label: t('settings_nav.duplicate_authors', { defaultValue: 'Duplicate authors' }) },
         ]}
       />
+      <SettingsBody>
 
-      {error && (
-        <p className="mb-4 rounded-lg border border-danger-line bg-danger-surface px-3 py-2 text-sm text-danger">
-          {error}
-        </p>
-      )}
-      {notice && (
-        <p className="mb-4 rounded-lg border border-success-line bg-success-surface px-3 py-2 text-sm text-success">
-          {notice}
-        </p>
-      )}
+        {error && (
+          <p className="mb-4 rounded-lg border border-danger-line bg-danger-surface px-3 py-2 text-sm text-danger">
+            {error}
+          </p>
+        )}
+        {notice && (
+          <p className="mb-4 rounded-lg border border-success-line bg-success-surface px-3 py-2 text-sm text-success">
+            {notice}
+          </p>
+        )}
 
-      {groups === null ? null : groups.length === 0 ? (
-        <p className="text-sm text-content-tertiary">
-          {t('duplicate_authors.none', { defaultValue: 'Nothing looks duplicated.' })}
-        </p>
-      ) : (
-        <ul className="space-y-4">
-          {groups.map(g => {
-            const keep = survivor[g.key]
-            return (
-              <li key={g.key} className="rounded-xl border border-line bg-surface p-4">
-                <ul className="mb-3 space-y-1">
-                  {g.members.map(m => (
-                    <li key={m.id}>
-                      <label className="flex cursor-pointer items-center gap-2.5 rounded-md px-1.5 py-1 hover:bg-surface-inset">
-                        <input
-                          type="radio"
-                          name={g.key}
-                          checked={keep === m.id}
-                          onChange={() => setSurvivor(s => ({ ...s, [g.key]: m.id }))}
-                          className="accent-[var(--color-accent)]"
-                        />
-                        <span className="min-w-0 flex-1 truncate text-sm text-content">{m.name}</span>
-                        <span className="text-xs tabular-nums text-content-tertiary">
-                          {t('duplicate_authors.books', {
-                            count: m.books,
-                            defaultValue: '1 book',
-                            defaultValue_other: `${m.books} books`,
-                          })}
-                        </span>
-                      </label>
-                    </li>
-                  ))}
-                </ul>
+        {groups === null ? null : groups.length === 0 ? (
+          <p className="text-sm text-content-tertiary">
+            {t('duplicate_authors.none', { defaultValue: 'Nothing looks duplicated.' })}
+          </p>
+        ) : (
+          <ul className="space-y-4">
+            {groups.map(g => {
+              const keep = survivor[g.key]
+              return (
+                <li key={g.key} className="rounded-xl border border-line bg-surface p-4">
+                  <ul className="mb-3 space-y-1">
+                    {g.members.map(m => (
+                      <li key={m.id}>
+                        <label className="flex cursor-pointer items-center gap-2.5 rounded-md px-1.5 py-1 hover:bg-surface-inset">
+                          <input
+                            type="radio"
+                            name={g.key}
+                            checked={keep === m.id}
+                            onChange={() => setSurvivor(s => ({ ...s, [g.key]: m.id }))}
+                            className="accent-[var(--color-accent)]"
+                          />
+                          <span className="min-w-0 flex-1 truncate text-sm text-content">{m.name}</span>
+                          <span className="text-xs tabular-nums text-content-tertiary">
+                            {t('duplicate_authors.books', {
+                              count: m.books,
+                              defaultValue: '1 book',
+                              defaultValue_other: `${m.books} books`,
+                            })}
+                          </span>
+                        </label>
+                      </li>
+                    ))}
+                  </ul>
 
-                <div className="flex flex-wrap items-center gap-2">
-                  <button type="button" className="lb-btn sm"
-                    disabled={!keep || busy === g.key}
-                    title={keep ? undefined : t('duplicate_authors.pick_one', {
-                      defaultValue: 'Choose which spelling to keep',
-                    })}
-                    onClick={() => void merge(g)}>
-                    {t('duplicate_authors.merge', {
-                      count: g.members.length - 1,
-                      defaultValue: 'Merge 1 in',
-                      defaultValue_other: `Merge ${g.members.length - 1} in`,
-                    })}
-                  </button>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button type="button" className="lb-btn sm"
+                      disabled={!keep || busy === g.key}
+                      title={keep ? undefined : t('duplicate_authors.pick_one', {
+                        defaultValue: 'Choose which spelling to keep',
+                      })}
+                      onClick={() => void merge(g)}>
+                      {t('duplicate_authors.merge', {
+                        count: g.members.length - 1,
+                        defaultValue: 'Merge 1 in',
+                        defaultValue_other: `Merge ${g.members.length - 1} in`,
+                      })}
+                    </button>
 
-                  {/* The reviewer has to be able to say no, or the nightly
-                      sweep offers the same wrong answer every morning and the
-                      queue becomes something nobody opens. */}
-                  <button type="button" className="lb-btn ghost sm"
-                    disabled={busy === g.key}
-                    onClick={() => void dismiss(g)}>
-                    {t('duplicate_authors.dismiss', {
-                      defaultValue: 'Different people',
-                    })}
-                  </button>
-                </div>
-              </li>
-            )
-          })}
-        </ul>
-      )}
-    </div>
+                    {/* The reviewer has to be able to say no, or the nightly
+                        sweep offers the same wrong answer every morning and the
+                        queue becomes something nobody opens. */}
+                    <button type="button" className="lb-btn ghost sm"
+                      disabled={busy === g.key}
+                      onClick={() => void dismiss(g)}>
+                      {t('duplicate_authors.dismiss', {
+                        defaultValue: 'Different people',
+                      })}
+                    </button>
+                  </div>
+                </li>
+              )
+            })}
+          </ul>
+        )}
+      </SettingsBody>
+    </>
   )
 }
