@@ -39,7 +39,7 @@ interface Manual {
 }
 
 export default function AddBooksDialog({
-  libraryId, libraries: librariesProp, mediaTypes, onClose, onSaved, onDuplicate, initialIsbn, initialTitle,
+  libraryId, libraries: librariesProp, mediaTypes, onClose, onSaved, onDuplicate, initialIsbn, initialTitle, placeId,
 }: {
   /** The library it was opened from, which it opens on. */
   libraryId?: string
@@ -51,6 +51,8 @@ export default function AddBooksDialog({
   onDuplicate?: (book: Book) => void
   initialIsbn?: string
   initialTitle?: string
+  /** A place in libraryId to file on this time, over the remembered one. Not saved. */
+  placeId?: string
 }) {
   const { callApi } = useAuth()
   const { t } = useTranslation()
@@ -83,7 +85,9 @@ export default function AddBooksDialog({
       if (!live) return
       setLibraries(ls)
       setPrefs(p)
-      if (ls.length) setDestination(destinationFromPrefs(p, ls.map(l => l.id), libraryId))
+      if (!ls.length) return
+      const d = destinationFromPrefs(p, ls.map(l => l.id), libraryId)
+      setDestination(placeId && d.libraryId === libraryId ? { ...d, locationId: placeId } : d)
     })
     void fetchLists(callApi).then(all => { if (live) setLists(all.filter(l => l.kind === 'manual')) }).catch(() => {})
     return () => { live = false }

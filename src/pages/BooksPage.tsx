@@ -819,6 +819,9 @@ export default function BooksPage() {
         />
 
           <span className="flex-1" />
+          <Link to={`/inventory${params.get('lib') ? `?lib=${params.get('lib')}` : ''}`} className="lb-btn ghost sm">
+            {t('inventory.title', { defaultValue: 'Inventory' })}
+          </Link>
           <button type="button" onClick={() => setAdding(true)}
             className="lb-btn sm">
             {t('books.add', { defaultValue: 'Add book' })}
