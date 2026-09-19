@@ -491,7 +491,9 @@
       "fair": "Aceptable",
       "poor": "Malo",
       "ex_library": "De biblioteca"
-    }
+    },
+    "shelf": "Estante",
+    "no_shelf": "Sin estante"
   },
   "search": {
     "placeholder": "Busca, o escribe un autor, una etiqueta o una biblioteca…",

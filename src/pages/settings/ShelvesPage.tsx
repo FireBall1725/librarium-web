@@ -22,7 +22,7 @@ import { usePageTitle } from '../../hooks/usePageTitle'
 import PageHeader from '../../components/PageHeader'
 import type { CopyLocation, Library } from '../../types'
 import {
-  buildTree, caseInfo, flatten, missingShelves, pathOf, selfAndInside,
+  buildTree, caseInfo, flatten, looksLikeBookcase, missingShelves, pathOf, selfAndInside,
   type CaseInfo, type PlaceNode,
 } from '../../lib/places'
 
@@ -199,11 +199,9 @@ function PlaceRow({ node, all, current, collapsed, onToggle, onSelect }: {
   const p = node.place
   const shelves = node.children.map(c => c.place)
   const bookcase = p.shelf_count != null
-  // The guess tag follows the kiosk's rule, so it says what the kiosk will
-  // draw: every place inside ends in a number. A box on a shelf doesn't stop
-  // the shelf counting, but one numbered name is not a pattern, so an
-  // unmarked place needs two before it earns a guess.
-  const info = shelves.length > 1 || bookcase ? caseInfo(p, shelves) : null
+  // A guess only for something shaped like a bookcase, so a room of
+  // numbered bookcases doesn't read as a bookcase itself.
+  const info = bookcase || looksLikeBookcase(node) ? caseInfo(p, shelves) : null
 
   return (
     <li className={`flex items-center gap-2 border-t border-line py-2 pr-3 first:border-t-0 ${current ? 'bg-accent-surface' : ''}`}
@@ -285,7 +283,8 @@ function PlaceEditor({ libraryId, places, node, newIn, onChanged, onError, onSel
   const { callApi } = useAuth()
   const place = node?.place ?? null
   const shelves = useMemo(() => node?.children.map(c => c.place) ?? [], [node])
-  const saved = place ? caseInfo(place, shelves) : null
+  const prefix = t('shelves_settings.shelf_prefix', { defaultValue: 'Shelf ' })
+  const saved = place ? caseInfo(place, shelves, prefix) : null
 
   const [name, setName] = useState(place?.name ?? '')
   const [parent, setParent] = useState(place ? place.parent_id ?? '' : newIn ?? '')
@@ -311,7 +310,7 @@ function PlaceEditor({ libraryId, places, node, newIn, onChanged, onError, onSel
   const draft: CaseInfo | null = saved ? { ...saved, count: Math.max(count, saved.highest) } : null
   const drawn = draft?.count ?? count
   const unnumbered = shelves.length > 0 && !saved
-  const missing = unnumbered ? [] : missingShelves(saved, count, t('shelves_settings.shelf_prefix', { defaultValue: 'Shelf ' }))
+  const missing = unnumbered ? [] : missingShelves(saved, count, prefix)
 
   const save = async () => {
     const trimmed = name.trim()

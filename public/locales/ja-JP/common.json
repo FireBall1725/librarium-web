@@ -461,7 +461,9 @@
       "fair": "可",
       "poor": "難あり",
       "ex_library": "図書館除籍本"
-    }
+    },
+    "shelf": "段",
+    "no_shelf": "段を指定しない"
   },
   "search": {
     "placeholder": "検索、または著者・タグ・ライブラリを指定…",

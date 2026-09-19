@@ -3,7 +3,10 @@
 
 import { describe, expect, it } from 'vitest'
 import type { CopyLocation } from '../types'
-import { buildTree, caseInfo, flatten, missingShelves, pathOf, selfAndInside } from './places'
+import {
+  buildTree, caseInfo, flatten, looksLikeBookcase, missingShelves, numberedShelfIds, pathOf, selfAndInside,
+  shelfChoices, shelfSpot,
+} from './places'
 
 const place = (id: string, name: string, parent: string | null = null, extra: Partial<CopyLocation> = {}): CopyLocation => ({
   id, name, parent_id: parent, library_id: 'lib', copy_count: 0, created_at: '', ...extra,
@@ -100,5 +103,60 @@ describe('missingShelves', () => {
   it('names new shelves Shelf 1 onward when there is nothing to copy', () => {
     expect(missingShelves(null, 3)).toEqual(['Shelf 1', 'Shelf 2', 'Shelf 3'])
     expect(missingShelves(null, 2, 'Étagère ')).toEqual(['Étagère 1', 'Étagère 2'])
+  })
+})
+
+describe('looksLikeBookcase', () => {
+  it('does not guess about a room of numbered bookcases', () => {
+    const room = [
+      place('lr', 'Living Room'),
+      place('b1', 'Bookcase 1', 'lr'),
+      place('b1t', 'Top shelf', 'b1'),
+      place('b1m', 'Middle shelf', 'b1'),
+      place('b2', 'Bookcase 2', 'lr'),
+    ]
+    expect(looksLikeBookcase(buildTree(room)[0])).toBe(false)
+  })
+
+  it('still guesses when one shelf holds a box', () => {
+    const a = [...places, place('box', 'Box 1', 'a2')]
+    expect(looksLikeBookcase(buildTree(a)[0].children[0])).toBe(true)
+  })
+
+  it('needs more than one numbered place', () => {
+    expect(looksLikeBookcase(buildTree([place('p', 'P'), place('c', 'Box 3', 'p')])[0])).toBe(false)
+  })
+})
+
+describe('shelves of a marked bookcase', () => {
+  // Nightstand declares 4 shelves and has a row for shelf 2 only.
+  const room = [
+    place('bed', 'Bedroom'),
+    place('ns', 'Nightstand', 'bed', { shelf_count: 4 }),
+    place('ns2', 'Shelf 2', 'ns'),
+    place('lamp', 'Lamp table', 'bed'),
+  ]
+
+  it('offers every declared shelf, with the row where there is one', () => {
+    expect(shelfChoices(room[1], room).map(s => [s.number, s.name, s.place?.id ?? null])).toEqual([
+      [1, 'Shelf 1', null], [2, 'Shelf 2', 'ns2'], [3, 'Shelf 3', null], [4, 'Shelf 4', null],
+    ])
+  })
+
+  it('names a new shelf in the language given when there is nothing to copy', () => {
+    const empty = [place('ns', 'Nightstand', null, { shelf_count: 2 })]
+    expect(shelfChoices(empty[0], empty, 'Fach ').map(s => s.name)).toEqual(['Fach 1', 'Fach 2'])
+  })
+
+  it('finds where a place sits', () => {
+    expect(shelfSpot('ns', room)).toEqual({ bookcase: room[1], shelf: null })
+    expect(shelfSpot('ns2', room)).toEqual({ bookcase: room[1], shelf: 2 })
+    expect(shelfSpot('lamp', room)).toBeNull()
+    // An unmarked bookcase is just places.
+    expect(shelfSpot('a1', places)).toBeNull()
+  })
+
+  it('hides only the numbered shelves of marked bookcases', () => {
+    expect([...numberedShelfIds([...room, ...places])]).toEqual(['ns2'])
   })
 })

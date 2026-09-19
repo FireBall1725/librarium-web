@@ -491,7 +491,9 @@
       "fair": "Fair",
       "poor": "Poor",
       "ex_library": "Ex-library"
-    }
+    },
+    "shelf": "Shelf",
+    "no_shelf": "No shelf"
   },
   "search": {
     "placeholder": "Search, or name an author, tag or library…",

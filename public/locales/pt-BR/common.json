@@ -491,7 +491,9 @@
       "fair": "Razoável",
       "poor": "Ruim",
       "ex_library": "Ex-biblioteca"
-    }
+    },
+    "shelf": "Prateleira",
+    "no_shelf": "Sem prateleira"
   },
   "search": {
     "placeholder": "Busque, ou escreva um autor, uma etiqueta ou uma biblioteca…",

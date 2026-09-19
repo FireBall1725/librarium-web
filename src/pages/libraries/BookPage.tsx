@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useParams, useNavigate, Link, useOutletContext } from 'react-router-dom'
 import { announceCollectionChanged } from '../../lib/collectionEvents'
@@ -16,6 +16,7 @@ import BookSeries from '../../components/BookSeries'
 import StarRating from '../../components/StarRating'
 import { type SavedList } from '../../lib/lists'
 import { withBase } from '../../lib/basePath'
+import { buildTree, flatten, numberedShelfIds, pathOf, shelfChoices, shelfSpot } from '../../lib/places'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -394,7 +395,22 @@ function useCopies(bookId: string, libraryId: string, onChanged?: () => void) {
                t('copies.remove_failed'))
   }
 
-  return { copies, conditions, locations, busy, error, patch, addCopy, removeCopy, reload }
+  /** Files a copy on a bookcase shelf, making the shelf's place first when
+   *  the bookcase only declares it. */
+  const fileOnShelf = (copy: Copy, bookcase: CopyLocation, shelf: { name: string; place: CopyLocation | null }) =>
+    run(async () => {
+      let id = shelf.place?.id
+      if (!id) {
+        const created = await callApi<CopyLocation>(`/api/v1/libraries/${libraryId}/locations`, {
+          method: 'POST',
+          body: JSON.stringify({ name: shelf.name, parent_id: bookcase.id }),
+        })
+        id = created?.id
+      }
+      if (id) await callApi(`/api/v1/copies/${copy.id}`, { method: 'PATCH', body: JSON.stringify({ location_id: id }) })
+    }, t('copies.save_failed'))
+
+  return { copies, conditions, locations, busy, error, patch, addCopy, removeCopy, reload, fileOnShelf }
 }
 
 type CopyControls = ReturnType<typeof useCopies>
@@ -402,7 +418,16 @@ type CopyControls = ReturnType<typeof useCopies>
 /** One row per object, with the fields that belong to the object. */
 function CopyRows({ copies, controls }: { copies: Copy[]; controls: CopyControls }) {
   const { t } = useTranslation()
-  const { conditions, locations, busy, patch, removeCopy } = controls
+  const { conditions, locations, busy, patch, removeCopy, fileOnShelf } = controls
+  const prefix = t('shelves_settings.shelf_prefix', { defaultValue: 'Shelf ' })
+  // Full paths, since two rooms can each have a "Top shelf". A bookcase's
+  // numbered shelves are left out: the shelf menu beside it covers them.
+  const placeOptions = useMemo(() => {
+    const hidden = numberedShelfIds(locations)
+    return flatten(buildTree(locations))
+      .filter(n => !hidden.has(n.place.id))
+      .map(n => ({ id: n.place.id, label: pathOf(n.place.id, locations).join(' › ') }))
+  }, [locations])
 
   /** Condition codes are a server vocabulary, so the label lives here: a name
    *  stored in the database cannot be translated. An unknown code shows itself
@@ -432,12 +457,10 @@ function CopyRows({ copies, controls }: { copies: Copy[]; controls: CopyControls
             ))}
           </select>
 
-          <select value={copy.location_id ?? ''} disabled={busy} className={selectCls}
-            onChange={e => patch(copy, { location_id: e.target.value || null })}
-            aria-label={t('copies.location')}>
-            <option value="">{t('copies.no_location')}</option>
-            {locations.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
-          </select>
+          <CopyPlace copy={copy} locations={locations} options={placeOptions} prefix={prefix}
+            busy={busy} selectCls={selectCls}
+            onPlace={id => patch(copy, { location_id: id })}
+            onShelf={(bookcase, shelf) => fileOnShelf(copy, bookcase, shelf)} />
 
           <label className="flex items-center gap-1.5 text-xs text-content-tertiary">
             <input type="checkbox" checked={copy.is_signed} disabled={busy}
@@ -459,6 +482,46 @@ function CopyRows({ copies, controls }: { copies: Copy[]; controls: CopyControls
         </div>
       ))}
     </div>
+  )
+}
+
+/** Where a copy sits: a place, and a shelf when the place is a bookcase. */
+function CopyPlace({ copy, locations, options, prefix, busy, selectCls, onPlace, onShelf }: {
+  copy: Copy
+  locations: CopyLocation[]
+  options: { id: string; label: string }[]
+  prefix: string
+  busy: boolean
+  selectCls: string
+  onPlace: (id: string | null) => void
+  onShelf: (bookcase: CopyLocation, shelf: { name: string; place: CopyLocation | null }) => void
+}) {
+  const { t } = useTranslation()
+  const spot = copy.location_id ? shelfSpot(copy.location_id, locations) : null
+  const shelves = spot ? shelfChoices(spot.bookcase, locations, prefix) : []
+
+  return (
+    <>
+      <select value={spot?.bookcase.id ?? copy.location_id ?? ''} disabled={busy} className={selectCls}
+        onChange={e => onPlace(e.target.value || null)}
+        aria-label={t('copies.location')}>
+        <option value="">{t('copies.no_location')}</option>
+        {options.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
+      </select>
+      {spot && shelves.length > 0 && (
+        <select value={spot.shelf ?? ''} disabled={busy} className={selectCls}
+          onChange={e => {
+            const n = Number(e.target.value)
+            const shelf = shelves.find(s => s.number === n)
+            if (shelf) onShelf(spot.bookcase, shelf)
+            else onPlace(spot.bookcase.id)
+          }}
+          aria-label={t('copies.shelf', { defaultValue: 'Shelf' })}>
+          <option value="">{t('copies.no_shelf', { defaultValue: 'No shelf' })}</option>
+          {shelves.map(s => <option key={s.number} value={s.number}>{s.name}</option>)}
+        </select>
+      )}
+    </>
   )
 }
 

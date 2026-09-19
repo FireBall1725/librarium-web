@@ -108,7 +108,7 @@ const TRAILING_NUMBER = /(\d+)\s*$/
  * the kiosk does. Every one has to end in a number (A1, B3, Shelf 7); if any
  * doesn't, there is no numbering to draw and this returns null.
  */
-export function caseInfo(bookcase: CopyLocation, shelves: CopyLocation[]): CaseInfo | null {
+export function caseInfo(bookcase: CopyLocation, shelves: CopyLocation[], fallbackPrefix = 'Shelf '): CaseInfo | null {
   const have = new Map<number, CopyLocation>()
   let highest = 0
   for (const s of shelves) {
@@ -126,7 +126,7 @@ export function caseInfo(bookcase: CopyLocation, shelves: CopyLocation[]): CaseI
     have,
     declared: bookcase.shelf_count != null,
     topDown: bookcase.shelf_numbering !== 'bottom_up',
-    prefix: first ? first.name.replace(TRAILING_NUMBER, '') : 'Shelf ',
+    prefix: first ? first.name.replace(TRAILING_NUMBER, '') : fallbackPrefix,
     highest,
   }
 }
@@ -143,4 +143,62 @@ export function missingShelves(info: CaseInfo | null, count: number, fallbackPre
     else if (!info.have.has(n)) out.push(info.prefix + n)
   }
   return out
+}
+
+/**
+ * Whether an unmarked place is worth guessing about. A room holding Bookcase 1
+ * and Bookcase 2 is numbered too, so anything inside that is itself a bookcase,
+ * or holds more than one thing, rules the guess out. A single box on a shelf
+ * doesn't.
+ */
+export function looksLikeBookcase(node: PlaceNode): boolean {
+  return node.children.length > 1 &&
+    node.children.every(c => c.place.shelf_count == null && c.children.length < 2)
+}
+
+function shelvesOf(id: string, places: CopyLocation[]): CopyLocation[] {
+  return places.filter(p => p.parent_id === id)
+}
+
+/**
+ * Where a place sits in a marked bookcase: the bookcase itself (shelf null),
+ * or one of its numbered shelves. Null for anything else.
+ */
+export function shelfSpot(id: string, places: CopyLocation[]): { bookcase: CopyLocation; shelf: number | null } | null {
+  const byId = new Map(places.map(p => [p.id, p]))
+  const place = byId.get(id)
+  if (!place) return null
+  if (place.shelf_count != null) return { bookcase: place, shelf: null }
+  const parent = place.parent_id ? byId.get(place.parent_id) : undefined
+  if (!parent || parent.shelf_count == null) return null
+  const info = caseInfo(parent, shelvesOf(parent.id, places))
+  if (!info) return null
+  for (const [n, s] of info.have) if (s.id === id) return { bookcase: parent, shelf: n }
+  return null
+}
+
+/**
+ * The numbered shelves of every marked bookcase. A shelf picker covers them,
+ * so a list of places can leave them out.
+ */
+export function numberedShelfIds(places: CopyLocation[]): Set<string> {
+  const out = new Set<string>()
+  for (const b of places) {
+    if (b.shelf_count == null) continue
+    const info = caseInfo(b, shelvesOf(b.id, places))
+    if (info) for (const s of info.have.values()) out.add(s.id)
+  }
+  return out
+}
+
+/** Shelf 1 to the count of a marked bookcase, with the place row where one exists. */
+export function shelfChoices(bookcase: CopyLocation, places: CopyLocation[], fallbackPrefix = 'Shelf '):
+  { number: number; name: string; place: CopyLocation | null }[] {
+  const info = caseInfo(bookcase, shelvesOf(bookcase.id, places), fallbackPrefix)
+  if (!info) return []
+  return Array.from({ length: info.count }, (_, i) => {
+    const n = i + 1
+    const place = info.have.get(n) ?? null
+    return { number: n, name: place?.name ?? info.prefix + n, place }
+  })
 }

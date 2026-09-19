@@ -491,7 +491,9 @@
       "fair": "Passable",
       "poor": "Mauvais",
       "ex_library": "Ex-bibliothèque"
-    }
+    },
+    "shelf": "Étagère",
+    "no_shelf": "Aucune étagère"
   },
   "search": {
     "placeholder": "Rechercher, ou nommer un auteur, une étiquette ou une bibliothèque…",

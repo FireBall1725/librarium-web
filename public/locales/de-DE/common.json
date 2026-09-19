@@ -491,7 +491,9 @@
       "fair": "Akzeptabel",
       "poor": "Schlecht",
       "ex_library": "Bibliotheksexemplar"
-    }
+    },
+    "shelf": "Fach",
+    "no_shelf": "Kein Fach"
   },
   "search": {
     "placeholder": "Suchen oder Autor, Schlagwort oder Bibliothek nennen…",
