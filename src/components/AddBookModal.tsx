@@ -16,6 +16,7 @@ import type { Book, ContributorResult, Genre, ISBNLookupResult, Library, MediaTy
 import { fetchLists, type SavedList } from '../lib/lists'
 import { LANGUAGE_OPTIONS } from './AddEditionModal'
 import ContributorRow, { CONTRIBUTOR_ROLES } from './ContributorRow'
+import { joinWithAbove } from '../lib/contributors'
 import MediaTypeSelect from './MediaTypeSelect'
 import MergedLookup from './MergedLookup'
 import { hasAnyField, mergedToResult } from '../lib/mergedLookup'
@@ -965,7 +966,8 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
                     contributor={c.contributor} role={c.role}
                     onContributorChange={contributor => setContributors(cs => cs.map((x, j) => j === i ? { ...x, contributor } : x))}
                     onRoleChange={role => setContributors(cs => cs.map((x, j) => j === i ? { ...x, role } : x))}
-                    onRemove={() => setContributors(cs => cs.filter((_, j) => j !== i))} />
+                    onRemove={() => setContributors(cs => cs.filter((_, j) => j !== i))}
+                    onJoinAbove={i > 0 ? () => void joinWithAbove(callApi, contributors, i).then(setContributors) : undefined} />
                 ))}
                 {contributors.length === 0 && (
                   <p className="text-xs text-content-subtle">No contributors added.</p>

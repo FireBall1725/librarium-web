@@ -6,6 +6,7 @@ import { useAuth, ApiError } from '../auth/AuthContext'
 import type { Book, Tag, Genre, MediaType, ContributorResult, BookEdition, Series } from '../types'
 import { fetchLists, type SavedList } from '../lib/lists'
 import ContributorRow from './ContributorRow'
+import { joinWithAbove } from '../lib/contributors'
 import MediaTypeSelect from './MediaTypeSelect'
 import { AddEditionModal } from './AddEditionModal'
 
@@ -284,6 +285,7 @@ export default function EditBookModal({ libraryId, book, onClose, onSaved, initi
                     onContributorChange={nc => setContributors(cs => cs.map((x, j) => j === i ? { ...x, contributor: nc } : x))}
                     onRoleChange={r => setContributors(cs => cs.map((x, j) => j === i ? { ...x, role: r } : x))}
                     onRemove={() => setContributors(cs => cs.filter((_, j) => j !== i))}
+                    onJoinAbove={i > 0 ? () => void joinWithAbove(callApi, contributors, i).then(setContributors) : undefined}
                   />
                 ))}
                 <button type="button" onClick={() => setContributors(cs => [...cs, { contributor: null, role: 'author' }])}

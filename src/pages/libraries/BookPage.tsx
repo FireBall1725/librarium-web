@@ -17,6 +17,7 @@ import StarRating from '../../components/StarRating'
 import { type SavedList } from '../../lib/lists'
 import { withBase } from '../../lib/basePath'
 import { buildTree, flatten, numberedShelfIds, pathOf, shelfChoices, shelfSpot } from '../../lib/places'
+import { authorNames } from '../../lib/mergedLookup'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -1330,7 +1331,9 @@ function MergedMetadataModal({ book, editions, libraryId, bookId, onClose, onApp
 
       let contribs = book.contributors.map((c, i) => ({ contributor_id: c.contributor_id, role: c.role, display_order: i }))
       if (enabled.has('authors') && merged.authors) {
-        contribs = await resolveContributors(getEffectiveValue('authors', merged.authors).split(/\s*,\s*/).filter(Boolean))
+        const chosen = altChoice.authors
+        contribs = await resolveContributors(authorNames(
+          (chosen && merged.authors.alternatives?.find(a => a.source === chosen)) || merged.authors))
       }
 
       await callApi(`/api/v1/libraries/${libraryId}/books/${bookId}`, {
