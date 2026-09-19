@@ -991,7 +991,7 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
                       </div>
                       <div>
                         <label className={labelCls}>Publish date</label>
-                        <input type="date" value={edition.publish_date} onChange={e => setEdition(d => ({ ...d, publish_date: e.target.value }))} className={inputCls} />
+                        <input type="text" inputMode="numeric" placeholder="YYYY-MM-DD" pattern="\d{4}(-\d{2}(-\d{2})?)?" title="YYYY, YYYY-MM or YYYY-MM-DD" value={edition.publish_date} onChange={e => setEdition(d => ({ ...d, publish_date: e.target.value }))} className={inputCls} />
                       </div>
                     </div>
 

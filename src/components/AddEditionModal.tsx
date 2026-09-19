@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useAuth, ApiError } from '../auth/AuthContext'
 import type { BookEdition, BookContributor } from '../types'
+import { displayPublishDate } from '../lib/publishDate'
 
 export const LANGUAGE_OPTIONS = [
   { code: 'af', name: 'Afrikaans' }, { code: 'ar', name: 'Arabic' },
@@ -88,7 +89,7 @@ export function AddEditionModal({ libraryId, bookId, edition, contributors = [],
     narrator:                edition?.narrator      ?? '',
     narrator_contributor_id: edition?.narrator_contributor_id ?? '',
     publisher:               edition?.publisher     ?? '',
-    publish_date:            edition?.publish_date  ?? '',
+    publish_date:            displayPublishDate(edition?.publish_date, edition?.publish_date_precision),
     isbn_10:                 edition?.isbn_10       ?? '',
     isbn_13:                 edition?.isbn_13       ?? '',
     duration_hours:          existingSecs > 0 ? String(Math.floor(existingSecs / 3600)) : '',
@@ -214,7 +215,7 @@ export function AddEditionModal({ libraryId, bookId, edition, contributors = [],
             </div>
             <div>
               <label className={labelCls}>Publish date</label>
-              <input type="date" value={form.publish_date} onChange={e => setForm(f => ({ ...f, publish_date: e.target.value }))} className={inputCls} />
+              <input type="text" inputMode="numeric" placeholder="YYYY-MM-DD" pattern="\d{4}(-\d{2}(-\d{2})?)?" title="YYYY, YYYY-MM or YYYY-MM-DD" value={form.publish_date} onChange={e => setForm(f => ({ ...f, publish_date: e.target.value }))} className={inputCls} />
             </div>
           </div>
 

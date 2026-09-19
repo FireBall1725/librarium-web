@@ -192,6 +192,8 @@ export interface BookEdition {
   narrator_contributor_name: string
   publisher: string
   publish_date: string | null
+  // year, month or day: how much of publish_date is real. Older servers omit it.
+  publish_date_precision?: 'year' | 'month' | 'day' | null
   isbn_10: string
   isbn_13: string
   description: string
