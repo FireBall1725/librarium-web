@@ -333,6 +333,27 @@
     "tokens_description": "トークンはあなたとして動作し、与えた権限の範囲に限られます。トークンを持つものは、取り消すまでその範囲のことを行えます。",
     "ai_description": "AI 提供元にあなたの読書について何を渡してよいか。既定では無効です。"
   },
+  "pin": {
+    "heading": "PIN",
+    "status_set": "設定済み",
+    "status_not_set": "未設定",
+    "description": "任意。図書館のキオスク端末など、パスワードの入力が不便な場所でのクイックサインインに使う短い番号です。",
+    "set": "PINを設定",
+    "change": "PINを変更",
+    "remove": "削除",
+    "remove_confirm": "PINを削除しますか？新しいPINを設定するまで、クイックサインインには使えなくなります。",
+    "new_pin": "新しいPIN",
+    "confirm_pin": "PINの確認",
+    "hint": "4〜8桁の数字。",
+    "save": "PINを保存",
+    "saving": "保存中…",
+    "saved": "PINを保存しました",
+    "save_failed": "PINを保存できませんでした",
+    "removed": "PINを削除しました",
+    "remove_failed": "PINを削除できませんでした",
+    "error_format": "PINは4〜8桁の数字です。",
+    "error_mismatch": "2つのPINが一致しません。"
+  },
   "ownership": {
     "shelf": "所持",
     "wishlist": "ウィッシュリスト",

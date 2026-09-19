@@ -352,6 +352,27 @@
     "tokens_description": "Tokens act as you, limited to the scopes you give them. Anything holding one can do what it allows until you revoke it.",
     "ai_description": "What an AI provider is allowed to see about your reading. Off unless you turn it on."
   },
+  "pin": {
+    "heading": "PIN",
+    "status_set": "Set",
+    "status_not_set": "Not set",
+    "description": "Optional. A short number that identifies you for a quick sign-in where typing your password isn't practical, like a library kiosk.",
+    "set": "Set PIN",
+    "change": "Change PIN",
+    "remove": "Remove",
+    "remove_confirm": "Remove your PIN? You won't be able to use it for a quick sign-in until you set a new one.",
+    "new_pin": "New PIN",
+    "confirm_pin": "Confirm PIN",
+    "hint": "4 to 8 digits.",
+    "save": "Save PIN",
+    "saving": "Saving…",
+    "saved": "PIN saved",
+    "save_failed": "Couldn't save the PIN",
+    "removed": "PIN removed",
+    "remove_failed": "Couldn't remove the PIN",
+    "error_format": "A PIN is 4 to 8 digits.",
+    "error_mismatch": "The two PINs don't match."
+  },
   "ownership": {
     "shelf": "On the shelf",
     "wishlist": "Wishlist",
