@@ -393,6 +393,8 @@ function RowActions({ row, libraryId, onUndo, onRetry, onOpen, onAdd, onSkip, on
         <span className="flex shrink-0 gap-3">
           <button type="button" className={btn} onClick={onAdd}>{t('add_books.add_copy', { defaultValue: 'Add a copy' })}</button>
           <Link className={btn} to={`/libraries/${libraryId}/books/${row.bookId}`} target="_blank" rel="noreferrer">{t('add_books.view_it', { defaultValue: 'View it' })}</Link>
+          {/* The match can be wrong too, a shared paperback UPC most of all. */}
+          <button type="button" className={btn} onClick={onRetry}>{t('add_book.ask_again')}</button>
         </span>
       )
     case 'ready':
