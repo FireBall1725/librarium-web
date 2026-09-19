@@ -65,7 +65,9 @@ export default function MergedLookup({ merged, onUse }: {
         </p>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-[150px_minmax(0,1fr)]">
+      {/* The cover column only when there's a cover: without one, the table
+          would drop into the 150px column and wrap a letter per line. */}
+      <div className={`grid gap-4 ${covers.length > 0 ? 'sm:grid-cols-[150px_minmax(0,1fr)]' : ''}`}>
         {covers.length > 0 && (
           <div className="flex flex-col gap-2">
             <img src={covers[coverPick]?.cover_url} alt="" referrerPolicy="no-referrer"
