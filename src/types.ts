@@ -586,12 +586,19 @@ export interface MergedFieldOption {
   value: string
   source: string
   source_display: string
+  // Every provider that gave this value. Older servers omit it.
+  sources?: string[]
 }
+
+// Why a field's value was pre-selected. Older servers omit it.
+export type MergeReason = 'agreed' | 'only' | 'longest' | 'most_detail' | 'first'
 
 export interface MergedFieldResult {
   value: string
   source: string
   source_display: string
+  reason?: MergeReason
+  sources?: string[]
   alternatives: MergedFieldOption[]
 }
 
@@ -599,6 +606,17 @@ export interface CoverOption {
   source: string
   source_display: string
   cover_url: string
+  // Pixel size read from the image header; absent when unknown.
+  width?: number
+  height?: number
+}
+
+// What one provider did during a lookup.
+export interface LookupProviderStatus {
+  name: string
+  display_name: string
+  status: 'answered' | 'no_record' | 'error' | 'missed'
+  millis: number
 }
 
 export interface MergedBookResult {
@@ -614,6 +632,9 @@ export interface MergedBookResult {
   page_count?: MergedFieldResult
   categories?: string[]
   covers?: CoverOption[]
+  // 'largest' once cover sizes are known, else 'first'.
+  cover_reason?: 'largest' | 'first'
+  providers?: LookupProviderStatus[]
 }
 
 export interface ISBNLookupResult {
