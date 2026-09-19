@@ -7,7 +7,7 @@ import { useAuthenticatedImage } from '../../hooks/useAuthenticatedImage'
 import BookCover, { BookCoverThumb } from '../../components/BookCover'
 import SeriesFormModal from '../../components/SeriesFormModal'
 import { useToast } from '../../components/Toast'
-import AddBookModal from '../../components/AddBookModal'
+import AddBooksDialog from '../../components/addBooks/AddBooksDialog'
 import EditBookModal from '../../components/EditBookModal'
 import {
   allConditions,
@@ -1280,7 +1280,7 @@ function BooksTab({ libraryId, mediaTypes, canEdit }: BooksTabProps) {
  )}
 
  {showAdd && (
- <AddBookModal
+ <AddBooksDialog
  libraryId={libraryId}
  mediaTypes={mediaTypes}
  onClose={() => setShowAdd(false)}

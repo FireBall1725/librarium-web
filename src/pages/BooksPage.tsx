@@ -16,7 +16,7 @@ import { formatStars, starsOf } from '../lib/rating'
 import { useAuth } from '../auth/AuthContext'
 import PageHeader from '../components/PageHeader'
 import { PromptDialog } from '../components/Dialog'
-import AddBookModal from '../components/AddBookModal'
+import AddBooksDialog from '../components/addBooks/AddBooksDialog'
 import FacetRail from '../components/FacetRail'
 import FilterSearch from '../components/FilterSearch'
 import BookBulkBar from '../components/BookBulkBar'
@@ -1310,7 +1310,7 @@ export default function BooksPage() {
       </div>
 
       {adding && addData && (
-        <AddBookModal
+        <AddBooksDialog
           libraries={addData.libraries}
           mediaTypes={addData.mediaTypes}
           onClose={() => setAdding(false)}
