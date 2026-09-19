@@ -608,7 +608,9 @@
     "from_one": "sur 1 note",
     "from_other": "sur {{count}} notes",
     "favourite": "Coup de cœur",
-    "rating": "Note"
+    "rating": "Note",
+    "read_between": "{{from}} au {{to}}",
+    "started": "Commencé le {{date}}"
   },
   "book_contents": {
     "add": "+ Indiquer ce que ce livre contient",

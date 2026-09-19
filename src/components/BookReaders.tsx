@@ -100,6 +100,7 @@ export default function BookReaders({ bookId }: { bookId: string }) {
             const who = r.display_name || r.username
             const label = isMe ? t('readers.you', { defaultValue: 'You' }) : who
             const finished = when(r.finished_at)
+            const started = when(r.started_at)
             return (
               <li
                 key={r.user_id}
@@ -124,9 +125,17 @@ export default function BookReaders({ bookId }: { bookId: string }) {
                   <span className="min-w-0">
                     <span className="block truncate text-sm font-medium text-content">{label}</span>
                     <span className="block text-xs text-content-tertiary">
+                      {/* The dates the reader chose to share, which the
+                          endpoint has always sent: finished is the one that
+                          matters, and a book still on the go says when it
+                          started instead. */}
                       {finished
-                        ? t('readers.finished', { date: finished, defaultValue: `Finished ${finished}` })
-                        : t(`read_status.${r.read_status}`, { defaultValue: r.read_status })}
+                        ? started
+                          ? t('readers.read_between', { from: started, to: finished, defaultValue: `${started} to ${finished}` })
+                          : t('readers.finished', { date: finished, defaultValue: `Finished ${finished}` })
+                        : started
+                          ? t('readers.started', { date: started, defaultValue: `Started ${started}` })
+                          : t(`read_status.${r.read_status}`, { defaultValue: r.read_status })}
                     </span>
                   </span>
                 </div>

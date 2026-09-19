@@ -608,7 +608,9 @@
     "from_one": "de 1 valoración",
     "from_other": "de {{count}} valoraciones",
     "favourite": "Favorito",
-    "rating": "Valoración"
+    "rating": "Valoración",
+    "read_between": "{{from}} a {{to}}",
+    "started": "Empezado el {{date}}"
   },
   "book_contents": {
     "add": "+ Anotar lo que contiene",

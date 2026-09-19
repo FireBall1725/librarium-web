@@ -566,7 +566,9 @@
     "you": "あなた",
     "from_other": "{{count}}件の評価から",
     "favourite": "お気に入り",
-    "rating": "評価"
+    "rating": "評価",
+    "read_between": "{{from}} 〜 {{to}}",
+    "started": "{{date}} に開始"
   },
   "book_contents": {
     "add": "+ 収録内容を記録",
