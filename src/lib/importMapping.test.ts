@@ -5,11 +5,21 @@ import { describe, expect, it } from 'vitest'
 import { autoDetect } from './importMapping'
 
 describe('autoDetect', () => {
-  it('maps a shelf column to the shelf field', () => {
+  it('maps a shelf or location column to the shelf field', () => {
     expect(autoDetect('shelf')).toBe('shelf')
     expect(autoDetect('Shelf')).toBe('shelf')
-    expect(autoDetect('shelves')).toBe('shelf')
-    expect(autoDetect('Shelves')).toBe('shelf')
+    expect(autoDetect('Location')).toBe('shelf')
+  })
+
+  it('maps a list column to the list field', () => {
+    expect(autoDetect('list')).toBe('list')
+    expect(autoDetect('Lists')).toBe('list')
+  })
+
+  // A bare "shelves" header could be places or lists; the reader picks.
+  it('leaves a bare shelves column unmapped', () => {
+    expect(autoDetect('shelves')).toBe('')
+    expect(autoDetect('Shelves')).toBe('')
   })
 
   // Goodreads exports a Bookshelves column, and it has always arrived as tags.

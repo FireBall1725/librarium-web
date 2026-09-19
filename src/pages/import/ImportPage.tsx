@@ -41,7 +41,8 @@ const IMPORT_FIELDS: { value: string; label: string }[] = [
   { value: 'language',      label: 'Language' },
   { value: 'tags',          label: 'Tags' },
   { value: 'media_type',    label: 'Media Type' },
-  { value: 'shelf',         label: 'Shelf' },
+  { value: 'shelf',         label: 'Shelf (where it sits)' },
+  { value: 'list',          label: 'Lists' },
   // User interaction (per-importer; written to user_book_interactions)
   { value: 'read_status',   label: 'Read status' },
   { value: 'rating',        label: 'Rating' },

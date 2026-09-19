@@ -24,7 +24,10 @@ export function autoDetect(header: string): string {
   if (['language', 'lang', 'booklanguage'].includes(h)) return 'language'
   if (['tags', 'tag', 'genre', 'genres', 'category', 'categories', 'subjects', 'subject', 'bookshelves'].includes(h)) return 'tags'
   if (['mediatype', 'type', 'format', 'booktype', 'bookformat', 'bindingtype'].includes(h)) return 'media_type'
-  if (['shelf', 'shelves'].includes(h)) return 'shelf'
+  // Shelf is where the copy sits, a place on the Shelves page; lists are the
+  // Lists page. A bare "shelves" header could mean either, so it isn't guessed.
+  if (['shelf', 'location', 'shelflocation', 'place'].includes(h)) return 'shelf'
+  if (['list', 'lists'].includes(h)) return 'list'
 
   // User interaction
   if (['rating', 'myrating', 'starrating', 'usrrating'].includes(h)) return 'rating'
