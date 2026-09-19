@@ -12,11 +12,13 @@ import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { useAuth, ApiError } from '../auth/AuthContext'
-import type { Book, ContributorResult, Genre, ISBNLookupResult, Library, MediaType, Tag } from '../types'
+import type { Book, ContributorResult, Genre, ISBNLookupResult, Library, MediaType, MergedBookResult, Tag } from '../types'
 import { fetchLists, type SavedList } from '../lib/lists'
 import { LANGUAGE_OPTIONS } from './AddEditionModal'
 import ContributorRow, { CONTRIBUTOR_ROLES } from './ContributorRow'
 import MediaTypeSelect from './MediaTypeSelect'
+import MergedLookup from './MergedLookup'
+import { hasAnyField } from '../lib/mergedLookup'
 import { TAG_COLORS } from '../lib/tagColours'
 import { getBarcodeReader } from '../lib/barcodeDetector'
 import { registerScanTarget } from '../lib/barcodeScanner'
@@ -24,18 +26,6 @@ import { useToast } from './Toast'
 
 
 const MANGA_PUBLISHERS = ['viz', 'yen press', 'kodansha', 'seven seas', 'tokyopop', 'square enix manga', 'dark horse manga', 'vertical', 'j-novel', 'cross infinite']
-
-// ─── ISBN result helpers ──────────────────────────────────────────────────────
-
-const TOTAL_ISBN_FIELDS = 11
-
-function countISBNFields(r: ISBNLookupResult): number {
-  return [
-    !!r.title, !!r.subtitle, (r.authors?.length ?? 0) > 0,
-    !!r.publisher, !!r.publish_date, !!r.isbn_10, !!r.isbn_13,
-    !!r.description, !!r.language, r.page_count != null, !!r.cover_url,
-  ].filter(Boolean).length
-}
 
 interface BookFormContributor {
   contributor: ContributorResult | null
@@ -144,7 +134,7 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
   // ─── ISBN lookup mode ──────────────────────────────────────────────────────
   const [mode, setMode] = useState<'isbn' | 'search' | 'manual'>(!initialIsbn && initialTitle ? 'search' : 'isbn')
   const [isbnInput, setIsbnInput] = useState(initialIsbn ?? '')
-  const [isbnResults, setIsbnResults] = useState<ISBNLookupResult[]>([])
+  const [isbnMerged, setIsbnMerged] = useState<MergedBookResult | null>(null)
   const [isbnLoading, setIsbnLoading] = useState(false)
   const [isbnError, setIsbnError] = useState<string | null>(null)
   const [isbnDuplicate, setIsbnDuplicate] = useState<Book | null>(null)
@@ -296,19 +286,22 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
     if (!isbn.trim()) return
     setIsbnLoading(true)
     setIsbnError(null)
-    setIsbnResults([])
+    setIsbnMerged(null)
     setIsbnDuplicate(null)
     const cleanISBN = isbn.trim()
     try {
-      const [results, duplicate] = await Promise.all([
-        callApi<ISBNLookupResult[]>(`/api/v1/lookup/isbn/${encodeURIComponent(cleanISBN)}`),
+      // One merged answer across every provider that's on, each field
+      // pre-selected by the server; MergedLookup lets the person switch any.
+      const [merged, duplicate] = await Promise.all([
+        callApi<MergedBookResult>(`/api/v1/lookup/isbn/${encodeURIComponent(cleanISBN)}/merged`),
         callApi<Book>(`/api/v1/libraries/${targetLibrary}/book-by-isbn/${encodeURIComponent(cleanISBN)}`).catch(() => null),
       ])
-      setIsbnResults(results ?? [])
       setIsbnDuplicate(duplicate ?? null)
       if (duplicate) onDuplicate?.(duplicate)
-      if (!results || results.length === 0) {
-        setIsbnError('No results found for that ISBN.')
+      if (hasAnyField(merged)) {
+        setIsbnMerged(merged)
+      } else {
+        setIsbnError(t('merged.none', { defaultValue: 'No results found for that ISBN.' }))
       }
     } catch (err) {
       setIsbnError(err instanceof ApiError ? err.message : 'Lookup failed')
@@ -613,40 +606,8 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
                       </div>
                     </div>
                   )}
-                  {isbnResults.length > 0 && (
-                    <div className="space-y-3">
-                      <p className="text-xs font-semibold uppercase tracking-wider text-content-subtle">
-                        {isbnResults.length} result{isbnResults.length !== 1 ? 's' : ''}
-                      </p>
-                      {[...isbnResults].sort((a, b) => countISBNFields(b) - countISBNFields(a)).map((r, i) => {
-                        const fieldCount = countISBNFields(r)
-                        return (
-                          <div key={i} className="rounded-xl border border-line bg-surface-muted p-4">
-                            <div className="flex gap-4">
-                              {r.cover_url && (
-                                <img src={r.cover_url} alt="" referrerPolicy="no-referrer" className="w-14 h-20 object-cover rounded-lg flex-shrink-0 bg-surface-strong shadow-sm" />
-                              )}
-                              <div className="flex-1 min-w-0">
-                                <p className="font-semibold text-content">{r.title}</p>
-                                {r.subtitle && <p className="text-sm text-content-muted mt-0.5">{r.subtitle}</p>}
-                                {r.authors?.length > 0 && <p className="text-sm text-content-tertiary mt-1">{r.authors.join(', ')}</p>}
-                                <div className="flex items-center gap-2 mt-2">
-                                  <span className="text-xs text-content-subtle">via {r.provider_display}</span>
-                                  <span className="text-content-faint">·</span>
-                                  <span className={`text-xs font-medium ${fieldCount >= 8 ? 'text-green-600 dark:text-green-400' : fieldCount >= 5 ? 'text-amber-500' : 'text-gray-400'}`}>
-                                    {fieldCount}/{TOTAL_ISBN_FIELDS} fields
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                            <button type="button" onClick={() => importResult(r)}
-                              className="mt-3 w-full rounded-lg bg-blue-600 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors">
-                              Import this result
-                            </button>
-                          </div>
-                        )
-                      })}
-                    </div>
+                  {isbnMerged && (
+                    <MergedLookup key={isbnInput} merged={isbnMerged} onUse={r => { void importResult(r) }} />
                   )}
                   <button type="button" onClick={() => setMode('manual')}
                     className="text-sm text-accent hover:underline">

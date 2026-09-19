@@ -7,6 +7,7 @@ import { useAuth, ApiError } from '../../auth/AuthContext'
 import PageHeader from '../../components/PageHeader'
 import { useToast } from '../../components/Toast'
 import { usePageTitle } from '../../hooks/usePageTitle'
+import { Switch } from '../../components/settings/SettingRow'
 
 // Icon set kept alongside the page — single-use SVGs that don't deserve
 // their own file. Edit mirrors what BookPage uses for edition edit; Run
@@ -173,15 +174,7 @@ export default function JobsPage() {
                         : <span className="text-content-faint">—</span>}
                     </td>
                     <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          className="sr-only peer"
-                          checked={s.enabled}
-                          onChange={e => toggleEnabled(s, e.target.checked)}
-                        />
-                        <div className="w-9 h-5 bg-surface-strong rounded-full peer peer-checked:bg-accent after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-surface-raised after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full" />
-                      </label>
+                      <span><Switch checked={s.enabled} label={`Enable ${s.display_name}`} onChange={on => toggleEnabled(s, on)} /></span>
                     </td>
                     <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                       <div className="flex items-center gap-1 justify-end">

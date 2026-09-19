@@ -23,7 +23,6 @@ import {
   READING_FONTS, applyReadingFont, readStoredReadingFont, storeReadingFont,
   type ReadingFontId,
 } from '../../lib/readingFont'
-import { readScannerEnabled, storeScannerEnabled } from '../../lib/barcodeScanner'
 
 export default function AppearancePage() {
   const { t, i18n } = useTranslation()
@@ -32,8 +31,6 @@ export default function AppearancePage() {
 
   const [theme, setTheme] = useState<ThemeId>(readStoredTheme)
   const [readingFont, setReadingFont] = useState<ReadingFontId>(readStoredReadingFont)
-  const [scanner, setScanner] = useState(readScannerEnabled)
-  const toggleScanner = () => { const v = !scanner; storeScannerEnabled(v); setScanner(v) }
   const [readBadges, setReadBadges] = useState(true)
 
   useEffect(() => {
@@ -211,21 +208,6 @@ export default function AppearancePage() {
               checked={readBadges}
               label={t('settings_appearance.read_badges', { defaultValue: 'Show read status badges' })}
               onChange={toggleReadBadges}
-            />
-          </SettingRow>
-        </SettingSection>
-
-        <SettingSection title={t('settings_appearance.scanner', { defaultValue: 'Barcode scanner' })}>
-          <SettingRow
-            label={t('settings_appearance.scanner_toggle', { defaultValue: 'Use a Bluetooth or USB scanner' })}
-            description={t('settings_appearance.scanner_note', {
-              defaultValue: "Scan a book's barcode on any page: a book you have opens, a new one starts Add Book. Turn this off if a scanner ever gets in the way of typing.",
-            })}
-          >
-            <Switch
-              checked={scanner}
-              label={t('settings_appearance.scanner_toggle', { defaultValue: 'Use a Bluetooth or USB scanner' })}
-              onChange={toggleScanner}
             />
           </SettingRow>
         </SettingSection>

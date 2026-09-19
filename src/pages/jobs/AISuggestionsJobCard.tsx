@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import { useAuth, ApiError } from '../../auth/AuthContext'
 import { useToast } from '../../components/Toast'
 import type { AISuggestionsJobConfig } from '../../types'
+import { Switch } from '../../components/settings/SettingRow'
 
 interface AISuggestionsJobCardProps {
   // Fires after a successful Run now so the parent can reload the jobs list
@@ -155,15 +156,7 @@ export default function AISuggestionsJobCard({ onRunKicked }: AISuggestionsJobCa
                 Master switch. When off, the scheduler won't enqueue any runs.
               </p>
             </div>
-            <label className="relative inline-flex items-center cursor-pointer shrink-0 mt-0.5">
-              <input
-                type="checkbox"
-                className="sr-only peer"
-                checked={config.enabled}
-                onChange={e => set('enabled', e.target.checked)}
- />
- <div className="w-10 h-6 bg-surface-strong peer-focus:outline-none rounded-full peer peer-checked:bg-accent after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-surface-raised after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full" />
-            </label>
+            <span className="shrink-0 mt-0.5"><Switch checked={config.enabled} label={'Enabled'} onChange={on => set('enabled', on)} /></span>
           </div>
 
           {/* Per-user cooldown — separate concern from the schedule cron
@@ -219,15 +212,7 @@ export default function AISuggestionsJobCard({ onRunKicked }: AISuggestionsJobCa
                 Still gated by each user's opt-in and the deployment permission toggle.
               </p>
             </div>
-            <label className="relative inline-flex items-center cursor-pointer shrink-0 mt-0.5">
-              <input
-                type="checkbox"
-                className="sr-only peer"
-                checked={config.include_taste_profile}
-                onChange={e => set('include_taste_profile', e.target.checked)}
- />
- <div className="w-10 h-6 bg-surface-strong peer-focus:outline-none rounded-full peer peer-checked:bg-accent after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-surface-raised after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full" />
- </label>
+            <span className="shrink-0 mt-0.5"><Switch checked={config.include_taste_profile} label={'Include taste profile'} onChange={on => set('include_taste_profile', on)} /></span>
  </div>
 
  {/* Max tokens */}

@@ -70,10 +70,11 @@
     "people": "人物",
     "profile": "プロフィール",
     "profiles": "プロフィール設定",
-    "providers": "メタデータ提供元",
+    "providers": "検索元",
     "shelves": "棚",
     "tags": "タグ",
-    "tokens": "API トークン"
+    "tokens": "API トークン",
+    "barcode_scanner": "バーコードスキャナー"
   },
   "theme": {
     "light": "☀ ライト",
@@ -141,7 +142,8 @@
     "delete": "削除",
     "edit": "編集",
     "icon": "アイコン",
-    "colour": "色"
+    "colour": "色",
+    "close": "閉じる"
   },
   "read_status": {
     "read": "読了",
@@ -270,7 +272,8 @@
     "fix": "対処する",
     "attention_count_other": "{{count}}件",
     "pages_count_other": "{{count}}ページ",
-    "overview": "概要"
+    "overview": "概要",
+    "title": "設定"
   },
   "settings_fact": {
     "types_other": "{{count}}種類",
@@ -323,10 +326,7 @@
     "typeface": "書体",
     "typeface_note": "OpenDyslexic は各文字の下部を太くし、似た文字に異なる形を与えます。ディスレクシアのある読者には読みやすいと感じられることがあります。",
     "typeface_sample": "ひとにぎりの本",
-    "machine_drafted": "この言語は AI の助けを借りて作成されており、話者による確認は済んでいません。修正は Crowdin からお寄せください。",
-    "scanner": "バーコードスキャナー",
-    "scanner_toggle": "Bluetooth または USB スキャナーを使う",
-    "scanner_note": "どのページでも本のバーコードをスキャンできます。持っている本はそのまま開き、新しい本は「本を追加」が始まります。スキャナーが入力の邪魔になる場合はオフにしてください。"
+    "machine_drafted": "この言語は AI の助けを借りて作成されており、話者による確認は済んでいません。修正は Crowdin からお寄せください。"
   },
   "settings_account": {
     "profile_description": "このインスタンスでのあなたのアカウントです。",
@@ -555,6 +555,95 @@
   "scan": {
     "start_failed": "バーコードスキャナーを起動できませんでした。"
   },
+  "lookups": {
+    "cap_isbn": "ISBN",
+    "cap_upc": "バーコード",
+    "cap_search": "タイトル検索",
+    "cap_series": "シリーズ",
+    "cap_volumes": "シリーズの巻",
+    "cap_authors": "著者",
+    "title": "検索元",
+    "load_failed": "提供元を読み込めませんでした。",
+    "save_failed": "変更を保存できませんでした。",
+    "test_unknown": "不明なエラー",
+    "test_request_failed": "テストのリクエストに失敗しました。",
+    "added": "{{name}} を追加してオンにしました",
+    "group_data": "書籍データ",
+    "group_buy": "購入先 · このサーバーの全員に表示されます",
+    "description": "オンになっている提供元には、検索のたびにすべて問い合わせます。本ごとに何を残すかはあなたが選びます。",
+    "browse": "カタログを見る（{{count}}）",
+    "lede": "並び順の管理は不要です。提供元の回答が食い違うと、本の画面にすべての回答が表示され、1つが選ばれた状態になります。最も多くの提供元が一致した値、なければ最も長い説明、最も詳しい日付、最も大きい表紙です。",
+    "buy_empty": "書店はまだありません。購入先のリンクは今後のアップデートで追加されます。",
+    "data_empty": "オンの提供元がありません。検索で本が見つかるよう、カタログから提供元を追加してください。",
+    "turned_on": "{{name}} をオンにしました",
+    "turned_off": "{{name}} をオフにしました。一覧には残りますが、問い合わせはしません。",
+    "removed": "{{name}} を外しました。カタログに戻っています。",
+    "saved": "{{name}} を保存しました",
+    "testing": "テスト中…",
+    "test_passed": "テスト成功：{{title}}",
+    "by": "作成：{{who}}",
+    "test_provider": "テスト用の提供元",
+    "needs_setup": "オンにする前に設定が必要です。",
+    "test": "テスト",
+    "settings": "設定",
+    "remove": "外す",
+    "switch_label": "{{name}} をオン",
+    "catalogue": "検索元カタログ",
+    "search_placeholder": "名前・国・言語で検索",
+    "search_label": "カタログを検索",
+    "region": "地域",
+    "any_region": "すべての地域",
+    "filter_no_key": "キー不要",
+    "filter_community": "コミュニティ製",
+    "tab_data": "書籍データ",
+    "tab_buy": "購入先",
+    "no_match": "条件に合うものはありません。",
+    "no_key": "キー不要",
+    "api_key": "APIキー",
+    "setup_needed": "設定が必要",
+    "languages": "言語",
+    "sends": "送信する情報",
+    "by_cap": "作成：{{who}}",
+    "built_in": "組み込み",
+    "added_label": "追加済み",
+    "add": "追加",
+    "saving": "保存中…",
+    "add_and_turn_on": "追加してオンにする",
+    "help_link": "入手方法",
+    "saved_marker": "（保存済み）",
+    "docs": "提供元のドキュメント"
+  },
+  "merged": {
+    "title": "タイトル",
+    "subtitle": "サブタイトル",
+    "authors": "著者",
+    "publisher": "出版社",
+    "published": "発行日",
+    "pages": "ページ数",
+    "language": "言語",
+    "isbn_13": "ISBN-13",
+    "isbn_10": "ISBN-10",
+    "description": "説明",
+    "why_picked": "あなたが選択",
+    "why_agreed": "{{total}}件中{{count}}件が一致",
+    "why_only": "この情報は1つの提供元だけにありました",
+    "why_longest": "最も長い",
+    "why_most_detail": "最も詳しい",
+    "why_first": "一致なし、最初の回答",
+    "no_record": "{{names}} には記録がありません。",
+    "missed": "{{names}} は時間内に回答しませんでした。",
+    "failed": "{{names}} から回答がありませんでした。",
+    "cover": "表紙",
+    "use_cover": "{{name}} の表紙を使う",
+    "cover_largest": "最も大きい表紙",
+    "from": "提供元：{{names}}",
+    "all_agree": "すべて一致",
+    "kept": "各提供元の回答は版と一緒に保存されるので、あとでどの項目も切り替えられます。",
+    "use": "この内容を使う",
+    "none": "このISBNでは見つかりませんでした。",
+    "answered_other": "{{count}}件の提供元が{{seconds}}秒で回答",
+    "answers_other": "{{count}}件の回答"
+  },
   "scanner": {
     "scanned": "スキャンしました: {{code}}",
     "not_book": "本のバーコードではありません: {{code}}",
@@ -563,5 +652,11 @@
     "no_libraries": "本を追加できるライブラリがまだありません。",
     "added": "{{title}} を追加しました",
     "view": "表示"
+  },
+  "barcode_scanner": {
+    "description": "キーボードモードのBluetoothまたはUSBスキャナー。このブラウザーのみ。",
+    "scanning": "スキャン",
+    "toggle": "Bluetooth または USB スキャナーを使う",
+    "note": "どのページでも本のバーコードをスキャンできます。持っている本はそのまま開き、新しい本は「本を追加」が始まります。スキャナーが入力の邪魔になる場合はオフにしてください。"
   }
 }
