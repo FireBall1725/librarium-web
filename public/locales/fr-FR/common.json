@@ -842,10 +842,6 @@
     "library_locked": "Attendez la fin des recherches en cours.",
     "loading": "Chargement…",
     "last_scanned": "Dernier scanné",
-    "when_found": "Quand un livre est trouvé",
-    "add_straight_away": "L’ajouter tout de suite",
-    "hold": "Garder pour vérification",
-    "unsure_waits": "Ce dont la recherche n’est pas sûre attend dans À vérifier, et la file continue.",
     "queue": "File",
     "filter_all": "Tout",
     "filter_added": "Ajoutés",
@@ -881,6 +877,10 @@
     "close_waiting_body": "Ils n’ont pas été ajoutés. Fermer les retire de la file.",
     "close_book_title": "Fermer sans ajouter ce livre ?",
     "close_book_body": "Il n’a pas encore été ajouté.",
-    "close_anyway": "Fermer quand même"
+    "close_anyway": "Fermer quand même",
+    "filter_ready": "Prêts",
+    "add_all_one": "Ajouter {{count}} livre",
+    "add_all_other": "Ajouter {{count}} livres",
+    "found_waits": "Les livres trouvés attendent dans Prêts jusqu’à ce que vous les ajoutiez. Ce dont la recherche n’est pas sûre attend dans À vérifier."
   }
 }

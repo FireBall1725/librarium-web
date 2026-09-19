@@ -116,7 +116,6 @@ const scanInto = (box: HTMLElement, code: string) => {
 
 describe('One book', () => {
   it('opens on the remembered library and shelf, and says where the book goes', async () => {
-    window.localStorage.setItem('librarium:add-books:mode', 'one')
     open()
     await waitFor(() => expect(screen.getByLabelText('Place')).toHaveValue('s3'))
     expect(screen.getByLabelText('Library')).toHaveValue('lib-b')
@@ -128,7 +127,6 @@ describe('One book', () => {
   })
 
   it('adds on the button: filed on the shelf, authors by name, read status set', async () => {
-    window.localStorage.setItem('librarium:add-books:mode', 'one')
     open()
     await waitFor(() => expect(screen.getByLabelText('Place')).toHaveValue('s3'))
     scanInto(screen.getByLabelText('Scan, or type an ISBN, UPC or title'), '9780765349064')
@@ -144,7 +142,6 @@ describe('One book', () => {
   })
 
   it('takes the newest copy back out on Undo', async () => {
-    window.localStorage.setItem('librarium:add-books:mode', 'one')
     open()
     await waitFor(() => expect(screen.getByLabelText('Place')).toHaveValue('s3'))
     scanInto(screen.getByLabelText('Scan, or type an ISBN, UPC or title'), '9780765349064')
@@ -154,7 +151,6 @@ describe('One book', () => {
   })
 
   it('remembers a new place for next time', async () => {
-    window.localStorage.setItem('librarium:add-books:mode', 'one')
     open()
     await waitFor(() => expect(screen.getByLabelText('Place')).toHaveValue('s3'))
     fireEvent.change(screen.getByLabelText('Place'), { target: { value: 'case' } })
@@ -164,35 +160,46 @@ describe('One book', () => {
 })
 
 describe('Many books', () => {
-  it('adds a clean match straight away and holds a miss in Needs you', async () => {
-    window.localStorage.setItem('librarium:add-books:mode', 'many')
+  it('holds found books for one Add button, and a miss in Needs you', async () => {
     open()
     await waitFor(() => expect(screen.getByLabelText('Place')).toHaveValue('s3'))
+    fireEvent.click(screen.getByRole('tab', { name: 'Many books' }))
     const box = screen.getByLabelText('Scan, or type an ISBN or UPC')
     await act(async () => { scanInto(box, '9780765349064') })
     await act(async () => { scanInto(box, '9780000000002') })
-    await waitFor(() => expect(calls.some(c => c.method === 'POST' && c.path === '/api/v1/libraries/lib-b/books')).toBe(true))
     expect(await screen.findByText('No provider knew this barcode.')).toBeInTheDocument()
-    await waitFor(() => expect(screen.getByRole('tab', { name: /Needs you/ })).toHaveTextContent('1'))
-    expect(screen.getByRole('tab', { name: /Added/ })).toHaveTextContent('1')
+    await waitFor(() => expect(screen.getByRole('tab', { name: /Ready/ })).toHaveTextContent('1'))
+    expect(screen.getByRole('tab', { name: /Needs you/ })).toHaveTextContent('1')
+    // Nothing is added until the button says so.
+    expect(calls.some(c => c.method === 'POST' && c.path === '/api/v1/libraries/lib-b/books')).toBe(false)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add 1 book' }))
+    await waitFor(() => expect(screen.getByRole('tab', { name: /Added/ })).toHaveTextContent('1'))
+    expect(calls.find(c => c.method === 'POST' && c.path === '/api/v1/libraries/lib-b/books')?.body).toMatchObject({ location_id: 's3' })
+  })
+
+  it('opens on One book', async () => {
+    open()
+    expect(await screen.findByRole('tab', { name: 'One book' })).toHaveAttribute('aria-selected', 'true')
   })
 
   it('keeps the queue when the dialog is opened again', async () => {
-    window.localStorage.setItem('librarium:add-books:mode', 'many')
     const first = open()
     await waitFor(() => expect(screen.getByLabelText('Place')).toHaveValue('s3'))
+    fireEvent.click(screen.getByRole('tab', { name: 'Many books' }))
     await act(async () => { scanInto(screen.getByLabelText('Scan, or type an ISBN or UPC'), '9780000000002') })
     await screen.findByText('No provider knew this barcode.')
     first.unmount()
     open()
+    fireEvent.click(await screen.findByRole('tab', { name: 'Many books' }))
     expect(await screen.findByText('No provider knew this barcode.')).toBeInTheDocument()
   })
 
   it('asks before closing on books still waiting, and starts clean after', async () => {
-    window.localStorage.setItem('librarium:add-books:mode', 'many')
     const onClose = vi.fn()
     const first = open({ onClose })
     await waitFor(() => expect(screen.getByLabelText('Place')).toHaveValue('s3'))
+    fireEvent.click(screen.getByRole('tab', { name: 'Many books' }))
     await act(async () => { scanInto(screen.getByLabelText('Scan, or type an ISBN or UPC'), '9780000000002') })
     await screen.findByText('No provider knew this barcode.')
 
@@ -207,6 +214,7 @@ describe('Many books', () => {
     expect(onClose).toHaveBeenCalled()
     first.unmount()
     open()
+    fireEvent.click(await screen.findByRole('tab', { name: 'Many books' }))
     expect(await screen.findByText('Nothing scanned yet')).toBeInTheDocument()
   })
 })
@@ -221,7 +229,6 @@ describe('Closing', () => {
   })
 
   it('asks before dropping a found book that was never added', async () => {
-    window.localStorage.setItem('librarium:add-books:mode', 'one')
     const onClose = vi.fn()
     open({ onClose })
     await waitFor(() => expect(screen.getByLabelText('Place')).toHaveValue('s3'))

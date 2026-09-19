@@ -27,10 +27,6 @@ import { useToast } from '../Toast'
 import CameraView from './CameraView'
 import FoundBook from './FoundBook'
 
-const AUTO_KEY = 'librarium:add-books:auto'
-const readAuto = () => { try { return window.localStorage.getItem(AUTO_KEY) !== 'hold' } catch { return true } }
-const storeAuto = (on: boolean) => { try { window.localStorage.setItem(AUTO_KEY, on ? 'add' : 'hold') } catch { /* not kept */ } }
-
 // Lookups at once. A USB scanner can fire a book a second; the providers
 // behind the merged lookup don't need twenty requests in flight.
 const PARALLEL = 3
@@ -53,7 +49,7 @@ export default function ManyBooks({ destination, places, mediaTypes, onAdded, on
   const lib = destination.libraryId
   const [rows, setRows] = useState<QueueRow[]>(() => loadQueue(lib))
   const [filter, setFilter] = useState<QueueFilter>('all')
-  const [auto, setAuto] = useState(readAuto)
+  const [addingAll, setAddingAll] = useState(false)
   const [camera, setCamera] = useState(false)
   const [text, setText] = useState('')
   const [open, setOpen] = useState<string | null>(null)
@@ -63,8 +59,7 @@ export default function ManyBooks({ destination, places, mediaTypes, onAdded, on
   // The loop below reads the newest values, not the ones it started with.
   const rowsRef = useRef(rows)
   const destRef = useRef(destination)
-  const autoRef = useRef(auto)
-  useEffect(() => { rowsRef.current = rows; destRef.current = destination; autoRef.current = auto })
+  useEffect(() => { rowsRef.current = rows; destRef.current = destination })
 
   // Another library is another queue.
   const [queueFor, setQueueFor] = useState(lib)
@@ -108,15 +103,14 @@ export default function ManyBooks({ destination, places, mediaTypes, onAdded, on
         update(row.id, { ...base, state: 'have', bookId: found.duplicate!.id, haveTitle: found.duplicate!.title })
       } else if (verdict.kind === 'needs_you') {
         update(row.id, { ...base, state: 'needs_you', why: verdict.why })
-      } else if (autoRef.current) {
-        await add({ ...row, ...base } as QueueRow)
       } else {
+        // Found books wait for Add, so nothing lands without you saying so.
         update(row.id, { ...base, state: 'ready' })
       }
     } catch (err) {
       update(row.id, { state: 'failed', error: err instanceof ApiError ? err.message : t('add_books.lookup_failed', { defaultValue: 'The lookup failed.' }) })
     }
-  }, [add, callApi, t, update])
+  }, [callApi, t, update])
 
   // Lookups run a few at a time, oldest first, so a burst of scans queues up
   // rather than all hitting the providers at once.
@@ -154,6 +148,16 @@ export default function ManyBooks({ destination, places, mediaTypes, onAdded, on
     if (b.kind === 'invalid') return
     enqueueRef.current(b.kind === 'isbn' ? b.isbn13 : upcLookupCode(b))
   }), [])
+
+  // Oldest first, one at a time, so a shelf's copies go on in scan order.
+  const addAll = async () => {
+    setAddingAll(true)
+    try {
+      for (const row of rowsRef.current.filter(r => r.state === 'ready').reverse()) await add(row)
+    } finally {
+      setAddingAll(false)
+    }
+  }
 
   const retry = (row: QueueRow) => { waiting.current.push(row); update(row.id, { state: 'looking' }); pump() }
 
@@ -218,36 +222,34 @@ export default function ManyBooks({ destination, places, mediaTypes, onAdded, on
           </div>
         )}
 
-        <fieldset className="space-y-1.5">
-          <legend className="lb-eyebrow mb-1">{t('add_books.when_found', { defaultValue: 'When a book is found' })}</legend>
-          {([true, false] as const).map(on => (
-            <label key={String(on)} className={`flex cursor-pointer items-center gap-2 rounded-lg border px-2.5 py-1.5 text-[13px] ${auto === on ? 'border-accent bg-accent-surface text-content' : 'border-line text-content-secondary'}`}>
-              <input type="radio" name="add-books-auto" id={`add-books-auto-${on}`} checked={auto === on}
-                className="accent-[var(--color-accent)]"
-                onChange={() => { setAuto(on); storeAuto(on) }} />
-              {on ? t('add_books.add_straight_away', { defaultValue: 'Add it straight away' }) : t('add_books.hold', { defaultValue: 'Hold for review' })}
-            </label>
-          ))}
-          <p className="pt-1 text-[12px] text-content-muted">
-            {t('add_books.unsure_waits', { defaultValue: "Anything the lookup isn't sure of waits in Needs you, and the queue keeps going." })}
-          </p>
-        </fieldset>
+        <p className="text-[12px] text-content-muted">
+          {t('add_books.found_waits', { defaultValue: "Found books wait in Ready until you add them. Anything the lookup isn't sure of waits in Needs you." })}
+        </p>
       </aside>
 
       <section className="min-w-0 space-y-3">
         <div className="flex flex-wrap items-center gap-1.5" role="tablist" aria-label={t('add_books.queue', { defaultValue: 'Queue' })}>
-          {(['all', 'added', 'needs_you', 'have'] as const).map(f => (
+          {(['all', 'ready', 'added', 'needs_you', 'have'] as const).map(f => (
             <button key={f} type="button" role="tab" aria-selected={filter === f} onClick={() => setFilter(f)}
               className={`lb-chip inline-flex items-center gap-1.5 ${filter === f ? 'on' : ''} ${f === 'needs_you' && counts.needs_you > 0 ? 'warn' : ''}`}>
-              {t(`add_books.filter_${f}`, { defaultValue: { all: 'All', added: 'Added', needs_you: 'Needs you', have: 'Already have' }[f] })}
+              {t(`add_books.filter_${f}`, { defaultValue: { all: 'All', ready: 'Ready', added: 'Added', needs_you: 'Needs you', have: 'Already have' }[f] })}
               <span className="lb-num text-[11px] opacity-80">{counts[f]}</span>
             </button>
           ))}
-          {rows.some(r => r.state === 'added' || r.state === 'have' || r.state === 'undone' || r.state === 'skipped') && (
-            <button type="button" className="ml-auto text-[12px] text-content-muted hover:text-content hover:underline" onClick={clearDone}>
-              {t('add_books.clear_done', { defaultValue: 'Clear finished rows' })}
+          <span className="ml-auto flex items-center gap-3">
+            {rows.some(r => r.state === 'added' || r.state === 'have' || r.state === 'undone' || r.state === 'skipped') && (
+              <button type="button" className="text-[12px] text-content-muted hover:text-content hover:underline" onClick={clearDone}>
+                {t('add_books.clear_done', { defaultValue: 'Clear finished rows' })}
+              </button>
+            )}
+            <button type="button" className="lb-btn inline-flex items-center gap-1.5 disabled:opacity-50"
+              disabled={addingAll || counts.ready === 0} onClick={() => void addAll()}>
+              <Icon name="check" className="h-4 w-4" />
+              {addingAll
+                ? t('add_books.adding', { defaultValue: 'Adding…' })
+                : t('add_books.add_all', { count: counts.ready, defaultValue: 'Add {{count}} books' })}
             </button>
-          )}
+          </span>
         </div>
 
         {opened?.merged && (

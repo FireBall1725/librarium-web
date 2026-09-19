@@ -15,7 +15,7 @@ export type RowState =
   | 'added'
   | 'have'       // already in this library
   | 'needs_you'  // unsure; waits for a person
-  | 'ready'      // found, and held for review instead of added
+  | 'ready'      // found, waiting for Add
   | 'failed'     // the lookup or the add failed
   | 'undone'     // added, then taken back
   | 'skipped'
@@ -46,21 +46,22 @@ export interface QueueRow {
   error?: string
 }
 
-export type QueueFilter = 'all' | 'added' | 'needs_you' | 'have'
+export type QueueFilter = 'all' | 'ready' | 'added' | 'needs_you' | 'have'
 
 export function matchesFilter(row: QueueRow, filter: QueueFilter): boolean {
   switch (filter) {
     case 'all': return row.state !== 'skipped'
+    case 'ready': return row.state === 'ready'
     case 'added': return row.state === 'added'
-    case 'needs_you': return row.state === 'needs_you' || row.state === 'ready' || row.state === 'failed'
+    case 'needs_you': return row.state === 'needs_you' || row.state === 'failed'
     case 'have': return row.state === 'have'
   }
 }
 
 export function countBy(rows: readonly QueueRow[]): Record<QueueFilter, number> {
-  const out: Record<QueueFilter, number> = { all: 0, added: 0, needs_you: 0, have: 0 }
+  const out: Record<QueueFilter, number> = { all: 0, ready: 0, added: 0, needs_you: 0, have: 0 }
   for (const r of rows) {
-    for (const f of ['all', 'added', 'needs_you', 'have'] as const) if (matchesFilter(r, f)) out[f]++
+    for (const f of ['all', 'ready', 'added', 'needs_you', 'have'] as const) if (matchesFilter(r, f)) out[f]++
   }
   return out
 }

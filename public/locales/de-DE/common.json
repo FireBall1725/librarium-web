@@ -842,10 +842,6 @@
     "library_locked": "Warte, bis die laufenden Suchen fertig sind.",
     "loading": "Wird geladen…",
     "last_scanned": "Zuletzt gescannt",
-    "when_found": "Wenn ein Buch gefunden wird",
-    "add_straight_away": "Sofort hinzufügen",
-    "hold": "Zur Prüfung zurückhalten",
-    "unsure_waits": "Was die Suche nicht sicher weiß, wartet unter Braucht dich, und die Warteschlange läuft weiter.",
     "queue": "Warteschlange",
     "filter_all": "Alle",
     "filter_added": "Hinzugefügt",
@@ -881,6 +877,10 @@
     "close_waiting_body": "Sie wurden nicht hinzugefügt. Schließen entfernt sie aus der Warteschlange.",
     "close_book_title": "Schließen, ohne dieses Buch hinzuzufügen?",
     "close_book_body": "Es wurde noch nicht hinzugefügt.",
-    "close_anyway": "Trotzdem schließen"
+    "close_anyway": "Trotzdem schließen",
+    "filter_ready": "Bereit",
+    "add_all_one": "{{count}} Buch hinzufügen",
+    "add_all_other": "{{count}} Bücher hinzufügen",
+    "found_waits": "Gefundene Bücher warten unter Bereit, bis du sie hinzufügst. Was die Suche nicht sicher weiß, wartet unter Braucht dich."
   }
 }

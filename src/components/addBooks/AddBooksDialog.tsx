@@ -31,9 +31,6 @@ import OneBook from './OneBook'
 import ManyBooks from './ManyBooks'
 
 type Mode = 'one' | 'many'
-const MODE_KEY = 'librarium:add-books:mode'
-const readMode = (): Mode => { try { return window.localStorage.getItem(MODE_KEY) === 'many' ? 'many' : 'one' } catch { return 'one' } }
-const storeMode = (m: Mode) => { try { window.localStorage.setItem(MODE_KEY, m) } catch { /* not kept */ } }
 
 interface Manual {
   result?: ISBNLookupResult
@@ -61,8 +58,8 @@ export default function AddBooksDialog({
   const navigate = useNavigate()
   const titleId = useId()
 
-  // Opened with a code or title, it's about that one book.
-  const [mode, setMode] = useState<Mode>(() => (initialIsbn || initialTitle ? 'one' : readMode()))
+  // Always opens on One book; Many books is a switch away.
+  const [mode, setMode] = useState<Mode>('one')
   const [manual, setManual] = useState<Manual | null>(null)
   const [libraries, setLibraries] = useState<Library[]>(librariesProp ?? [])
   const [prefs, setPrefs] = useState<AddBooksPrefs | undefined>(undefined)
@@ -217,7 +214,7 @@ export default function AddBooksDialog({
     toast.show(t('add_books.finish_first', { defaultValue: 'Add or cancel this book before scanning the next.' }), { variant: 'error' })
   }) : undefined, [manual, t, toast])
 
-  const switchMode = (m: Mode) => { setMode(m); storeMode(m); setManual(null) }
+  const switchMode = (m: Mode) => { setMode(m); setManual(null) }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-2 sm:p-4"

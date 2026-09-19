@@ -842,10 +842,6 @@
     "library_locked": "Wait for the books being looked up to finish.",
     "loading": "Loading…",
     "last_scanned": "Last scanned",
-    "when_found": "When a book is found",
-    "add_straight_away": "Add it straight away",
-    "hold": "Hold for review",
-    "unsure_waits": "Anything the lookup isn't sure of waits in Needs you, and the queue keeps going.",
     "queue": "Queue",
     "filter_all": "All",
     "filter_added": "Added",
@@ -881,6 +877,10 @@
     "close_waiting_body": "They haven't been added. Closing drops them from the queue.",
     "close_book_title": "Close without adding this book?",
     "close_book_body": "It hasn't been added yet.",
-    "close_anyway": "Close anyway"
+    "close_anyway": "Close anyway",
+    "filter_ready": "Ready",
+    "add_all_one": "Add {{count}} book",
+    "add_all_other": "Add {{count}} books",
+    "found_waits": "Found books wait in Ready until you add them. Anything the lookup isn't sure of waits in Needs you."
   }
 }

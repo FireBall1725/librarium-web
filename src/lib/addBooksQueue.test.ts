@@ -20,15 +20,16 @@ const memory = () => {
 }
 
 describe('the queue filters', () => {
-  it('puts unsure, held and failed rows under Needs you', () => {
+  it('puts found books under Ready, and unsure or failed ones under Needs you', () => {
+    expect(matchesFilter(row('1', 'ready'), 'ready')).toBe(true)
+    expect(matchesFilter(row('1', 'ready'), 'needs_you')).toBe(false)
     expect(matchesFilter(row('1', 'needs_you'), 'needs_you')).toBe(true)
-    expect(matchesFilter(row('1', 'ready'), 'needs_you')).toBe(true)
     expect(matchesFilter(row('1', 'failed'), 'needs_you')).toBe(true)
     expect(matchesFilter(row('1', 'added'), 'needs_you')).toBe(false)
   })
 
   it('hides skipped rows everywhere', () => {
-    expect(countBy([row('1', 'skipped'), row('2', 'added'), row('3', 'have')])).toEqual({ all: 2, added: 1, needs_you: 0, have: 1 })
+    expect(countBy([row('1', 'skipped'), row('2', 'added'), row('3', 'have')])).toEqual({ all: 2, ready: 0, added: 1, needs_you: 0, have: 1 })
   })
 })
 

@@ -842,10 +842,6 @@
     "library_locked": "Aguarde as buscas em andamento terminarem.",
     "loading": "Carregando…",
     "last_scanned": "Último escaneado",
-    "when_found": "Quando um livro é encontrado",
-    "add_straight_away": "Adicionar na hora",
-    "hold": "Segurar para revisão",
-    "unsure_waits": "O que a busca não tem certeza espera em Precisa de você, e a fila continua.",
     "queue": "Fila",
     "filter_all": "Tudo",
     "filter_added": "Adicionados",
@@ -881,6 +877,10 @@
     "close_waiting_body": "Eles não foram adicionados. Fechar os remove da fila.",
     "close_book_title": "Fechar sem adicionar este livro?",
     "close_book_body": "Ele ainda não foi adicionado.",
-    "close_anyway": "Fechar mesmo assim"
+    "close_anyway": "Fechar mesmo assim",
+    "filter_ready": "Prontos",
+    "add_all_one": "Adicionar {{count}} livro",
+    "add_all_other": "Adicionar {{count}} livros",
+    "found_waits": "Os livros encontrados esperam em Prontos até você adicioná-los. O que a busca não tem certeza espera em Precisa de você."
   }
 }
