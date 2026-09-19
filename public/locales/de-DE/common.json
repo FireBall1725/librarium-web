@@ -342,7 +342,10 @@
     "typeface": "Schriftart",
     "typeface_note": "OpenDyslexic verstärkt den unteren Teil jedes Buchstabens und gibt ähnlichen Zeichen eigene Formen, was manche Menschen mit Legasthenie als leichter empfinden.",
     "typeface_sample": "Eine Handvoll Bücher",
-    "machine_drafted": "Diese Sprache wurde mit KI-Unterstützung erstellt und noch nicht von einer sprechenden Person geprüft. Korrekturen sind über Crowdin willkommen."
+    "machine_drafted": "Diese Sprache wurde mit KI-Unterstützung erstellt und noch nicht von einer sprechenden Person geprüft. Korrekturen sind über Crowdin willkommen.",
+    "scanner": "Barcode-Scanner",
+    "scanner_toggle": "Bluetooth- oder USB-Scanner verwenden",
+    "scanner_note": "Scanne auf jeder Seite den Barcode eines Buchs: Ein vorhandenes Buch wird geöffnet, ein neues startet „Buch hinzufügen“. Schalte das aus, falls ein Scanner beim Tippen stört."
   },
   "settings_account": {
     "profile_description": "Dein Konto auf dieser Instanz.",
@@ -584,5 +587,14 @@
   },
   "scan": {
     "start_failed": "Der Barcode-Scanner konnte nicht gestartet werden."
+  },
+  "scanner": {
+    "scanned": "Gescannt: {{code}}",
+    "not_book": "Dieser Barcode gehört zu keinem Buch: {{code}}",
+    "upc_unavailable": "UPC-Suche ist noch nicht verfügbar: {{code}}",
+    "lookup_failed": "Deine Bibliotheken konnten für {{code}} nicht geprüft werden",
+    "no_libraries": "Du hast noch keine Bibliothek, in die du Bücher aufnehmen kannst.",
+    "added": "{{title}} hinzugefügt",
+    "view": "Ansehen"
   }
 }

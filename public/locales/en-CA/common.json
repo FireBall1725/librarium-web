@@ -342,7 +342,10 @@
     "typeface": "Typeface",
     "typeface_note": "OpenDyslexic weights the bottom of each letter and gives similar characters distinct shapes, which some readers with dyslexia find easier.",
     "typeface_sample": "Handful of books",
-    "machine_drafted": "This language was drafted with AI help and has not been reviewed by a speaker. Corrections are welcome through Crowdin."
+    "machine_drafted": "This language was drafted with AI help and has not been reviewed by a speaker. Corrections are welcome through Crowdin.",
+    "scanner": "Barcode scanner",
+    "scanner_toggle": "Use a Bluetooth or USB scanner",
+    "scanner_note": "Scan a book's barcode on any page: a book you have opens, a new one starts Add Book. Turn this off if a scanner ever gets in the way of typing."
   },
   "settings_account": {
     "profile_description": "Your account on this instance.",
@@ -584,5 +587,14 @@
   },
   "scan": {
     "start_failed": "Could not start the barcode scanner."
+  },
+  "scanner": {
+    "scanned": "Scanned {{code}}",
+    "not_book": "That barcode isn't a book barcode: {{code}}",
+    "upc_unavailable": "UPC lookup isn't available yet: {{code}}",
+    "lookup_failed": "Couldn't check your libraries for {{code}}",
+    "no_libraries": "You don't have a library to add books to yet.",
+    "added": "Added {{title}}",
+    "view": "View"
   }
 }

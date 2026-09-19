@@ -19,6 +19,8 @@ import ContributorRow, { CONTRIBUTOR_ROLES } from './ContributorRow'
 import MediaTypeSelect from './MediaTypeSelect'
 import { TAG_COLORS } from '../lib/tagColours'
 import { getBarcodeReader } from '../lib/barcodeDetector'
+import { registerScanTarget } from '../lib/barcodeScanner'
+import { useToast } from './Toast'
 
 
 const MANGA_PUBLISHERS = ['viz', 'yen press', 'kodansha', 'seven seas', 'tokyopop', 'square enix manga', 'dark horse manga', 'vertical', 'j-novel', 'cross infinite']
@@ -257,6 +259,22 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
     else if (initialTitle) doBookSearch(initialTitle)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // While open, this modal takes hardware scanner scans itself, so a scan
+  // replaces the ISBN here instead of opening a second Add Book on top.
+  const toast = useToast()
+  const lookupRef = useRef(doISBNLookup)
+  useEffect(() => { lookupRef.current = doISBNLookup })
+  useEffect(() => registerScanTarget(barcode => {
+    if (barcode.kind !== 'isbn') {
+      const code = barcode.code
+      toast.show(t('scanner.upc_unavailable', { code, defaultValue: `UPC lookup isn't available yet: ${code}` }), { variant: 'error' })
+      return
+    }
+    setMode('isbn')
+    setIsbnInput(barcode.isbn13)
+    lookupRef.current(barcode.isbn13)
+  }), [t, toast])
 
   // Focus the relevant input whenever the active mode changes (and when a
   // barcode scan is cancelled, which remounts the ISBN input).
