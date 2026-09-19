@@ -329,7 +329,7 @@ function Catalogue({ open, onClose, providers, locale, capLabel, onAdd }: {
               <article key={p.name} className={`flex flex-col gap-2.5 rounded-xl border bg-surface-raised p-3.5 ${added ? 'border-accent' : 'border-line'}`}>
                 <h3 className="text-[15px] font-semibold text-content">{p.display_name}</h3>
                 <p className="text-[12.5px] leading-snug text-content-muted">{p.description}</p>
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex flex-wrap items-center gap-1.5">
                   {p.capabilities.map(c => <span key={c} className="lb-cap">{capLabel(c)}</span>)}
                   {needsNoKey(p)
                     ? <span className="lb-chip good">{t('lookups.no_key', { defaultValue: 'No key' })}</span>

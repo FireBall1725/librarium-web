@@ -7,6 +7,7 @@ import type { CronError } from 'react-js-cron'
 import 'react-js-cron/dist/styles.css'
 import { useAuth, ApiError } from '../../auth/AuthContext'
 import { useToast } from '../../components/Toast'
+import { Switch } from '../../components/settings/SettingRow'
 
 // Mirrors ScheduleView on the api side — one row per registered schedulable
 // job kind. Config is intentionally kept opaque here; kind-specific config
@@ -141,15 +142,7 @@ function ScheduleRow({ initial, onSaved, onError, showToast }: {
             <p className="text-xs text-content-muted mt-0.5">{initial.description}</p>
           )}
         </div>
-        <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
-          <input
-            type="checkbox"
-            className="sr-only peer"
-            checked={enabled}
-            onChange={e => setEnabled(e.target.checked)}
-          />
-          <div className="w-10 h-6 bg-surface-strong peer-focus:outline-none rounded-full peer peer-checked:bg-accent after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-surface-raised after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full" />
-        </label>
+        <span className="flex-shrink-0"><Switch checked={enabled} label={'Enabled'} onChange={on => setEnabled(on)} /></span>
       </div>
 
       <div className="p-4 space-y-3">
