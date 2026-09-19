@@ -11,6 +11,8 @@ import type {
   ContinueSeriesItem,
 } from '../types'
 import PageHeader from '../components/PageHeader'
+import AddBooksButton from '../components/addBooks/AddBooksButton'
+import { COLLECTION_CHANGED } from '../lib/collectionEvents'
 import BookCover from '../components/BookCover'
 import SuggestionsWidget from '../components/SuggestionsWidget'
 import { usePageTitle } from '../hooks/usePageTitle'
@@ -741,11 +743,18 @@ export default function DashboardPage() {
   const { user } = useAuth()
   const { t } = useTranslation('dashboard')
   usePageTitle(t('page_title'))
+  // Books added from the header's button: the panels reload by remounting.
+  const [version, setVersion] = useState(0)
+  useEffect(() => {
+    const bump = () => setVersion(v => v + 1)
+    window.addEventListener(COLLECTION_CHANGED, bump)
+    return () => window.removeEventListener(COLLECTION_CHANGED, bump)
+  }, [])
 
   return (
     <>
-      <PageHeader title={t('welcome_back', { name: user?.display_name ?? '' })} />
-      <div className="p-4 sm:p-6 space-y-4 max-w-screen-2xl mx-auto">
+      <PageHeader title={t('welcome_back', { name: user?.display_name ?? '' })} actions={<AddBooksButton />} />
+      <div key={version} className="p-4 sm:p-6 space-y-4 max-w-screen-2xl mx-auto">
         {/* Library chip strip */}
         <LibraryChips />
 

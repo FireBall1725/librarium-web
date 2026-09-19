@@ -12,7 +12,7 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import { useToast } from './Toast'
-import AddBookModal from './AddBookModal'
+import AddBooksDialog from './addBooks/AddBooksDialog'
 import { classifyBarcode, upcLookupCode } from '../lib/barcode'
 import { currentScanTarget, useScannerEnabled } from '../lib/barcodeScanner'
 import { useBarcodeScanner } from '../lib/useBarcodeScanner'
@@ -105,20 +105,18 @@ export default function GlobalBarcodeScanner() {
 
   if (!addFor) return null
   return (
-    <AddBookModal
-      // Remount on a new ISBN so the modal starts clean.
+    <AddBooksDialog
+      // Remount on a new ISBN so the dialog starts clean.
       key={addFor.isbn}
       libraryId={addFor.libraryId}
-      libraries={addFor.libraryId ? undefined : addFor.libraries}
+      libraries={addFor.libraries}
       mediaTypes={addFor.mediaTypes}
       initialIsbn={addFor.isbn}
       onClose={() => setAddFor(null)}
-      onSaved={book => {
+      // Each add already had its own toast, with Undo.
+      onSaved={() => {
         setAddFor(null)
         announceCollectionChanged()
-        toast.show(t('scanner.added', { title: book.title, defaultValue: `Added ${book.title}` }), {
-          action: { label: t('scanner.view', { defaultValue: 'View' }), to: `/libraries/${book.library_id ?? addFor.libraryId ?? addFor.libraries[0].id}/books/${book.id}` },
-        })
       }}
     />
   )

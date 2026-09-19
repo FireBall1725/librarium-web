@@ -7,10 +7,8 @@ import { Link } from 'react-router-dom'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-interface ToastAction {
-  label: string
-  to: string
-}
+// A link, or a button for something like Undo.
+type ToastAction = { label: string; to: string } | { label: string; onClick: () => void }
 
 interface Toast {
   id: number
@@ -101,14 +99,22 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: number)
 
       <span className="flex-1">{toast.message}</span>
 
-      {toast.action && (
+      {toast.action && ('to' in toast.action ? (
         <Link
           to={toast.action.to}
           className="flex-shrink-0 font-medium text-accent hover:underline"
         >
           {toast.action.label}
         </Link>
-      )}
+      ) : (
+        <button
+          type="button"
+          onClick={() => { (toast.action as { onClick: () => void }).onClick(); onDismiss(toast.id) }}
+          className="flex-shrink-0 font-medium text-accent hover:underline"
+        >
+          {toast.action.label}
+        </button>
+      ))}
 
       <button
         onClick={() => onDismiss(toast.id)}

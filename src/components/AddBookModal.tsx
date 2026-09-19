@@ -29,6 +29,8 @@ import {
 import { registerScanTarget } from '../lib/barcodeScanner'
 import { barcodeIdentifier, classifyBarcode, editionForIdentifier, pickCameraScan, savableIdentifier, upcLookupCode, type ScannedIdentifier } from '../lib/barcode'
 import { useToast } from './Toast'
+import { Icon } from '../lib/icons'
+import type { Destination } from '../lib/addBooks'
 
 
 interface BookFormContributor {
@@ -97,9 +99,25 @@ interface AddBookModalProps {
   initialIsbn?: string
   /** Pre-fill the title search and auto-search when there is no ISBN. */
   initialTitle?: string
+  /**
+   * Hosted inside the Add books dialog, which draws the frame, the
+   * destination bar and handles scans: this is only the form, filed at the
+   * destination, filled from a lookup or from a scan nobody knew.
+   */
+  embed?: {
+    destination: Destination
+    result?: ISBNLookupResult
+    identifier?: ScannedIdentifier | null
+    /** A barcode from a failed scan, for the ISBN field. */
+    barcode?: string
+    onLookUp: () => void
+    /** The add button, naming where the book goes. */
+    addLabel: string
+  }
 }
 
-export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose, onSaved, onDuplicate, initialIsbn, initialTitle }: AddBookModalProps) {
+export default function AddBookModal({ libraryId: libraryIdProp, libraries, mediaTypes, onClose, onSaved, onDuplicate, initialIsbn, initialTitle, embed }: AddBookModalProps) {
+  const libraryId = embed?.destination.libraryId ?? libraryIdProp
   const { callApi } = useAuth()
   const { t } = useTranslation()
 
@@ -109,9 +127,12 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
   const [chosenLibrary, setChosenLibrary] = useState(libraryId ?? libraries?.[0]?.id ?? '')
   const targetLibrary = libraryId ?? chosenLibrary
   useEffect(() => {
+    // Embedded, the dialog around the form owns Escape.
+    if (embed) return
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') closeModalRef.current() }
     document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   const [form, setForm] = useState({
     title: '',
@@ -130,6 +151,8 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
 
   const [selectedGenres, setSelectedGenres] = useState<Genre[]>([])
   const [allGenres, setAllGenres] = useState<Genre[]>([])
+  // Importing a lookup matches its categories to genres, so it waits for them.
+  const [genresLoaded, setGenresLoaded] = useState(false)
   const [genreQuery, setGenreQuery] = useState('')
   const [genreDropdownOpen, setGenreDropdownOpen] = useState(false)
   const genreInputRef = useRef<HTMLInputElement>(null)
@@ -141,11 +164,13 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
     callApi<Genre[]>('/api/v1/genres')
       .then(gs => setAllGenres(gs ?? []))
       .catch(() => {})
+      .finally(() => setGenresLoaded(true))
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [targetLibrary])
 
   const [allShelves, setAllShelves] = useState<SavedList[]>([])
-  const [selectedShelfIds, setSelectedShelfIds] = useState<Set<string>>(new Set())
+  const [selectedShelfIds, setSelectedShelfIds] = useState<Set<string>>(
+    () => new Set(embed?.destination.listId ? [embed.destination.listId] : []))
 
   // Not scoped to the target library: a list's membership is (list, book) with
   // no library in it, and the shelf route this replaced could not see a
@@ -166,7 +191,8 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
     publisher: '',
     publish_date: '',
     isbn_10: '',
-    isbn_13: '',
+    // A scan nobody knew: saved on the edition, so it's found next time.
+    isbn_13: embed?.barcode && classifyBarcode(embed.barcode).kind === 'isbn' ? embed.barcode : '',
     page_count: '',
     duration_hours: '',
     duration_minutes: '',
@@ -179,7 +205,7 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
   const [pendingCoverUrl, setPendingCoverUrl] = useState<string | null>(null)
 
   // ─── ISBN lookup mode ──────────────────────────────────────────────────────
-  const [mode, setMode] = useState<'isbn' | 'search' | 'manual'>(!initialIsbn && initialTitle ? 'search' : 'isbn')
+  const [mode, setMode] = useState<'isbn' | 'search' | 'manual'>(embed ? 'manual' : !initialIsbn && initialTitle ? 'search' : 'isbn')
   const [isbnInput, setIsbnInput] = useState(initialIsbn ?? '')
   const [isbnMerged, setIsbnMerged] = useState<MergedBookResult | null>(null)
   // The last lookup was by UPC, whose answers need checking; see below.
@@ -187,7 +213,12 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
   // The scanned code the showing lookup came from, and, once its result is
   // used, the code the new edition gets saved under so the next scan finds it.
   const [mergedIdentifier, setMergedIdentifier] = useState<ScannedIdentifier | null>(null)
-  const [saveIdentifier, setSaveIdentifier] = useState<ScannedIdentifier | null>(null)
+  const [saveIdentifier, setSaveIdentifier] = useState<ScannedIdentifier | null>(() => {
+    // A UPC nobody knew is kept on the edition like an ISBN would be.
+    if (!embed?.barcode || embed.result) return null
+    const b = classifyBarcode(embed.barcode)
+    return b.kind === 'isbn' ? null : savableIdentifier(b)
+  })
   const [isbnLoading, setIsbnLoading] = useState(false)
   const [isbnError, setIsbnError] = useState<string | null>(null)
   const [isbnDuplicate, setIsbnDuplicate] = useState<Book | null>(null)
@@ -447,8 +478,19 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
   const closeModalRef = useRef(closeModal)
   closeModalRef.current = closeModal
 
+  // Embedded with a lookup: fill the form from it, once genres are in so its
+  // categories can match them.
+  const imported = useRef(false)
+  useEffect(() => {
+    if (!embed?.result || !genresLoaded || imported.current) return
+    imported.current = true
+    void importResult(embed.result, embed.identifier ?? null)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [genresLoaded])
+
   // Auto-trigger lookup when modal opens with a pre-filled ISBN or title
   useEffect(() => {
+    if (embed) return
     if (initialIsbn) doISBNLookup(initialIsbn)
     else if (initialTitle) doBookSearch(initialTitle)
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -460,7 +502,8 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
   const lookupRef = useRef(doISBNLookup)
   const sweepRef = useRef(acceptIntoSession)
   useEffect(() => { lookupRef.current = doISBNLookup; sweepRef.current = acceptIntoSession })
-  useEffect(() => registerScanTarget(barcode => {
+  const embedded = !!embed
+  useEffect(() => embedded ? undefined : registerScanTarget(barcode => {
     // The global scanner turns away anything that isn't a barcode first.
     if (barcode.kind === 'invalid') return
     if (barcode.kind !== 'isbn') {
@@ -485,7 +528,7 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
     setMode('isbn')
     setIsbnInput(barcode.isbn13)
     lookupRef.current(barcode.isbn13)
-  }), [t, toast])
+  }), [embedded, t, toast])
 
   // Focus the relevant input whenever the active mode changes (and when a
   // barcode scan is cancelled, which remounts the ISBN input).
@@ -750,6 +793,7 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
         tag_ids: selectedTags.map(t => t.id),
         genre_ids: selectedGenres.map(g => g.id),
       }
+      if (embed?.destination.locationId) body.location_id = embed.destination.locationId
       if (showEdition) {
         const isAudio = edition.format === 'audiobook'
         const isPhysical = !isAudio && edition.format !== 'ebook' && edition.format !== 'digital'
@@ -805,6 +849,12 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
       // Apply list membership
       for (const id of selectedShelfIds)
         await callApi(`/api/v1/me/lists/${id}/books/${bookId}`, { method: 'POST' }).catch(() => {})
+      if (embed && embed.destination.readStatus !== 'unread') {
+        await callApi(`/api/v1/books/${bookId}/me`, {
+          method: 'PUT',
+          body: JSON.stringify({ read_status: embed.destination.readStatus }),
+        }).catch(() => {})
+      }
 
       onSaved(book)
     } catch (err) {
@@ -825,66 +875,7 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
   )
   const tagQueryMatchesExisting = libraryTags.some(t => t.name.toLowerCase() === tagQuery.trim().toLowerCase())
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={e => { if (e.target === e.currentTarget) closeModal() }}>
-      <div className="w-full max-w-2xl rounded-2xl bg-surface shadow-2xl flex flex-col max-h-[92vh]">
-
-        {/* Header */}
-        <div className="px-6 py-4 border-b border-line flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <h2 className="text-base font-semibold text-content">Add book</h2>
-            {/* Only when the caller did not fix the library. Inside a library
-                the answer is already known and asking would be noise. */}
-            {!libraryId && (libraries?.length ?? 0) > 0 && (
-              <label className="ml-auto mr-3 flex items-center gap-2 text-xs text-content-tertiary">
-                Library
-                {/* Locked while a sweep holds rows. The detection callback
-                    closes over the library it started with, so switching
-                    mid-sweep would check duplicates against one library and
-                    post the queued books to another. Freezing the choice is
-                    kinder than silently discarding what has been scanned. */}
-                <select
-                  className="lb-field w-auto disabled:opacity-50"
-                  value={chosenLibrary}
-                  disabled={scanned.length > 0}
-                  title={scanned.length > 0
-                    ? t('scan.library_locked', {
-                        defaultValue: 'Finish or clear the scan session to change library.',
-                      })
-                    : undefined}
-                  onChange={e => setChosenLibrary(e.target.value)}
-                >
-                  {libraries!.map(l => (
-                    <option key={l.id} value={l.id}>{l.name}</option>
-                  ))}
-                </select>
-              </label>
-            )}
-            <button type="button" onClick={closeModal}
-              className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-surface-inset transition-colors"
-              aria-label="Close">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-          <div className="mt-3 flex gap-1 rounded-lg bg-surface-inset p-1">
-            <button type="button" onClick={() => setMode('isbn')}
-              className={`flex-1 rounded-md py-1.5 text-sm font-medium transition-colors ${mode === 'isbn' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}>
-              By ISBN
-            </button>
-            <button type="button" onClick={() => setMode('search')}
-              className={`flex-1 rounded-md py-1.5 text-sm font-medium transition-colors ${mode === 'search' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}>
-              By Title
-            </button>
-            <button type="button" onClick={() => setMode('manual')}
-              className={`flex-1 rounded-md py-1.5 text-sm font-medium transition-colors ${mode === 'manual' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}>
-              Manual
-            </button>
-          </div>
-        </div>
-
-        {/* Body */}
+  const body = (
         <div className="overflow-y-auto flex-1 px-6 py-5">
           {mode === 'isbn' ? (
             <div className="space-y-4">
@@ -1435,6 +1426,89 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
           </form>
           )}
         </div>
+  )
+
+  if (embed) {
+    return (
+      <>
+        {body}
+        <div className="flex flex-shrink-0 flex-wrap items-center gap-3 border-t border-line px-6 py-4">
+          <button type="button" onClick={embed.onLookUp} className="lb-btn ghost inline-flex items-center gap-1.5">
+            <Icon name="barcode" className="h-4 w-4" />
+            {t('add_books.look_it_up', { defaultValue: 'Look it up instead' })}
+          </button>
+          <span className="flex-1" />
+          <button type="button" onClick={onClose} className="lb-btn ghost">
+            {t('common.cancel', { defaultValue: 'Cancel' })}
+          </button>
+          <button type="submit" form="book-form" className="lb-btn disabled:opacity-50" disabled={isLoading || !form.title || !form.media_type_id}>
+            {isLoading ? t('add_books.adding', { defaultValue: 'Adding…' }) : embed.addLabel}
+          </button>
+        </div>
+      </>
+    )
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={e => { if (e.target === e.currentTarget) closeModal() }}>
+      <div className="w-full max-w-2xl rounded-2xl bg-surface shadow-2xl flex flex-col max-h-[92vh]">
+
+        {/* Header */}
+        <div className="px-6 py-4 border-b border-line flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-semibold text-content">Add book</h2>
+            {/* Only when the caller did not fix the library. Inside a library
+                the answer is already known and asking would be noise. */}
+            {!libraryId && (libraries?.length ?? 0) > 0 && (
+              <label className="ml-auto mr-3 flex items-center gap-2 text-xs text-content-tertiary">
+                Library
+                {/* Locked while a sweep holds rows. The detection callback
+                    closes over the library it started with, so switching
+                    mid-sweep would check duplicates against one library and
+                    post the queued books to another. Freezing the choice is
+                    kinder than silently discarding what has been scanned. */}
+                <select
+                  className="lb-field w-auto disabled:opacity-50"
+                  value={chosenLibrary}
+                  disabled={scanned.length > 0}
+                  title={scanned.length > 0
+                    ? t('scan.library_locked', {
+                        defaultValue: 'Finish or clear the scan session to change library.',
+                      })
+                    : undefined}
+                  onChange={e => setChosenLibrary(e.target.value)}
+                >
+                  {libraries!.map(l => (
+                    <option key={l.id} value={l.id}>{l.name}</option>
+                  ))}
+                </select>
+              </label>
+            )}
+            <button type="button" onClick={closeModal}
+              className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-surface-inset transition-colors"
+              aria-label="Close">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div className="mt-3 flex gap-1 rounded-lg bg-surface-inset p-1">
+            <button type="button" onClick={() => setMode('isbn')}
+              className={`flex-1 rounded-md py-1.5 text-sm font-medium transition-colors ${mode === 'isbn' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}>
+              By ISBN
+            </button>
+            <button type="button" onClick={() => setMode('search')}
+              className={`flex-1 rounded-md py-1.5 text-sm font-medium transition-colors ${mode === 'search' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}>
+              By Title
+            </button>
+            <button type="button" onClick={() => setMode('manual')}
+              className={`flex-1 rounded-md py-1.5 text-sm font-medium transition-colors ${mode === 'manual' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}>
+              Manual
+            </button>
+          </div>
+        </div>
+
+        {body}
 
         {/* Footer */}
         <div className="px-6 py-4 border-t border-line flex justify-end gap-3 flex-shrink-0">
