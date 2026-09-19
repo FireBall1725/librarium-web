@@ -739,12 +739,13 @@
     "answered_one": "{{count}} Quelle hat in {{seconds}} s geantwortet",
     "answered_other": "{{count}} Quellen haben in {{seconds}} s geantwortet",
     "answers_one": "{{count}} Antwort",
-    "answers_other": "{{count}} Antworten"
+    "answers_other": "{{count}} Antworten",
+    "none_upc": "Keine Ergebnisse für diesen UPC."
   },
   "scanner": {
     "scanned": "Gescannt: {{code}}",
     "not_book": "Dieser Barcode gehört zu keinem Buch: {{code}}",
-    "upc_unavailable": "UPC-Suche ist noch nicht verfügbar: {{code}}",
+    "upc_not_in_sweep": "Einen UPC einzeln scannen, nicht im Durchlauf: {{code}}",
     "lookup_failed": "Deine Bibliotheken konnten für {{code}} nicht geprüft werden",
     "no_libraries": "Du hast noch keine Bibliothek, in die du Bücher aufnehmen kannst.",
     "added": "{{title}} hinzugefügt",
@@ -760,5 +761,8 @@
     "change": "{{name}} ändern",
     "join_above": "Mit dem Namen darüber verbinden",
     "remove": "Entfernen"
+  },
+  "add_book": {
+    "isbn_or_upc": "ISBN oder UPC…"
   }
 }

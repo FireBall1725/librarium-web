@@ -2,7 +2,7 @@
 // Copyright (C) 2026 FireBall1725
 
 import { describe, expect, it } from 'vitest'
-import { classifyBarcode, isbn10to13 } from './barcode'
+import { classifyBarcode, isbn10to13, upcLookupCode } from './barcode'
 
 describe('classifyBarcode', () => {
   it('reads an ISBN-13', () => {
@@ -34,8 +34,8 @@ describe('classifyBarcode', () => {
     expect(classifyBarcode('036000291452')).toEqual({ kind: 'upc', code: '036000291452' })
   })
 
-  it('drops a 5-digit add-on after a UPC-A', () => {
-    expect(classifyBarcode('03600029145200399')).toEqual({ kind: 'upc', code: '036000291452' })
+  it('splits a 5-digit add-on off a UPC-A', () => {
+    expect(classifyBarcode('03600029145200399')).toEqual({ kind: 'upc', code: '036000291452', addon: '00399' })
   })
 
   it('treats a non-ISBN EAN-13 as an EAN', () => {
@@ -57,5 +57,19 @@ describe('classifyBarcode', () => {
 describe('isbn10to13', () => {
   it('computes the new check digit', () => {
     expect(isbn10to13('0441172717')).toBe('9780441172719')
+  })
+})
+
+describe('UPC add-ons', () => {
+  it('keeps a 5-digit add-on for the lookup', () => {
+    const b = classifyBarcode('03714500699451099')
+    expect(b).toEqual({ kind: 'upc', code: '037145006994', addon: '51099' })
+    if (b.kind === 'upc') expect(upcLookupCode(b)).toBe('03714500699451099')
+  })
+
+  it('sends a bare UPC as it is', () => {
+    const b = classifyBarcode('037145006994')
+    expect(b).toEqual({ kind: 'upc', code: '037145006994' })
+    if (b.kind === 'upc') expect(upcLookupCode(b)).toBe('037145006994')
   })
 })

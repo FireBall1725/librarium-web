@@ -27,6 +27,7 @@ import {
   type LastAccepted, type ScannedItem,
 } from '../lib/scanSession'
 import { registerScanTarget } from '../lib/barcodeScanner'
+import { classifyBarcode, upcLookupCode } from '../lib/barcode'
 import { useToast } from './Toast'
 
 
@@ -445,9 +446,18 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
   const sweepRef = useRef(acceptIntoSession)
   useEffect(() => { lookupRef.current = doISBNLookup; sweepRef.current = acceptIntoSession })
   useEffect(() => registerScanTarget(barcode => {
+    // The global scanner turns away anything that isn't a barcode first.
+    if (barcode.kind === 'invalid') return
     if (barcode.kind !== 'isbn') {
-      const code = barcode.code
-      toast.show(t('scanner.upc_unavailable', { code, defaultValue: `UPC lookup isn't available yet: ${code}` }), { variant: 'error' })
+      const code = upcLookupCode(barcode)
+      // A sweep collects ISBNs to look up later; a UPC is looked up on its own.
+      if (continuousRef.current || scannedRef.current.length > 0) {
+        toast.show(t('scanner.upc_not_in_sweep', { code, defaultValue: `Scan a UPC on its own, not in a sweep: ${code}` }), { variant: 'error' })
+        return
+      }
+      setMode('isbn')
+      setIsbnInput(code)
+      lookupRef.current(code)
       return
     }
     // A sweep is running, with the camera on or its list under review: the
@@ -485,19 +495,29 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
     setIsbnMerged(null)
     setIsbnDuplicate(null)
     const cleanISBN = isbn.trim()
+    const barcode = classifyBarcode(cleanISBN)
+    const upc = barcode.kind === 'upc' || barcode.kind === 'ean' ? upcLookupCode(barcode) : null
     try {
       // One merged answer across every provider that's on, each field
       // pre-selected by the server; MergedLookup lets the person switch any.
+      // A UPC asks the providers that read UPCs, and skips the duplicate
+      // check, which only knows ISBNs.
       const [merged, duplicate] = await Promise.all([
-        callApi<MergedBookResult>(`/api/v1/lookup/isbn/${encodeURIComponent(cleanISBN)}/merged`),
-        callApi<Book>(`/api/v1/libraries/${targetLibrary}/book-by-isbn/${encodeURIComponent(cleanISBN)}`).catch(() => null),
+        upc
+          ? callApi<MergedBookResult>(`/api/v1/lookup/upc/${encodeURIComponent(upc)}/merged`)
+          : callApi<MergedBookResult>(`/api/v1/lookup/isbn/${encodeURIComponent(cleanISBN)}/merged`),
+        upc
+          ? Promise.resolve(null)
+          : callApi<Book>(`/api/v1/libraries/${targetLibrary}/book-by-isbn/${encodeURIComponent(cleanISBN)}`).catch(() => null),
       ])
       setIsbnDuplicate(duplicate ?? null)
       if (duplicate) onDuplicate?.(duplicate)
       if (hasAnyField(merged)) {
         setIsbnMerged(merged)
       } else {
-        setIsbnError(t('merged.none', { defaultValue: 'No results found for that ISBN.' }))
+        setIsbnError(upc
+          ? t('merged.none_upc', { defaultValue: 'No results found for that UPC.' })
+          : t('merged.none', { defaultValue: 'No results found for that ISBN.' }))
       }
     } catch (err) {
       setIsbnError(err instanceof ApiError ? err.message : 'Lookup failed')
@@ -813,7 +833,7 @@ export default function AddBookModal({ libraryId, libraries, mediaTypes, onClose
                       ref={isbnInputRef}
                       onChange={e => setIsbnInput(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && doISBNLookup(isbnInput)}
-                      placeholder="Enter ISBN-10 or ISBN-13…"
+                      placeholder={t('add_book.isbn_or_upc', { defaultValue: 'ISBN or UPC…' })}
                       className={inputCls} />
                     <button type="button" onClick={() => doISBNLookup(isbnInput)} disabled={isbnLoading || !isbnInput.trim()}
                       className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">

@@ -739,12 +739,13 @@
     "answered_one": "{{count}} fournisseur a répondu en {{seconds}} s",
     "answered_other": "{{count}} fournisseurs ont répondu en {{seconds}} s",
     "answers_one": "{{count}} réponse",
-    "answers_other": "{{count}} réponses"
+    "answers_other": "{{count}} réponses",
+    "none_upc": "Aucun résultat pour cet UPC."
   },
   "scanner": {
     "scanned": "Scanné {{code}}",
     "not_book": "Ce code-barres n'est pas celui d'un livre : {{code}}",
-    "upc_unavailable": "La recherche par UPC n'est pas encore disponible : {{code}}",
+    "upc_not_in_sweep": "Scannez un UPC seul, pas pendant un balayage : {{code}}",
     "lookup_failed": "Impossible de vérifier vos bibliothèques pour {{code}}",
     "no_libraries": "Vous n'avez pas encore de bibliothèque où ajouter des livres.",
     "added": "{{title}} ajouté",
@@ -760,5 +761,8 @@
     "change": "Modifier {{name}}",
     "join_above": "Joindre au nom au-dessus",
     "remove": "Retirer"
+  },
+  "add_book": {
+    "isbn_or_upc": "ISBN ou UPC…"
   }
 }

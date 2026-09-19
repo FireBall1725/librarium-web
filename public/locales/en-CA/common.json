@@ -739,12 +739,13 @@
     "answered_one": "{{count}} provider answered in {{seconds}} s",
     "answered_other": "{{count}} providers answered in {{seconds}} s",
     "answers_one": "{{count}} answer",
-    "answers_other": "{{count}} answers"
+    "answers_other": "{{count}} answers",
+    "none_upc": "No results found for that UPC."
   },
   "scanner": {
     "scanned": "Scanned {{code}}",
     "not_book": "That barcode isn't a book barcode: {{code}}",
-    "upc_unavailable": "UPC lookup isn't available yet: {{code}}",
+    "upc_not_in_sweep": "Scan a UPC on its own, not in a sweep: {{code}}",
     "lookup_failed": "Couldn't check your libraries for {{code}}",
     "no_libraries": "You don't have a library to add books to yet.",
     "added": "Added {{title}}",
@@ -760,5 +761,8 @@
     "change": "Change {{name}}",
     "join_above": "Join with the name above",
     "remove": "Remove"
+  },
+  "add_book": {
+    "isbn_or_upc": "ISBN or UPC…"
   }
 }

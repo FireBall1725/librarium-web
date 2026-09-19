@@ -9,8 +9,10 @@
 
 export type Barcode =
   | { kind: 'isbn'; isbn13: string }
-  | { kind: 'upc'; code: string }
-  | { kind: 'ean'; code: string }
+  // addon is a 5-digit add-on printed after the code. For a book it's a
+  // price; for a comic it tells apart issues that share the same 12 digits.
+  | { kind: 'upc'; code: string; addon?: string }
+  | { kind: 'ean'; code: string; addon?: string }
   | { kind: 'invalid'; code: string }
 
 /** Check digit for EAN-13 and UPC-A: weights alternate 1 and 3 from the right, excluding the check digit. */
@@ -48,14 +50,20 @@ export function classifyBarcode(raw: string): Barcode {
 
   // A 5-digit price add-on (mass-market paperbacks, comics) arrives glued on:
   // 13+5 or 12+5 digits. The main code is what identifies the book.
-  if (/^\d{18}$/.test(code)) code = code.slice(0, 13)
-  else if (/^\d{17}$/.test(code)) code = code.slice(0, 12)
+  let addon: string | undefined
+  if (/^\d{18}$/.test(code)) { addon = code.slice(13); code = code.slice(0, 13) }
+  else if (/^\d{17}$/.test(code)) { addon = code.slice(12); code = code.slice(0, 12) }
 
   if (code.length === 13 && validGtin(code)) {
     if (code.startsWith('978') || code.startsWith('979')) return { kind: 'isbn', isbn13: code }
-    return { kind: 'ean', code }
+    return addon ? { kind: 'ean', code, addon } : { kind: 'ean', code }
   }
   if (code.length === 10 && validIsbn10(code)) return { kind: 'isbn', isbn13: isbn10to13(code) }
-  if (code.length === 12 && validGtin(code)) return { kind: 'upc', code }
+  if (code.length === 12 && validGtin(code)) return addon ? { kind: 'upc', code, addon } : { kind: 'upc', code }
   return { kind: 'invalid', code: raw.trim() }
+}
+
+/** What to send the UPC lookup: the code with its add-on, which the server keeps. */
+export function upcLookupCode(b: Extract<Barcode, { kind: 'upc' | 'ean' }>): string {
+  return b.code + (b.addon ?? '')
 }

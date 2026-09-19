@@ -694,12 +694,13 @@
     "use": "この内容を使う",
     "none": "このISBNでは見つかりませんでした。",
     "answered_other": "{{count}}件の提供元が{{seconds}}秒で回答",
-    "answers_other": "{{count}}件の回答"
+    "answers_other": "{{count}}件の回答",
+    "none_upc": "その UPC の結果は見つかりませんでした。"
   },
   "scanner": {
     "scanned": "スキャンしました: {{code}}",
     "not_book": "本のバーコードではありません: {{code}}",
-    "upc_unavailable": "UPC での検索はまだ使えません: {{code}}",
+    "upc_not_in_sweep": "UPC は連続スキャン中ではなく単独でスキャンしてください：{{code}}",
     "lookup_failed": "{{code}} をライブラリで確認できませんでした",
     "no_libraries": "本を追加できるライブラリがまだありません。",
     "added": "{{title}} を追加しました",
@@ -715,5 +716,8 @@
     "change": "{{name}} を変更",
     "join_above": "上の名前とつなげる",
     "remove": "削除"
+  },
+  "add_book": {
+    "isbn_or_upc": "ISBN または UPC…"
   }
 }
