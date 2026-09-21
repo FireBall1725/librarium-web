@@ -25,6 +25,8 @@ const base = (over: Partial<BrowseState> = {}): BrowseState => ({
   grouped: false,
   series: '',
   contributors: [],
+  sort: [],
+  headings: false,
   ...over,
 })
 
@@ -247,5 +249,35 @@ describe('grouping and the series drill-in', () => {
     // light up "clear filters".
     expect(selectionCount(base({ grouped: true }).selection))
       .toBe(selectionCount(base().selection))
+  })
+})
+
+describe('sort and headings', () => {
+  it('round-trips a three-level sort and headings', () => {
+    const state = base({
+      sort: [{ field: 'author', desc: false }, { field: 'series', desc: false, mixed: true }, { field: 'title', desc: true }],
+      headings: true,
+    })
+    const params = writeState(state)
+    expect(params.get('sort')).toBe('author,series-mixed,title-desc')
+    expect(params.get('headings')).toBe('1')
+    expect(readState(params)).toEqual(state)
+  })
+
+  it('writes nothing for title A to Z, so an unsorted view is not modified', () => {
+    expect(writeState(base({ sort: [{ field: 'title', desc: false }] })).has('sort')).toBe(false)
+    expect(writeState(base()).has('headings')).toBe(false)
+  })
+
+  it('sends sort, headings and language to the list but not to the counts', () => {
+    const state = base({ sort: [{ field: 'added', desc: true }], headings: true })
+    const list = new URLSearchParams(toApiQuery(state, 50, false, 'fr-FR'))
+    expect(list.get('sort')).toBe('added-desc')
+    expect(list.get('headings')).toBe('1')
+    expect(list.get('lang')).toBe('fr-FR')
+    const facets = new URLSearchParams(toApiQuery(state, 50, true, 'fr-FR'))
+    expect(facets.has('sort')).toBe(false)
+    expect(facets.has('headings')).toBe(false)
+    expect(facets.has('lang')).toBe(false)
   })
 })
