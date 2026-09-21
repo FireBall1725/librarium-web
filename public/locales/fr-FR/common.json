@@ -976,7 +976,7 @@
     "automatic": "automatique",
     "reset": "Revenir au tri par défaut",
     "presets": "Choix rapides",
-    "preset_shelf": "Ordre des rayons",
+    "preset_shelf": "Auteur, puis série",
     "preset_title": "Titre",
     "preset_author_title": "Auteur, puis titre",
     "preset_recent": "Ajoutés récemment",
@@ -1013,6 +1013,10 @@
     "no_author": "Sans auteur",
     "no_series": "Hors série",
     "no_date": "Sans date",
-    "not_added": "Pas sur un rayon"
+    "not_added": "Dans aucune bibliothèque",
+    "field_shelf": "Rayon",
+    "headings_shelf": "Titres par rayon",
+    "no_shelf": "Pas sur un rayon",
+    "preset_by_shelf": "Rayon, puis auteur"
   }
 }

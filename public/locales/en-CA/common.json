@@ -976,7 +976,7 @@
     "automatic": "automatic",
     "reset": "Back to the default",
     "presets": "Quick picks",
-    "preset_shelf": "Shelf order",
+    "preset_shelf": "Author, then series",
     "preset_title": "Title",
     "preset_author_title": "Author, then title",
     "preset_recent": "Recently added",
@@ -1013,6 +1013,10 @@
     "no_author": "No author",
     "no_series": "Not in a series",
     "no_date": "No date",
-    "not_added": "Not on a shelf"
+    "not_added": "Not in a library",
+    "field_shelf": "Shelf",
+    "headings_shelf": "Shelf headings",
+    "no_shelf": "Not on a shelf",
+    "preset_by_shelf": "Shelf, then author"
   }
 }

@@ -976,7 +976,7 @@
     "automatic": "automatisch",
     "reset": "Zurück zur Standardsortierung",
     "presets": "Schnellauswahl",
-    "preset_shelf": "Regalordnung",
+    "preset_shelf": "Autor, dann Reihe",
     "preset_title": "Titel",
     "preset_author_title": "Autor, dann Titel",
     "preset_recent": "Zuletzt hinzugefügt",
@@ -1013,6 +1013,10 @@
     "no_author": "Ohne Autor",
     "no_series": "Keine Reihe",
     "no_date": "Ohne Datum",
-    "not_added": "Nicht im Regal"
+    "not_added": "In keiner Bibliothek",
+    "field_shelf": "Regal",
+    "headings_shelf": "Überschriften nach Regal",
+    "no_shelf": "Nicht im Regal",
+    "preset_by_shelf": "Regal, dann Autor"
   }
 }

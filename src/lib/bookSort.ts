@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (C) 2026 FireBall1725
 //
-// The Books sort: up to three levels, each with its own direction, carried in
+// The Books sort: up to four levels, each with its own direction, carried in
 // the URL the way the API reads it (sort=author,series,title-desc).
 //
 // It lives in the URL rather than component state for the same reason the
@@ -11,7 +11,7 @@
 
 import type { TFunction } from 'i18next'
 
-export type SortField = 'title' | 'author' | 'series' | 'added' | 'year'
+export type SortField = 'title' | 'author' | 'series' | 'shelf' | 'added' | 'year'
 
 export interface SortLevel {
   field: SortField
@@ -21,9 +21,10 @@ export interface SortLevel {
 }
 
 /** In the order the field picker lists them. */
-export const SORT_FIELDS: SortField[] = ['title', 'author', 'series', 'added', 'year']
+export const SORT_FIELDS: SortField[] = ['title', 'author', 'series', 'shelf', 'added', 'year']
 
-export const MAX_SORT_LEVELS = 3
+/** Shelf, author, series, title: each bookcase in the order its books stand. */
+export const MAX_SORT_LEVELS = 4
 
 /** What the two directions are called depends on what is being sorted. */
 export type DirectionKind = 'text' | 'series' | 'date'
@@ -32,6 +33,7 @@ export const DIRECTION_KIND: Record<SortField, DirectionKind> = {
   title: 'text',
   author: 'text',
   series: 'series',
+  shelf: 'text',
   added: 'date',
   year: 'date',
 }
@@ -43,6 +45,7 @@ export interface SortPreset {
 
 export const SORT_PRESETS: SortPreset[] = [
   { id: 'shelf', levels: [{ field: 'author', desc: false }, { field: 'series', desc: false }, { field: 'title', desc: false }] },
+  { id: 'by_shelf', levels: [{ field: 'shelf', desc: false }, { field: 'author', desc: false }, { field: 'series', desc: false }, { field: 'title', desc: false }] },
   { id: 'title', levels: [{ field: 'title', desc: false }] },
   { id: 'author_title', levels: [{ field: 'author', desc: false }, { field: 'title', desc: false }] },
   { id: 'recent', levels: [{ field: 'added', desc: true }] },
@@ -111,6 +114,7 @@ export function fieldLabel(field: SortField, t: TFunction): string {
     case 'title': return t('sort.field_title', { defaultValue: 'Title' })
     case 'author': return t('sort.field_author', { defaultValue: 'Author' })
     case 'series': return t('sort.field_series', { defaultValue: 'Series' })
+    case 'shelf': return t('sort.field_shelf', { defaultValue: 'Shelf' })
     case 'added': return t('sort.field_added', { defaultValue: 'Date added' })
     case 'year': return t('sort.field_year', { defaultValue: 'Year published' })
   }
@@ -146,6 +150,7 @@ export function headingsLabel(field: SortField, t: TFunction): string {
     case 'title': return t('sort.headings_title', { defaultValue: 'Letter headings' })
     case 'author': return t('sort.headings_author', { defaultValue: 'Author headings' })
     case 'series': return t('sort.headings_series', { defaultValue: 'Series headings' })
+    case 'shelf': return t('sort.headings_shelf', { defaultValue: 'Shelf headings' })
     case 'added': return t('sort.headings_added', { defaultValue: 'Day headings' })
     case 'year': return t('sort.headings_year', { defaultValue: 'Year headings' })
   }
@@ -166,10 +171,13 @@ export function headingText(field: SortField, raw: string | undefined, t: TFunct
       return v || t('sort.no_author', { defaultValue: 'No author' })
     case 'series':
       return v || t('sort.no_series', { defaultValue: 'Not in a series' })
+    case 'shelf':
+      return v || t('sort.no_shelf', { defaultValue: 'Not on a shelf' })
     case 'year':
       return v || t('sort.no_date', { defaultValue: 'No date' })
     case 'added': {
-      if (!v) return t('sort.not_added', { defaultValue: 'Not on a shelf' })
+      // A wishlisted or suggested book has no copy, so no date it arrived.
+      if (!v) return t('sort.not_added', { defaultValue: 'Not in a library' })
       const d = new Date(v)
       return Number.isNaN(d.getTime())
         ? v

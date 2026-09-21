@@ -40,7 +40,8 @@ function SortIcon() {
 
 /** English fallbacks for the preset names, used until a locale has them. */
 const PRESET_NAMES: Record<string, string> = {
-  shelf: 'Shelf order',
+  shelf: 'Author, then series',
+  by_shelf: 'Shelf, then author',
   title: 'Title',
   author_title: 'Author, then title',
   recent: 'Recently added',

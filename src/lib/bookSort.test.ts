@@ -21,7 +21,7 @@ describe('parseSort', () => {
 
   it('drops what it does not know, repeats, and a fourth level', () => {
     expect(parseSort('colour,title,title-desc')).toEqual([{ field: 'title', desc: false }])
-    expect(parseSort('title,author,series,year')).toHaveLength(3)
+    expect(parseSort('title,author,series,shelf,year')).toHaveLength(4)
     expect(parseSort('')).toEqual([])
     expect(parseSort(null)).toEqual([])
   })
@@ -71,6 +71,8 @@ describe('labels', () => {
     expect(headingText('author', '', t)).toBe('No author')
     expect(headingText('series', undefined, t)).toBe('Not in a series')
     expect(headingText('year', '', t)).toBe('No date')
+    expect(headingText('shelf', '', t)).toBe('Not on a shelf')
+    expect(headingText('shelf', 'Library › Fiction', t)).toBe('Library › Fiction')
     expect(headingText('author', 'Douglas Adams', t)).toBe('Douglas Adams')
   })
 

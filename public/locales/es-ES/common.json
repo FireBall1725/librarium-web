@@ -976,7 +976,7 @@
     "automatic": "automático",
     "reset": "Volver al orden predeterminado",
     "presets": "Opciones rápidas",
-    "preset_shelf": "Orden de estantería",
+    "preset_shelf": "Autor y luego serie",
     "preset_title": "Título",
     "preset_author_title": "Autor y luego título",
     "preset_recent": "Añadidos recientemente",
@@ -1013,6 +1013,10 @@
     "no_author": "Sin autor",
     "no_series": "Sin serie",
     "no_date": "Sin fecha",
-    "not_added": "No está en un estante"
+    "not_added": "En ninguna biblioteca",
+    "field_shelf": "Estante",
+    "headings_shelf": "Encabezados por estante",
+    "no_shelf": "No está en un estante",
+    "preset_by_shelf": "Estante y luego autor"
   }
 }

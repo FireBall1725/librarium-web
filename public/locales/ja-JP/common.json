@@ -919,7 +919,7 @@
     "automatic": "自動",
     "reset": "既定の並び順に戻す",
     "presets": "よく使う並び順",
-    "preset_shelf": "本棚の順",
+    "preset_shelf": "著者、次にシリーズ",
     "preset_title": "タイトル",
     "preset_author_title": "著者、次にタイトル",
     "preset_recent": "最近追加",
@@ -956,6 +956,10 @@
     "no_author": "著者なし",
     "no_series": "シリーズなし",
     "no_date": "日付なし",
-    "not_added": "本棚にない"
+    "not_added": "どの蔵書にもない",
+    "field_shelf": "棚",
+    "headings_shelf": "棚ごとの見出し",
+    "no_shelf": "棚にない",
+    "preset_by_shelf": "棚、次に著者"
   }
 }
