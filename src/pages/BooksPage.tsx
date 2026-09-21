@@ -8,7 +8,7 @@
 // lines. The old per-library route keeps working until the redesign's later
 // tranches replace it.
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useNavigationType, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { announceCollectionChanged } from '../lib/collectionEvents'
@@ -28,6 +28,8 @@ import type { TFunction } from 'i18next'
 import { type IconName } from '../lib/icons'
 import { LIST_ICONS } from '../lib/listIcons'
 import ViewChip from '../components/ViewChip'
+import SortMenu from '../components/SortMenu'
+import { effectiveSort, headingKey, headingText, headingsLabel } from '../lib/bookSort'
 import type { Book, GroupedEntry, Library, MediaType, PagedGroupedBooks, SeriesGroupEntry } from '../types'
 import {
   DEFAULT_PAGE_SIZE,
@@ -277,7 +279,8 @@ interface PagedBooks {
 }
 
 export default function BooksPage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const lang = i18n.resolvedLanguage ?? i18n.language
   const { callApi } = useAuth()
   usePageTitle('Books')
 
@@ -499,7 +502,7 @@ export default function BooksPage() {
   // to run again. This does.
   const [reloadNonce, setReloadNonce] = useState(0)
 
-  const fetchKey = `${params.toString()}|${perPage}|${reloadNonce}`
+  const fetchKey = `${params.toString()}|${perPage}|${reloadNonce}|${lang}`
   const [loadedKey, setLoadedKey] = useState<string | null>(null)
   const loading = loadedKey !== fetchKey
 
@@ -563,15 +566,15 @@ export default function BooksPage() {
     const seq = ++requestSeq.current
 
     const list = state.grouped
-      ? callApi<PagedGroupedBooks>(`/api/v1/me/books/grouped?${toApiQuery(state, perPage)}`)
+      ? callApi<PagedGroupedBooks>(`/api/v1/me/books/grouped?${toApiQuery(state, perPage, false, lang)}`)
           .then(p => ({
             items: p.items ?? [],
             total: p.total ?? 0,
             bookTotal: p.book_total ?? 0,
           }))
-      : callApi<PagedBooks>(`/api/v1/me/books?${toApiQuery(state, perPage)}`)
+      : callApi<PagedBooks>(`/api/v1/me/books?${toApiQuery(state, perPage, false, lang)}`)
           .then(p => ({
-            items: (p.items ?? []).map(book => ({ kind: 'book', book }) as GroupedEntry),
+            items: (p.items ?? []).map(book => ({ kind: 'book', book, sort_heading: book.sort_heading }) as GroupedEntry),
             total: p.total ?? 0,
             bookTotal: p.total ?? 0,
           }))
@@ -596,7 +599,7 @@ export default function BooksPage() {
         // the reader sees instead of results.
         setLoadedKey(fetchKey)
       })
-  }, [callApi, state, perPage, fetchKey])
+  }, [callApi, state, perPage, fetchKey, lang])
 
   const pages = Math.max(1, Math.ceil(total / perPage))
 
@@ -705,6 +708,26 @@ export default function BooksPage() {
       : activeView?.layout ?? 'list'
   const dirty = activeView ? viewIsDirty(activeView, paramsNow, layout) : false
   const isDefaultView = activeView?.builtin_key === DEFAULT_LIST_KEY
+
+  // The sort in effect: the reader's, or title A to Z, or reading order inside
+  // one series. Headings follow its first level.
+  const sortNow = effectiveSort(state.sort, !!state.series)
+  const autoSort = state.sort.length === 0 && !!state.series
+  const leadField = sortNow[0].field
+
+  // Where each heading starts: the heading's text at the first entry under it,
+  // null everywhere else. The server says which author or series an entry was
+  // sorted under; a date added becomes a day in the reader's own time zone.
+  const headingStarts = useMemo(() => {
+    if (!state.headings) return []
+    let last: string | null = null
+    return entries.map(e => {
+      const key = headingKey(leadField, e.sort_heading)
+      if (key === last) return null
+      last = key
+      return headingText(leadField, e.sort_heading, t, lang)
+    })
+  }, [entries, state.headings, leadField, t, lang])
 
   const chooseLayout = (next: ListLayout) =>
     setLayoutOverride({ viewId: activeView?.id ?? null, layout: next })
@@ -857,6 +880,28 @@ export default function BooksPage() {
             </button>
           )}
 
+          {/* Beside Group series and named apart from it: that one changes what
+              a row is, this one only puts a heading over each author, series,
+              letter or year, whichever the sort starts with. Off unless asked
+              for, so a sorted list is just a list. */}
+          <button type="button"
+            onClick={() => apply({ ...state, headings: !state.headings })}
+            aria-pressed={state.headings}
+            title={state.headings
+              ? t('sort.headings_on_hint', { defaultValue: 'Headings on. Click to list the books without them.' })
+              : t('sort.headings_off_hint', { defaultValue: 'Put a heading over each group the sort makes' })}
+            className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors ${
+              state.headings
+                ? 'border-accent bg-accent text-white'
+                : 'border-line-strong text-content-secondary hover:bg-surface-inset'
+            }`}>
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M2 3h7M2 9.5h7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+              <path d="M4 5.8h10M4 12.3h10" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" opacity=".6" />
+            </svg>
+            {headingsLabel(leadField, t)}
+          </button>
+
           <div className="flex overflow-hidden rounded-md border border-line-strong">
             {(['list', 'grid'] as ListLayout[]).map(opt => (
               <button key={opt} type="button" onClick={() => chooseLayout(opt)}
@@ -937,6 +982,16 @@ export default function BooksPage() {
                           defaultValue: `${total} books`,
                         })}
               </span>
+
+              {/* The sort sits with the count and the filters: all three
+                  describe the list in front of you. Changing it marks the view
+                  modified, and Save changes beside it keeps it. */}
+              <SortMenu
+                value={state.sort}
+                effective={sortNow}
+                auto={autoSort}
+                onChange={levels => apply({ ...state, sort: levels, page: 1 })}
+              />
 
               {/* Every applied filter as a chip that removes itself. The rail
                   can do this too, but it is a long way from the results and
@@ -1078,7 +1133,14 @@ export default function BooksPage() {
 
             {entries.length > 0 && layout === 'list' && (
               <ul>
-                {entries.map(entry => entry.kind === 'series' ? (
+                {entries.map((entry, i) => (
+                  <Fragment key={entry.kind === 'series' ? `s:${entry.series_id}` : entry.book.id}>
+                  {headingStarts[i] && (
+                    <li className="lb-display border-b border-line-strong pb-1 pt-5 text-[19px] leading-tight text-content first:pt-0">
+                      {headingStarts[i]}
+                    </li>
+                  )}
+                  {entry.kind === 'series' ? (
                   <li key={`s:${entry.series_id}`}>
                     <div className="lb-rowitem">
                       <button type="button" className="absolute inset-0"
@@ -1153,13 +1215,22 @@ export default function BooksPage() {
                       <Stars rating={entry.book.user_rating ?? 0} />
                     </div>
                   </li>
+                  )}
+                  </Fragment>
                 ))}
               </ul>
             )}
 
             {entries.length > 0 && layout === 'grid' && (
               <ul className="grid grid-cols-[repeat(auto-fill,minmax(7rem,1fr))] items-start gap-[18px]">
-                {entries.map(entry => entry.kind === 'series' ? (
+                {entries.map((entry, i) => (
+                  <Fragment key={entry.kind === 'series' ? `s:${entry.series_id}` : entry.book.id}>
+                  {headingStarts[i] && (
+                    <li className="lb-display col-span-full border-b border-line pb-1 pt-3 text-[21px] leading-tight text-content first:pt-0">
+                      {headingStarts[i]}
+                    </li>
+                  )}
+                  {entry.kind === 'series' ? (
                   <li key={`s:${entry.series_id}`} className="relative">
                     {selecting && (
                       <span className="absolute left-1.5 top-1.5 rounded bg-surface/85 p-0.5 backdrop-blur-sm">
@@ -1242,6 +1313,8 @@ export default function BooksPage() {
                       )}
                     </Link>
                   </li>
+                  )}
+                  </Fragment>
                 ))}
               </ul>
             )}

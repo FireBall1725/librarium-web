@@ -13,6 +13,8 @@
 // two people opening the same link should each get their own, and the link
 // should not change meaning when one of them switches to 200.
 
+import { formatSort, parseSort, type SortLevel } from './bookSort'
+
 export type FacetKey = 'ownership' | 'library' | 'shelf' | 'location' | 'read_status' | 'media_type' | 'genre' | 'tag' | 'rating' | 'my_rating' | 'favourite'
 
 // Ownership leads: whether you have a book at all comes before anything else
@@ -132,6 +134,13 @@ export interface BrowseState {
    * them on every request. Reached by typing a name instead.
    */
   contributors: string[]
+  /**
+   * The sort, as the reader picked it. Empty means they did not, which is
+   * title A to Z, or reading order inside one series. See bookSort.
+   */
+  sort: SortLevel[]
+  /** A heading over each author, series, letter or year, per the first level. */
+  headings: boolean
 }
 
 export const emptySelection = (): Selection => ({
@@ -195,6 +204,8 @@ export function readState(params: URLSearchParams): BrowseState {
     grouped: params.get('group') === 'series' && !params.get('series'),
     series: params.get('series') ?? '',
     contributors: (params.get('contributor') ?? '').split(',').filter(Boolean),
+    sort: parseSort(params.get('sort')),
+    headings: params.get('headings') === '1',
   }
 }
 
@@ -217,6 +228,9 @@ export function writeState(state: BrowseState): URLSearchParams {
   if (state.contributors.length) params.set('contributor', state.contributors.join(','))
   if (state.series) params.set('series', state.series)
   if (state.grouped && !state.series) params.set('group', 'series')
+  const sort = formatSort(state.sort, !!state.series)
+  if (sort) params.set('sort', sort)
+  if (state.headings) params.set('headings', '1')
   if (state.page > 1) params.set('page', String(state.page))
   return params
 }
@@ -228,7 +242,7 @@ export function writeState(state: BrowseState): URLSearchParams {
  * already understand, so the facet rail reuses the existing query language
  * rather than inventing a parallel one the server would have to learn.
  */
-export function toApiQuery(state: BrowseState, perPage: number, forFacets = false): string {
+export function toApiQuery(state: BrowseState, perPage: number, forFacets = false, lang?: string): string {
   const params = new URLSearchParams()
   if (state.query) params.set('q', state.query)
 
@@ -261,6 +275,13 @@ export function toApiQuery(state: BrowseState, perPage: number, forFacets = fals
   if (!forFacets) {
     params.set('page', String(state.page))
     params.set('per_page', String(perPage))
+    // Counts do not depend on order, so the facet request leaves these off.
+    const sort = formatSort(state.sort, !!state.series)
+    if (sort) params.set('sort', sort)
+    if (state.headings) params.set('headings', '1')
+    // The reader's language decides how text sorts: Å with A in English, after
+    // Z in Swedish. The server has no other way to know which one they read.
+    if (lang) params.set('lang', lang)
   }
   return params.toString()
 }

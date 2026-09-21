@@ -135,6 +135,12 @@ export interface Book {
    * return a book nobody has.
    */
   ownership?: string
+  /**
+   * The heading this book falls under for the list's first sort level: an
+   * author, a series, a letter, a year, or a time for date added. Sent only
+   * when the list is asked for headings; empty means none.
+   */
+  sort_heading?: string
   user_read_status?: string
   // Caller-scoped, and all three pick the same interaction row, so a user who
   // owns several editions of one work gets a consistent status, rating and
@@ -1030,11 +1036,15 @@ export interface SeriesGroupEntry {
   read: number
   total_count: number | null
   cover_url: string | null
+  /** Present when the list was asked for headings. See Book.sort_heading. */
+  sort_heading?: string
 }
 
 export interface BookGroupEntry {
   kind: 'book'
   book: Book
+  /** Present when the list was asked for headings. See Book.sort_heading. */
+  sort_heading?: string
 }
 
 export type GroupedEntry = SeriesGroupEntry | BookGroupEntry
