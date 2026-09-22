@@ -826,6 +826,7 @@
     "state_ready": "追加できます",
     "state_failed": "失敗",
     "state_undone": "取り消し済み",
+    "scanned_already": "スキャン済み · 2冊目",
     "state_skipped": "スキップ済み",
     "close_waiting_title_other": "{{count}} 冊が保留中のまま閉じますか？",
     "close_waiting_body": "まだ追加されていません。閉じるとキューから消えます。",

@@ -873,6 +873,7 @@
     "state_ready": "Bereit zum Hinzufügen",
     "state_failed": "Fehlgeschlagen",
     "state_undone": "Rückgängig gemacht",
+    "scanned_already": "Bereits gescannt · zweites Exemplar",
     "state_skipped": "Übersprungen",
     "close_waiting_title_one": "Mit {{count}} wartenden Buch schließen?",
     "close_waiting_title_other": "Mit {{count}} wartenden Büchern schließen?",

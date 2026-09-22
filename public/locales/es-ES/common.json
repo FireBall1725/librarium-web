@@ -873,6 +873,7 @@
     "state_ready": "Listo para añadir",
     "state_failed": "Error",
     "state_undone": "Deshecho",
+    "scanned_already": "Ya escaneado · segundo ejemplar",
     "state_skipped": "Omitido",
     "close_waiting_title_one": "¿Cerrar con {{count}} libro pendiente?",
     "close_waiting_title_other": "¿Cerrar con {{count}} libros pendientes?",

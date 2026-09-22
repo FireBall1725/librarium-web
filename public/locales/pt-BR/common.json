@@ -873,6 +873,7 @@
     "state_ready": "Pronto para adicionar",
     "state_failed": "Falhou",
     "state_undone": "Desfeito",
+    "scanned_already": "Já digitalizado · segundo exemplar",
     "state_skipped": "Pulado",
     "close_waiting_title_one": "Fechar com {{count}} livro pendente?",
     "close_waiting_title_other": "Fechar com {{count}} livros pendentes?",

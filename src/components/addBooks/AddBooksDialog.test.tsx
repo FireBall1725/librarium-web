@@ -218,6 +218,32 @@ describe('Many books', () => {
     expect(calls.find(c => c.method === 'POST' && c.path === '/api/v1/libraries/lib-b/books')?.body).toMatchObject({ location_id: 's3' })
   })
 
+  it('skips a ready row, so Add all leaves it alone', async () => {
+    open()
+    await waitFor(() => expect(screen.getByLabelText('Place')).toHaveValue('s3'))
+    fireEvent.click(screen.getByRole('tab', { name: 'Many books' }))
+    await act(async () => { scanInto(screen.getByLabelText('Scan, or type an ISBN or UPC'), '9780765349064') })
+    await waitFor(() => expect(screen.getByRole('tab', { name: /Ready/ })).toHaveTextContent('1'))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Skip' }))
+    await waitFor(() => expect(screen.getByRole('tab', { name: /Ready/ })).toHaveTextContent('0'))
+    expect(screen.getByRole('button', { name: /Add \d+ books?/ })).toBeDisabled()
+    expect(calls.some(c => c.method === 'POST' && c.path === '/api/v1/libraries/lib-b/books')).toBe(false)
+  })
+
+  it('says when a book is in the queue already, and still lets it add', async () => {
+    open()
+    await waitFor(() => expect(screen.getByLabelText('Place')).toHaveValue('s3'))
+    fireEvent.click(screen.getByRole('tab', { name: 'Many books' }))
+    const box = screen.getByLabelText('Scan, or type an ISBN or UPC')
+    await act(async () => { scanInto(box, '9780765349064') })
+    // Another book between them: a rescan inside 4 seconds is one scan, not two.
+    await act(async () => { scanInto(box, '9780000000002') })
+    await act(async () => { scanInto(box, '9780765349064') })
+    expect(await screen.findByText('Scanned already · second copy')).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByRole('tab', { name: /Ready/ })).toHaveTextContent('2'))
+  })
+
   it('opens on One book', async () => {
     open()
     expect(await screen.findByRole('tab', { name: 'One book' })).toHaveAttribute('aria-selected', 'true')
