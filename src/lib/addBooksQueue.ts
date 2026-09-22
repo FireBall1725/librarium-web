@@ -43,6 +43,12 @@ export interface QueueRow {
   bookId?: string
   /** A book already here, for Already have it. */
   haveTitle?: string
+  /**
+   * The same code is already in this queue, so this row is a second copy.
+   * Wanting two copies is real, so the row still adds; it just says so, which
+   * is what a double scan looks like from the other side.
+   */
+  repeat?: boolean
   error?: string
 }
 
@@ -74,6 +80,11 @@ export function patchRow(rows: readonly QueueRow[], id: string, patch: Partial<Q
 // A scanner fires the same code again when a book is held under it, and a
 // camera sees it on every frame. Inside this window a repeat is the same scan.
 export const REPEAT_WINDOW_MS = 4000
+
+/** Whether this code is already in the queue, ignoring rows that came to nothing. */
+export function alreadyQueued(rows: readonly QueueRow[], code: string): boolean {
+  return rows.some(r => r.code === code && r.state !== 'skipped' && r.state !== 'undone')
+}
 
 /**
  * Whether a scan is a repeat of the last one rather than a new book. The same

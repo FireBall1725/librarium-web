@@ -13,6 +13,7 @@ import { Link, useNavigate, useNavigationType, useSearchParams } from 'react-rou
 import { useTranslation } from 'react-i18next'
 import { announceCollectionChanged } from '../lib/collectionEvents'
 import { formatStars, starsOf } from '../lib/rating'
+import { Stars } from '../components/StarRating'
 import { useAuth } from '../auth/AuthContext'
 import PageHeader from '../components/PageHeader'
 import { PromptDialog } from '../components/Dialog'
@@ -101,13 +102,14 @@ function StatusChip({ book, t }: { book: Book; t: TFunction }) {
 /**
  * Fixed-width so the titles beside it stay on one left edge down the list; a
  * rating that sized itself would make every row start somewhere different. The
- * width and the narrow-screen hiding both come from `.lb-rowitem .stars`.
+ * width and the narrow-screen hiding both come from `.lb-rowitem .stars`, which
+ * is why the shared widget is wrapped rather than used on its own.
  */
-function Stars({ rating }: { rating: number }) {
+function RowStars({ rating }: { rating: number }) {
   if (!rating) return <span className="stars" aria-hidden="true" />
   return (
-    <span className="stars text-warning" aria-label={`${rating} out of 5`}>
-      {'★'.repeat(rating)}
+    <span className="stars">
+      <Stars rating={rating} />
     </span>
   )
 }
@@ -1212,7 +1214,7 @@ export default function BooksPage() {
                       </span>
                       <MultiLibraryBadge book={entry.book} t={t} />
                       <StatusChip book={entry.book} t={t} />
-                      <Stars rating={entry.book.user_rating ?? 0} />
+                      <RowStars rating={entry.book.user_rating ?? 0} />
                     </div>
                   </li>
                   )}

@@ -18,7 +18,7 @@ import { mergedToResult, type Picks } from '../../lib/mergedLookup'
 import { disagreements, judgeLookup, type Destination } from '../../lib/addBooks'
 import { addLookedUpBook, lookUpCode, undoAdd } from '../../lib/addBooksFlow'
 import {
-  countBy, isRepeat, loadQueue, matchesFilter, patchRow, saveQueue,
+  alreadyQueued, countBy, isRepeat, loadQueue, matchesFilter, patchRow, saveQueue,
   type QueueFilter, type QueueRow,
 } from '../../lib/addBooksQueue'
 import { pathOf } from '../../lib/places'
@@ -135,7 +135,10 @@ export default function ManyBooks({ destination, places, mediaTypes, onAdded, on
     const code = b.kind === 'isbn' ? b.isbn13 : upcLookupCode(b)
     const now = Date.now()
     if (isRepeat(rowsRef.current, code, now)) return
-    const row: QueueRow = { id: `${now}-${Math.random().toString(36).slice(2, 7)}`, code, scannedAt: now, state: 'looking' }
+    const row: QueueRow = {
+      id: `${now}-${Math.random().toString(36).slice(2, 7)}`, code, scannedAt: now, state: 'looking',
+      repeat: alreadyQueued(rowsRef.current, code),
+    }
     rowsRef.current = [row, ...rowsRef.current]
     setRows(rs => [row, ...rs])
     waiting.current.push(row)
@@ -315,6 +318,11 @@ export default function ManyBooks({ destination, places, mediaTypes, onAdded, on
                   {(row.state === 'needs_you' || row.state === 'failed') && (
                     <p className="text-[12px] text-warning-strong">{row.state === 'failed' ? row.error : why(t, row)}</p>
                   )}
+                  {row.repeat && row.state !== 'skipped' && (
+                    <p className="text-[12px] text-content-muted">
+                      {t('add_books.scanned_already', { defaultValue: 'Scanned already · second copy' })}
+                    </p>
+                  )}
                 </div>
                 <StateChip row={row} />
                 {row.state === 'added' && (row.picked ?? 0) > 0 && row.merged !== undefined && (
@@ -387,6 +395,10 @@ function RowActions({ row, libraryId, onUndo, onRetry, onOpen, onAdd, onSkip, on
 }) {
   const { t } = useTranslation()
   const btn = 'shrink-0 text-[12px] font-semibold text-accent hover:underline'
+  const quiet = 'shrink-0 text-[12px] text-content-muted hover:underline'
+  // Skip on every row that hasn't landed yet. A mis-scan used to have no way
+  // out of the queue: it stayed in Ready, counted, and Add all took it too.
+  const skip = <button type="button" className={quiet} onClick={onSkip}>{t('add_books.skip', { defaultValue: 'Skip' })}</button>
   switch (row.state) {
     case 'added':
       return <button type="button" className={btn} onClick={onUndo}>{t('add_books.undo', { defaultValue: 'Undo' })}</button>
@@ -397,6 +409,7 @@ function RowActions({ row, libraryId, onUndo, onRetry, onOpen, onAdd, onSkip, on
           <Link className={btn} to={`/libraries/${libraryId}/books/${row.bookId}`} target="_blank" rel="noreferrer">{t('add_books.view_it', { defaultValue: 'View it' })}</Link>
           {/* The match can be wrong too, a shared paperback UPC most of all. */}
           <button type="button" className={btn} onClick={onRetry}>{t('add_book.ask_again')}</button>
+          {skip}
         </span>
       )
     case 'ready':
@@ -404,6 +417,7 @@ function RowActions({ row, libraryId, onUndo, onRetry, onOpen, onAdd, onSkip, on
         <span className="flex shrink-0 gap-3">
           <button type="button" className={btn} onClick={onOpen}>{t('add_books.review', { defaultValue: 'Review' })}</button>
           <button type="button" className={btn} onClick={onAdd}>{t('add_books.add', { defaultValue: 'Add' })}</button>
+          {skip}
         </span>
       )
     case 'needs_you':
@@ -414,14 +428,14 @@ function RowActions({ row, libraryId, onUndo, onRetry, onOpen, onAdd, onSkip, on
             : <button type="button" className={btn} onClick={onManual}>{t('add_books.enter', { defaultValue: 'Enter it' })}</button>}
           <button type="button" className={btn} onClick={onSearch}>{t('add_books.search', { defaultValue: 'Search' })}</button>
           <button type="button" className={btn} onClick={onRetry}>{t('add_book.ask_again')}</button>
-          <button type="button" className="shrink-0 text-[12px] text-content-muted hover:underline" onClick={onSkip}>{t('add_books.skip', { defaultValue: 'Skip' })}</button>
+          {skip}
         </span>
       )
     case 'failed':
       return (
         <span className="flex shrink-0 gap-3">
           <button type="button" className={btn} onClick={onRetry}>{t('add_book.ask_again')}</button>
-          <button type="button" className="shrink-0 text-[12px] text-content-muted hover:underline" onClick={onSkip}>{t('add_books.skip', { defaultValue: 'Skip' })}</button>
+          {skip}
         </span>
       )
     default:

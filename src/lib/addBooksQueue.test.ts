@@ -3,7 +3,7 @@
 
 import { describe, expect, it } from 'vitest'
 import type { Copy, MergedBookResult } from '../types'
-import { MAX_KEPT, countBy, pendingRows, isRepeat, loadQueue, matchesFilter, newestCopy, saveQueue, type QueueRow } from './addBooksQueue'
+import { MAX_KEPT, alreadyQueued, countBy, pendingRows, isRepeat, loadQueue, matchesFilter, newestCopy, saveQueue, type QueueRow } from './addBooksQueue'
 
 const row = (id: string, state: QueueRow['state'], extra: Partial<QueueRow> = {}): QueueRow => ({
   id, code: `978000000000${id}`, scannedAt: 0, state, ...extra,
@@ -102,5 +102,13 @@ describe('keeping the queue', () => {
     expect(store.m.size).toBe(0)
     store.setItem('librarium:add-books:queue:lib', '{not json')
     expect(loadQueue('lib', store)).toEqual([])
+  })
+
+  it('knows a code is in the queue already, but not when its row came to nothing', () => {
+    const live = [row('1', 'ready')]
+    expect(alreadyQueued(live, live[0].code)).toBe(true)
+    expect(alreadyQueued(live, '9780000000009')).toBe(false)
+    expect(alreadyQueued([row('1', 'skipped')], row('1', 'skipped').code)).toBe(false)
+    expect(alreadyQueued([row('1', 'undone')], row('1', 'undone').code)).toBe(false)
   })
 })

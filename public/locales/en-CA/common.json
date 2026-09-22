@@ -873,6 +873,7 @@
     "state_ready": "Ready to add",
     "state_failed": "Failed",
     "state_undone": "Undone",
+    "scanned_already": "Scanned already · second copy",
     "state_skipped": "Skipped",
     "close_waiting_title_one": "Close with {{count}} book still waiting?",
     "close_waiting_title_other": "Close with {{count}} books still waiting?",
