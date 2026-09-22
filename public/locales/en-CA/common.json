@@ -788,6 +788,10 @@
     "other_isbns": "That barcode could also be:",
     "ask_again": "Ask again"
   },
+  "app_version": {
+    "ready": "A newer version of Librarium is ready.",
+    "reload": "Reload"
+  },
   "add_books": {
     "title": "Add books",
     "manual_title": "Add a book by hand",

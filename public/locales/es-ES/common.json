@@ -788,6 +788,10 @@
     "other_isbns": "Ese código de barras también podría ser:",
     "ask_again": "Preguntar de nuevo"
   },
+  "app_version": {
+    "ready": "Hay una versión más reciente de Librarium lista.",
+    "reload": "Recargar"
+  },
   "add_books": {
     "title": "Añadir libros",
     "manual_title": "Añadir un libro a mano",
