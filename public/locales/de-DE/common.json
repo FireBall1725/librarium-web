@@ -788,6 +788,10 @@
     "other_isbns": "Dieser Strichcode könnte auch sein:",
     "ask_again": "Erneut fragen"
   },
+  "app_version": {
+    "ready": "Eine neuere Version von Librarium ist bereit.",
+    "reload": "Neu laden"
+  },
   "add_books": {
     "title": "Bücher hinzufügen",
     "manual_title": "Buch von Hand hinzufügen",

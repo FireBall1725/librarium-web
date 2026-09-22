@@ -743,6 +743,10 @@
     "other_isbns": "このバーコードは次の本の可能性もあります：",
     "ask_again": "もう一度問い合わせる"
   },
+  "app_version": {
+    "ready": "Librarium の新しいバージョンが利用できます。",
+    "reload": "再読み込み"
+  },
   "add_books": {
     "title": "本を追加",
     "manual_title": "本を手動で追加",
