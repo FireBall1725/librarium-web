@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import { COLLECTION_CHANGED } from '../lib/collectionEvents'
 import type { Book, BookContent, PagedBooks } from '../types'
+import SeriesPositionInput from './SeriesPositionInput'
 
 /**
  * What this book contains, and what contains it.
@@ -152,10 +153,7 @@ export default function BookContents({ bookId, libraryId }: { bookId: string; li
               placeholder={t('book_contents.find', { defaultValue: 'Which volume is inside?' })}
               aria-label={t('book_contents.find', { defaultValue: 'Which volume is inside?' })}
             />
-            <input
-              type="number"
-              step="0.5"
-              min="0"
+            <SeriesPositionInput
               className="lb-field"
               style={{ width: '6rem' }}
               value={position}

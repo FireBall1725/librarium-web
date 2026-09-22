@@ -31,7 +31,7 @@ export default function OneBook({
   initialCode?: string
   initialTitle?: string
   onAdded: (book: Book, wasNew: boolean) => void
-  onEdit: (result: ISBNLookupResult, identifier: ScannedIdentifier | null) => void
+  onEdit: (result: ISBNLookupResult, identifier: ScannedIdentifier | null, wasNew: boolean) => void
   onManual: (barcode?: string) => void
   onImport: () => void
   /** A lookup found a book this library already has. */
@@ -264,7 +264,7 @@ export default function OneBook({
                   {/* With an ISBN, the result is looked up in full like a scan;
                       without one, it goes to the form as it is. */}
                   <button type="button"
-                    onClick={() => (r.isbn_13 || r.isbn_10) ? void lookUp(r.isbn_13 || r.isbn_10) : onEdit(r, null)}
+                    onClick={() => (r.isbn_13 || r.isbn_10) ? void lookUp(r.isbn_13 || r.isbn_10) : onEdit(r, null, true)}
                     className="flex w-full gap-3 rounded-xl border border-line bg-surface p-2.5 text-left hover:border-accent-line hover:bg-accent-surface">
                     {r.cover_url
                       ? <img src={r.cover_url} alt="" referrerPolicy="no-referrer" className="h-14 w-10 shrink-0 rounded bg-surface-strong object-cover" />
@@ -318,7 +318,7 @@ export default function OneBook({
 
           <div className="flex flex-wrap items-center justify-end gap-2">
             <button type="button" className="lb-btn ghost inline-flex items-center gap-1.5" disabled={busy === 'adding'}
-              onClick={() => onEdit(mergedToResult(merged, picks), lookup.identifier)}>
+              onClick={() => onEdit(mergedToResult(merged, picks), lookup.identifier, !lookup.duplicate)}>
               <Icon name="pencil" className="h-4 w-4" />
               {t('add_books.edit_first', { defaultValue: 'Edit details first' })}
             </button>

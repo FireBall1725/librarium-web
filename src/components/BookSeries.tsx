@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import type { BookSeriesRef, Series } from '../types'
+import SeriesPositionInput from './SeriesPositionInput'
 
 /**
  * The series a book belongs to, and the controls to change that.
@@ -227,15 +228,12 @@ function PositionInput({ value, onChange, disabled, t }: {
   t: (k: string, o?: Record<string, unknown>) => string
 }) {
   return (
-    <input
-      type="number"
-      step="0.5"
-      min="0"
+    <SeriesPositionInput
       value={value}
       disabled={disabled}
       onChange={e => onChange(e.target.value)}
-      // Half positions are real: side stories and specials are numbered 4.5,
-      // which is why the column is numeric rather than an integer.
+      // Novellas and specials are numbered 0.1 or 4.5, which is why the
+      // column is numeric rather than an integer.
       placeholder={t('book_series.position', { defaultValue: 'Vol.' })}
       aria-label={t('book_series.position', { defaultValue: 'Volume number' })}
       className="lb-field"

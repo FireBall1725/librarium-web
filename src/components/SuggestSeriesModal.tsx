@@ -15,6 +15,7 @@
 import { useEffect, useState } from 'react'
 import { useAuth, ApiError } from '../auth/AuthContext'
 import type { SeriesSuggestion } from '../types'
+import SeriesPositionInput from './SeriesPositionInput'
 
 interface SuggestSeriesModalProps {
   libraryId: string
@@ -177,7 +178,7 @@ export default function SuggestSeriesModal({ libraryId, onClose, onCreated }: Su
  </div>
  <label className="flex items-center gap-1 text-xs text-content-muted dark:text-gray-400">
  #
- <input type="number" step="0.5" min="0" value={b.positionStr}
+ <SeriesPositionInput value={b.positionStr}
  onChange={e => setBookPos(i, j, e.target.value)}
  className="w-16 rounded-md border border-line-strong px-2 py-1 text-xs text-right focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
  </label>
