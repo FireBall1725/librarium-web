@@ -9,6 +9,7 @@ import SeriesFormModal from '../../components/SeriesFormModal'
 import { useToast } from '../../components/Toast'
 import AddBooksDialog from '../../components/addBooks/AddBooksDialog'
 import EditBookModal from '../../components/EditBookModal'
+import SeriesPositionInput from '../../components/SeriesPositionInput'
 import {
   allConditions,
   conditionLabel,
@@ -1365,7 +1366,7 @@ function SeriesLinkSuggestionModal({ libraryId, book, series, suggestedPosition,
  </p>
  <div className="mb-4">
  <label className="block text-sm font-medium text-content-secondary mb-1">Volume position</label>
- <input type="number" min="0" step="0.5" value={position} onChange={e => setPosition(e.target.value)}
+ <SeriesPositionInput value={position} onChange={e => setPosition(e.target.value)}
  placeholder="e.g. 1, 2, 1.5"
  className="w-full rounded-lg border border-line-strong dark:bg-gray-800 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
  </div>
@@ -1618,7 +1619,7 @@ function AddToSeriesModal({ libraryId, seriesId, existingBookIds, editEntry, ini
  )}
  <div>
  <label className="block text-sm font-medium text-content-secondary mb-1">Position *</label>
- <input type="number" autoFocus={!!editEntry} min="0" step="0.5" value={position}
+ <SeriesPositionInput autoFocus={!!editEntry} value={position}
  onChange={e => setPosition(e.target.value)}
  placeholder="e.g. 1, 2, 1.5"
  className="w-full rounded-lg border border-line-strong dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
@@ -1760,7 +1761,7 @@ function AutoMatchModal({ series, libraryId, onClose, onApplied }: AutoMatchModa
  className="rounded border-line-strong text-blue-600 focus:ring-blue-500" />
  </td>
  <td className="px-3 py-2">
- <input type="number" min="0" step="0.5" value={r.positionStr}
+ <SeriesPositionInput value={r.positionStr}
  onChange={e => setPos(i, e.target.value)}
  disabled={!r.selected}
  className="w-16 rounded border border-line-strong dark:bg-gray-800 dark:text-white px-2 py-1 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50" />

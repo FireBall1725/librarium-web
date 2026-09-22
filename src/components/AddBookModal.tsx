@@ -18,6 +18,8 @@ import { LANGUAGE_OPTIONS } from './AddEditionModal'
 import ContributorRow, { CONTRIBUTOR_ROLES } from './ContributorRow'
 import { joinWithAbove } from '../lib/contributors'
 import MediaTypeSelect from './MediaTypeSelect'
+import SeriesRowsField from './SeriesRowsField'
+import { saveSeriesRows, type SeriesRowDraft } from '../lib/seriesRows'
 import MergedLookup from './MergedLookup'
 import { hasAnyField, mergedToResult } from '../lib/mergedLookup'
 import { TAG_COLORS } from '../lib/tagColours'
@@ -156,6 +158,11 @@ export default function AddBookModal({ libraryId: libraryIdProp, libraries, medi
   const [genreQuery, setGenreQuery] = useState('')
   const [genreDropdownOpen, setGenreDropdownOpen] = useState(false)
   const genreInputRef = useRef<HTMLInputElement>(null)
+
+  // Series belong to a library, so picking another library drops the rows.
+  const [seriesDraft, setSeriesDraft] = useState<{ libraryId: string; rows: SeriesRowDraft[] }>({ libraryId: '', rows: [] })
+  const seriesRows = seriesDraft.libraryId === targetLibrary ? seriesDraft.rows : []
+  const setSeriesRows = (rows: SeriesRowDraft[]) => setSeriesDraft({ libraryId: targetLibrary, rows })
 
   useEffect(() => {
     callApi<Tag[]>(`/api/v1/libraries/${targetLibrary}/tags`)
@@ -849,6 +856,8 @@ export default function AddBookModal({ libraryId: libraryIdProp, libraries, medi
       // Apply list membership
       for (const id of selectedShelfIds)
         await callApi(`/api/v1/me/lists/${id}/books/${bookId}`, { method: 'POST' }).catch(() => {})
+      // The create route takes no series, so they go on once the book exists.
+      await saveSeriesRows(callApi, targetLibrary, bookId, seriesRows, new Map())
       if (embed && embed.destination.readStatus !== 'unread') {
         await callApi(`/api/v1/books/${bookId}/me`, {
           method: 'PUT',
@@ -1244,6 +1253,9 @@ export default function AddBookModal({ libraryId: libraryIdProp, libraries, medi
                 </div>
               </div>
             </div>
+
+            <SeriesRowsField libraryId={targetLibrary} rows={seriesRows} onChange={setSeriesRows}
+              inputCls={inputCls} labelCls={labelCls} />
 
             {/* Lists */}
             {allShelves.length > 0 && (

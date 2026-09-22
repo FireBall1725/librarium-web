@@ -36,6 +36,8 @@ interface Manual {
   result?: ISBNLookupResult
   identifier?: ScannedIdentifier | null
   barcode?: string
+  /** False when the lookup found a book the library already has. */
+  wasNew?: boolean
 }
 
 export default function AddBooksDialog({
@@ -63,6 +65,9 @@ export default function AddBooksDialog({
   // Always opens on One book; Many books is a switch away.
   const [mode, setMode] = useState<Mode>('one')
   const [manual, setManual] = useState<Manual | null>(null)
+  // Bumped when the form adds a book, so One book starts over like it does
+  // after its own Add instead of still holding the card the form came from.
+  const [oneRound, setOneRound] = useState(0)
   const [libraries, setLibraries] = useState<Library[]>(librariesProp ?? [])
   const [prefs, setPrefs] = useState<AddBooksPrefs | undefined>(undefined)
   const [destination, setDestination] = useState<Destination>(() =>
@@ -259,7 +264,11 @@ export default function AddBooksDialog({
             key={`${shown.libraryId}:${manual.result?.isbn_13 ?? manual.barcode ?? ''}`}
             mediaTypes={mediaTypes}
             onClose={() => setManual(null)}
-            onSaved={book => { added(book, true); setManual(null) }}
+            onSaved={book => {
+              added(book, manual.wasNew ?? true)
+              setManual(null)
+              if (mode === 'one') setOneRound(r => r + 1)
+            }}
             embed={{
               destination: shown,
               result: manual.result,
@@ -276,10 +285,12 @@ export default function AddBooksDialog({
               <p className="text-[13px] text-content-muted">{t('add_books.loading', { defaultValue: 'Loading…' })}</p>
             ) : mode === 'one' ? (
               <OneBook
+                key={oneRound}
                 destination={shown} addLabel={addLabel} libraryName={library?.name ?? ''} mediaTypes={mediaTypes}
-                initialCode={initialIsbn} initialTitle={initialTitle}
+                // Only the first round: starting over must not look the opening code up again.
+                initialCode={oneRound ? undefined : initialIsbn} initialTitle={oneRound ? undefined : initialTitle}
                 onAdded={added} onDuplicate={onDuplicate} onHolding={setHolding}
-                onEdit={(result, identifier) => setManual({ result, identifier })}
+                onEdit={(result, identifier, wasNew) => setManual({ result, identifier, wasNew })}
                 onManual={barcode => setManual({ barcode })}
                 onImport={() => { close(); navigate('/import') }}
               />

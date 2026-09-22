@@ -159,6 +159,46 @@ describe('One book', () => {
   })
 })
 
+describe('Edit details first', () => {
+  const editFirst = async () => {
+    routes['GET /api/v1/libraries/lib-b/series'] = () => [{ id: 'hgttg', name: "The Hitchhiker's Guide" }]
+    open()
+    await waitFor(() => expect(screen.getByLabelText('Place')).toHaveValue('s3'))
+    scanInto(screen.getByLabelText('Scan, or type an ISBN, UPC or title'), '9780765349064')
+    fireEvent.click(await screen.findByRole('button', { name: 'Edit details first' }))
+    await screen.findByRole('heading', { name: 'Add a book by hand' })
+  }
+  // The title lands once the form has its genres, so wait for it.
+  const save = async () => fireEvent.submit((await screen.findByDisplayValue('Hybrids')).closest('form')!)
+
+  it('starts over after the form adds the book, like the Add button does', async () => {
+    await editFirst()
+    await save()
+    await screen.findByText('Added Hybrids')
+    // The card the form came from is gone, so there is nothing to add twice.
+    expect(screen.queryByRole('button', { name: /Add to Book Collection/ })).not.toBeInTheDocument()
+    expect(screen.getByLabelText('Scan, or type an ISBN, UPC or title')).toHaveValue('')
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(screen.queryByText('Close without adding this book?')).not.toBeInTheDocument()
+  })
+
+  it('puts the book in a series at a tenth position', async () => {
+    await editFirst()
+    fireEvent.click(await screen.findByRole('button', { name: '+ Add to a series' }))
+    const series = screen.getByLabelText('Series')
+    await waitFor(() => expect(series.querySelectorAll('option')).toHaveLength(2))
+    fireEvent.change(series, { target: { value: 'hgttg' } })
+    const position = screen.getByLabelText('Volume number')
+    expect(position).toHaveAttribute('step', '0.1')
+    fireEvent.change(position, { target: { value: '0.1' } })
+    routes['POST /api/v1/libraries/lib-b/series/hgttg/books'] = () => ({})
+    await save()
+    await screen.findByText('Added Hybrids')
+    expect(calls.find(c => c.method === 'POST' && c.path === '/api/v1/libraries/lib-b/series/hgttg/books')?.body)
+      .toEqual({ book_id: 'book-1', position: 0.1 })
+  })
+})
+
 describe('Many books', () => {
   it('holds found books for one Add button, and a miss in Needs you', async () => {
     open()
