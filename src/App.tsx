@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './auth/AuthContext'
 import { ToastProvider } from './components/Toast'
 import ProtectedRoute from './components/ProtectedRoute'
+import NewVersionBar from './components/NewVersionBar'
 import Layout from './components/Layout'
 import LibraryOutlet from './components/LibraryOutlet'
 import LoginPage from './pages/LoginPage'
@@ -165,6 +166,8 @@ export default function App() {
       <AuthProvider>
         <ToastProvider>
           <AppRoutes />
+          {/* Outside the routes: a stale tab is stale wherever it is sitting. */}
+          <NewVersionBar />
         </ToastProvider>
       </AuthProvider>
     </BrowserRouter>

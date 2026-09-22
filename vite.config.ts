@@ -18,8 +18,26 @@ function computeVersion(): string {
   return '0.0.0-dev'
 }
 
+/**
+ * Writes the built version where a running tab can read it.
+ *
+ * An open tab has no way to tell that the files behind it were replaced, and
+ * index.html is the wrong thing to ask: it is the file browsers cache hardest.
+ * One tiny JSON, fetched with no-store, is what src/lib/appVersion.ts compares
+ * against. Emitted rather than kept in public/, because the version only exists
+ * at build time.
+ */
+function versionFile(version: string) {
+  return {
+    name: 'librarium-version-file',
+    generateBundle(this: { emitFile: (f: { type: 'asset'; fileName: string; source: string }) => void }) {
+      this.emitFile({ type: 'asset', fileName: 'version.json', source: JSON.stringify({ version }) + '\n' })
+    },
+  }
+}
+
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), versionFile(computeVersion())],
   define: {
     __APP_VERSION__: JSON.stringify(computeVersion()),
   },
