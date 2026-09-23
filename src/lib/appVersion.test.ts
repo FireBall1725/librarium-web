@@ -44,17 +44,33 @@ describe('fetchServedVersion', () => {
 describe('watchForNewVersion', () => {
   it('reports a missing chunk straight away, and only once', () => {
     const onFound = vi.fn()
-    const stop = watchForNewVersion('26.9.1', onFound)
+    const watch = watchForNewVersion('26.9.1', onFound)
     window.dispatchEvent(new Event('vite:preloadError'))
     window.dispatchEvent(new Event('vite:preloadError'))
     expect(onFound).toHaveBeenCalledTimes(1)
-    stop()
+    watch.stop()
   })
 
   it('stops listening once it is torn down', () => {
     const onFound = vi.fn()
-    watchForNewVersion('26.9.1', onFound)()
+    watchForNewVersion('26.9.1', onFound).stop()
     window.dispatchEvent(new Event('vite:preloadError'))
     expect(onFound).not.toHaveBeenCalled()
+  })
+
+  // The bar asks on every navigation, so the floor is what stops a reader
+  // clicking through a list from fetching this on every click.
+  it('asks when told to, then not again inside the floor', async () => {
+    const asked = vi.fn<typeof fetch>(async () => ({ ok: true, json: async () => ({ version: '26.9.1' }) }) as unknown as Response)
+    vi.stubGlobal('fetch', asked)
+    const watch = watchForNewVersion('26.9.1', vi.fn())
+    await Promise.resolve()
+    const afterMount = asked.mock.calls.length
+    watch.check()
+    watch.check()
+    await Promise.resolve()
+    expect(asked.mock.calls.length).toBe(afterMount)
+    watch.stop()
+    vi.unstubAllGlobals()
   })
 })

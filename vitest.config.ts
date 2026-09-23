@@ -12,6 +12,11 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
+  // The production bundle gets this from vite.config.ts; a test run has no
+  // build step to replace it, and a component that reads it throws without.
+  define: {
+    __APP_VERSION__: JSON.stringify('26.9.1-test'),
+  },
   test: {
     // jsdom gives us `document`, `window`, etc. for hooks/components
     // that touch the DOM (most of the surface that matters).
