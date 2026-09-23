@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, NavLink, Outlet, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
@@ -13,6 +13,7 @@ import ViewRow from './ViewRow'
 import { SETTINGS_TREE } from '../lib/settingsTree'
 import { COLLECTION_CHANGED } from '../lib/collectionEvents'
 import { attentionRoutes, useSettingsAttention } from '../lib/settingsAttention'
+import { useScrollToTopOnNavigate } from '../hooks/useScrollToTopOnNavigate'
 import { DEFAULT_OWNERSHIP, PARAM, type BookFacets, type FacetValue } from '../lib/bookBrowse'
 import { Icon, type IconName } from '../lib/icons'
 import { LIST_ICONS } from '../lib/listIcons'
@@ -167,6 +168,9 @@ export default function Layout() {
   const location = useLocation()
   const [params] = useSearchParams()
   const { t } = useTranslation()
+  // A new page starts at its top, the way a loaded document does.
+  const mainRef = useRef<HTMLElement>(null)
+  useScrollToTopOnNavigate(mainRef)
   // Settings covers more than the /settings prefix: People and the connection
   // pages live elsewhere in the route table but belong to the tree.
   const inSettings =
@@ -914,8 +918,9 @@ export default function Layout() {
         </div>
       </aside>
 
-      {/* Main content */}
-      <main className="flex-1 overflow-auto min-w-0">
+      {/* Main content. This is what scrolls, not the document, which is why
+          the scroll reset below is on the element. */}
+      <main ref={mainRef} className="flex-1 overflow-auto min-w-0">
         <Outlet />
       </main>
      </div>
