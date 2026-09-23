@@ -424,12 +424,12 @@ export const fetchLists = (callApi: CallApi): Promise<SavedList[]> =>
 /** Saves the filter on screen as a new smart list, on the page it was made on. */
 export function createSmartList(
   callApi: CallApi, name: string, query: string, icon?: string,
-  surface: ListSurface = 'books', layout?: ListLayout,
+  surface: ListSurface = 'books', layout?: ListLayout, color?: string,
 ): Promise<SavedList> {
   return callApi<SavedList>('/api/v1/me/lists', {
     method: 'POST',
     body: JSON.stringify({
-      name, icon: icon ?? '', kind: 'smart', surface,
+      name, icon: icon ?? '', color: color ?? '', kind: 'smart', surface,
       // The layout on screen, not the column's default. Saving a view is
       // saying "keep this", and dropping the layout meant saving from Rows
       // handed back a view that opened in Grid.
@@ -447,11 +447,12 @@ export function createSmartList(
  */
 export function updateList(
   callApi: CallApi, id: string,
-  changes: { name?: string; icon?: string; query?: string; layout?: ListLayout },
+  changes: { name?: string; icon?: string; color?: string; query?: string; layout?: ListLayout },
 ): Promise<SavedList> {
   const body: Record<string, unknown> = {}
   if (changes.name !== undefined) body.name = changes.name
   if (changes.icon !== undefined) body.icon = changes.icon
+  if (changes.color !== undefined) body.color = changes.color
   if (changes.layout !== undefined) body.layout = changes.layout
   if (changes.query !== undefined) body.filter = { query: changes.query }
   return callApi<SavedList>(`/api/v1/me/lists/${id}`, {

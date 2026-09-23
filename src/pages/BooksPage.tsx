@@ -16,7 +16,8 @@ import { formatStars, starsOf } from '../lib/rating'
 import { Stars } from '../components/StarRating'
 import { useAuth } from '../auth/AuthContext'
 import PageHeader from '../components/PageHeader'
-import { PromptDialog } from '../components/Dialog'
+import { PromptDialog, type PromptExtras } from '../components/Dialog'
+import { TAG_COLORS } from '../lib/tagColours'
 import AddBooksDialog from '../components/addBooks/AddBooksDialog'
 import FacetRail from '../components/FacetRail'
 import FilterSearch from '../components/FilterSearch'
@@ -740,9 +741,9 @@ export default function BooksPage() {
     setParams(new URLSearchParams(listQuery(v)), { replace: true })
   }
 
-  const saveCurrentAs = async (name: string, icon?: IconName) => {
+  const saveCurrentAs = async (name: string, icon?: IconName, extras?: PromptExtras) => {
     setNaming(false)
-    const created = await createSmartList(callApi, name, paramsNow, icon, 'books', layout)
+    const created = await createSmartList(callApi, name, paramsNow, icon, 'books', layout, extras?.color)
       .catch(() => null)
     await reloadLists()
     if (created) setActiveViewId(created.id)
@@ -757,10 +758,10 @@ export default function BooksPage() {
    * does both, because from the reader's side it is one edit.
    */
   const [renaming, setRenaming] = useState(false)
-  const applyRename = async (name: string, icon?: IconName) => {
+  const applyRename = async (name: string, icon?: IconName, extras?: PromptExtras) => {
     setRenaming(false)
     if (!activeView) return
-    await updateList(callApi, activeView.id, { name, icon }).catch(() => {})
+    await updateList(callApi, activeView.id, { name, icon, color: extras?.color ?? '' }).catch(() => {})
     await reloadLists()
     announceListsChanged()
   }
@@ -1415,6 +1416,8 @@ export default function BooksPage() {
         icons={LIST_ICONS}
         initialIcon="newview"
         iconLabel={t('common.icon', { defaultValue: 'Icon' })}
+        colors={TAG_COLORS}
+        colorLabel={t('common.colour', { defaultValue: 'Colour' })}
         onCancel={() => setNaming(false)}
         onSubmit={saveCurrentAs}
       />
@@ -1427,6 +1430,9 @@ export default function BooksPage() {
         icons={LIST_ICONS}
         initialIcon={activeView ? listIcon(activeView) : undefined}
         iconLabel={t('common.icon', { defaultValue: 'Icon' })}
+        initialColor={activeView?.color ?? ''}
+        colors={TAG_COLORS}
+        colorLabel={t('common.colour', { defaultValue: 'Colour' })}
         onCancel={() => setRenaming(false)}
         onSubmit={applyRename}
       />

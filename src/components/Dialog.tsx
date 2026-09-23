@@ -223,9 +223,11 @@ export function PromptDialog({
   // Keyed on both, because the rail opens this dialog two ways with the same
   // icon and only the library differing. Watching the icon alone meant the
   // second way in arrived carrying the first one's library.
-  const [syncedInitial, setSyncedInitial] = useState(`${initialIcon}:${initialShare ?? ''}`)
-  if (`${initialIcon}:${initialShare ?? ''}` !== syncedInitial) {
-    setSyncedInitial(`${initialIcon}:${initialShare ?? ''}`)
+  // The colour is in the key as well: renaming one view after another, both
+  // with the same icon, showed the first one's colour as the second one's.
+  const [syncedInitial, setSyncedInitial] = useState(`${initialIcon}:${initialShare ?? ''}:${initialColor ?? ''}`)
+  if (`${initialIcon}:${initialShare ?? ''}:${initialColor ?? ''}` !== syncedInitial) {
+    setSyncedInitial(`${initialIcon}:${initialShare ?? ''}:${initialColor ?? ''}`)
     setIcon(initialIcon)
     setColor(initialColor ?? '')
     setShare(initialShare ?? '')
