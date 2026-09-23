@@ -23,7 +23,8 @@ import PageHeader from '../components/PageHeader'
 import BookCover from '../components/BookCover'
 import { Stars } from '../components/StarRating'
 import SuggestBox, { type SuggestItem } from '../components/SuggestBox'
-import { PromptDialog } from '../components/Dialog'
+import { PromptDialog, type PromptExtras } from '../components/Dialog'
+import { TAG_COLORS } from '../lib/tagColours'
 import SeriesFormModal from '../components/SeriesFormModal'
 import SuggestSeriesModal from '../components/SuggestSeriesModal'
 import ViewChip from '../components/ViewChip'
@@ -174,10 +175,10 @@ export default function SeriesPage() {
    * The same dialog does both, because from the reader's side it is one edit.
    */
   const [renaming, setRenaming] = useState(false)
-  const applyRename = async (name: string, icon?: IconName) => {
+  const applyRename = async (name: string, icon?: IconName, extras?: PromptExtras) => {
     setRenaming(false)
     if (!activeView) return
-    await updateList(callApi, activeView.id, { name, icon }).catch(() => {})
+    await updateList(callApi, activeView.id, { name, icon, color: extras?.color ?? '' }).catch(() => {})
     await reloadViews()
     announceListsChanged()
   }
@@ -190,9 +191,9 @@ export default function SeriesPage() {
     setParams(new URLSearchParams())
   }
 
-  const saveCurrentAs = async (name: string, icon?: IconName) => {
+  const saveCurrentAs = async (name: string, icon?: IconName, extras?: PromptExtras) => {
     setNaming(false)
-    await createSmartList(callApi, name, paramsNow, icon, 'series', layout).catch(() => null)
+    await createSmartList(callApi, name, paramsNow, icon, 'series', layout, extras?.color).catch(() => null)
     await reloadViews()
     announceListsChanged()
   }
@@ -618,6 +619,8 @@ export default function SeriesPage() {
         icons={LIST_ICONS}
         initialIcon="newview"
         iconLabel={t('common.icon', { defaultValue: 'Icon' })}
+        colors={TAG_COLORS}
+        colorLabel={t('common.colour', { defaultValue: 'Colour' })}
         onCancel={() => setNaming(false)}
         onSubmit={saveCurrentAs}
       />
@@ -630,6 +633,9 @@ export default function SeriesPage() {
         icons={LIST_ICONS}
         initialIcon={activeView ? listIcon(activeView) : undefined}
         iconLabel={t('common.icon', { defaultValue: 'Icon' })}
+        initialColor={activeView?.color ?? ''}
+        colors={TAG_COLORS}
+        colorLabel={t('common.colour', { defaultValue: 'Colour' })}
         onCancel={() => setRenaming(false)}
         onSubmit={applyRename}
       />
