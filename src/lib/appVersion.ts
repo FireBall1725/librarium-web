@@ -13,8 +13,16 @@ import { withBase } from './basePath'
 /** What a build off someone's laptop reports. Never compared against. */
 export const DEV_VERSION = '0.0.0-dev'
 
-/** How often an open tab asks. Long: a deploy is not an emergency. */
-export const CHECK_EVERY_MS = 15 * 60 * 1000
+/** How often an idle tab asks. */
+export const CHECK_EVERY_MS = 5 * 60 * 1000
+
+/**
+ * The shortest gap between two checks.
+ *
+ * Navigating asks as well, so a reader clicking through a list would otherwise
+ * fetch this on every click. The file is tiny, but pointless is pointless.
+ */
+export const CHECK_AT_MOST_EVERY_MS = 30 * 1000
 
 /**
  * Whether the served version means this tab is behind.
@@ -48,13 +56,17 @@ export async function fetchServedVersion(f: typeof fetch = fetch): Promise<strin
 /**
  * Watch for a newer client, and call back once when there is one.
  *
- * Checks on a timer and whenever the tab is looked at again, because a laptop
- * asleep for a day is the common case and its timer didn't run. Also listens
- * for Vite's preload error, which is a chunk the deploy deleted: proof the tab
- * is stale, arriving before any timer would have noticed.
+ * Asks on a timer, whenever the tab is looked at again, and whenever `check()`
+ * on the returned handle is called, which the bar does on every navigation. A
+ * timer alone meant a reader could deploy, click around for ten minutes and be
+ * told nothing, which is what happened the first time this shipped.
+ *
+ * Also listens for Vite's preload error: a chunk the deploy deleted is proof
+ * the tab is stale, and it arrives before any timer would have noticed.
  */
-export function watchForNewVersion(running: string, onFound: () => void, every = CHECK_EVERY_MS): () => void {
+export function watchForNewVersion(running: string, onFound: () => void, every = CHECK_EVERY_MS) {
   let stopped = false
+  let lastAsked = 0
   const found = () => {
     if (stopped) return
     stopped = true
@@ -64,6 +76,9 @@ export function watchForNewVersion(running: string, onFound: () => void, every =
 
   const check = async () => {
     if (stopped || document.hidden) return
+    const now = Date.now()
+    if (now - lastAsked < CHECK_AT_MOST_EVERY_MS) return
+    lastAsked = now
     if (isDifferentVersion(running, await fetchServedVersion())) found()
   }
 
@@ -80,5 +95,8 @@ export function watchForNewVersion(running: string, onFound: () => void, every =
     document.removeEventListener('visibilitychange', onVisible)
     window.removeEventListener('vite:preloadError', onPreloadError)
   }
-  return () => { stopped = true; stop() }
+  return {
+    check: () => void check(),
+    stop: () => { stopped = true; stop() },
+  }
 }

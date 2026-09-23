@@ -5,16 +5,27 @@
 // reloads on the reader's word. Never on its own: a reload in the middle of a
 // review throws away what was typed, and the tab still works, it is only old.
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useLocation } from 'react-router-dom'
 import { watchForNewVersion } from '../lib/appVersion'
 import { Icon } from '../lib/icons'
 
 export default function NewVersionBar() {
   const { t } = useTranslation()
   const [waiting, setWaiting] = useState(false)
+  const { pathname } = useLocation()
+  const watch = useRef<ReturnType<typeof watchForNewVersion> | null>(null)
 
-  useEffect(() => watchForNewVersion(__APP_VERSION__, () => setWaiting(true)), [])
+  useEffect(() => {
+    const w = watchForNewVersion(__APP_VERSION__, () => setWaiting(true))
+    watch.current = w
+    return w.stop
+  }, [])
+
+  // Moving between pages is the moment a reader would welcome the news, and it
+  // is cheap: the watcher ignores anything asked inside its own floor.
+  useEffect(() => { watch.current?.check() }, [pathname])
 
   if (!waiting) return null
   return (
