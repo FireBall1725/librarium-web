@@ -966,5 +966,11 @@
     "headings_shelf": "棚ごとの見出し",
     "no_shelf": "棚にない",
     "preset_by_shelf": "棚、次に著者"
+  },
+  "image_upload": {
+    "too_large": "画像が10 MBを超えています。もっと小さい画像を選んでください。",
+    "wrong_type": "このファイルはPNG、JPEG、GIF、WebPの画像ではありません。",
+    "no_permission": "これを変更する権限がありません。",
+    "failed": "アップロードできませんでした。もう一度お試しください。"
   }
 }

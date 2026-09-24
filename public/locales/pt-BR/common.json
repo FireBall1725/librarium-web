@@ -1023,5 +1023,11 @@
     "headings_shelf": "Títulos por estante",
     "no_shelf": "Fora da estante",
     "preset_by_shelf": "Estante, depois autor"
+  },
+  "image_upload": {
+    "too_large": "Essa imagem passa de 10 MB. Tente uma menor.",
+    "wrong_type": "Esse arquivo não é uma imagem PNG, JPEG, GIF ou WebP.",
+    "no_permission": "Você não tem permissão para alterar isso.",
+    "failed": "O envio não foi concluído. Tente de novo."
   }
 }

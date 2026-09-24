@@ -1023,5 +1023,11 @@
     "headings_shelf": "Überschriften nach Regal",
     "no_shelf": "Nicht im Regal",
     "preset_by_shelf": "Regal, dann Autor"
+  },
+  "image_upload": {
+    "too_large": "Dieses Bild ist größer als 10 MB. Versuch es mit einem kleineren.",
+    "wrong_type": "Diese Datei ist kein PNG-, JPEG-, GIF- oder WebP-Bild.",
+    "no_permission": "Du darfst das nicht ändern.",
+    "failed": "Das Hochladen hat nicht geklappt. Versuch es noch einmal."
   }
 }

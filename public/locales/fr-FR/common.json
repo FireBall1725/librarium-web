@@ -1023,5 +1023,11 @@
     "headings_shelf": "Titres par rayon",
     "no_shelf": "Pas sur un rayon",
     "preset_by_shelf": "Rayon, puis auteur"
+  },
+  "image_upload": {
+    "too_large": "Cette image dépasse 10 Mo. Essayez-en une plus petite.",
+    "wrong_type": "Ce fichier n'est pas une image PNG, JPEG, GIF ou WebP.",
+    "no_permission": "Vous n'avez pas l'autorisation de modifier ceci.",
+    "failed": "L'envoi n'a pas abouti. Réessayez."
   }
 }
