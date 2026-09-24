@@ -1,4 +1,5 @@
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Navigate, useParams, Link, useOutletContext, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth, ApiError } from '../../auth/AuthContext'
 import type { Crumb, LibraryOutletContext } from '../../components/LibraryOutlet'
@@ -2607,14 +2608,49 @@ interface BookArcAssignerProps {
 
 function BookArcAssigner({ entry, arcs, isOpen, onOpen, onClose, onAssign }: BookArcAssignerProps) {
   const ref = useRef<HTMLDivElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
     if (!isOpen) return
     const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) onClose()
+      const target = e.target as Node
+      if (ref.current?.contains(target) || menuRef.current?.contains(target)) return
+      onClose()
     }
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
     document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', handler)
+      document.removeEventListener('keydown', onKey)
+    }
   }, [isOpen, onClose])
+
+  // The menu lives in a portal because the rows card clips its children, and it
+  // opens upward when there's more room above, which is the case on the last rows.
+  useLayoutEffect(() => {
+    const menu = menuRef.current
+    if (!isOpen || !menu || !ref.current) return
+    const place = () => {
+      if (!ref.current) return
+      const r = ref.current.getBoundingClientRect()
+      const gap = 4, margin = 8
+      const below = window.innerHeight - r.bottom - gap - margin
+      const above = r.top - gap - margin
+      const up = menu.scrollHeight > below && above > below
+      menu.style.right = `${Math.max(margin, window.innerWidth - r.right)}px`
+      menu.style.top = up ? '' : `${r.bottom + gap}px`
+      menu.style.bottom = up ? `${window.innerHeight - r.top + gap}px` : ''
+      menu.style.maxHeight = `${Math.min(320, Math.max(120, up ? above : below))}px`
+      menu.style.visibility = 'visible'
+    }
+    place()
+    window.addEventListener('resize', place)
+    window.addEventListener('scroll', place, true)
+    return () => {
+      window.removeEventListener('resize', place)
+      window.removeEventListener('scroll', place, true)
+    }
+  }, [isOpen, arcs.length])
 
   const currentArc = arcs.find(a => a.id === entry.arc_id)
   const sorted = [...arcs].sort((a, b) => a.position - b.position || a.name.localeCompare(b.name))
@@ -2622,23 +2658,26 @@ function BookArcAssigner({ entry, arcs, isOpen, onOpen, onClose, onAssign }: Boo
   return (
     <div ref={ref} className="relative">
       <button onClick={isOpen ? onClose : onOpen}
+        aria-haspopup="menu" aria-expanded={isOpen}
         className="text-xs text-content-muted hover:text-blue-600 transition-colors">
         {currentArc ? `Arc: ${currentArc.name}` : 'Set arc'}
       </button>
-      {isOpen && (
-        <div className="absolute right-0 top-full mt-1 z-30 w-56 rounded-lg border border-line bg-surface shadow-lg py-1">
-          <button onClick={() => onAssign(null)}
+      {isOpen && createPortal(
+        <div ref={menuRef} role="menu" style={{ visibility: 'hidden' }}
+          className="fixed z-[200] w-56 overflow-y-auto rounded-lg border border-line bg-surface shadow-lg py-1">
+          <button onClick={() => onAssign(null)} role="menuitem"
             className={`w-full text-left px-3 py-1.5 text-xs transition-colors ${!entry.arc_id ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'}`}>
             Unsorted
           </button>
           <div className="my-1 border-t border-line-subtle" />
           {sorted.map(arc => (
-            <button key={arc.id} onClick={() => onAssign(arc.id)}
+            <button key={arc.id} onClick={() => onAssign(arc.id)} role="menuitem"
               className={`w-full text-left px-3 py-1.5 text-xs transition-colors ${entry.arc_id === arc.id ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'}`}>
               {arc.name}
             </button>
           ))}
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   )
