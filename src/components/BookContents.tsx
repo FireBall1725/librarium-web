@@ -33,6 +33,9 @@ export default function BookContents({ bookId, libraryId }: { bookId: string; li
 
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<Book[]>([])
+  // The query the results answer. An empty list used to render nothing, so
+  // "no book matched" looked exactly like the button doing nothing.
+  const [answered, setAnswered] = useState<string | null>(null)
   const [picked, setPicked] = useState<Book | null>(null)
   const [position, setPosition] = useState('')
 
@@ -59,18 +62,28 @@ export default function BookContents({ bookId, libraryId }: { bookId: string; li
   // Debounced, and skipped once something is picked so the list does not
   // reappear over the choice. The same shape LoanFormModal uses.
   useEffect(() => {
-    if (picked || !query.trim()) { setResults([]); return }
+    if (picked || !query.trim()) { setResults([]); setAnswered(null); return }
     const timer = setTimeout(() => {
       void callApi<PagedBooks>(
         `/api/v1/libraries/${libraryId}/books?q=${encodeURIComponent(query)}&per_page=10`,
       )
-        .then(r => setResults((r?.items ?? []).filter(b => b.id !== bookId)))
-        .catch(() => setResults([]))
+        .then(r => {
+          setResults((r?.items ?? []).filter(b => b.id !== bookId))
+          setAnswered(query)
+          setError(null)
+        })
+        .catch(e => {
+          setResults([])
+          setAnswered(null)
+          setError(e instanceof Error ? e.message : String(e))
+        })
     }, 200)
     return () => clearTimeout(timer)
   }, [query, picked, callApi, libraryId, bookId])
 
-  const reset = () => { setAdding(false); setQuery(''); setResults([]); setPicked(null); setPosition('') }
+  const reset = () => {
+    setAdding(false); setQuery(''); setResults([]); setAnswered(null); setPicked(null); setPosition('')
+  }
 
   const add = async () => {
     if (!picked) return
@@ -170,6 +183,17 @@ export default function BookContents({ bookId, libraryId }: { bookId: string; li
               {t('common.cancel', { defaultValue: 'Cancel' })}
             </button>
           </div>
+
+          {!picked && query.trim() !== '' && results.length === 0 && (
+            <p className="text-xs text-content-tertiary">
+              {answered === query
+                ? t('book_contents.no_match', {
+                  query: query.trim(),
+                  defaultValue: 'No book in this library matches "{{query}}".',
+                })
+                : t('book_contents.searching', { defaultValue: 'Searching…' })}
+            </p>
+          )}
 
           {results.length > 0 && (
             <ul className="max-h-56 overflow-y-auto rounded-lg border border-line bg-surface">

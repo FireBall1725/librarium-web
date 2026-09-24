@@ -575,7 +575,9 @@
     "find": "どの巻が入っていますか?",
     "inside": "収録元:",
     "position": "順番",
-    "remove": "{{title}} を削除"
+    "remove": "{{title}} を削除",
+    "no_match": "このライブラリに「{{query}}」に一致する本はありません。",
+    "searching": "検索中…"
   },
   "book_series": {
     "add": "+ シリーズに追加",

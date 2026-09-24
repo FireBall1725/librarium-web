@@ -617,7 +617,9 @@
     "find": "Welcher Band steckt darin?",
     "inside": "Auch enthalten in:",
     "position": "Reihenfolge",
-    "remove": "{{title}} entfernen"
+    "remove": "{{title}} entfernen",
+    "no_match": "Kein Buch in dieser Bibliothek passt zu „{{query}}“.",
+    "searching": "Suche läuft…"
   },
   "book_series": {
     "add": "+ Zu einer Reihe hinzufügen",
