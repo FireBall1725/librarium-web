@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './auth/AuthContext'
+import { PermissionsProvider } from './auth/PermissionsContext'
 import { ToastProvider } from './components/Toast'
 import ProtectedRoute from './components/ProtectedRoute'
 import NewVersionBar from './components/NewVersionBar'
@@ -174,11 +175,13 @@ export default function App() {
     // withBase: applying both would prefix twice.
     <BrowserRouter basename={basePath || undefined}>
       <AuthProvider>
-        <ToastProvider>
-          <AppRoutes />
-          {/* Outside the routes: a stale tab is stale wherever it is sitting. */}
-          <NewVersionBar />
-        </ToastProvider>
+        <PermissionsProvider>
+          <ToastProvider>
+            <AppRoutes />
+            {/* Outside the routes: a stale tab is stale wherever it is sitting. */}
+            <NewVersionBar />
+          </ToastProvider>
+        </PermissionsProvider>
       </AuthProvider>
     </BrowserRouter>
   )

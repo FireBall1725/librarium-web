@@ -15,6 +15,7 @@
 // the volumes you are missing. Tiles are offered because a wall of covers is
 // the better way to recognise a shelf you already know.
 
+import { usePermissions } from '../lib/permissions'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigationType, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -745,6 +746,9 @@ function SeriesRow({ series: s, libraryName, showLibrary, busy, t, onEdit, onDel
   onDelete: () => void
 }) {
   const { hidden } = counts(s)
+  const { can } = usePermissions()
+  const canEdit = can('series:update', s.library_id)
+  const canDelete = can('series:delete', s.library_id)
   return (
     <li className="group border-b border-line px-0.5 pb-3 pt-4">
       <div className="flex flex-wrap items-center gap-2.5">
@@ -773,13 +777,17 @@ function SeriesRow({ series: s, libraryName, showLibrary, busy, t, onEdit, onDel
             series is rare next to reading the list, and a delete button on
             every row invites the click nobody meant to make. */}
         <span className="ml-auto flex gap-1 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
-          <button type="button" className="lb-btn ghost sm" disabled={busy} onClick={onEdit}>
-            {t('common.edit', { defaultValue: 'Edit' })}
-          </button>
-          <button type="button" className="lb-btn ghost sm" disabled={busy}
-            style={{ color: 'var(--color-danger)' }} onClick={onDelete}>
-            {t('common.delete', { defaultValue: 'Delete' })}
-          </button>
+          {canEdit && (
+            <button type="button" className="lb-btn ghost sm" disabled={busy} onClick={onEdit}>
+              {t('common.edit', { defaultValue: 'Edit' })}
+            </button>
+          )}
+          {canDelete && (
+            <button type="button" className="lb-btn ghost sm" disabled={busy}
+              style={{ color: 'var(--color-danger)' }} onClick={onDelete}>
+              {t('common.delete', { defaultValue: 'Delete' })}
+            </button>
+          )}
         </span>
       </div>
 
