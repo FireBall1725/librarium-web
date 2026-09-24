@@ -2,7 +2,7 @@
 // Copyright (C) 2026 FireBall1725
 
 import { describe, expect, it } from 'vitest'
-import { SETTINGS_TREE, pageForPath, sectionForPath } from './settingsTree'
+import { SETTINGS_TREE, pageForPath, sectionForPath, visibleSettings } from './settingsTree'
 // The route table as text. Vite's ?raw import keeps this inside the bundler's
 // world, so the test needs no node types and no filesystem path to go stale.
 import appSource from '../App.tsx?raw'
@@ -93,5 +93,26 @@ describe('pageForPath', () => {
 
   it('resolves a job kind to its parent page', () => {
     expect(pageForPath('/settings/jobs/enrich-metadata')?.id).toBe('jobs')
+  })
+})
+
+const ids = (sections: ReturnType<typeof visibleSettings>) => sections.flatMap(s => s.pages.map(p => p.id))
+
+describe('visibleSettings', () => {
+  it('gives an admin the whole tree', () => {
+    expect(visibleSettings(true)).toBe(SETTINGS_TREE)
+  })
+
+  it('gives everyone else the pages they can open, and nothing that redirects', () => {
+    const open = ids(visibleSettings(false))
+    expect(open).toEqual(expect.arrayContaining(['profile', 'appearance', 'tokens', 'lists', 'members', 'import', 'licences']))
+    expect(open).not.toContain('people')
+    expect(open).not.toContain('general')
+    expect(open).not.toContain('media-types')
+  })
+
+  it('drops a section left with no pages', () => {
+    // Sources is AI provider and Lookups, both instance configuration.
+    expect(visibleSettings(false).map(s => s.id)).not.toContain('sources')
   })
 })

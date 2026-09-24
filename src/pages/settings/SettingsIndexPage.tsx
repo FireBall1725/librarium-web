@@ -14,7 +14,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../auth/AuthContext'
 import PageHeader from '../../components/PageHeader'
 import { usePageTitle } from '../../hooks/usePageTitle'
-import { SETTINGS_TREE, type FactKey, type SettingsPage } from '../../lib/settingsTree'
+import { visibleSettings, type FactKey, type SettingsPage } from '../../lib/settingsTree'
 import { THEMES, readStoredTheme } from '../../lib/theme'
 import { attentionRoutes, useSettingsAttention } from '../../lib/settingsAttention'
 import type { AIProviderStatus, ProviderStatus } from '../../types'
@@ -35,9 +35,13 @@ export default function SettingsIndexPage() {
   const [facts, setFacts] = useState<Facts>({})
   // The same source the rail marks its dots from, so a dot always has a
   // problem listed behind it.
-  const attention = useSettingsAttention(callApi, true)
+  const isAdmin = user?.is_instance_admin === true
+  const attention = useSettingsAttention(callApi, isAdmin)
 
   useEffect(() => {
+    // Every fact below comes from an admin page, and asking as anyone else
+    // is a row of 403s for rows they can't see.
+    if (!isAdmin) return
     let cancelled = false
     const put = (patch: Facts) => { if (!cancelled) setFacts(prev => ({ ...prev, ...patch })) }
 
@@ -83,7 +87,7 @@ export default function SettingsIndexPage() {
       .catch(() => {})
 
     return () => { cancelled = true }
-  }, [callApi, t])
+  }, [callApi, t, isAdmin])
 
   // Client-side facts, which need no request at all. The theme label comes from
   // THEMES rather than a translation key, because that list is where the names
@@ -146,7 +150,7 @@ export default function SettingsIndexPage() {
             to the tallest, a one-row section reads as a section with rows
             missing. */}
         <div className="grid grid-cols-[repeat(auto-fill,minmax(285px,1fr))] items-start gap-4">
-          {SETTINGS_TREE.map(section => (
+          {visibleSettings(isAdmin).map(section => (
             <section key={section.id}
               className="rounded-2xl border border-line bg-surface-raised px-4 pb-2 pt-1">
               <div className="flex items-baseline gap-2.5 border-b border-line-strong pb-2.5 pt-3">

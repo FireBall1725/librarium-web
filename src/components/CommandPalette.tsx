@@ -46,7 +46,8 @@ export default function CommandPalette({
   onClose: () => void
 }) {
   const { t } = useTranslation()
-  const { callApi } = useAuth()
+  const { callApi, user } = useAuth()
+  const isAdmin = user?.is_instance_admin === true
   const navigate = useNavigate()
 
   const [query, setQuery] = useState('')
@@ -140,7 +141,7 @@ export default function CommandPalette({
         kind: 'library', id: `lib:${l.id}`, label: l.name, icon: 'libraries',
         tint: libraryColour(l.id), to: `/books?lib=${l.id}`,
       })),
-      ...pageItems(t),
+      ...pageItems(t, isAdmin),
     ].filter(i => !q || matches(i.label, q) || (i.sublabel ? matches(i.sublabel, q) : false))
 
     const remote: CommandItem[] = [
@@ -169,7 +170,7 @@ export default function CommandPalette({
     // books/series/authors/loans are set asynchronously and MUST be listed:
     // omitting them computes the rows once against empty arrays and never
     // again, which reads as "the API returned nothing" rather than as a bug.
-  }, [query, actions, libraries, lists, books, series, authors, loans, t])
+  }, [query, actions, libraries, lists, books, series, authors, loans, t, isAdmin])
 
   /** Grouped for rendering, in section order, from whatever is present. */
   const groups = useMemo(() => {

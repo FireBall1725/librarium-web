@@ -91,6 +91,19 @@ function AppRoutes() {
               <Route path="/settings/ai-privacy" element={<SettingsLayout />}>
                 <Route index element={<AiPrivacyPage />} />
               </Route>
+              {/* Open to everyone: the overview lists only what the reader can
+                  open, Lists are their own, and Members is read-only unless
+                  they manage that library. Behind the guard, Settings was a
+                  button that silently bounced non-admins to the dashboard. */}
+              <Route path="/settings" element={<SettingsLayout />}>
+                <Route index element={<SettingsIndexPage />} />
+              </Route>
+              <Route path="/settings/lists" element={<SettingsLayout />}>
+                <Route index element={<ListsPage />} />
+              </Route>
+              <Route path="/settings/members" element={<SettingsLayout />}>
+                <Route index element={<MembersPage />} />
+              </Route>
 
               <Route element={<ProtectedRoute requireAdmin />}>
                 <Route path="/admin/users" element={<UsersPage />} />
@@ -104,7 +117,6 @@ function AppRoutes() {
                     the split was the reason nobody could find anything. The old
                     paths redirect so existing links and bookmarks still land. */}
                 <Route path="/settings" element={<SettingsLayout />}>
-                  <Route index element={<SettingsIndexPage />} />
                   <Route path="metadata"          element={<MetadataPage />} />
                   <Route path="ai"                element={<AIPage />} />
                   <Route path="media-management"  element={<MediaManagementPage />} />
@@ -113,9 +125,7 @@ function AppRoutes() {
                   <Route path="duplicate-authors"  element={<DuplicateAuthorsPage />} />
                   <Route path="media-types"       element={<MediaTypesPage />} />
                   <Route path="profiles"          element={<ProfilesPage />} />
-                  <Route path="lists"             element={<ListsPage />} />
                   <Route path="shelves"           element={<ShelvesPage />} />
-                  <Route path="members"           element={<MembersPage />} />
                   <Route path="general"           element={<GeneralPage />} />
                   <Route path="jobs"              element={<JobsPage />} />
                   <Route path="jobs/history"       element={<JobsHistoryPage />} />

@@ -14,7 +14,7 @@
 // server-side on a debounce.
 
 import type { IconName } from './icons'
-import { SETTINGS_TREE } from './settingsTree'
+import { visibleSettings } from './settingsTree'
 import { listHref, listIcon, type SavedList } from './lists'
 
 /**
@@ -77,7 +77,7 @@ export const matches = (haystack: string, needle: string) =>
  * the tree exists: the index, the sidebar and the breadcrumbs already read it,
  * and a fourth copy would be the one that drifts.
  */
-export function pageItems(t: (k: string, o?: Record<string, unknown>) => string): CommandItem[] {
+export function pageItems(t: (k: string, o?: Record<string, unknown>) => string, isAdmin = true): CommandItem[] {
   const top: CommandItem[] = [
     { kind: 'page', id: 'page:dashboard', label: t('nav.dashboard', { defaultValue: 'Dashboard' }), icon: 'home', to: '/dashboard' },
     { kind: 'page', id: 'page:books', label: t('nav.books', { defaultValue: 'Books' }), icon: 'books', to: '/books' },
@@ -88,7 +88,7 @@ export function pageItems(t: (k: string, o?: Record<string, unknown>) => string)
     { kind: 'page', id: 'page:settings', label: t('nav.settings', { defaultValue: 'Settings' }), icon: 'settings', to: '/settings' },
   ]
 
-  const settings = SETTINGS_TREE.flatMap(section =>
+  const settings = visibleSettings(isAdmin).flatMap(section =>
     section.pages.map<CommandItem>(p => ({
       kind: 'page',
       id: `page:${p.id}`,

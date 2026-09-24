@@ -32,6 +32,8 @@ export interface SettingsPage {
   fact?: FactKey
   /** Static value where there is nothing to fetch. */
   staticFact?: string
+  /** Behind the instance admin guard in the route table. */
+  adminOnly?: true
 }
 
 export interface SettingsSection {
@@ -61,18 +63,18 @@ export const SETTINGS_TREE: SettingsSection[] = [
     labelKey: 'settings_section.collection',
     labelFallback: 'Collection',
     pages: [
-      { id: 'media-types', to: '/settings/media-types', labelKey: 'settings_nav.media_types', labelFallback: 'Media Types', fact: 'mediaTypes' },
-      { id: 'genres', to: '/settings/genres', labelKey: 'settings_nav.genres', labelFallback: 'Genres', fact: 'genres' },
-      { id: 'tags', to: '/settings/tags', labelKey: 'settings_nav.tags', labelFallback: 'Tags' },
+      { id: 'media-types', to: '/settings/media-types', labelKey: 'settings_nav.media_types', labelFallback: 'Media Types', fact: 'mediaTypes', adminOnly: true },
+      { id: 'genres', to: '/settings/genres', labelKey: 'settings_nav.genres', labelFallback: 'Genres', fact: 'genres', adminOnly: true },
+      { id: 'tags', to: '/settings/tags', labelKey: 'settings_nav.tags', labelFallback: 'Tags', adminOnly: true },
       { id: 'lists', to: '/settings/lists', labelKey: 'settings_nav.lists', labelFallback: 'Lists' },
-      { id: 'shelves', to: '/settings/shelves', labelKey: 'settings_nav.shelves', labelFallback: 'Shelves' },
+      { id: 'shelves', to: '/settings/shelves', labelKey: 'settings_nav.shelves', labelFallback: 'Shelves', adminOnly: true },
       // Beside Tags because they are the same shape: a named, per-library set
       // of books. A shelf is a tag with an icon and a description.
-      { id: 'profiles', to: '/settings/profiles', labelKey: 'settings_nav.profiles', labelFallback: 'Profiles' },
+      { id: 'profiles', to: '/settings/profiles', labelKey: 'settings_nav.profiles', labelFallback: 'Profiles', adminOnly: true },
       // Beside the vocabulary pages, because a contributor is instance-wide the
       // same way a genre is: folding two names together changes what every
       // household on the server sees.
-      { id: 'duplicate-authors', to: '/settings/duplicate-authors', labelKey: 'settings_nav.duplicate_authors', labelFallback: 'Duplicate authors' },
+      { id: 'duplicate-authors', to: '/settings/duplicate-authors', labelKey: 'settings_nav.duplicate_authors', labelFallback: 'Duplicate authors', adminOnly: true },
     ],
   },
   {
@@ -85,8 +87,8 @@ export const SETTINGS_TREE: SettingsSection[] = [
       // opened the same page and the providers page was unreachable from the
       // tree. The providers page itself was filed under Collection as
       // "Metadata", a name that does not say what it holds.
-      { id: 'providers', to: '/settings/metadata', labelKey: 'settings_nav.providers', labelFallback: 'Lookups', fact: 'providers' },
-      { id: 'ai', to: '/settings/ai', labelKey: 'connections_nav.ai', labelFallback: 'AI provider', fact: 'aiProvider' },
+      { id: 'providers', to: '/settings/metadata', labelKey: 'settings_nav.providers', labelFallback: 'Lookups', fact: 'providers', adminOnly: true },
+      { id: 'ai', to: '/settings/ai', labelKey: 'connections_nav.ai', labelFallback: 'AI provider', fact: 'aiProvider', adminOnly: true },
     ],
   },
   {
@@ -94,7 +96,7 @@ export const SETTINGS_TREE: SettingsSection[] = [
     labelKey: 'settings_section.storage',
     labelFallback: 'Storage',
     pages: [
-      { id: 'media-management', to: '/settings/media-management', labelKey: 'settings_nav.media_management', labelFallback: 'Media Management' },
+      { id: 'media-management', to: '/settings/media-management', labelKey: 'settings_nav.media_management', labelFallback: 'Media Management', adminOnly: true },
       // Import lived under a Tools heading of its own in the nav. It is data
       // coming in, which is a storage concern, and one destination fewer.
       { id: 'import', to: '/import', labelKey: 'nav.import', labelFallback: 'Import' },
@@ -105,19 +107,30 @@ export const SETTINGS_TREE: SettingsSection[] = [
     labelKey: 'settings_section.system',
     labelFallback: 'System',
     pages: [
-      { id: 'people', to: '/admin/users', labelKey: 'settings_nav.people', labelFallback: 'People', fact: 'people' },
+      { id: 'people', to: '/admin/users', labelKey: 'settings_nav.people', labelFallback: 'People', fact: 'people', adminOnly: true },
       // Beside People because the two answer the same question at different
       // scopes: who has an account here, and who can see which library.
       { id: 'members', to: '/settings/members', labelKey: 'settings_nav.members', labelFallback: 'Members' },
-      { id: 'jobs', to: '/settings/jobs', labelKey: 'settings_nav.jobs', labelFallback: 'Jobs' },
-      { id: 'history', to: '/settings/jobs/history', labelKey: 'settings_nav.job_history', labelFallback: 'Job history' },
-      { id: 'general', to: '/settings/general', labelKey: 'settings_nav.general', labelFallback: 'General', fact: 'version' },
+      { id: 'jobs', to: '/settings/jobs', labelKey: 'settings_nav.jobs', labelFallback: 'Jobs', adminOnly: true },
+      { id: 'history', to: '/settings/jobs/history', labelKey: 'settings_nav.job_history', labelFallback: 'Job history', adminOnly: true },
+      { id: 'general', to: '/settings/general', labelKey: 'settings_nav.general', labelFallback: 'General', fact: 'version', adminOnly: true },
       // A setting for the scanner plugged into this computer, so per browser.
       { id: 'barcode-scanner', to: '/settings/barcode-scanner', labelKey: 'settings_nav.barcode_scanner', labelFallback: 'Barcode scanner' },
       { id: 'licences', to: '/settings/licences', labelKey: 'settings_nav.licences', labelFallback: 'Licences', staticFact: 'AGPL-3.0' },
     ],
   },
 ]
+
+/**
+ * The tree as one reader can use it: admin pages dropped for everyone else, and
+ * a section with nothing left dropped with them, so no row leads to a redirect.
+ */
+export function visibleSettings(isAdmin: boolean): SettingsSection[] {
+  if (isAdmin) return SETTINGS_TREE
+  return SETTINGS_TREE
+    .map(section => ({ ...section, pages: section.pages.filter(p => !p.adminOnly) }))
+    .filter(section => section.pages.length > 0)
+}
 
 /** The section a route belongs to, for the contextual sidebar and crumbs. */
 export function sectionForPath(pathname: string): SettingsSection | null {
