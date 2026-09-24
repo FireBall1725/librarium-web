@@ -1023,5 +1023,11 @@
     "headings_shelf": "Shelf headings",
     "no_shelf": "Not on a shelf",
     "preset_by_shelf": "Shelf, then author"
+  },
+  "image_upload": {
+    "too_large": "That image is over 10 MB. Try a smaller one.",
+    "wrong_type": "That file isn't a PNG, JPEG, GIF or WebP image.",
+    "no_permission": "You don't have permission to change this.",
+    "failed": "The upload didn't go through. Try again."
   }
 }

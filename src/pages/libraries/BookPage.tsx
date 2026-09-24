@@ -9,6 +9,7 @@ import { AddEditionModal } from '../../components/AddEditionModal'
 import EditBookModal from '../../components/EditBookModal'
 import LoanFormModal from '../../components/LoanFormModal'
 import BookCover from '../../components/BookCover'
+import { useToast } from '../../components/Toast'
 import BookContents from '../../components/BookContents'
 import BookLists from '../../components/BookLists'
 import BookReaders from '../../components/BookReaders'
@@ -18,6 +19,7 @@ import { type SavedList } from '../../lib/lists'
 import { withBase } from '../../lib/basePath'
 import { buildTree, flatten, numberedShelfIds, pathOf, shelfChoices, shelfSpot } from '../../lib/places'
 import { authorNames } from '../../lib/mergedLookup'
+import { IMAGE_ACCEPT, MAX_IMAGE_BYTES, imageUploadError, tooLargeMessage } from '../../lib/imageUpload'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -1601,6 +1603,8 @@ export default function BookPage() {
   const navigate = useNavigate()
   const { callApi } = useAuth()
   const { setExtraCrumbs } = useOutletContext<LibraryOutletContext>()
+  const { t } = useTranslation()
+  const toast = useToast()
 
   const [book, setBook] = useState<Book | null>(null)
   const [editions, setEditions] = useState<BookEdition[]>([])
@@ -1690,6 +1694,10 @@ export default function BookPage() {
     if (!file) return
     // Reset input so re-selecting the same file still fires onChange
     e.target.value = ''
+    if (file.size > MAX_IMAGE_BYTES) {
+      toast.show(tooLargeMessage(t), { variant: 'error' })
+      return
+    }
     setCoverUploading(true)
     try {
       const form = new FormData()
@@ -1699,8 +1707,9 @@ export default function BookPage() {
         body: form,
       })
       load()
-    } catch { /* ignore — cover upload errors are visible from missing image */ }
-    finally { setCoverUploading(false) }
+    } catch (err) {
+      toast.show(imageUploadError(err, t), { variant: 'error' })
+    } finally { setCoverUploading(false) }
   }
 
   const handleMarkReturned = async (loan: Loan) => {
@@ -1747,7 +1756,7 @@ export default function BookPage() {
           <div className="relative group cursor-pointer"
             onClick={() => !coverUploading && coverInputRef.current?.click()}>
             <BookCover title={book.title} coverUrl={book.cover_url} className="w-full" />
-            <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={handleCoverUpload} />
+            <input ref={coverInputRef} type="file" accept={IMAGE_ACCEPT} className="hidden" onChange={handleCoverUpload} />
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
               <button type="button" disabled={coverUploading}
                 onClick={e => { e.stopPropagation(); coverInputRef.current?.click() }}

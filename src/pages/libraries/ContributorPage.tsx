@@ -2,10 +2,13 @@
 // Copyright (C) 2026 fireball1725
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAuthenticatedImage } from '../../hooks/useAuthenticatedImage'
 import { Link, useNavigate, useOutletContext, useParams } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthContext'
 import BookCover from '../../components/BookCover'
+import { useToast } from '../../components/Toast'
+import { IMAGE_ACCEPT, MAX_IMAGE_BYTES, imageUploadError, tooLargeMessage } from '../../lib/imageUpload'
 import type { LibraryOutletContext } from '../../components/LibraryOutlet'
 import type {
   Book,
@@ -563,6 +566,8 @@ export default function ContributorPage() {
   const { libraryId, contributorId } = useParams<{ libraryId: string; contributorId: string }>()
   const { setExtraCrumbs } = useOutletContext<LibraryOutletContext>()
   const { callApi } = useAuth()
+  const { t } = useTranslation()
+  const toast = useToast()
 
   const [contributor, setContributor] = useState<ContributorDetail | null>(null)
   const [loading, setLoading] = useState(true)
@@ -605,12 +610,19 @@ export default function ContributorPage() {
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
+    if (file.size > MAX_IMAGE_BYTES) {
+      toast.show(tooLargeMessage(t), { variant: 'error' })
+      if (photoInputRef.current) photoInputRef.current.value = ''
+      return
+    }
     setPhotoUploading(true)
     try {
       const form = new FormData()
       form.append('photo', file)
       await callApi(`/api/v1/contributors/${contributorId}/photo`, { method: 'PUT', body: form })
       load()
+    } catch (err) {
+      toast.show(imageUploadError(err, t), { variant: 'error' })
     } finally {
       setPhotoUploading(false)
       if (photoInputRef.current) photoInputRef.current.value = ''
@@ -663,7 +675,7 @@ export default function ContributorPage() {
  {/* Photo with upload overlay */}
  <div ref={sidebarPhotoRef} className="relative group cursor-pointer"
  onClick={() => !photoUploading && photoInputRef.current?.click()}>
- <input ref={photoInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
+ <input ref={photoInputRef} type="file" accept={IMAGE_ACCEPT} className="hidden" onChange={handlePhotoUpload} />
  {sidebarPhotoSrc ? (
  <img
  src={sidebarPhotoSrc}

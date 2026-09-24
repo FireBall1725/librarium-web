@@ -1023,5 +1023,11 @@
     "headings_shelf": "Encabezados por estante",
     "no_shelf": "No está en un estante",
     "preset_by_shelf": "Estante y luego autor"
+  },
+  "image_upload": {
+    "too_large": "Esa imagen pasa de 10 MB. Prueba con una más pequeña.",
+    "wrong_type": "Ese archivo no es una imagen PNG, JPEG, GIF o WebP.",
+    "no_permission": "No tienes permiso para cambiar esto.",
+    "failed": "La subida no se completó. Inténtalo de nuevo."
   }
 }
