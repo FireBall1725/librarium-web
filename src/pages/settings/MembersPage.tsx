@@ -47,7 +47,7 @@ const ROLES = ['library_owner', 'library_editor', 'library_viewer'] as const
 
 export default function MembersPage() {
   const { t } = useTranslation()
-  const { callApi } = useAuth()
+  const { callApi, user } = useAuth()
   usePageTitle(t('settings_nav.members', { defaultValue: 'Members' }))
 
   const [params, setParams] = useSearchParams()
@@ -87,6 +87,13 @@ export default function MembersPage() {
   }, [callApi, libraryId])
 
   useEffect(() => { void load() }, [load])
+
+  // The members list is readable by every member, so it already says what the
+  // reader holds here. The API decides either way; this only hides controls
+  // that would answer 403.
+  const library = libraries.find(l => l.id === libraryId)
+  const myRole = members?.find(m => m.user_id === user?.id)?.role
+  const canManage = user?.is_instance_admin === true || myRole === 'library_owner'
 
   const changeRole = async (m: LibraryMember, role: string) => {
     setError(null)
@@ -177,7 +184,11 @@ export default function MembersPage() {
               </div>
             )}
 
-            <AddMember libraryId={libraryId} onAdded={m => { setNotice(m); void load() }} />
+            {canManage && (
+              <AddMember libraryId={libraryId}
+                onAdded={m => { setNotice(m); void load() }}
+                onError={setError} />
+            )}
 
             {members === null ? (
               <p className="text-sm text-content-muted">
@@ -197,10 +208,11 @@ export default function MembersPage() {
                       </span>
                     </span>
 
-                    {/* The owner's role is fixed. Demoting the only owner would
-                        leave a library nobody can administer, and there is no
-                        ownership transfer to offer instead. */}
-                    {m.role === 'library_owner' ? (
+                    {/* Only the library's owner is fixed, which is what the API
+                        protects: demoting them would leave a library nobody can
+                        administer, and there is no ownership transfer. Anyone
+                        else holding the owner role can be changed or removed. */}
+                    {m.user_id === library?.owner_id || !canManage ? (
                       <span className="lb-chip flex-none">{roleLabel(m.role)}</span>
                     ) : (
                       <>
@@ -215,9 +227,7 @@ export default function MembersPage() {
                           })}
                         >
                           {ROLES.map(r => (
-                            <option key={r} value={r} disabled={r === 'library_owner'}>
-                              {roleLabel(r)}
-                            </option>
+                            <option key={r} value={r}>{roleLabel(r)}</option>
                           ))}
                         </select>
                         <button
@@ -267,7 +277,11 @@ export default function MembersPage() {
  * upper bound, and the endpoint already requires two characters before it
  * answers.
  */
-function AddMember({ libraryId, onAdded }: { libraryId: string; onAdded: (notice: string) => void }) {
+function AddMember({ libraryId, onAdded, onError }: {
+  libraryId: string
+  onAdded: (notice: string) => void
+  onError: (message: string) => void
+}) {
   const { t } = useTranslation()
   const { callApi } = useAuth()
   const [query, setQuery] = useState('')
@@ -301,8 +315,8 @@ function AddMember({ libraryId, onAdded }: { libraryId: string; onAdded: (notice
       }))
       setPicked(null)
       setQuery('')
-    } catch {
-      /* The list reloads either way; a failure shows as the member not being in it. */
+    } catch (e) {
+      onError(e instanceof ApiError ? e.message : String(e))
     } finally {
       setBusy(false)
     }
@@ -346,7 +360,7 @@ function AddMember({ libraryId, onAdded }: { libraryId: string; onAdded: (notice
       <select className="lb-field" style={{ width: 'auto' }}
         value={role} onChange={e => setRole(e.target.value)}
         aria-label={t('members.role_label', { defaultValue: 'Role' })}>
-        {ROLES.filter(r => r !== 'library_owner').map(r => (
+        {ROLES.map(r => (
           <option key={r} value={r}>
             {t(`members.role.${r}`, { defaultValue: r.replace('library_', '') })}
           </option>

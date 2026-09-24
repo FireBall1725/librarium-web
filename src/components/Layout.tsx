@@ -10,7 +10,7 @@ import { applyReadingFont, readStoredReadingFont } from '../lib/readingFont'
 // is looking at Reading now.
 import { LISTS_CHANGED, announceListsChanged, ambiguousListNames, defaultListHref, fetchMissingCounts, importLegacyViews, listCount, listNameKey, normaliseParams, viewIsCurrent, deleteList, reorderLists, saveListOrder, splitLists, visibleLists, type SavedList } from '../lib/lists'
 import ViewRow from './ViewRow'
-import { SETTINGS_TREE } from '../lib/settingsTree'
+import { SETTINGS_TREE, visibleSettings } from '../lib/settingsTree'
 import { COLLECTION_CHANGED } from '../lib/collectionEvents'
 import { attentionRoutes, useSettingsAttention } from '../lib/settingsAttention'
 import { useScrollToTopOnNavigate } from '../hooks/useScrollToTopOnNavigate'
@@ -665,7 +665,7 @@ export default function Layout() {
                 label={t('settings.overview', { defaultValue: 'Overview' })}
                 end
               />
-              {SETTINGS_TREE.map(section => (
+              {visibleSettings(user?.is_instance_admin === true).map(section => (
                 <div key={section.id}>
                   <p className="lb-eyebrow px-2 pb-1 pt-3.5">
                     {t(section.labelKey, { defaultValue: section.labelFallback })}
