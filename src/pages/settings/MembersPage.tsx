@@ -18,6 +18,7 @@
 // back.
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { usePermissions } from '../../lib/permissions'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
 import { ApiError, useAuth } from '../../auth/AuthContext'
@@ -47,7 +48,8 @@ const ROLES = ['library_owner', 'library_editor', 'library_viewer'] as const
 
 export default function MembersPage() {
   const { t } = useTranslation()
-  const { callApi, user } = useAuth()
+  const { callApi } = useAuth()
+  const { can } = usePermissions()
   usePageTitle(t('settings_nav.members', { defaultValue: 'Members' }))
 
   const [params, setParams] = useSearchParams()
@@ -88,12 +90,9 @@ export default function MembersPage() {
 
   useEffect(() => { void load() }, [load])
 
-  // The members list is readable by every member, so it already says what the
-  // reader holds here. The API decides either way; this only hides controls
-  // that would answer 403.
+  // The API decides either way; this only hides controls that would answer 403.
   const library = libraries.find(l => l.id === libraryId)
-  const myRole = members?.find(m => m.user_id === user?.id)?.role
-  const canManage = user?.is_instance_admin === true || myRole === 'library_owner'
+  const canManage = can('members:update', libraryId)
 
   const changeRole = async (m: LibraryMember, role: string) => {
     setError(null)

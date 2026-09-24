@@ -1,5 +1,6 @@
 import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { usePermissions } from '../../lib/permissions'
 import { Navigate, useParams, Link, useOutletContext, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth, ApiError } from '../../auth/AuthContext'
 import type { Crumb, LibraryOutletContext } from '../../components/LibraryOutlet'
@@ -2686,6 +2687,11 @@ function BookArcAssigner({ entry, arcs, isOpen, onOpen, onClose, onAssign }: Boo
 function SeriesDetailView({ seriesId, libraryId, setExtraCrumbs, onBack }: SeriesDetailViewProps) {
   const { callApi } = useAuth()
   const { show: showToast } = useToast()
+  // Offer only what the API would accept. Editors hold series:update but not
+  // series:delete, and a Delete that answers 403 reads as a button that's broken.
+  const { can } = usePermissions()
+  const canEdit = can('series:update', libraryId)
+  const canDelete = can('series:delete', libraryId)
   // Series is fetched on mount so the URL is the source of truth — users can
   // share links straight to a series without going through the list first.
   const [series, setSeries] = useState<Series | null>(null)
@@ -2712,7 +2718,9 @@ function SeriesDetailView({ seriesId, libraryId, setExtraCrumbs, onBack }: Serie
     try {
       await callApi(`/api/v1/libraries/${libraryId}/series/${seriesId}`, { method: 'DELETE' })
       onBack()
-    } catch { /* ignore */ }
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : String(err), { variant: 'error' })
+    }
   }
 
   const reloadSeries = useCallback(async () => {
@@ -2974,37 +2982,43 @@ function SeriesDetailView({ seriesId, libraryId, setExtraCrumbs, onBack }: Serie
           {series.total_count != null && ` · ${series.book_count} / ${series.total_count} volumes`}
         </span>
         <div className="flex-1" />
-        {series.external_id && (
-          <button onClick={syncVolumes} disabled={isSyncing}
-            className="rounded-lg border border-line-strong px-3 py-1.5 text-sm font-medium text-content-secondary hover:bg-surface-muted disabled:opacity-50 transition-colors">
-            {isSyncing ? 'Syncing…' : 'Sync volumes'}
+        {canEdit && (<>
+          {series.external_id && (
+            <button onClick={syncVolumes} disabled={isSyncing}
+              className="rounded-lg border border-line-strong px-3 py-1.5 text-sm font-medium text-content-secondary hover:bg-surface-muted disabled:opacity-50 transition-colors">
+              {isSyncing ? 'Syncing…' : 'Sync volumes'}
+            </button>
+          )}
+          <button onClick={() => setShowAutoMatch(true)}
+            className="rounded-lg border border-line-strong px-3 py-1.5 text-sm font-medium text-content-secondary hover:bg-surface-muted transition-colors">
+            Auto-match
+          </button>
+          <button onClick={() => setShowMetaSearch(true)}
+            className="rounded-lg border border-line-strong px-3 py-1.5 text-sm font-medium text-content-secondary hover:bg-surface-muted transition-colors">
+            Search metadata
+          </button>
+          <button onClick={suggestSeriesMetadata} disabled={isSuggestingMetadata}
+            className="rounded-lg border border-line-strong px-3 py-1.5 text-sm font-medium text-content-secondary hover:bg-surface-muted disabled:opacity-50 transition-colors"
+            title="Ask AI to suggest series fields (status, total volumes, demographic, genres, description)">
+            {isSuggestingMetadata ? 'Asking AI…' : 'Suggest with AI'}
+          </button>
+          <button onClick={() => setShowEdit(true)}
+            className="rounded-lg border border-line-strong px-3 py-1.5 text-sm font-medium text-content-secondary hover:bg-surface-muted transition-colors">
+            Edit series
+          </button>
+        </>)}
+        {canDelete && (
+          <button onClick={deleteSeries}
+            className="rounded-lg border border-line-strong px-3 py-1.5 text-sm font-medium text-content-secondary hover:bg-danger-surface hover:text-danger-strong hover:border-red-300 dark:hover:border-red-800 transition-colors">
+            Delete series
           </button>
         )}
-        <button onClick={() => setShowAutoMatch(true)}
-          className="rounded-lg border border-line-strong px-3 py-1.5 text-sm font-medium text-content-secondary hover:bg-surface-muted transition-colors">
-          Auto-match
-        </button>
-        <button onClick={() => setShowMetaSearch(true)}
-          className="rounded-lg border border-line-strong px-3 py-1.5 text-sm font-medium text-content-secondary hover:bg-surface-muted transition-colors">
-          Search metadata
-        </button>
-        <button onClick={suggestSeriesMetadata} disabled={isSuggestingMetadata}
-          className="rounded-lg border border-line-strong px-3 py-1.5 text-sm font-medium text-content-secondary hover:bg-surface-muted disabled:opacity-50 transition-colors"
-          title="Ask AI to suggest series fields (status, total volumes, demographic, genres, description)">
-          {isSuggestingMetadata ? 'Asking AI…' : 'Suggest with AI'}
-        </button>
-        <button onClick={() => setShowEdit(true)}
-          className="rounded-lg border border-line-strong px-3 py-1.5 text-sm font-medium text-content-secondary hover:bg-surface-muted transition-colors">
-          Edit series
-        </button>
-        <button onClick={deleteSeries}
-          className="rounded-lg border border-line-strong px-3 py-1.5 text-sm font-medium text-content-secondary hover:bg-danger-surface hover:text-danger-strong hover:border-red-300 dark:hover:border-red-800 transition-colors">
-          Delete series
-        </button>
-        <button onClick={() => setShowAdd(true)}
-          className="rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors">
-          Add book
-        </button>
+        {canEdit && (
+          <button onClick={() => setShowAdd(true)}
+            className="rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors">
+            Add book
+          </button>
+        )}
       </div>
 
       {(series.description || series.url) && (
@@ -3108,30 +3122,32 @@ function SeriesDetailView({ seriesId, libraryId, setExtraCrumbs, onBack }: Serie
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3 justify-end">
-                          {arcs.length > 0 && (
-                            <BookArcAssigner
-                              entry={row.entry}
-                              arcs={arcs}
-                              isOpen={assigningBookId === row.entry.book_id}
-                              onOpen={() => setAssigningBookId(row.entry.book_id)}
-                              onClose={() => setAssigningBookId(null)}
-                              onAssign={arcID => assignBookToArc(row.entry.book_id, row.entry.position, arcID)}
-                            />
-                          )}
-                          <button onClick={() => setEditEntry(row.entry)}
-                            className="p-1 rounded text-content-muted hover:text-accent hover:bg-surface-inset transition-colors"
-                            title="Edit volume position">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                              <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                            </svg>
-                          </button>
-                          <button onClick={() => removeEntry(row.entry.book_id)}
-                            className="p-1 rounded text-content-muted hover:text-danger hover:bg-surface-inset transition-colors"
-                            title="Remove from series">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                            </svg>
-                          </button>
+                          {canEdit && (<>
+                            {arcs.length > 0 && (
+                              <BookArcAssigner
+                                entry={row.entry}
+                                arcs={arcs}
+                                isOpen={assigningBookId === row.entry.book_id}
+                                onOpen={() => setAssigningBookId(row.entry.book_id)}
+                                onClose={() => setAssigningBookId(null)}
+                                onAssign={arcID => assignBookToArc(row.entry.book_id, row.entry.position, arcID)}
+                              />
+                            )}
+                            <button onClick={() => setEditEntry(row.entry)}
+                              className="p-1 rounded text-content-muted hover:text-accent hover:bg-surface-inset transition-colors"
+                              title="Edit volume position">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                              </svg>
+                            </button>
+                            <button onClick={() => removeEntry(row.entry.book_id)}
+                              className="p-1 rounded text-content-muted hover:text-danger hover:bg-surface-inset transition-colors"
+                              title="Remove from series">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                              </svg>
+                            </button>
+                          </>)}
                         </div>
                       </td>
                     </tr>
