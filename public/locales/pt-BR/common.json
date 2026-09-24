@@ -617,7 +617,9 @@
     "find": "Qual volume está dentro?",
     "inside": "Também em:",
     "position": "Ordem",
-    "remove": "Tirar {{title}}"
+    "remove": "Tirar {{title}}",
+    "no_match": "Nenhum livro desta biblioteca corresponde a \"{{query}}\".",
+    "searching": "Buscando…"
   },
   "book_series": {
     "add": "+ Adicionar a uma série",

@@ -617,7 +617,9 @@
     "find": "¿Qué tomo hay dentro?",
     "inside": "También en:",
     "position": "Orden",
-    "remove": "Quitar {{title}}"
+    "remove": "Quitar {{title}}",
+    "no_match": "Ningún libro de esta biblioteca coincide con «{{query}}».",
+    "searching": "Buscando…"
   },
   "book_series": {
     "add": "+ Añadir a una serie",

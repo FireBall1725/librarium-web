@@ -617,7 +617,9 @@
     "find": "Quel tome est à l'intérieur ?",
     "inside": "Aussi dans :",
     "position": "Ordre",
-    "remove": "Retirer {{title}}"
+    "remove": "Retirer {{title}}",
+    "no_match": "Aucun livre de cette bibliothèque ne correspond à « {{query}} ».",
+    "searching": "Recherche…"
   },
   "book_series": {
     "add": "+ Ajouter à une série",
