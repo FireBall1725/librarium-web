@@ -24,7 +24,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Crowdin action
-        uses: crowdin/github-action@v2
+        uses: crowdin/github-action@v3
         with:
           upload_sources: true
           # Every French string in this repo was written by hand in a feature
