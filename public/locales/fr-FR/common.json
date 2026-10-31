@@ -3,30 +3,30 @@
     "name": "Librarium"
   },
   "auth": {
-    "sign_in_subtitle": "Sign in to your library",
-    "username_or_email": "Username or email",
-    "username_placeholder": "username",
-    "password": "Password",
-    "remember_me": "Remember me",
-    "sign_in": "Sign in",
-    "signing_in": "Signing in…",
-    "unexpected_error": "An unexpected error occurred",
+    "sign_in_subtitle": "Connectez-vous à votre bibliothèque",
+    "username_or_email": "Nom d'utilisateur ou e-mail",
+    "username_placeholder": "nom d'utilisateur",
+    "password": "Mot de passe",
+    "remember_me": "Rester connecté",
+    "sign_in": "Se connecter",
+    "signing_in": "Connexion…",
+    "unexpected_error": "Une erreur inattendue s'est produite",
     "invalid_credentials": "Nom d'utilisateur ou mot de passe incorrect"
   },
   "nav": {
-    "dashboard": "Dashboard",
-    "libraries": "Libraries",
+    "dashboard": "Tableau de bord",
+    "libraries": "Bibliothèques",
     "suggestions": "Suggestions",
-    "tools": "Tools",
-    "import": "Import",
+    "tools": "Outils",
+    "import": "Importation",
     "admin": "Admin",
-    "users": "Users",
-    "connections": "Connections",
-    "settings": "Settings",
-    "profile": "Profile",
-    "sign_out": "Sign out",
-    "open_menu": "Open navigation menu",
-    "close_menu": "Close navigation menu",
+    "users": "Utilisateurs",
+    "connections": "Connexions",
+    "settings": "Paramètres",
+    "profile": "Profil",
+    "sign_out": "Se déconnecter",
+    "open_menu": "Ouvrir le menu de navigation",
+    "close_menu": "Fermer le menu de navigation",
     "books": "Livres",
     "views": "Vues",
     "series": "Séries",
@@ -36,60 +36,60 @@
     "shared_views": "Vues partagées"
   },
   "library_nav": {
-    "books": "Books",
-    "contributors": "Contributors",
-    "series": "Series",
-    "loans": "Loans",
-    "members": "Members"
+    "books": "Livres",
+    "contributors": "Contributeurs",
+    "series": "Séries",
+    "loans": "Prêts",
+    "members": "Membres"
   },
   "footer": {
     "web": "Web",
     "api": "API",
     "source": "Source",
-    "license": "License",
-    "report_issue": "Report an issue",
+    "license": "Licence",
+    "report_issue": "Signaler un problème",
     "credit": "Créé par FireBall1725 en Ontario, Canada"
   },
   "connections_nav": {
-    "ai": "AI"
+    "ai": "IA"
   },
   "settings_nav": {
     "ai_privacy": "IA et confidentialité",
     "appearance": "Apparence",
     "duplicate_authors": "Doublons d'auteurs",
-    "general": "General",
+    "general": "Général",
     "genres": "Genres",
     "job_history": "Historique des tâches",
-    "jobs": "Jobs",
+    "jobs": "Tâches",
     "licences": "Licences",
     "lists": "Listes",
-    "media_management": "Media Management",
-    "media_types": "Media Types",
+    "media_management": "Gestion des médias",
+    "media_types": "Types de médias",
     "members": "Membres",
-    "metadata": "Metadata",
+    "metadata": "Métadonnées",
     "people": "Personnes",
     "profile": "Profil",
-    "profiles": "Profiles",
+    "profiles": "Profils",
     "providers": "Recherches",
     "shelves": "Étagères",
-    "tags": "Tags",
+    "tags": "Étiquettes",
     "tokens": "Jetons API",
     "barcode_scanner": "Lecteur de codes-barres"
   },
   "theme": {
-    "light": "☀ Light",
-    "dark": "☾ Dark",
+    "light": "☀ Clair",
+    "dark": "☾ Sombre",
     "auto": "⊙ Auto",
-    "cycle_tooltip": "Cycle theme: light → dark → auto",
+    "cycle_tooltip": "Changer de thème : clair → sombre → auto",
     "label": "Thème"
   },
   "badges": {
     "public": "Public",
-    "favourite": "Favourite"
+    "favourite": "Favori"
   },
   "errors": {
-    "failed_to_load": "Failed to load",
-    "failed_to_load_libraries": "Failed to load libraries"
+    "failed_to_load": "Échec du chargement",
+    "failed_to_load_libraries": "Échec du chargement des bibliothèques"
   },
   "books": {
     "title": "Livres",
@@ -191,7 +191,18 @@
     "saved": "vue enregistrée",
     "share_none": "Moi seulement",
     "share_with": "Partager avec",
-    "shared_empty": "Aucune pour l'instant. Une vue créée ici est visible par tous ceux qui ont accès à la bibliothèque."
+    "shared_empty": "Aucune pour l'instant. Une vue créée ici est visible par tous ceux qui ont accès à la bibliothèque.",
+    "builtin": {
+      "default": "Par défaut",
+      "reading": "En cours",
+      "unread": "À lire ensuite",
+      "read": "Terminés",
+      "favourites": "Favoris",
+      "five-stars": "Cinq étoiles",
+      "signed": "Exemplaires dédicacés",
+      "incomplete": "Séries incomplètes",
+      "reading-series": "Séries en cours"
+    }
   },
   "index": {
     "all": "Tous"
@@ -236,8 +247,8 @@
     "none": "Aucune série",
     "none_matching": "Aucune série ne correspond",
     "own_of": "{{have}} sur {{total}}",
-    "own_one": "{{count}} volume",
-    "own_other": "{{count}} volumes",
+    "own_one": "{{count}} tome",
+    "own_other": "{{count}} tomes",
     "owned_of": "{{owned}} sur {{total}}",
     "owned_one": "{{count}} tome",
     "owned_other": "{{count}} tomes",

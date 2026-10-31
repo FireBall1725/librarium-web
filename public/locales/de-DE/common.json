@@ -191,7 +191,18 @@
     "saved": "gespeicherte Ansicht",
     "share_none": "Nur ich",
     "share_with": "Teilen mit",
-    "shared_empty": "Noch keine. Eine hier erstellte sehen alle, die auf die Bibliothek zugreifen können."
+    "shared_empty": "Noch keine. Eine hier erstellte sehen alle, die auf die Bibliothek zugreifen können.",
+    "builtin": {
+      "default": "Standard",
+      "reading": "Am Lesen",
+      "unread": "Als Nächstes",
+      "read": "Beendet",
+      "favourites": "Favoriten",
+      "five-stars": "Fünf Sterne",
+      "signed": "Signierte Exemplare",
+      "incomplete": "Serien mit Lücken",
+      "reading-series": "Laufende Serien"
+    }
   },
   "index": {
     "all": "Alle"

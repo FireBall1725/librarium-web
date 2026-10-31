@@ -2,8 +2,9 @@
 // Copyright (C) 2026 FireBall1725
 
 import { NavLink } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Icon } from '../lib/icons'
-import { listHref, listIcon, type SavedList } from '../lib/lists'
+import { listHref, listIcon, listDisplayName, type SavedList } from '../lib/lists'
 
 /**
  * One view in the rail.
@@ -38,6 +39,8 @@ export default function ViewRow({
   onDrop: (fromId: string) => void
   onNudge: (id: string, delta: -1 | 1) => void
 }) {
+  const { t } = useTranslation()
+  const name = listDisplayName(l, t)
   const dropping = dragOver === l.id && dragging !== l.id
   // Which side of this row the line goes on: dragging downwards, the row lands
   // after the one it is over.
@@ -87,7 +90,7 @@ export default function ViewRow({
         // flicker.
         dropping ? `lb-drop-line ${after ? 'lb-drop-after' : 'lb-drop-before'}` : '',
       ].filter(Boolean).join(' ')}
-      title={[l.name, qualifier, l.description].filter(Boolean).join(' · ') || undefined}
+      title={[name, qualifier, l.description].filter(Boolean).join(' · ') || undefined}
     >
       {/* The universal six-dot grip, so a row reads as grabbable without having
           to be dragged to find out. Absolutely positioned in the row's existing
@@ -104,7 +107,7 @@ export default function ViewRow({
           in the rail not drawn from the same set as everything above. */}
       <Icon name={listIcon(l)} style={l.color ? { color: l.color } : undefined} />
       <span className="min-w-0 flex-1 truncate">
-        {l.name}
+        {name}
         {/* Which library, but only when the name alone does not say. Two views
             shared into different libraries and both called Favourites read as
             one row listed twice. Qualifying every one would be noise for the

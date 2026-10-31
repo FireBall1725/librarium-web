@@ -3,6 +3,7 @@
 
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth, ApiError } from '../auth/AuthContext'
 import { useToast } from './Toast'
 import BookCover from './BookCover'
@@ -20,6 +21,7 @@ type BlockScope = 'book' | 'author'
 // the type-specific primary action — "interested" for buy, "open" for read_next
 // (the book is already in the library so we can link straight there).
 export default function SuggestionCard({ suggestion, onChanged }: SuggestionCardProps) {
+  const { t } = useTranslation(['dashboard', 'common'])
   const { callApi } = useAuth()
   const { show: showToast } = useToast()
   const [busy, setBusy] = useState(false)
@@ -34,12 +36,12 @@ export default function SuggestionCard({ suggestion, onChanged }: SuggestionCard
       })
       onChanged(suggestion.id, status === 'dismissed' ? null : status)
       if (status === 'dismissed') {
-        showToast('Dismissed', { variant: 'success' })
+        showToast(t('dashboard:suggestions.toast_dismissed'), { variant: 'success' })
       } else if (status === 'interested') {
-        showToast('Marked as interested', { variant: 'success' })
+        showToast(t('dashboard:suggestions.toast_interested'), { variant: 'success' })
       }
     } catch (err) {
-      showToast(err instanceof ApiError ? err.message : 'Failed to update', { variant: 'error' })
+      showToast(err instanceof ApiError ? err.message : t('dashboard:suggestions.toast_update_failed'), { variant: 'error' })
     } finally {
       setBusy(false)
     }
@@ -54,9 +56,12 @@ export default function SuggestionCard({ suggestion, onChanged }: SuggestionCard
         body: JSON.stringify({ scope }),
       })
       onChanged(suggestion.id, null)
-      showToast(scope === 'book' ? 'Blocked this book' : `Blocked anything by ${suggestion.author}`, { variant: 'success' })
+      showToast(scope === 'book'
+        ? t('dashboard:suggestions.toast_blocked_book')
+        : t('dashboard:suggestions.toast_blocked_author', { author: suggestion.author }),
+        { variant: 'success' })
     } catch (err) {
-      showToast(err instanceof ApiError ? err.message : 'Failed to block', { variant: 'error' })
+      showToast(err instanceof ApiError ? err.message : t('dashboard:suggestions.toast_block_failed'), { variant: 'error' })
     } finally {
       setBusy(false)
     }
@@ -113,7 +118,7 @@ export default function SuggestionCard({ suggestion, onChanged }: SuggestionCard
             to={detailHref}
             className="flex-1 text-center rounded border border-accent-line bg-accent-surface px-2 py-1 font-medium text-accent-strong hover:bg-accent-surface transition-colors"
           >
-            Open
+            {t('common:open')}
           </Link>
         ) : (
           <button
@@ -122,14 +127,14 @@ export default function SuggestionCard({ suggestion, onChanged }: SuggestionCard
             disabled={busy || suggestion.status === 'interested'}
             className="flex-1 rounded border border-accent-line bg-accent-surface px-2 py-1 font-medium text-accent-strong hover:bg-accent-surface disabled:opacity-50 transition-colors"
           >
-            {suggestion.status === 'interested' ? 'Saved ✓' : 'Interested'}
+            {suggestion.status === 'interested' ? t('dashboard:suggestions.saved') : t('dashboard:suggestions.interested')}
           </button>
         )}
         <button
           type="button"
           onClick={() => setStatus('dismissed')}
           disabled={busy}
-          title="Dismiss"
+          title={t('dashboard:suggestions.dismiss_title')}
           className="rounded border border-line-strong px-2 py-1 font-medium text-content-tertiary hover:bg-surface-inset disabled:opacity-50 transition-colors"
         >
           ✕
@@ -139,7 +144,7 @@ export default function SuggestionCard({ suggestion, onChanged }: SuggestionCard
             type="button"
             onClick={() => setBlockOpen(o => !o)}
             disabled={busy}
-            title="Block"
+            title={t('dashboard:suggestions.block_title')}
             className="rounded border border-line-strong px-2 py-1 font-medium text-content-tertiary hover:bg-surface-inset disabled:opacity-50 transition-colors"
           >
             ⊘
@@ -151,7 +156,7 @@ export default function SuggestionCard({ suggestion, onChanged }: SuggestionCard
                 onClick={() => block('book')}
                 className="block w-full text-left px-3 py-2 text-xs hover:bg-surface-inset text-content-secondary"
               >
-                Block this book
+                {t('dashboard:suggestions.block_book')}
               </button>
               {suggestion.author && (
                 <button
@@ -159,7 +164,7 @@ export default function SuggestionCard({ suggestion, onChanged }: SuggestionCard
                   onClick={() => block('author')}
                   className="block w-full text-left px-3 py-2 text-xs hover:bg-surface-inset text-content-secondary"
                 >
-                  Block by {suggestion.author}
+                  {t('dashboard:suggestions.block_author', { author: suggestion.author })}
                 </button>
               )}
               <button
@@ -167,7 +172,7 @@ export default function SuggestionCard({ suggestion, onChanged }: SuggestionCard
                 onClick={() => setBlockOpen(false)}
                 className="block w-full text-left px-3 py-2 text-xs text-content-subtle border-t border-line-subtle hover:bg-surface-inset"
               >
-                Cancel
+                {t('common:cancel')}
               </button>
             </div>
           )}

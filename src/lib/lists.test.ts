@@ -10,6 +10,7 @@ import {
   importLegacyViews,
   isDirty,
   listCount,
+  listDisplayName,
   listHref,
   listNameKey,
   listQuery,
@@ -443,5 +444,32 @@ describe('reordering', () => {
     const after = reorderLists(withDefault, 'b', 'a')
     expect(after.find(l => l.id === 'd')?.display_order).toBe(0)
     expect(order(after)).toBe('ba')
+  })
+})
+
+describe('listDisplayName', () => {
+  // Stand-in t(): what i18next would render when the key exists is the
+  // translation, so the stub reports the key it was asked for.
+  const t = (key: string, opts?: { defaultValue?: string }) => opts?.defaultValue
+    ? `${key}=${opts.defaultValue}` : key
+
+  it('translates a built-in still carrying the shipped name', () => {
+    const l = list({ name: 'Reading now', builtin_key: 'reading' })
+    expect(listDisplayName(l, t)).toBe('views.builtin.reading=Reading now')
+  })
+
+  it('keeps the reader\'s words once the view has been renamed', () => {
+    const l = list({ name: 'Currently reading', builtin_key: 'reading' })
+    expect(listDisplayName(l, t)).toBe('Currently reading')
+  })
+
+  it('leaves views that are not ours to name alone', () => {
+    const l = list({ name: 'Signed first editions' })
+    expect(listDisplayName(l, t)).toBe('Signed first editions')
+  })
+
+  it('does not mistake a similar name for the shipped one', () => {
+    const l = list({ name: 'reading now', builtin_key: 'reading' })
+    expect(listDisplayName(l, t)).toBe('reading now')
   })
 })
