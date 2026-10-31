@@ -191,7 +191,18 @@
     "saved": "visão salva",
     "share_none": "Só eu",
     "share_with": "Compartilhar com",
-    "shared_empty": "Ainda nenhuma. Uma visão criada aqui aparece para todo mundo que puder ver a biblioteca."
+    "shared_empty": "Ainda nenhuma. Uma visão criada aqui aparece para todo mundo que puder ver a biblioteca.",
+    "builtin": {
+      "default": "Padrão",
+      "reading": "Lendo agora",
+      "unread": "A seguir",
+      "read": "Concluídos",
+      "favourites": "Favoritos",
+      "five-stars": "Cinco estrelas",
+      "signed": "Exemplares assinados",
+      "incomplete": "Séries com lacunas",
+      "reading-series": "Séries em andamento"
+    }
   },
   "index": {
     "all": "Tudo"

@@ -188,7 +188,18 @@
     "saved": "保存済みビュー",
     "share_none": "自分のみ",
     "share_with": "共有先",
-    "shared_empty": "まだありません。ここで作ると、そのライブラリを見られる全員に表示されます。"
+    "shared_empty": "まだありません。ここで作ると、そのライブラリを見られる全員に表示されます。",
+    "builtin": {
+      "default": "デフォルト",
+      "reading": "読書中",
+      "unread": "次に読む",
+      "read": "読了",
+      "favourites": "お気に入り",
+      "five-stars": "星5つ",
+      "signed": "サイン本",
+      "incomplete": "揃っていないシリーズ",
+      "reading-series": "読書中のシリーズ"
+    }
   },
   "index": {
     "all": "すべて"

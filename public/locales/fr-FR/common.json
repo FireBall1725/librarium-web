@@ -191,7 +191,18 @@
     "saved": "vue enregistrée",
     "share_none": "Moi seulement",
     "share_with": "Partager avec",
-    "shared_empty": "Aucune pour l'instant. Une vue créée ici est visible par tous ceux qui ont accès à la bibliothèque."
+    "shared_empty": "Aucune pour l'instant. Une vue créée ici est visible par tous ceux qui ont accès à la bibliothèque.",
+    "builtin": {
+      "default": "Par défaut",
+      "reading": "En cours",
+      "unread": "À lire ensuite",
+      "read": "Terminés",
+      "favourites": "Favoris",
+      "five-stars": "Cinq étoiles",
+      "signed": "Exemplaires dédicacés",
+      "incomplete": "Séries incomplètes",
+      "reading-series": "Séries en cours"
+    }
   },
   "index": {
     "all": "Tous"

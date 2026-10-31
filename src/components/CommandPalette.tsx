@@ -32,7 +32,7 @@ import {
   type CommandItem,
   type ItemKind,
 } from '../lib/commandPalette'
-import { fetchLists, type SavedList } from '../lib/lists'
+import { fetchLists, listDisplayName, type SavedList } from '../lib/lists'
 import type { Book, Library, Loan, MeSeriesResult } from '../types'
 
 /** How many rows a single remote source may contribute. */
@@ -136,7 +136,7 @@ export default function CommandPalette({
 
     const local: CommandItem[] = [
       ...actions,
-      ...viewItems(lists),
+      ...viewItems(lists, l => listDisplayName(l, t)),
       ...libraries.map<CommandItem>(l => ({
         kind: 'library', id: `lib:${l.id}`, label: l.name, icon: 'libraries',
         tint: libraryColour(l.id), to: `/books?lib=${l.id}`,

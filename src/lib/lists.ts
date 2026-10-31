@@ -267,6 +267,43 @@ export function splitLists(lists: SavedList[]): { mine: SavedList[]; shared: Sav
 export const listIcon = (l: SavedList): IconName =>
   listIconName(l.icon, l.builtin_key, l.kind)
 
+/**
+ * The names the API seeds for the lists it ships, keyed on builtin_key.
+ *
+ * Mirrors BuiltinLists in librarium-api's internal/repository/lists.go. The
+ * seed is handed over once and then owned by the reader — rename Five stars
+ * and it sticks — so the stored name stays the source of truth and this map
+ * is only consulted when the name is still exactly the one that shipped.
+ */
+const BUILTIN_LIST_NAMES: Record<string, string> = {
+  default: 'Default',
+  reading: 'Reading now',
+  unread: 'Up next',
+  read: 'Finished',
+  favourites: 'Favourites',
+  'five-stars': 'Five stars',
+  signed: 'Signed copies',
+  incomplete: 'Runs with gaps',
+  'reading-series': 'Series on the go',
+}
+
+/**
+ * Display name for a list: the locale's translation of the shipped name while
+ * the reader has not renamed it, their own words once they have.
+ *
+ * Every surface that shows a list name goes through this — the rail, the view
+ * chip, the palette, the book-page lists — so a view never reads English in a
+ * French rail and French inside the palette.
+ */
+export const listDisplayName = (
+  l: Pick<SavedList, 'name' | 'builtin_key'>,
+  t: (key: string, opts?: { defaultValue?: string }) => string,
+): string => {
+  const shipped = l.builtin_key ? BUILTIN_LIST_NAMES[l.builtin_key] : undefined
+  if (shipped === undefined || shipped !== l.name.trim()) return l.name
+  return t(`views.builtin.${l.builtin_key}`, { defaultValue: l.name })
+}
+
 /** Query-string form, normalised so two spellings of one filter compare equal. */
 export function normaliseParams(params: string): string {
   const p = new URLSearchParams(params)

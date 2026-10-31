@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
-import { announceListsChanged, fetchLists, listHref, type SavedList } from '../lib/lists'
+import { announceListsChanged, fetchLists, listHref, listDisplayName, type SavedList } from '../lib/lists'
 
 /**
  * The lists a book is on, and the controls to change that.
@@ -97,7 +97,7 @@ export default function BookLists({
       {lists.map(l => (
         <span key={l.id}
           className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-surface py-1.5 pl-3 pr-1.5 text-sm text-content-secondary">
-          <Link to={listHref(l)} className="hover:text-content">{l.name}</Link>
+          <Link to={listHref(l)} className="hover:text-content">{listDisplayName(l, t)}</Link>
           <button type="button" disabled={busy} onClick={() => void remove(l.id)}
             title={t('book_lists.remove', { defaultValue: 'Take off this list' })}
             aria-label={t('book_lists.remove_named', {
@@ -140,7 +140,7 @@ export default function BookLists({
           className="rounded-lg border border-dashed border-line-strong bg-transparent px-3 py-1.5 text-sm text-content-tertiary hover:bg-surface-inset"
         >
           <option value="">{t('book_lists.add', { defaultValue: '+ Add to list' })}</option>
-          {available.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
+          {available.map(l => <option key={l.id} value={l.id}>{listDisplayName(l, t)}</option>)}
           <option value="__new__">{t('book_lists.new', { defaultValue: 'New list…' })}</option>
         </select>
       )}

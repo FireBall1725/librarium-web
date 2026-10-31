@@ -191,7 +191,18 @@
     "saved": "saved view",
     "share_none": "Only me",
     "share_with": "Share with",
-    "shared_empty": "None yet. One made here is visible to everyone who can reach the library."
+    "shared_empty": "None yet. One made here is visible to everyone who can reach the library.",
+    "builtin": {
+      "default": "Default",
+      "reading": "Reading now",
+      "unread": "Up next",
+      "read": "Finished",
+      "favourites": "Favourites",
+      "five-stars": "Five stars",
+      "signed": "Signed copies",
+      "incomplete": "Runs with gaps",
+      "reading-series": "Series on the go"
+    }
   },
   "index": {
     "all": "All"
