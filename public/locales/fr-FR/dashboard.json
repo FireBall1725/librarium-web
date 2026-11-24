@@ -1,93 +1,105 @@
 {
-  "welcome_back": "Welcome back, {{name}}",
-  "page_title": "Dashboard",
-  "continue_reading_eyebrow": "Continue reading",
-  "last_opened": "Last opened {{relative}}",
-  "also_in_progress": "Also in progress",
+  "welcome_back": "Bon retour, {{name}}",
+  "page_title": "Tableau de bord",
+  "continue_reading_eyebrow": "Reprendre la lecture",
+  "last_opened": "Dernière ouverture {{relative}}",
+  "also_in_progress": "Aussi en cours",
   "no_books_in_progress": {
-    "title": "No books in progress",
-    "hint": "Mark a book as \"Reading\" and it'll show up here."
+    "title": "Aucune lecture en cours",
+    "hint": "Marquez un livre comme « En cours » et il apparaîtra ici."
   },
   "stats": {
-    "read_in_year": "Read in {{year}}",
-    "all_time": "{{count}} all-time",
-    "last_12_months": "Last 12 months",
-    "reading": "Reading",
-    "favourites": "Favourites",
-    "total_books": "Total books",
-    "unread": "Unread",
-    "sparkline_aria": "12-month reading activity"
+    "read_in_year": "Lus en {{year}}",
+    "all_time": "{{count}} au total",
+    "last_12_months": "12 derniers mois",
+    "reading": "En cours",
+    "favourites": "Favoris",
+    "total_books": "Livres au total",
+    "unread": "Non lus",
+    "sparkline_aria": "Activité de lecture sur 12 mois"
   },
   "continue_series": {
-    "title": "Up next in your series",
-    "empty": "Finish a book in a series and we'll suggest the next one."
+    "title": "À suivre dans vos séries",
+    "empty": "Terminez un tome d'une série et nous suggérerons le suivant."
   },
   "recently_finished": {
-    "title": "Recently finished",
-    "empty": "No finished books yet.",
+    "title": "Terminés récemment",
+    "empty": "Aucun livre terminé pour l'instant.",
     "rating": "★ {{rating}}/10"
   },
   "recently_added": {
-    "title": "Recently added",
-    "empty": "No books yet. Add one to get started."
+    "title": "Ajoutés récemment",
+    "empty": "Aucun livre pour l'instant. Ajoutez-en un pour commencer."
   },
   "picks_of_the_day": {
-    "title": "Picks of the day",
-    "empty": "Nothing to pick from — add some novels to your libraries and check back tomorrow."
+    "title": "Sélections du jour",
+    "empty": "Rien à sélectionner — ajoutez des romans à vos bibliothèques et revenez demain."
   },
   "suggestions": {
-    "buy_title": "Suggestions to buy",
-    "read_next_title": "Read next from your library",
-    "see_all": "See all →"
+    "buy_title": "Suggestions d'achat",
+    "read_next_title": "À lire ensuite dans votre bibliothèque",
+    "see_all": "Tout voir →",
+    "interested": "Intéressé",
+    "saved": "Enregistré ✓",
+    "dismiss_title": "Ignorer",
+    "block_title": "Bloquer",
+    "block_book": "Bloquer ce livre",
+    "block_author": "Bloquer les suggestions de {{author}}",
+    "toast_dismissed": "Ignoré",
+    "toast_interested": "Marqué comme intéressé",
+    "toast_update_failed": "Échec de la mise à jour",
+    "toast_blocked_book": "Livre bloqué",
+    "toast_blocked_author": "Suggestions de {{author}} bloquées",
+    "toast_block_failed": "Échec du blocage"
   },
   "suggestions_page": {
     "title": "Suggestions",
-    "description": "Books your AI assistant thinks you'd enjoy, based on your library and taste profile.",
-    "run_now": "Run now",
-    "running": "Running…",
-    "run_queued": "Suggestion run queued — new picks will appear shortly.",
-    "run_failed": "Couldn't start a suggestion run.",
+    "description": "Des livres que votre assistant IA pense que vous aimerez, d'après votre bibliothèque et votre profil de goûts.",
+    "run_now": "Lancer maintenant",
+    "running": "En cours…",
+    "run_queued": "Génération de suggestions en file d'attente — les sélections apparaîtront bientôt.",
+    "run_failed": "Impossible de lancer la génération de suggestions.",
     "filters": {
-      "all": "All ({{count}})",
-      "read_next": "Read next ({{count}})",
-      "buy": "To buy ({{count}})",
-      "saved": "Saved ({{count}})"
+      "all": "Toutes ({{count}})",
+      "read_next": "À lire ({{count}})",
+      "buy": "À acheter ({{count}})",
+      "saved": "Enregistrées ({{count}})"
     },
     "saved_empty": {
-      "title": "Nothing saved yet",
-      "hint": "Tap \"Interested\" on a suggestion to pin it here."
+      "title": "Rien d'enregistré pour l'instant",
+      "hint": "Appuyez sur « Intéressé » sur une suggestion pour l'épingler ici."
     },
     "empty": {
-      "title": "No suggestions yet",
-      "hint": "Opt in from your profile and run a batch — or wait for the next scheduled run."
+      "title": "Aucune suggestion pour l'instant",
+      "hint": "Activez l'option depuis votre profil et lancez une génération — ou attendez la prochaine exécution planifiée."
     },
     "runs": {
-      "title": "Recent runs"
+      "title": "Exécutions récentes"
     },
     "progress": {
-      "title": "Generating suggestions…",
-      "starting": "Starting run…",
-      "steps_one": "{{count}} step completed",
-      "steps_other": "{{count}} steps completed"
+      "title": "Génération des suggestions…",
+      "starting": "Démarrage…",
+      "steps_one": "{{count}} étape terminée",
+      "steps_other": "{{count}} étapes terminées"
     },
     "quota": {
-      "label": "Runs left: {{remaining}}/{{limit}}",
-      "unlimited": "Runs today: {{used}}",
-      "resets_at": "Next run available {{at}}"
+      "label": "Exécutions restantes : {{remaining}}/{{limit}}",
+      "unlimited": "Exécutions aujourd'hui : {{used}}",
+      "resets_at": "Prochaine exécution possible {{at}}"
     }
   },
   "library_chips": {
-    "create_first": "+ Create your first library",
-    "view_all": "View all →"
+    "create_first": "+ Créez votre première bibliothèque",
+    "view_all": "Tout voir →"
   },
   "relative_time": {
-    "just_now": "just now",
-    "minutes": "{{count}}m ago",
-    "hours": "{{count}}h ago",
-    "yesterday": "yesterday",
-    "days": "{{count}}d ago",
-    "weeks": "{{count}}w ago",
-    "months": "{{count}}mo ago",
-    "years": "{{count}}y ago"
+    "just_now": "à l'instant",
+    "minutes": "il y a {{count}} min",
+    "hours": "il y a {{count}} h",
+    "yesterday": "hier",
+    "days": "il y a {{count}} j",
+    "weeks": "il y a {{count}} sem.",
+    "months": "il y a {{count}} mois",
+    "years": "il y a {{count}} ans"
   }
 }

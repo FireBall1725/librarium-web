@@ -112,13 +112,18 @@ export function pageItems(t: (k: string, o?: Record<string, unknown>) => string,
  * headings, which put the two halves of one concept in two places and meant a
  * view made anywhere else never appeared here at all.
  */
-export function viewItems(lists: SavedList[]): CommandItem[] {
+export function viewItems(
+  lists: SavedList[],
+  /** Resolves the display name, so built-in views read (and match) in the
+   * active language exactly as the rail spells them. */
+  name: (l: SavedList) => string = l => l.name,
+): CommandItem[] {
   return lists
     .filter(l => !l.hidden)
     .map(l => ({
       kind: 'view',
       id: `view:${l.id}`,
-      label: l.name,
+      label: name(l),
       icon: listIcon(l),
       tint: l.color || undefined,
       to: listHref(l),

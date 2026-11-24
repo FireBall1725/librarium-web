@@ -38,7 +38,19 @@
   "suggestions": {
     "buy_title": "購入のおすすめ",
     "read_next_title": "ライブラリから次に読む本",
-    "see_all": "すべて見る →"
+    "see_all": "すべて見る →",
+    "interested": "気になる",
+    "saved": "保存済み ✓",
+    "dismiss_title": "非表示",
+    "block_title": "ブロック",
+    "block_book": "この本をブロック",
+    "block_author": "{{author}}の作品をすべてブロック",
+    "toast_dismissed": "非表示にしました",
+    "toast_interested": "気になるに追加しました",
+    "toast_update_failed": "更新できませんでした",
+    "toast_blocked_book": "この本をブロックしました",
+    "toast_blocked_author": "{{author}}の作品をすべてブロックしました",
+    "toast_block_failed": "ブロックできませんでした"
   },
   "suggestions_page": {
     "title": "おすすめ",

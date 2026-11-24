@@ -38,7 +38,19 @@
   "suggestions": {
     "buy_title": "Sugestões para comprar",
     "read_next_title": "Para ler em seguida, da sua biblioteca",
-    "see_all": "Ver todas →"
+    "see_all": "Ver todas →",
+    "interested": "Tenho interesse",
+    "saved": "Salvo ✓",
+    "dismiss_title": "Dispensar",
+    "block_title": "Bloquear",
+    "block_book": "Bloquear este livro",
+    "block_author": "Bloquear tudo de {{author}}",
+    "toast_dismissed": "Dispensado",
+    "toast_interested": "Marcado como tenho interesse",
+    "toast_update_failed": "Falha ao atualizar",
+    "toast_blocked_book": "Livro bloqueado",
+    "toast_blocked_author": "Tudo de {{author}} bloqueado",
+    "toast_block_failed": "Falha ao bloquear"
   },
   "suggestions_page": {
     "title": "Sugestões",

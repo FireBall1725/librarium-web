@@ -38,7 +38,19 @@
   "suggestions": {
     "buy_title": "Vorschläge zum Kaufen",
     "read_next_title": "Als Nächstes aus deiner Bibliothek",
-    "see_all": "Alle ansehen →"
+    "see_all": "Alle ansehen →",
+    "interested": "Interessant",
+    "saved": "Gespeichert ✓",
+    "dismiss_title": "Ausblenden",
+    "block_title": "Blockieren",
+    "block_book": "Dieses Buch blockieren",
+    "block_author": "Alles von {{author}} blockieren",
+    "toast_dismissed": "Ausgeblendet",
+    "toast_interested": "Als interessant markiert",
+    "toast_update_failed": "Aktualisierung fehlgeschlagen",
+    "toast_blocked_book": "Buch blockiert",
+    "toast_blocked_author": "Alles von {{author}} blockiert",
+    "toast_block_failed": "Blockieren fehlgeschlagen"
   },
   "suggestions_page": {
     "title": "Vorschläge",

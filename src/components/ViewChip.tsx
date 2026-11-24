@@ -16,7 +16,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Icon } from '../lib/icons'
-import { listIcon, type SavedList } from '../lib/lists'
+import { listIcon, listDisplayName, type SavedList } from '../lib/lists'
 
 export default function ViewChip({
   view, dirty, isDefault, defaultHint, onLeave, onRename, onSaveAsNew, onDelete,
@@ -61,7 +61,7 @@ export default function ViewChip({
                 reads oddly beside Up next or Favourites. */}
             {isDefault
               ? t('views.default_name', { defaultValue: 'Default view' })
-              : view.name} ×
+              : listDisplayName(view, t)} ×
           </button>
         )}
 
@@ -90,7 +90,7 @@ export default function ViewChip({
           <div className="fixed inset-0 z-[190]" onClick={() => setAt(null)} />
           <div className="lb-menu open" style={{ left: at.x, top: at.y }} role="menu">
             <div className="hd">
-              {view.name}
+              {listDisplayName(view, t)}
               {isDefault && ` · ${defaultHint}`}
             </div>
             <button type="button" role="menuitem"

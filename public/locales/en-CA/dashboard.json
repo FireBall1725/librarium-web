@@ -38,7 +38,19 @@
   "suggestions": {
     "buy_title": "Suggestions to buy",
     "read_next_title": "Read next from your library",
-    "see_all": "See all →"
+    "see_all": "See all →",
+    "interested": "Interested",
+    "saved": "Saved ✓",
+    "dismiss_title": "Dismiss",
+    "block_title": "Block",
+    "block_book": "Block this book",
+    "block_author": "Block by {{author}}",
+    "toast_dismissed": "Dismissed",
+    "toast_interested": "Marked as interested",
+    "toast_update_failed": "Failed to update",
+    "toast_blocked_book": "Blocked this book",
+    "toast_blocked_author": "Blocked anything by {{author}}",
+    "toast_block_failed": "Failed to block"
   },
   "suggestions_page": {
     "title": "Suggestions",

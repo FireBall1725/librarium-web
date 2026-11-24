@@ -18,7 +18,7 @@ import { useAuth, ApiError } from '../../auth/AuthContext'
 import { usePageTitle } from '../../hooks/usePageTitle'
 import PageHeader from '../../components/PageHeader'
 import { SettingsBody } from '../../components/settings/SettingRow'
-import { announceListsChanged, fetchLists, listHref, type SavedList } from '../../lib/lists'
+import { announceListsChanged, fetchLists, listHref, listDisplayName, type SavedList } from '../../lib/lists'
 import type { Library } from '../../types'
 
 interface Draft {
@@ -235,7 +235,7 @@ export default function ListsPage() {
             {lists.map(l => (
               <li key={l.id} className="flex items-center gap-3 px-4 py-3">
                 <div className="min-w-0 flex-1">
-                  <Link to={listHref(l)} className="text-sm text-content hover:text-accent">{l.name}</Link>
+                  <Link to={listHref(l)} className="text-sm text-content hover:text-accent">{listDisplayName(l, t)}</Link>
                   <div className="text-xs text-content-tertiary">
                     {l.visibility === 'library'
                       ? t('lists_settings.shared_with', {
